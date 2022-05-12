@@ -1,4 +1,4 @@
-package live_example
+package main
 
 import (
 	"bufio"
@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/Jeffail/gabs/v2"
 	deepgram "github.com/deepgram-devs/go-sdk"
 	"github.com/gorilla/websocket"
 )
@@ -40,7 +41,13 @@ func main() {
 				fmt.Println("ERROR reading message")
 				log.Fatal(err)
 		}
-		log.Printf("recv: %s", message)
+
+		jsonParsed, jsonErr := gabs.ParseJSON(message)
+		if jsonErr != nil {
+				log.Fatal(err)
+		}
+		log.Printf("recv: %s", jsonParsed.Path("channel.alternatives.0.transcript").String())
+
 	}
 	}()
 
@@ -57,7 +64,5 @@ func main() {
 	
 	}
 	
-	defer resp.Body.Close()
-	log.Print(resp.Body)
 }
 
