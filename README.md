@@ -28,12 +28,12 @@ To make sure our community is safe for all, be sure to review and agree to our
 We love to hear from you so if you have questions, comments or find a bug in the
 project, let us know! You can either:
 
-- [Open an issue](https://github.com/deepgram-devs/go-sdk/issues/new) on this repository
+- [Open an issue](https://github.com/deepgram-devs/deepgram-go-sdk/issues/new) on this repository
 - Tweet at us! We're [@DeepgramDevs on Twitter](https://twitter.com/DeepgramDevs)
 
 ## Further Reading
 
 Check out the Developer Documentation at [https://developers.deepgram.com/](https://developers.deepgram.com/)
 
-[signup]: https://console.deepgram.com/signup?utm_medium=github&utm_source=DEVREL&utm_content=node-sdk
+[signup]: https://console.deepgram.com/signup?utm_medium=github&utm_source=DEVREL&utm_content=deepgram-go-sdk
 [license]: LICENSE.txt
