@@ -17,7 +17,7 @@ log.Printf("connecting to %s", u.String())
 header := http.Header{
 		"Host": []string{"api.deepgram.com"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/1.0.0"},
+		"X-DG-Agent": []string{"go-sdk/0.1.0"},
 	}
 
 c, resp, err := websocket.DefaultDialer.Dial(u.String(), header);

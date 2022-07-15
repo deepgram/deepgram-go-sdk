@@ -50,7 +50,7 @@ func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptio
 		"Host": []string{dg.Host("")},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/1.0.0"},
+		"X-DG-Agent": []string{"go-sdk/0.1.0"},
 	}
 
 	var result UsageRequestList
