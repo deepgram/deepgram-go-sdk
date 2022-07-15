@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -57,7 +58,13 @@ func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptio
 	if err != nil {
 		return result, err
 	}
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		log.Fatal(string(b))
+	}
+
 	jsonErr := GetJson(res, &result)
+
 	if jsonErr != nil {
 		fmt.Printf("error getting request list: %s\n", jsonErr.Error())
 		return result, jsonErr
