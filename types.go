@@ -1,5 +1,10 @@
 package deepgram
 
+import (
+	"bytes"
+	"io"
+)
+
 type InvitationOptions struct {
   Email string `json:"email"`
   Scope string `json:"scope"`
@@ -35,4 +40,44 @@ type LiveTranscriptionOptions struct {
 	Sample_rate int `json:"sample_rate" url:"sample_rate,omitempty" `
 	Tier string `json:"tier" url:"tier,omitempty" `
 	Replace string `json:"replace" url:"replace,omitempty" `
+}
+
+type PreRecordedTranscriptionOptions struct {
+	Tier string `json:"tier" url:"tier,omitempty" `
+	Model string `json:"model" url:"model,omitempty" `
+	Version string `json:"version" url:"version,omitempty" `
+	Language string `json:"language" url:"language,omitempty" `
+	Punctuate bool `json:"punctuate" url:"punctuate,omitempty" `
+	Profanity_filter bool `json:"profanity_filter" url:"profanity_filter,omitempty" `
+	Redact bool `json:"redact" url:"redact,omitempty" `
+	Diarize bool `json:"diarize" url:"diarize,omitempty" `
+	Ner bool `json:"ner" url:"ner,omitempty" `
+	Multichannel bool `json:"multichannel" url:"multichannel,omitempty" `
+	Alternatives int `json:"alternatives" url:"alternatives,omitempty" `
+	Numerals bool `json:"numerals" url:"numerals,omitempty" `
+	Search []string `json:"search" url:"search,omitempty" `
+	Replace string `json:"replace" url:"replace,omitempty" `
+	Callback string `json:"callback" url:"callback,omitempty" `
+	Keywords []string `json:"keywords" url:"keywords,omitempty" `
+	Utterances bool `json:"utterances" url:"utterances,omitempty" `
+	Utt_split int `json:"utt_split" url:"utt_split,omitempty" `
+	Tag string `json:"tag" url:"tag,omitempty"`
+}
+
+type TranscriptionSource interface {
+	 ReadStreamSource | UrlSource | BufferSource
+}
+
+type ReadStreamSource struct {
+	Stream io.Reader `json:"stream"`
+	Mimetype string `json:"mimetype"`
+}
+
+type UrlSource struct {
+	Url string `json:"url"`
+}
+
+type BufferSource struct {
+	Buffer bytes.Buffer `json:"buffer"`
+	Mimetype string `json:"mimetype"`
 }
