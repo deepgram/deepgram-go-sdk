@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+var sdkVersion string = "0.1.0"
+
 type Deepgram struct {
 	ApiKey string
 }
