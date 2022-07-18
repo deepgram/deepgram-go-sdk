@@ -1,5 +1,10 @@
 package deepgram
 
+import (
+	"bytes"
+	"io"
+)
+
 type InvitationOptions struct {
   Email string `json:"email"`
   Scope string `json:"scope"`
@@ -14,23 +19,65 @@ type Message struct {
 }
 
 type LiveTranscriptionOptions struct {
-	Model string `json:"model"`
-	Language string `json:"language"`
-	Version string `json:"version"`
-	Punctuate bool `json:"punctuate"`
-	Profanity_filter bool `json:"profanity_filter"`
-	Redact bool `json:"redact"`
-	Diarize bool `json:"diarize"`
-	Multichannel bool `json:"multichannel"`
-	Alternatives int `json:"alternatives"`
-	Numerals bool `json:"numerals"`
-	Search []string `json:"search"`
-	Callback string `json:"callback"`
-	Keywords []string `json:"keywords"`
-	Interim_results bool `json:"interim_results"`
-	Endpointing bool `json:"endpointing"`
-	Vad_turnoff int `json:"vad_turnoff"`
-	Encoding string `json:"encoding"`
-	Channels int `json:"channels"`
-	Sample_rate int `json:"sample_rate"`
+	Model string `json:"model" url:"model,omitempty" `
+	Language string `json:"language" url:"language,omitempty" `
+	Version string `json:"version" url:"version,omitempty" `
+	Punctuate bool `json:"punctuate" url:"punctuate,omitempty" `
+	Profanity_filter bool `json:"profanity_filter" url:"profanity_filter,omitempty" `
+	Redact bool `json:"redact" url:"redact,omitempty" `
+	Diarize bool `json:"diarize" url:"diarize,omitempty" `
+	Multichannel bool `json:"multichannel" url:"multichannel,omitempty" `
+	Alternatives int `json:"alternatives" url:"alternatives,omitempty" `
+	Numerals bool `json:"numerals" url:"numerals,omitempty" `
+	Search []string `json:"search" url:"search,omitempty" `
+	Callback string `json:"callback" url:"callback,omitempty" `
+	Keywords []string `json:"keywords" url:"keywords,omitempty" `
+	Interim_results bool `json:"interim_results" url:"interim_results,omitempty" `
+	Endpointing bool `json:"endpointing" url:"endpointing,omitempty" `
+	Vad_turnoff int `json:"vad_turnoff" url:"vad_turnoff,omitempty" `
+	Encoding string `json:"encoding" url:"encoding,omitempty" `
+	Channels int `json:"channels" url:"channels,omitempty" `
+	Sample_rate int `json:"sample_rate" url:"sample_rate,omitempty" `
+	Tier string `json:"tier" url:"tier,omitempty" `
+	Replace string `json:"replace" url:"replace,omitempty" `
+}
+
+type PreRecordedTranscriptionOptions struct {
+	Tier string `json:"tier" url:"tier,omitempty" `
+	Model string `json:"model" url:"model,omitempty" `
+	Version string `json:"version" url:"version,omitempty" `
+	Language string `json:"language" url:"language,omitempty" `
+	Punctuate bool `json:"punctuate" url:"punctuate,omitempty" `
+	Profanity_filter bool `json:"profanity_filter" url:"profanity_filter,omitempty" `
+	Redact bool `json:"redact" url:"redact,omitempty" `
+	Diarize bool `json:"diarize" url:"diarize,omitempty" `
+	Ner bool `json:"ner" url:"ner,omitempty" `
+	Multichannel bool `json:"multichannel" url:"multichannel,omitempty" `
+	Alternatives int `json:"alternatives" url:"alternatives,omitempty" `
+	Numerals bool `json:"numerals" url:"numerals,omitempty" `
+	Search []string `json:"search" url:"search,omitempty" `
+	Replace string `json:"replace" url:"replace,omitempty" `
+	Callback string `json:"callback" url:"callback,omitempty" `
+	Keywords []string `json:"keywords" url:"keywords,omitempty" `
+	Utterances bool `json:"utterances" url:"utterances,omitempty" `
+	Utt_split int `json:"utt_split" url:"utt_split,omitempty" `
+	Tag string `json:"tag" url:"tag,omitempty"`
+}
+
+type TranscriptionSource interface {
+	 ReadStreamSource | UrlSource | BufferSource
+}
+
+type ReadStreamSource struct {
+	Stream io.Reader `json:"stream"`
+	Mimetype string `json:"mimetype"`
+}
+
+type UrlSource struct {
+	Url string `json:"url"`
+}
+
+type BufferSource struct {
+	Buffer bytes.Buffer `json:"buffer"`
+	Mimetype string `json:"mimetype"`
 }
