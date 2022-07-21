@@ -25,7 +25,7 @@ type LiveTranscriptionOptions struct {
 	Punctuate bool `json:"punctuate" url:"punctuate,omitempty" `
 	Profanity_filter bool `json:"profanity_filter" url:"profanity_filter,omitempty" `
 	Redact bool `json:"redact" url:"redact,omitempty" `
-	Diarize bool `json:"diarize" url:"diarize,omitempty" `
+	Diarize interface{} `json:"diarize" url:"diarize,omitempty" `
 	Multichannel bool `json:"multichannel" url:"multichannel,omitempty" `
 	Alternatives int `json:"alternatives" url:"alternatives,omitempty" `
 	Numerals bool `json:"numerals" url:"numerals,omitempty" `
@@ -50,7 +50,7 @@ type PreRecordedTranscriptionOptions struct {
 	Punctuate bool `json:"punctuate" url:"punctuate,omitempty" `
 	Profanity_filter bool `json:"profanity_filter" url:"profanity_filter,omitempty" `
 	Redact bool `json:"redact" url:"redact,omitempty" `
-	Diarize bool `json:"diarize" url:"diarize,omitempty" `
+	Diarize interface{} `json:"diarize" url:"diarize,omitempty" `
 	Ner bool `json:"ner" url:"ner,omitempty" `
 	Multichannel bool `json:"multichannel" url:"multichannel,omitempty" `
 	Alternatives int `json:"alternatives" url:"alternatives,omitempty" `
