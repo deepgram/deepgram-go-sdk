@@ -19,13 +19,13 @@ type PreRecordedResponse struct {
 	Results interface{} `json:"results"`
 }
 
-func (dg *Deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
+func (dg *deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
 query, _ := query.Values(options)
-u := url.URL{Scheme: "wss", Host: "api.deepgram.com", Path: "/v1/listen", RawQuery: query.Encode()}
+u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
 log.Printf("connecting to %s", u.String())
 
 header := http.Header{
-		"Host": []string{"api.deepgram.com"},
+		"Host": []string{dg.Host},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
 	}
@@ -40,14 +40,13 @@ return c, resp, nil
   
 }
 
-func(dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
+func(dg *deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
 	client := new(http.Client)
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "https", Host: "api.deepgram.com", Path: "/v1/listen", RawQuery: query.Encode()}
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
 	jsonStr, err := json.Marshal(source)
 	if err != nil {
 		log.Fatal(err)
-		// TODO: Fix this return value
 		return PreRecordedResponse{}, err
 	}
 
@@ -58,7 +57,7 @@ func(dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTrans
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host("")},
+		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
@@ -69,30 +68,17 @@ func(dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTrans
 	if err != nil {
 		return result, err
 	}
-	fmt.Println("CODE:", res.Body)
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
 		log.Fatal(string(b))
 	}
 
 	jsonErr := GetJson(res, &result)
-
 	if jsonErr != nil {
 		fmt.Printf("error getting request list: %s\n", jsonErr.Error())
 		return result, jsonErr
 	} else {
 		return result, nil
 	}
-
-	// query, _ := query.Values(options)
-	// u := url.URL{Scheme: "https", Host: "api.deepgram.com", Path: "/v1/projects", RawQuery: query.Encode()}
-	// log.Printf("connecting to %s", u.String())
-
-	// header := http.Header{
-	// 	"Host": []string{"api.deepgram.com"},
-	// 	"Authorization": []string{"token " + dg.ApiKey},
-	// 	"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
-	// }
-
 	
 }
