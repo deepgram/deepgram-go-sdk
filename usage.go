@@ -1,7 +1,6 @@
 package deepgram
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -36,9 +35,10 @@ type UsageRequest struct {
 func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.Path + "/" + projectId + "/requests", RawQuery: query.Encode()}
+	path := fmt.Sprintf("%s/%s/requests", dg.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path, RawQuery: query.Encode()}
 
-	req, err := http.NewRequest("GET", u.String(), bytes.NewBuffer( nil ))
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 			//Handle Error
 			log.Fatal(err)

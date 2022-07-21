@@ -6,20 +6,22 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 )
 
-func (dg *Deepgram) ListInvitations(projectId string) (InvitationList, error) {
+func (dg *deepgram) ListInvitations(projectId string) (InvitationList, error) {
 	client := new(http.Client)
-	url := fmt.Sprintf("%s%s/%s/invites", dg.Host(""), dg.Path(""), projectId)
+	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
 
-	req , err := http.NewRequest("GET", url, nil)
+	req , err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 			//Handle Error
 			log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{"api.deepgram.com"},
+		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
@@ -39,23 +41,23 @@ func (dg *Deepgram) ListInvitations(projectId string) (InvitationList, error) {
 	}
 }
 
-func (dg *Deepgram) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
+func (dg *deepgram) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
 	client := new(http.Client)
-	url := fmt.Sprintf("%s%s/%s/invites", dg.Host(""), dg.Path(""), projectId)
-
+	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
 	jsonStr, err := json.Marshal(options)
 	if err != nil {
 		log.Fatal(err)
 		return Message{}, err
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		//Handle Error
 		log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{"api.deepgram.com"},
+		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
@@ -79,18 +81,19 @@ func (dg *Deepgram) SendInvitation(projectId string, options InvitationOptions) 
 	}
 }
 
-func (dg *Deepgram) DeleteInvitation(projectId string, email string) (Message, error) {
+func (dg *deepgram) DeleteInvitation(projectId string, email string) (Message, error) {
 	client := new(http.Client)
-	url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Host(""), dg.Path(""), projectId, email)
-
-	req, err := http.NewRequest("DELETE", url, nil)
+	// url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Host, dg.Path, projectId, email)
+	path := fmt.Sprintf("%s/%s/invites/%s", dg.Path, projectId, email)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
 		log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{"api.deepgram.com"},
+		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
