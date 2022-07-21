@@ -2,52 +2,50 @@ package deepgram
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+
+	"github.com/google/go-querystring/query"
 )
 
 type UsageRequestListOptions struct {
-  Start string `json:"start"`
-  End string `json:"end"`
-  Page int `json:"page"`
-  Limit int `json:"limit"`
-  Status string `json:"status"`
+  Start string `json:"start" url:"start,omitempty"`
+  End string `json:"end" url:"end,omitempty"`
+  Page int `json:"page" url:"page,omitempty"`
+  Limit int `json:"limit" url:"limit,omitempty"`
+  Status string `json:"status" url:"status,omitempty"`
 };
 
 type UsageRequestList struct {
-	Page int `json:"page"`
-	Limit int `json:"limit"`
-	Requests interface{} `json:"requests"`
+	Page int `json:"page" url:"page,omitempty"`
+	Limit int `json:"limit" url:"limit,omitempty"`
+	Requests interface{} `json:"requests" url:"requests,omitempty"`
 };
 type UsageRequest struct {
-	RequestId string `json:"request_id"`
-	Created string `json:"created"`
-	Path string `json:"path"`
-	Accessor string `json:"accessor"`
-	Response interface{} `json:"response"`
-	Callback interface{} `json:"callback"`
+	RequestId string `json:"request_id" url:"request_id,omitempty"`
+	Created string `json:"created" url:"created,omitempty"`
+	Path string `json:"path" url:"path,omitempty"`
+	Accessor string `json:"accessor" url:"accessor,omitempty"`
+	Response interface{} `json:"response" url:"response,omitempty"`
+	Callback interface{} `json:"callback" url:"callback,omitempty"`
 };
 
-func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
+func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
+	query, _ := query.Values(options)
 	client := new(http.Client)
-	url := fmt.Sprintf("%s%s/%s/requests", dg.Host(""), dg.Path(""), projectId)
-	jsonStr, err := json.Marshal(options)
-	if err != nil {
-		log.Fatal(err)
-		return UsageRequestList{}, err
-	}
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.Path + "/" + projectId + "/requests", RawQuery: query.Encode()}
 
-	req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonStr))
+	req, err := http.NewRequest("GET", u.String(), bytes.NewBuffer( nil ))
 	if err != nil {
 			//Handle Error
 			log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host("")},
+		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
@@ -62,7 +60,6 @@ func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptio
 		b, _ := io.ReadAll(res.Body)
 		log.Fatal(string(b))
 	}
-
 	jsonErr := GetJson(res, &result)
 
 	if jsonErr != nil {
