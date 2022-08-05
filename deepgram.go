@@ -5,7 +5,8 @@ import (
 	"net/http"
 )
 
-var sdkVersion string = "0.1.0"
+var sdkVersion string = "0.2.2"
+var dgAgent string = "deepgram-go-sdk/v" + sdkVersion
 
 type Deepgram struct {
 	ApiKey string

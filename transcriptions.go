@@ -27,7 +27,7 @@ log.Printf("connecting to %s", u.String())
 header := http.Header{
 		"Host": []string{"api.deepgram.com"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
+		"X-DG-Agent": []string{dgAgent},
 	}
 
 c, resp, err := websocket.DefaultDialer.Dial(u.String(), header);
@@ -61,7 +61,7 @@ func(dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTrans
 		"Host": []string{dg.Host("")},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
+		"X-DG-Agent": []string{dgAgent},
 	}
 
 	var result PreRecordedResponse
