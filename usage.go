@@ -48,8 +48,7 @@ func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptio
 		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
-	}
+		"X-DG-Agent": []string{dgAgent},
 
 	var result UsageRequestList
 	res, err := client.Do(req)

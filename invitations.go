@@ -24,7 +24,7 @@ func (dg *deepgram) ListInvitations(projectId string) (InvitationList, error) {
 		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
+		"X-DG-Agent": []string{dgAgent},
 	}
 
 	var result InvitationList
@@ -60,7 +60,7 @@ func (dg *deepgram) SendInvitation(projectId string, options InvitationOptions) 
 		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
+		"X-DG-Agent": []string{dgAgent},
 	}
 
 	var result Message
@@ -96,7 +96,7 @@ func (dg *deepgram) DeleteInvitation(projectId string, email string) (Message, e
 		"Host": []string{dg.Host},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/" + sdkVersion},
+		"X-DG-Agent": []string{dgAgent},
 	}
 
 	var result Message
