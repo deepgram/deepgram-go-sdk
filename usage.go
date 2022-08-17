@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 )
@@ -49,15 +50,20 @@ func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptio
 		"Host": []string{dg.Host("")},
 		"Content-Type": []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{"go-sdk/1.0.0"},
-	}
+		"X-DG-Agent": []string{dgAgent},
 
 	var result UsageRequestList
 	res, err := client.Do(req)
 	if err != nil {
 		return result, err
 	}
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		log.Fatal(string(b))
+	}
+
 	jsonErr := GetJson(res, &result)
+
 	if jsonErr != nil {
 		fmt.Printf("error getting request list: %s\n", jsonErr.Error())
 		return result, jsonErr
