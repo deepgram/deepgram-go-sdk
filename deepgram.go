@@ -5,31 +5,32 @@ import (
 	"net/http"
 )
 
+
 var sdkVersion string = "0.2.2"
 var dgAgent string = "deepgram-go-sdk/v" + sdkVersion
 
-type Deepgram struct {
+type deepgram struct {
 	ApiKey string
+	Host string 
+	Path string 
+}
+
+func Init(apiKey string, host string, path string) *deepgram {
+	if host == "" {
+		host = "api.deepgram.com"
+	}
+	if path == "" {
+		path = "/v1/projects"
+	}
+	return &deepgram{
+		ApiKey: apiKey,
+		Host: host,
+		Path: path,
+	}
 }
 
 func GetJson(resp *http.Response, target interface{}) error {
 	defer resp.Body.Close()
-
+	
 	return json.NewDecoder(resp.Body).Decode(target)
-}
-
-func (dg *Deepgram) Host(host string) string  {
-	if host == "" {
-		return "https://api.deepgram.com"
-	} else {
-		return host
-	}
-}
-
-func (dg *Deepgram) Path(path string) string  {
-	if path == "" {
-		return "/v1/projects"
-	} else {
-		return path
-	}
 }
