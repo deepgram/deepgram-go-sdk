@@ -14,17 +14,17 @@ func (dg *Deepgram) ListInvitations(projectId string) (InvitationList, error) {
 	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
 
-	req , err := http.NewRequest("GET", u.String(), nil)
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-			//Handle Error
-			log.Fatal(err)
+		//Handle Error
+		log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host},
-		"Content-Type": []string{"application/json"},
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result InvitationList
@@ -57,10 +57,10 @@ func (dg *Deepgram) SendInvitation(projectId string, options InvitationOptions) 
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host},
-		"Content-Type": []string{"application/json"},
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -73,8 +73,8 @@ func (dg *Deepgram) SendInvitation(projectId string, options InvitationOptions) 
 		fmt.Printf("error sending invitation: %s\n", jsonErr.Error())
 		log.Printf("error decoding sakura response: %v", jsonErr)
 		if e, ok := err.(*json.SyntaxError); ok {
-        log.Printf("syntax error at byte offset %d", e.Offset)
-    }
+			log.Printf("syntax error at byte offset %d", e.Offset)
+		}
 		return result, jsonErr
 	} else {
 		return result, nil
@@ -93,10 +93,10 @@ func (dg *Deepgram) DeleteInvitation(projectId string, email string) (Message, e
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host},
-		"Content-Type": []string{"application/json"},
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -112,4 +112,3 @@ func (dg *Deepgram) DeleteInvitation(projectId string, email string) (Message, e
 		return result, nil
 	}
 }
-
