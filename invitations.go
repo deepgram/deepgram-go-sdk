@@ -9,7 +9,7 @@ import (
 	"net/url"
 )
 
-func (dg *deepgram) ListInvitations(projectId string) (InvitationList, error) {
+func (dg *Deepgram) ListInvitations(projectId string) (InvitationList, error) {
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
@@ -41,7 +41,7 @@ func (dg *deepgram) ListInvitations(projectId string) (InvitationList, error) {
 	}
 }
 
-func (dg *deepgram) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
+func (dg *Deepgram) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
@@ -81,7 +81,7 @@ func (dg *deepgram) SendInvitation(projectId string, options InvitationOptions) 
 	}
 }
 
-func (dg *deepgram) DeleteInvitation(projectId string, email string) (Message, error) {
+func (dg *Deepgram) DeleteInvitation(projectId string, email string) (Message, error) {
 	client := new(http.Client)
 	// url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Host, dg.Path, projectId, email)
 	path := fmt.Sprintf("%s/%s/invites/%s", dg.Path, projectId, email)

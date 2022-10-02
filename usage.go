@@ -32,7 +32,7 @@ type UsageRequest struct {
 	Callback interface{} `json:"callback" url:"callback,omitempty"`
 };
 
-func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
+func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/requests", dg.Path, projectId)

@@ -9,20 +9,20 @@ import (
 var sdkVersion string = "0.2.2"
 var dgAgent string = "deepgram-go-sdk/v" + sdkVersion
 
-type deepgram struct {
+type Deepgram struct {
 	ApiKey string
 	Host string 
 	Path string 
 }
 
-func Init(apiKey string, host string, path string) *deepgram {
+func Init(apiKey string, host string, path string) *Deepgram {
 	if host == "" {
 		host = "api.deepgram.com"
 	}
 	if path == "" {
 		path = "/v1/projects"
 	}
-	return &deepgram{
+	return &Deepgram{
 		ApiKey: apiKey,
 		Host: host,
 		Path: path,

@@ -19,7 +19,7 @@ type PreRecordedResponse struct {
 	Results interface{} `json:"results"`
 }
 
-func (dg *deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
+func (dg *Deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
 query, _ := query.Values(options)
 u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
 log.Printf("connecting to %s", u.String())
@@ -40,7 +40,7 @@ return c, resp, nil
   
 }
 
-func(dg *deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
+func (dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
 	client := new(http.Client)
 	query, _ := query.Values(options)
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
