@@ -11,28 +11,29 @@ import (
 )
 
 type UsageRequestListOptions struct {
-  Start string `json:"start" url:"start,omitempty"`
-  End string `json:"end" url:"end,omitempty"`
-  Page int `json:"page" url:"page,omitempty"`
-  Limit int `json:"limit" url:"limit,omitempty"`
-  Status string `json:"status" url:"status,omitempty"`
-};
+	Start  string `json:"start" url:"start,omitempty"`
+	End    string `json:"end" url:"end,omitempty"`
+	Page   int    `json:"page" url:"page,omitempty"`
+	Limit  int    `json:"limit" url:"limit,omitempty"`
+	Status string `json:"status" url:"status,omitempty"`
+}
 
 type UsageRequestList struct {
-	Page int `json:"page" url:"page,omitempty"`
-	Limit int `json:"limit" url:"limit,omitempty"`
+	Page     int         `json:"page" url:"page,omitempty"`
+	Limit    int         `json:"limit" url:"limit,omitempty"`
 	Requests interface{} `json:"requests" url:"requests,omitempty"`
-};
-type UsageRequest struct {
-	RequestId string `json:"request_id" url:"request_id,omitempty"`
-	Created string `json:"created" url:"created,omitempty"`
-	Path string `json:"path" url:"path,omitempty"`
-	Accessor string `json:"accessor" url:"accessor,omitempty"`
-	Response interface{} `json:"response" url:"response,omitempty"`
-	Callback interface{} `json:"callback" url:"callback,omitempty"`
-};
+}
 
-func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
+type UsageRequest struct {
+	RequestId string      `json:"request_id" url:"request_id,omitempty"`
+	Created   string      `json:"created" url:"created,omitempty"`
+	Path      string      `json:"path" url:"path,omitempty"`
+	Accessor  string      `json:"accessor" url:"accessor,omitempty"`
+	Response  interface{} `json:"response" url:"response,omitempty"`
+	Callback  interface{} `json:"callback" url:"callback,omitempty"`
+}
+
+func (dg *Deepgram) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/requests", dg.Path, projectId)
@@ -40,15 +41,16 @@ func (dg *deepgram) ListRequests(projectId string, options UsageRequestListOptio
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-			//Handle Error
-			log.Fatal(err)
+		//Handle Error
+		log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host},
-		"Content-Type": []string{"application/json"},
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
+	}
 
 	var result UsageRequestList
 	res, err := client.Do(req)

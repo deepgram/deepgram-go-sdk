@@ -14,33 +14,33 @@ import (
 )
 
 type PreRecordedResponse struct {
-	Request_id string `json:"request_id"`
-	Metadata interface{} `json:"metadata"`
-	Results interface{} `json:"results"`
+	Request_id string      `json:"request_id"`
+	Metadata   interface{} `json:"metadata"`
+	Results    interface{} `json:"results"`
 }
 
-func (dg *deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
-query, _ := query.Values(options)
-u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
-log.Printf("connecting to %s", u.String())
+func (dg *Deepgram) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
+	query, _ := query.Values(options)
+	u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
+	log.Printf("connecting to %s", u.String())
 
-header := http.Header{
-		"Host": []string{dg.Host},
+	header := http.Header{
+		"Host":          []string{dg.Host},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
-c, resp, err := websocket.DefaultDialer.Dial(u.String(), header);
+	c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
 
-if err != nil {
-	log.Printf("handshake failed with status %s", resp.Status)
-	log.Fatal("dial:", err)
-}
-return c, resp, nil
-  
+	if err != nil {
+		log.Printf("handshake failed with status %s", resp.Status)
+		log.Fatal("dial:", err)
+	}
+	return c, resp, nil
+
 }
 
-func(dg *deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
+func (dg *Deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
 	client := new(http.Client)
 	query, _ := query.Values(options)
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
@@ -52,15 +52,15 @@ func(dg *deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTrans
 
 	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
-			//Handle Error
-			log.Fatal(err)
+		//Handle Error
+		log.Fatal(err)
 	}
 
 	req.Header = http.Header{
-		"Host": []string{dg.Host},
-		"Content-Type": []string{"application/json"},
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent": []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result PreRecordedResponse
@@ -80,5 +80,5 @@ func(dg *deepgram) PreRecordedFromURL(source UrlSource, options PreRecordedTrans
 	} else {
 		return result, nil
 	}
-	
+
 }
