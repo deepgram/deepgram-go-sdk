@@ -19,6 +19,7 @@ func main() {
 	dg := deepgram.Deepgram{
         ApiKey: "YOUR_API_KEY",
     }
+	dg = *deepgram.Init(dg.ApiKey, dg.Host, dg.Path)
 	resp, err := client.Get("http://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourlw_online_nonuk")
 	if err != nil {
 			log.Println("ERRROR getting stream", err)
