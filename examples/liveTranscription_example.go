@@ -9,18 +9,14 @@ import (
 	"time"
 
 	"github.com/Jeffail/gabs/v2"
-	deepgram "github.com/deepgram-devs/go-sdk/deepgram"
+	"github.com/deepgram-devs/go-sdk/deepgram"
 	"github.com/gorilla/websocket"
 )
 
 func main() {
 	client := new(http.Client)
 	// IMPORTANT: Make sure you add your own API key here
-	dg := deepgram.Deepgram{
-
-		ApiKey: "YOUR_API_KEY",
-	}
-	dg = *deepgram.Init(dg.ApiKey, dg.Host, dg.Path)
+	dg := *deepgram.NewClient("YOUR_API_KEY")
 	resp, err := client.Get("http://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourlw_online_nonuk")
 	if err != nil {
 		log.Println("ERRROR getting stream", err)
@@ -28,9 +24,10 @@ func main() {
 	fmt.Println("Stream is up and running ", reflect.TypeOf(resp))
 	reader := bufio.NewReader(resp.Body)
 
-	options := deepgram.LiveTranscriptionOptions{}
-	options.Punctuate = true
-	options.Language = "en-US"
+	options := deepgram.LiveTranscriptionOptions{
+		Language:  "en-US",
+		Punctuate: true,
+	}
 
 	dgConn, _, err := dg.LiveTranscription(options)
 

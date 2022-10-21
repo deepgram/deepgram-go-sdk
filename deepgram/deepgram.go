@@ -8,24 +8,28 @@ import (
 var sdkVersion string = "0.2.2"
 var dgAgent string = "deepgram-go-sdk/v" + sdkVersion
 
-type Deepgram struct {
+type Client struct {
 	ApiKey string
 	Host   string
 	Path   string
 }
 
-func Init(apiKey string, host string, path string) *Deepgram {
-	if host == "" {
-		host = "api.deepgram.com"
-	}
-	if path == "" {
-		path = "/v1/projects"
-	}
-	return &Deepgram{
+func NewClient(apiKey string) *Client {
+	return &Client{
 		ApiKey: apiKey,
-		Host:   host,
-		Path:   path,
+		Host:   "api.deepgram.com",
+		Path:   "/v1/projects",
 	}
+}
+
+func (c *Client) WithHost(host string) *Client {
+	c.Host = host
+	return c
+}
+
+func (c *Client) WithPath(path string) *Client {
+	c.Path = path
+	return c
 }
 
 func GetJson(resp *http.Response, target interface{}) error {
