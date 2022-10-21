@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Jeffail/gabs/v2"
-	deepgram "github.com/deepgram-devs/go-sdk"
+	deepgram "github.com/deepgram-devs/go-sdk/deepgram"
 	"github.com/gorilla/websocket"
 )
 
@@ -17,11 +17,12 @@ func main() {
 	client := new(http.Client)
 	// IMPORTANT: Make sure you add your own API key here
 	dg := deepgram.Deepgram{
-        ApiKey: "YOUR_API_KEY",
-    }
+		ApiKey: "YOUR_API_KEY",
+	}
+	dg = *deepgram.Init(dg.ApiKey, dg.Host, dg.Path)
 	resp, err := client.Get("http://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourlw_online_nonuk")
 	if err != nil {
-			log.Println("ERRROR getting stream", err)
+		log.Println("ERRROR getting stream", err)
 	}
 	fmt.Println("Stream is up and running ", reflect.TypeOf(resp))
 	reader := bufio.NewReader(resp.Body)
@@ -35,34 +36,32 @@ func main() {
 	chunk := make([]byte, 1024*2)
 
 	go func() {
-	for {
-		_, message, err := dgConn.ReadMessage()
-		if err != nil {
+		for {
+			_, message, err := dgConn.ReadMessage()
+			if err != nil {
 				fmt.Println("ERROR reading message")
 				log.Fatal(err)
-		}
+			}
 
-		jsonParsed, jsonErr := gabs.ParseJSON(message)
-		if jsonErr != nil {
+			jsonParsed, jsonErr := gabs.ParseJSON(message)
+			if jsonErr != nil {
 				log.Fatal(err)
-		}
-		log.Printf("recv: %s", jsonParsed.Path("channel.alternatives.0.transcript").String())
+			}
+			log.Printf("recv: %s", jsonParsed.Path("channel.alternatives.0.transcript").String())
 
-	}
+		}
 	}()
 
 	for {
 		bytesRead, err := reader.Read(chunk)
 
 		if err != nil {
-				fmt.Println("ERROR reading chunk")
-				log.Fatal(err)
+			fmt.Println("ERROR reading chunk")
+			log.Fatal(err)
 		}
 		dgConn.WriteMessage(websocket.BinaryMessage, chunk[:bytesRead])
 		time.Sleep(10 * time.Millisecond)
 
-	
 	}
-	
-}
 
+}
