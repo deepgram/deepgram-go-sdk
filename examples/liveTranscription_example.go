@@ -17,6 +17,7 @@ func main() {
 	client := new(http.Client)
 	// IMPORTANT: Make sure you add your own API key here
 	dg := deepgram.Deepgram{
+
 		ApiKey: "YOUR_API_KEY",
 	}
 	dg = *deepgram.Init(dg.ApiKey, dg.Host, dg.Path)
