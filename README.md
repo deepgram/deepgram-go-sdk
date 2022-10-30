@@ -25,6 +25,36 @@ To make sure our community is safe for all, be sure to review and agree to our
 [Code of Conduct](./CODE_OF_CONDUCT.md). Then see the
 [Contribution](./CONTRIBUTING.md) guidelines for more information.
 
+## Local Installation and Example Set up
+
+Requirements: [Go](https://go.dev/doc/install) (version ^1.18)
+
+- Clone the repository:
+```
+git clone https://github.com/deepgram-devs/deepgram-go-sdk/
+```
+
+- Move into the directory and install the dependencies:
+
+```
+cd deepgram-go-sdk  
+
+go get .
+```
+
+- Add the API key in the `examples/liveTranscription_example.go` file:
+
+```go
+dg := *deepgram.NewClient("YOUR_API_KEY")
+```
+
+- Run the example:
+
+```
+go run examples/liveTranscription_example.go
+```
+
+
 ## Getting Help
 
 We love to hear from you so if you have questions, comments or find a bug in the
