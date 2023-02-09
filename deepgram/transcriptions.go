@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/google/go-querystring/query"
 	"github.com/gorilla/websocket"
@@ -142,13 +143,29 @@ func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 
 	for i, utterance := range resp.Results.Utterances {
 		utterance := utterance
-		// TODO: Create SecondsToTimestamp function
 		start := SecondsToTimestamp(utterance.Start)
 		end := SecondsToTimestamp(utterance.End)
 		vtt += fmt.Sprintf("%d\n%s --> %s\n%s\n\n", i+1, start, end, utterance.Transcript)
 	}
-
 	return vtt, nil
+}
+
+func (resp *PreRecordedResponse) ToSRT() (string, error) {
+	if resp.Results.Utterances == nil {
+		return "", errors.New("This function requires a transcript that was generated with the utterances feature.")
+	}
+
+	srt := ""
+
+	for i, utterance := range resp.Results.Utterances {
+		utterance := utterance
+		start := SecondsToTimestamp(utterance.Start)
+		end := SecondsToTimestamp(utterance.End)
+		end = strings.ReplaceAll(end, ".", ",")
+		srt += fmt.Sprintf("%d\n%s --> %s\n%s\n\n", i+1, start, end, utterance.Transcript)
+
+	}
+	return srt, nil
 }
 
 func SecondsToTimestamp(seconds float64) string {
