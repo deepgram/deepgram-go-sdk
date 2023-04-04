@@ -100,3 +100,33 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 		return result, nil
 	}
 }
+
+func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (interface{}, error) {
+	query, _ := query.Values(options)
+	client := new(http.Client)
+	path := fmt.Sprintf("%s/%s/usage/fields", dg.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path, RawQuery: query.Encode()}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		//Handle Error
+		log.Fatal(err)
+	}
+
+	var result interface{}
+	res, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		log.Fatal(string(b))
+	}
+	jsonErr := GetJson(res, &result)
+
+	if jsonErr != nil {
+		fmt.Printf("error getting fields: %s\n", jsonErr.Error())
+		return result, jsonErr
+	} else {
+		return result, nil
+	}
+}
