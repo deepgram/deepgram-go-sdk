@@ -71,3 +71,32 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	}
 
 }
+
+func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, error) {
+	client := new(http.Client)
+	path := fmt.Sprintf("%s/%s/requests/%s", dg.Path, projectId, requestId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		//Handle Error
+		log.Fatal(err)
+	}
+
+	var result UsageRequest
+	res, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		log.Fatal(string(b))
+	}
+	jsonErr := GetJson(res, &result)
+
+	if jsonErr != nil {
+		fmt.Printf("error getting request %s: %s\n", requestId, jsonErr.Error())
+		return result, jsonErr
+	} else {
+		return result, nil
+	}
+}
