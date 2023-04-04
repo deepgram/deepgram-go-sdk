@@ -158,11 +158,9 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	var result Message
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println("ERROR 165")
 		return result, err
 	}
 	if res.StatusCode != 200 {
-		fmt.Println("ERROR 169")
 		fmt.Println(res)
 		b, _ := io.ReadAll(res.Body)
 		log.Fatal(string(b))
@@ -170,9 +168,44 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	jsonErr := GetJson(res, &result)
 
 	if jsonErr != nil {
-		fmt.Println("ERROR 175")
-
 		fmt.Printf("error updating member scopes: %s\n", jsonErr.Error())
+		return result, jsonErr
+	} else {
+		return result, nil
+	}
+}
+
+func (dg *Client) LeaveProject(projectId string) (Message, error) {
+	client := new(http.Client)
+	path := fmt.Sprintf("%s/%s/leave", dg.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	req, err := http.NewRequest("DELETE", u.String(), nil)
+	if err != nil {
+		//Handle Error
+		log.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
+	}
+
+	var result Message
+	res, err := client.Do(req)
+	if err != nil {
+		return result, err
+	}
+	if res.StatusCode != 200 {
+		fmt.Println(res)
+		b, _ := io.ReadAll(res.Body)
+		log.Fatal(string(b))
+	}
+	jsonErr := GetJson(res, &result)
+
+	if jsonErr != nil {
+		fmt.Printf("error leaving project: %s\n", jsonErr.Error())
 		return result, jsonErr
 	} else {
 		return result, nil
