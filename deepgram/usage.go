@@ -119,6 +119,13 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 		log.Fatal(err)
 	}
 
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
+	}
+
 	var result UsageRequest
 	res, err := client.Do(req)
 	if err != nil {
@@ -149,6 +156,13 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 		log.Fatal(err)
 	}
 
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
+	}
+
 	var result interface{}
 	res, err := client.Do(req)
 	if err != nil {
@@ -177,6 +191,13 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (interface{},
 	if err != nil {
 		//Handle Error
 		log.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result interface{}
