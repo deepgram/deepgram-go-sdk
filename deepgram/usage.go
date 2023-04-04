@@ -18,6 +18,43 @@ type UsageRequestListOptions struct {
 	Status string `json:"status" url:"status,omitempty"`
 }
 
+type UsageOptions struct {
+	Accessor           string   `json:"accessor" url:"accessor,omitempty"`
+	Alternatives       bool     `json:"alternatives" url:"alternatives,omitempty"`
+	AnalyzeSentiment   bool     `json:"analyze_sentiment" url:"analyze_sentiment,omitempty"`
+	DetectEntities     bool     `json:"detect_entities" url:"detect_entities,omitempty"`
+	DetectLanguage     bool     `json:"detect_language" url:"detect_language,omitempty"`
+	DetectTopics       bool     `json:"detect_topics" url:"detect_topics,omitempty"`
+	Diarize            bool     `json:"diarize" url:"diarize,omitempty"`
+	End                string   `json:"end" url:"end,omitempty"`
+	InterimResults     bool     `json:"interim_results" url:"interim_results,omitempty"`
+	Keywords           bool     `json:"keywords" url:"keywords,omitempty"`
+	Method             string   `json:"method" url:"method,omitempty"` // Must be one of "sync" | "async" | "streaming"
+	Model              string   `json:"model" url:"model,omitempty"`
+	Multichannel       bool     `json:"multichannel" url:"multichannel,omitempty"`
+	Ner                bool     `json:"ner" url:"ner,omitempty"`
+	Numbers            bool     `json:"numbers" url:"numbers,omitempty"`
+	Numerals           bool     `json:"numerals" url:"numerals,omitempty"`
+	Paragraphs         bool     `json:"paragraphs" url:"paragraphs,omitempty"`
+	ProfanityFilter    bool     `json:"profanity_filter" url:"profanity_filter,omitempty"`
+	Punctuate          bool     `json:"punctuate" url:"punctuate,omitempty"`
+	Redact             bool     `json:"redact" url:"redact,omitempty"`
+	Replace            bool     `json:"replace" url:"replace,omitempty"`
+	Search             bool     `json:"search" url:"search,omitempty"`
+	Sentiment          bool     `json:"sentiment" url:"sentiment,omitempty"`
+	SentimentThreshold bool     `json:"sentiment_threshold" url:"sentiment_threshold,omitempty"`
+	SmartFormat        bool     `json:"smart_format" url:"smart_format,omitempty"`
+	Start              string   `json:"start" url:"start,omitempty"`
+	Summarize          bool     `json:"summarize" url:"summarize,omitempty"`
+	Tag                []string `json:"tag" url:"tag,omitempty"`
+	Translate          bool     `json:"translate" url:"translate,omitempty"`
+	Utterances         bool     `json:"utterances" url:"utterances,omitempty"`
+	UttSplit           bool     `json:"utt_split" url:"utt_split,omitempty"`
+}
+
+type UsageSummary struct {
+}
+
 type UsageRequestList struct {
 	Page     int         `json:"page" url:"page,omitempty"`
 	Limit    int         `json:"limit" url:"limit,omitempty"`
@@ -131,7 +168,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 }
 
-func (dg *Client) GetUsage(projectId string, options UsageRequestListOptions) (interface{}, error) {
+func (dg *Client) GetUsage(projectId string, options UsageOptions) (interface{}, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/usage", dg.Path, projectId)
