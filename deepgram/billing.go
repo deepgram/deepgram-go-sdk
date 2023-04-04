@@ -9,10 +9,10 @@ import (
 )
 
 type Balance struct {
-	Amount    float64 `json:"amount"`
-	BalanceId string  `json:"balance_id"`
-	Units     string  `json:"units"`
-	Purchase  string  `json:"purchase"`
+	Amount          float64 `json:"amount"`
+	BalanceId       string  `json:"balance_id"`
+	Units           string  `json:"units"`
+	PurchaseOrderId string  `json:"purchase_order_id"`
 }
 
 type BalanceList struct {
@@ -27,6 +27,13 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 	if err != nil {
 		//Handle Error
 		log.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result BalanceList
@@ -56,6 +63,13 @@ func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error
 	if err != nil {
 		//Handle Error
 		log.Fatal(err)
+	}
+
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{"application/json"},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result Balance
