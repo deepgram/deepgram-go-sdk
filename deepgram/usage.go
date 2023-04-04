@@ -52,7 +52,18 @@ type UsageOptions struct {
 	UttSplit           bool     `json:"utt_split" url:"utt_split,omitempty"`
 }
 
+type UsageResponseDetail struct {
+	Start    string  `json:"start"`
+	End      string  `json:"end"`
+	Hours    float64 `json:"hours"`
+	Requests int     `json:"requests"`
+}
+
 type UsageSummary struct {
+	Start      string                `json:"start"`
+	End        string                `json:"end"`
+	Resolution interface{}           `json:"resolution"`
+	Results    []UsageResponseDetail `json:"results"`
 }
 
 type UsageRequestList struct {
@@ -182,7 +193,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 }
 
-func (dg *Client) GetUsage(projectId string, options UsageOptions) (interface{}, error) {
+func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/usage", dg.Path, projectId)
@@ -200,7 +211,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (interface{},
 		"X-DG-Agent":    []string{dgAgent},
 	}
 
-	var result interface{}
+	var result UsageSummary
 	res, err := client.Do(req)
 	if err != nil {
 		return result, err
