@@ -37,6 +37,7 @@ type LiveTranscriptionOptions struct {
 	Measurements     bool     `json:"measurements" url:"measurements,omitempty" `
 	Model            string   `json:"model" url:"model,omitempty" `
 	Multichannel     bool     `json:"multichannel" url:"multichannel,omitempty" `
+	Ner              bool     `json:"ner" url:"ner,omitempty" `
 	Numbers          bool     `json:"numbers" url:"numbers,omitempty" `
 	Numerals         bool     `json:"numerals" url:"numerals,omitempty" `
 	Profanity_filter bool     `json:"profanity_filter" url:"profanity_filter,omitempty" `

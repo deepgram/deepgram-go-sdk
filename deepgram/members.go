@@ -161,7 +161,7 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 		return result, err
 	}
 	if res.StatusCode != 200 {
-		fmt.Println(res)
+
 		b, _ := io.ReadAll(res.Body)
 		log.Fatal(string(b))
 	}
@@ -198,7 +198,7 @@ func (dg *Client) LeaveProject(projectId string) (Message, error) {
 		return result, err
 	}
 	if res.StatusCode != 200 {
-		fmt.Println(res)
+
 		b, _ := io.ReadAll(res.Body)
 		log.Fatal(string(b))
 	}
