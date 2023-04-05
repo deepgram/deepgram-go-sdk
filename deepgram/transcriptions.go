@@ -57,6 +57,8 @@ type PreRecordedTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
 	Callback         string   `json:"callback" url:"callback,omitempty" `
 	Dates            bool     `json:"dates" url:"dates,omitempty"` // Indicates whether to convert dates from written format (e.g., january first) to numerical format (e.g., 01-01).
+	DetectLanguage   bool     `json:"detect_language" url:"detect_language,omitempty" `
+	DetectTopics     bool     `json:"detect_topics" url:"detect_topics,omitempty" `
 	Diarize          bool     `json:"diarize" url:"diarize,omitempty" `
 	Diarize_version  string   `json:"diarize_version" url:"diarize_version,omitempty" `
 	Dictation        bool     `json:"dictation" url:"dictation,omitempty"` // Option to format punctuated commands. Eg: "i went to the store period new paragraph then i went home" --> "i went to the store. <\n> then i went home"
@@ -74,6 +76,7 @@ type PreRecordedTranscriptionOptions struct {
 	Redact           bool     `json:"redact" url:"redact,omitempty" `
 	Replace          []string `json:"replace" url:"replace,omitempty" `
 	Search           []string `json:"search" url:"search,omitempty" `
+	Summarize        bool     `json:"summarize" url:"summarize,omitempty" `
 	Tag              []string `json:"tag" url:"tag,omitempty"`
 	Tier             string   `json:"tier" url:"tier,omitempty" `
 	Times            bool     `json:"times" url:"times,omitempty"` // Indicates whether to convert times from written format (e.g., 3:00 pm) to numerical format (e.g., 15:00).
