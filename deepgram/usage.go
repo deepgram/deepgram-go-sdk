@@ -42,7 +42,7 @@ type UsageOptions struct {
 	Replace            bool     `json:"replace" url:"replace,omitempty"`
 	Search             bool     `json:"search" url:"search,omitempty"`
 	Sentiment          bool     `json:"sentiment" url:"sentiment,omitempty"`
-	SentimentThreshold bool     `json:"sentiment_threshold" url:"sentiment_threshold,omitempty"`
+	SentimentThreshold float64  `json:"sentiment_threshold" url:"sentiment_threshold,omitempty"`
 	SmartFormat        bool     `json:"smart_format" url:"smart_format,omitempty"`
 	Start              string   `json:"start" url:"start,omitempty"`
 	Summarize          bool     `json:"summarize" url:"summarize,omitempty"`
