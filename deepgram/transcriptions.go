@@ -18,7 +18,7 @@ type LiveTranscriptionOptions struct {
 	Diarize_version  string   `json:"diarize_version" url:"diarize_version,omitempty" `
 	Dictation        bool     `json:"dictation" url:"dictation,omitempty"` // Option to format punctuated commands. Eg: "i went to the store period new paragraph then i went home" --> "i went to the store. <\n> then i went home"
 	Encoding         string   `json:"encoding" url:"encoding,omitempty" `
-	Endpointing      bool     `json:"endpointing" url:"endpointing,omitempty" `
+	Endpointing      string   `json:"endpointing" url:"endpointing,omitempty" ` // Can be "false" to disable endpointing, or can be the milliseconds of silence to wait before returning a transcript. Default is 10 milliseconds. Is string here so it can accept "false" as a value.
 	Interim_results  bool     `json:"interim_results" url:"interim_results,omitempty" `
 	Keywords         []string `json:"keywords" url:"keywords,omitempty" `
 	Language         string   `json:"language" url:"language,omitempty" `
