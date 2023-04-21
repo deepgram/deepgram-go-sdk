@@ -21,6 +21,7 @@ type LiveTranscriptionOptions struct {
 	Endpointing      string   `json:"endpointing" url:"endpointing,omitempty" ` // Can be "false" to disable endpointing, or can be the milliseconds of silence to wait before returning a transcript. Default is 10 milliseconds. Is string here so it can accept "false" as a value.
 	Interim_results  bool     `json:"interim_results" url:"interim_results,omitempty" `
 	Keywords         []string `json:"keywords" url:"keywords,omitempty" `
+	KeywordBoost     string   `json:"keyword_boost" url:"keyword_boost,omitempty" `
 	Language         string   `json:"language" url:"language,omitempty" `
 	Measurements     bool     `json:"measurements" url:"measurements,omitempty" `
 	Model            string   `json:"model" url:"model,omitempty" `
