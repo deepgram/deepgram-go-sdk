@@ -26,6 +26,7 @@ type PreRecordedTranscriptionOptions struct {
 	Diarize_version    string   `json:"diarize_version" url:"diarize_version,omitempty" `
 	Dictation          bool     `json:"dictation" url:"dictation,omitempty"` // Option to format punctuated commands. Eg: "i went to the store period new paragraph then i went home" --> "i went to the store. <\n> then i went home"
 	Keywords           []string `json:"keywords" url:"keywords,omitempty" `
+	KeywordBoost       string   `json:"keyword_boost" url:"keyword_boost,omitempty" `
 	Language           string   `json:"language" url:"language,omitempty" `
 	Measurements       bool     `json:"measurements" url:"measurements,omitempty"`
 	Model              string   `json:"model" url:"model,omitempty" `
