@@ -89,9 +89,31 @@ type WordBase struct {
 }
 
 type Alternative struct {
-	Transcript string     `json:"transcript"`
-	Confidence float64    `json:"confidence"`
-	Words      []WordBase `json:"words"`
+	Transcript string       `json:"transcript"`
+	Confidence float64      `json:"confidence"`
+	Words      []WordBase   `json:"words"`
+	Topics     []TopicBase  `json:"topics"`
+	Entities   []EntityBase `json:"entities"`
+}
+
+type EntityBase struct {
+	Label      string  `json:"label"`
+	Value      string  `json:"value"`
+	Confidence float64 `json:"confidence"`
+	StartWord  int     `json:"start_word"`
+	EndWord    int     `json:"end_word"`
+}
+
+type TopicBase struct {
+	Text      string  `json:"text"`
+	StartWord int     `json:"start_word"`
+	EndWord   int     `json:"end_word"`
+	Topics    []Topic `json:"topics"`
+}
+
+type Topic struct {
+	Topic      string `json:"topic"`
+	Confidence int    `json:"confidence"`
 }
 
 type Channel struct {
