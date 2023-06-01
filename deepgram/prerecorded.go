@@ -112,8 +112,8 @@ type TopicBase struct {
 }
 
 type Topic struct {
-	Topic      string `json:"topic"`
-	Confidence int    `json:"confidence"`
+	Topic      string  `json:"topic"`
+	Confidence float64 `json:"confidence"`
 }
 
 type Channel struct {
