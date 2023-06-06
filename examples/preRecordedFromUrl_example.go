@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/deepgram-devs/go-sdk/deepgram"
+	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
 )
 
 func main() {
