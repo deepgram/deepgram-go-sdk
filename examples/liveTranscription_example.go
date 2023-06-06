@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Jeffail/gabs/v2"
-	"github.com/deepgram-devs/go-sdk/deepgram"
+	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
 	"github.com/gorilla/websocket"
 )
 
