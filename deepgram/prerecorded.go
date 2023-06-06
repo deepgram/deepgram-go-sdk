@@ -89,9 +89,31 @@ type WordBase struct {
 }
 
 type Alternative struct {
-	Transcript string     `json:"transcript"`
-	Confidence float64    `json:"confidence"`
-	Words      []WordBase `json:"words"`
+	Transcript string       `json:"transcript"`
+	Confidence float64      `json:"confidence"`
+	Words      []WordBase   `json:"words"`
+	Topics     []TopicBase  `json:"topics"`
+	Entities   []EntityBase `json:"entities"`
+}
+
+type EntityBase struct {
+	Label      string  `json:"label"`
+	Value      string  `json:"value"`
+	Confidence float64 `json:"confidence"`
+	StartWord  int     `json:"start_word"`
+	EndWord    int     `json:"end_word"`
+}
+
+type TopicBase struct {
+	Text      string  `json:"text"`
+	StartWord int     `json:"start_word"`
+	EndWord   int     `json:"end_word"`
+	Topics    []Topic `json:"topics"`
+}
+
+type Topic struct {
+	Topic      string  `json:"topic"`
+	Confidence float64 `json:"confidence"`
 }
 
 type Channel struct {
@@ -113,6 +135,45 @@ type Utterance struct {
 type Results struct {
 	Utterances []Utterance `json:"utterances"`
 	Channels   []Channel   `json:"channels"`
+}
+
+func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
+	client := &http.Client{}
+	query, _ := query.Values(options)
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
+
+	// TODO: accept file path as string build io.Reader here
+	req, err := http.NewRequest("POST", u.String(), source.Stream)
+	if err != nil {
+		//Handle Error
+		return nil, err
+	}
+
+	req.Header = http.Header{
+		"Host":          []string{dg.Host},
+		"Content-Type":  []string{source.Mimetype},
+		"Authorization": []string{"token " + dg.ApiKey},
+		"X-DG-Agent":    []string{dgAgent},
+	}
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if res.StatusCode != 200 {
+		b, _ := io.ReadAll(res.Body)
+		return nil, fmt.Errorf("response error: %s", string(b))
+	}
+
+	var result PreRecordedResponse
+	jsonErr := GetJson(res, &result)
+	if jsonErr != nil {
+		fmt.Printf("error getting request list: %s\n", jsonErr.Error())
+		return nil, jsonErr
+	}
+
+	return &result, nil
 }
 
 func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
