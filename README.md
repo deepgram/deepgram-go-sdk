@@ -1,12 +1,14 @@
 # Deepgram Go SDK
 
-Community Go SDK for [Deepgram](https://www.deepgram.com/)'s automated speech recognition APIs.
+Community Go SDK for [Deepgram](https://www.deepgram.com/).  Start building with our powerful transcription & speech understanding API.
 
 > This SDK only supports hosted usage of api.deepgram.com.
+## Getting an API Key
 
-To access the API you will need a Deepgram account. Sign up for free at [signup][signup].
+🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
+## Documentation
 
----
+You can learn more about the Deepgram API at [developers.deepgram.com](https://developers.deepgram.com/docs).
 
 ## Current Status
 
@@ -37,7 +39,7 @@ git clone https://github.com/deepgram-devs/deepgram-go-sdk/
 - Move into the directory and install the dependencies:
 
 ```
-cd deepgram-go-sdk  
+cd deepgram-go-sdk
 
 go get .
 ```
@@ -60,12 +62,8 @@ go run examples/liveTranscription_example.go
 We love to hear from you so if you have questions, comments or find a bug in the
 project, let us know! You can either:
 
-- [Open an issue](https://github.com/deepgram-devs/deepgram-go-sdk/issues/new) on this repository
-- Tweet at us! We're [@DeepgramAI on Twitter](https://twitter.com/DeepgramAI)
+- [Open an issue on this repository](https://github.com/deepgram-devs/deepgram-go-sdk/issues/new)
+- [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
+- [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)
 
-## Further Reading
-
-Check out the Developer Documentation at [https://developers.deepgram.com/](https://developers.deepgram.com/)
-
-[signup]: https://console.deepgram.com/signup?utm_medium=github&utm_source=DEVREL&utm_content=deepgram-go-sdk
 [license]: LICENSE.txt
