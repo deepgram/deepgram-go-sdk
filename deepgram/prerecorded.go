@@ -42,7 +42,7 @@ type PreRecordedTranscriptionOptions struct {
 	Search             []string `json:"search" url:"search,omitempty" `
 	Sentiment          bool     `json:"sentiment" url:"sentiment,omitempty" `
 	SentimentThreshold float64  `json:"sentiment_threshold" url:"sentiment_threshold,omitempty" `
-	Summarize          bool     `json:"summarize" url:"summarize,omitempty" `
+	Summarize          string   `json:"summarize" url:"summarize,omitempty" `
 	Tag                []string `json:"tag" url:"tag,omitempty"`
 	Tier               string   `json:"tier" url:"tier,omitempty" `
 	Times              bool     `json:"times" url:"times,omitempty"` // Indicates whether to convert times from written format (e.g., 3:00 pm) to numerical format (e.g., 15:00).
@@ -65,6 +65,12 @@ type Metadata struct {
 	Created        string  `json:"created"`
 	Duration       float64 `json:"duration"`
 	Channels       int     `json:"channels"`
+	ModelInfo      struct {
+		Arch    string `json:"arch"`
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	} `json:"model_info"`
+	Models []string `json:"models"`
 }
 
 type Hit struct {
