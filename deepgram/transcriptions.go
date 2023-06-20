@@ -60,6 +60,7 @@ func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocke
 			log.Printf("handshake failed with status %s", resp.Status)
 		}
 		log.Fatal("dial failed:", err)
+		return c, resp, err
 	}
 	return c, resp, nil
 }
