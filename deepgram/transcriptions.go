@@ -56,8 +56,10 @@ func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocke
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
 
 	if err != nil {
-		log.Printf("handshake failed with status %s", resp.Status)
-		log.Fatal("dial:", err)
+		if resp != nil {
+			log.Printf("handshake failed with status %s", resp.Status)
+		}
+		log.Fatal("dial failed:", err)
 	}
 	return c, resp, nil
 }
