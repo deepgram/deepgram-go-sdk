@@ -41,7 +41,9 @@ git clone https://github.com/deepgram-devs/deepgram-go-sdk/
 ```
 cd deepgram-go-sdk
 
-go get .
+cd deepgram
+
+go get
 ```
 
 - Add the API key in the `examples/liveTranscription_example.go` file:
@@ -55,7 +57,6 @@ dg := *deepgram.NewClient("YOUR_API_KEY")
 ```
 go run examples/liveTranscription_example.go
 ```
-
 
 ## Getting Help
 
