@@ -128,6 +128,10 @@ type Channel struct {
 	Alternatives []Alternative `json:"alternatives"`
 }
 
+type Summary struct {
+	Short string `json:"short"`
+}
+
 type Utterance struct {
 	Start      float64    `json:"start"`
 	End        float64    `json:"end"`
