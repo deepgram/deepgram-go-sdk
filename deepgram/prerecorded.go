@@ -53,18 +53,23 @@ type PreRecordedTranscriptionOptions struct {
 }
 
 type PreRecordedResponse struct {
-	Request_id string   `json:"request_id"`
-	Metadata   Metadata `json:"metadata"`
-	Results    Results  `json:"results"`
+	Metadata Metadata `json:"metadata"`
+	Results  Results  `json:"results"`
 }
 
 type Metadata struct {
-	RequestId      string  `json:"request_id"`
-	TransactionKey string  `json:"transaction_key"`
-	Sha256         string  `json:"sha256"`
-	Created        string  `json:"created"`
-	Duration       float64 `json:"duration"`
-	Channels       int     `json:"channels"`
+	TransactionKey string   `json:"transaction_key"`
+	RequestId      string   `json:"request_id"`
+	Sha256         string   `json:"sha256"`
+	Created        string   `json:"created"`
+	Duration       float64  `json:"duration"`
+	Channels       int      `json:"channels"`
+	Models         []string `json:"models"`
+	ModelInfo      map[string]struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+		Arch    string `json:"arch"`
+	} `json:"model_info"`
 }
 
 type Hit struct {
@@ -84,17 +89,17 @@ type WordBase struct {
 	Start           float64 `json:"start"`
 	End             float64 `json:"end"`
 	Confidence      float64 `json:"confidence"`
-	Punctuated_Word string  `json:"punctuated_word"`
-	Speaker         int     `json:"speaker"`
+	Punctuated_Word string  `json:"punctuated_word,omitempty"`
+	Speaker         int     `json:"speaker,omitempty"`
 }
 
 type Alternative struct {
-	Transcript string       `json:"transcript"`
-	Confidence float64      `json:"confidence"`
-	Words      []WordBase   `json:"words"`
-	Summaries  []*SummaryV1 `json:"summaries,omitempty"`
-	Topics     []TopicBase  `json:"topics"`
-	Entities   []EntityBase `json:"entities"`
+	Transcript string        `json:"transcript"`
+	Confidence float64       `json:"confidence"`
+	Words      []WordBase    `json:"words"`
+	Summaries  []*SummaryV1  `json:"summaries,omitempty"`
+	Topics     []*TopicBase  `json:"topics,omitempty"`
+	Entities   []*EntityBase `json:"entities,omitempty"`
 }
 
 type EntityBase struct {
@@ -118,8 +123,9 @@ type Topic struct {
 }
 
 type Channel struct {
-	Search       []Search      `json:"search"`
-	Alternatives []Alternative `json:"alternatives"`
+	Search           []*Search     `json:"search,omitempty"`
+	Alternatives     []Alternative `json:"alternatives"`
+	DetectedLanguage string        `json:"detected_language"`
 }
 
 type Utterance struct {
@@ -134,9 +140,9 @@ type Utterance struct {
 }
 
 type Results struct {
-	Utterances []Utterance `json:"utterances"`
-	Channels   []Channel   `json:"channels"`
-	Summary    *SummaryV2  `json:"summary,omitempty"`
+	Utterances []*Utterance `json:"utterances,omitempty"`
+	Channels   []Channel    `json:"channels"`
+	Summary    *SummaryV2   `json:"summary,omitempty"`
 }
 
 type SummaryV1 struct {
@@ -238,7 +244,7 @@ func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 
 	vtt := "WEBVTT\n\n"
 
-	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Request_id + "\nCreated: " + resp.Metadata.Created + "\n\n"
+	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Metadata.RequestId + "\nCreated: " + resp.Metadata.Created + "\n\n"
 
 	for i, utterance := range resp.Results.Utterances {
 		utterance := utterance
