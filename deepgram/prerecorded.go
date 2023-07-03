@@ -125,7 +125,7 @@ type Topic struct {
 type Channel struct {
 	Search           []*Search     `json:"search,omitempty"`
 	Alternatives     []Alternative `json:"alternatives"`
-	DetectedLanguage string        `json:"detected_language"`
+	DetectedLanguage string        `json:"detected_language,omitempty"`
 }
 
 type Utterance struct {
