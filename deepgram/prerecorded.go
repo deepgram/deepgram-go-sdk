@@ -85,12 +85,13 @@ type Search struct {
 }
 
 type WordBase struct {
-	Word            string  `json:"word"`
-	Start           float64 `json:"start"`
-	End             float64 `json:"end"`
-	Confidence      float64 `json:"confidence"`
-	Punctuated_Word string  `json:"punctuated_word,omitempty"`
-	Speaker         int     `json:"speaker,omitempty"`
+	Word              string  `json:"word"`
+	Start             float64 `json:"start"`
+	End               float64 `json:"end"`
+	Confidence        float64 `json:"confidence"`
+	Speaker           *int    `json:"speaker,omitempty"`
+	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
+	Punctuated_Word   string  `json:"punctuated_word,omitempty"`
 }
 
 type Alternative struct {
