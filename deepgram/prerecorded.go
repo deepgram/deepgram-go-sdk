@@ -95,16 +95,16 @@ type WordBase struct {
 }
 
 type Alternative struct {
-	Transcript string           `json:"transcript"`
-	Confidence float64          `json:"confidence"`
-	Words      []WordBase       `json:"words"`
-	Summaries  []*SummaryV1     `json:"summaries,omitempty"`
-	Paragraphs *ParagraphResult `json:"paragraphs,omitempty"`
-	Topics     []*TopicBase     `json:"topics,omitempty"`
-	Entities   []*EntityBase    `json:"entities,omitempty"`
+	Transcript string          `json:"transcript"`
+	Confidence float64         `json:"confidence"`
+	Words      []WordBase      `json:"words"`
+	Summaries  []*SummaryV1    `json:"summaries,omitempty"`
+	Paragraphs *ParagraphGroup `json:"paragraphs,omitempty"`
+	Topics     []*TopicBase    `json:"topics,omitempty"`
+	Entities   []*EntityBase   `json:"entities,omitempty"`
 }
 
-type ParagraphResult struct {
+type ParagraphGroup struct {
 	Transcript string          `json:"transcript"`
 	Paragraphs []ParagraphBase `json:"paragraphs"`
 }
