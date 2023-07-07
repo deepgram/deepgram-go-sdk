@@ -30,6 +30,7 @@ type LiveTranscriptionOptions struct {
 	Numbers          bool     `json:"numbers" url:"numbers,omitempty" `
 	Numerals         bool     `json:"numerals" url:"numerals,omitempty" `
 	Profanity_filter bool     `json:"profanity_filter" url:"profanity_filter,omitempty" `
+	Smart_format     bool     `json:"smart_format" url:"smart_format,omitempty" `
 	Punctuate        bool     `json:"punctuate" url:"punctuate,omitempty" `
 	Redact           bool     `json:"redact" url:"redact,omitempty" `
 	Replace          string   `json:"replace" url:"replace,omitempty" `
