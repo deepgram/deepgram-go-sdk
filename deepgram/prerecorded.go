@@ -155,7 +155,7 @@ type Utterance struct {
 	Channel    int        `json:"channel"`
 	Transcript string     `json:"transcript"`
 	Words      []WordBase `json:"words"`
-	Speaker    int        `json:"speaker"`
+	Speaker    *int       `json:"speaker,omitempty"`
 	Id         string     `json:"id"`
 }
 
