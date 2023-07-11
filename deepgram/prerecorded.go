@@ -42,6 +42,7 @@ type PreRecordedTranscriptionOptions struct {
 	Search             []string    `json:"search" url:"search,omitempty" `
 	Sentiment          bool        `json:"sentiment" url:"sentiment,omitempty" `
 	SentimentThreshold float64     `json:"sentiment_threshold" url:"sentiment_threshold,omitempty" `
+	SmartFormat        bool        `json:"smart_format" url:"smart_format,omitempty" `
 	Summarize          interface{} `json:"summarize" url:"summarize,omitempty" ` // bool | string
 	Tag                []string    `json:"tag" url:"tag,omitempty"`
 	Tier               string      `json:"tier" url:"tier,omitempty" `
