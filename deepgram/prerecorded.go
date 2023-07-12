@@ -42,6 +42,7 @@ type PreRecordedTranscriptionOptions struct {
 	Search             []string    `json:"search" url:"search,omitempty" `
 	Sentiment          bool        `json:"sentiment" url:"sentiment,omitempty" `
 	SentimentThreshold float64     `json:"sentiment_threshold" url:"sentiment_threshold,omitempty" `
+	SmartFormat        bool        `json:"smart_format" url:"smart_format,omitempty" `
 	Summarize          interface{} `json:"summarize" url:"summarize,omitempty" ` // bool | string
 	Tag                []string    `json:"tag" url:"tag,omitempty"`
 	Tier               string      `json:"tier" url:"tier,omitempty" `
@@ -53,18 +54,23 @@ type PreRecordedTranscriptionOptions struct {
 }
 
 type PreRecordedResponse struct {
-	Request_id string   `json:"request_id"`
-	Metadata   Metadata `json:"metadata"`
-	Results    Results  `json:"results"`
+	Metadata Metadata `json:"metadata"`
+	Results  Results  `json:"results"`
 }
 
 type Metadata struct {
-	RequestId      string  `json:"request_id"`
-	TransactionKey string  `json:"transaction_key"`
-	Sha256         string  `json:"sha256"`
-	Created        string  `json:"created"`
-	Duration       float64 `json:"duration"`
-	Channels       int     `json:"channels"`
+	TransactionKey string   `json:"transaction_key"`
+	RequestId      string   `json:"request_id"`
+	Sha256         string   `json:"sha256"`
+	Created        string   `json:"created"`
+	Duration       float64  `json:"duration"`
+	Channels       int      `json:"channels"`
+	Models         []string `json:"models"`
+	ModelInfo      map[string]struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+		Arch    string `json:"arch"`
+	} `json:"model_info"`
 }
 
 type Hit struct {
@@ -80,21 +86,41 @@ type Search struct {
 }
 
 type WordBase struct {
-	Word            string  `json:"word"`
-	Start           float64 `json:"start"`
-	End             float64 `json:"end"`
-	Confidence      float64 `json:"confidence"`
-	Punctuated_Word string  `json:"punctuated_word"`
-	Speaker         int     `json:"speaker"`
+	Word              string  `json:"word"`
+	Start             float64 `json:"start"`
+	End               float64 `json:"end"`
+	Confidence        float64 `json:"confidence"`
+	Speaker           *int    `json:"speaker,omitempty"`
+	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
+	Punctuated_Word   string  `json:"punctuated_word,omitempty"`
 }
 
 type Alternative struct {
-	Transcript string       `json:"transcript"`
-	Confidence float64      `json:"confidence"`
-	Words      []WordBase   `json:"words"`
-	Summaries  []*SummaryV1 `json:"summaries,omitempty"`
-	Topics     []TopicBase  `json:"topics"`
-	Entities   []EntityBase `json:"entities"`
+	Transcript string          `json:"transcript"`
+	Confidence float64         `json:"confidence"`
+	Words      []WordBase      `json:"words"`
+	Summaries  []*SummaryV1    `json:"summaries,omitempty"`
+	Paragraphs *ParagraphGroup `json:"paragraphs,omitempty"`
+	Topics     []*TopicBase    `json:"topics,omitempty"`
+	Entities   []*EntityBase   `json:"entities,omitempty"`
+}
+
+type ParagraphGroup struct {
+	Transcript string          `json:"transcript"`
+	Paragraphs []ParagraphBase `json:"paragraphs"`
+}
+
+type ParagraphBase struct {
+	Sentences []SentenceBase `json:"sentences"`
+	NumWords  int            `json:"num_words"`
+	Start     float64        `json:"start"`
+	End       float64        `json:"end"`
+}
+
+type SentenceBase struct {
+	Text  string  `json:"text"`
+	Start float64 `json:"start"`
+	End   float64 `json:"end"`
 }
 
 type EntityBase struct {
@@ -118,8 +144,9 @@ type Topic struct {
 }
 
 type Channel struct {
-	Search       []Search      `json:"search"`
-	Alternatives []Alternative `json:"alternatives"`
+	Search           []*Search     `json:"search,omitempty"`
+	Alternatives     []Alternative `json:"alternatives"`
+	DetectedLanguage string        `json:"detected_language,omitempty"`
 }
 
 type Utterance struct {
@@ -129,14 +156,14 @@ type Utterance struct {
 	Channel    int        `json:"channel"`
 	Transcript string     `json:"transcript"`
 	Words      []WordBase `json:"words"`
-	Speaker    int        `json:"speaker"`
+	Speaker    *int       `json:"speaker,omitempty"`
 	Id         string     `json:"id"`
 }
 
 type Results struct {
-	Utterances []Utterance `json:"utterances"`
-	Channels   []Channel   `json:"channels"`
-	Summary    *SummaryV2  `json:"summary,omitempty"`
+	Utterances []*Utterance `json:"utterances,omitempty"`
+	Channels   []Channel    `json:"channels"`
+	Summary    *SummaryV2   `json:"summary,omitempty"`
 }
 
 type SummaryV1 struct {
@@ -238,7 +265,7 @@ func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 
 	vtt := "WEBVTT\n\n"
 
-	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Request_id + "\nCreated: " + resp.Metadata.Created + "\n\n"
+	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Metadata.RequestId + "\nCreated: " + resp.Metadata.Created + "\n\n"
 
 	for i, utterance := range resp.Results.Utterances {
 		utterance := utterance
