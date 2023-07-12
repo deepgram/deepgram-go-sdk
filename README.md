@@ -92,11 +92,16 @@ deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances: true})
 
 [See our Pre-Recorded Quickstart for more info](https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio).
 
+#### UrlSource
+
+| Property | Value  |          Description          |
+| -------- | :----- | :---------------------------: |
+| Url      | string | Url of the file to transcribe |
+
 ## Local files
 
 ```go
-credentials := "DEEPGRAM_API_KEY"
-dg := deepgram.NewClient(credentials)
+dg := deepgram.NewClient("DEEPGRAM_API_KEY")
 file, err := os.Open("PATH_TO_LOCAL_FILE")
 
 if err != nil {
@@ -113,9 +118,39 @@ if err != nil {
 
 [See our Pre-Recorded Quickstart for more info](https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio).
 
+#### ReadStreamSource
+
+| Property | Value Type |      reason for      |
+| -------- | :--------- | :------------------: |
+| Stream   | io.Reader  | stream to transcribe |
+| MimeType | string     |  MIMETYPE of stream  |
+
 #### PrerecordedTranscriptionOptions
 
-To be updated
+| Property         | Value Type | Example                            |
+| ---------------- | ---------- | ---------------------------------- |
+| Model            | string     | `Model: "phonecall"`               |
+| Tier             | string     | `Tier: "nova"`                     |
+| Version          | string     | `Version: "latest"`                |
+| Language         | string     | `Language: "es"`                   |
+| DetectLanguage   | bool       | `DetectLanguage: true`             |
+| Punctuate        | bool       | `Punctuate: true`                  |
+| Profanity_filter | bool       | `Profanity_filter: true`           |
+| Redact           | bool       | `Redact: true`                     |
+| Diarize          | bool       | `Diarize: true`                    |
+| SmartFormat      | bool       | `SmartFormat: true`                |
+| Multichannel     | bool       | `Multichannel: true`               |
+| Alternatives     | int        | `Alternatives: 2`                  |
+| Numerals         | bool       | `Numerals: true`                   |
+| Search           | []string   | `Search: []string{"apple"}`        |
+| Replace          | []string   | `Replace:[]string{"apple:orange"}` |
+| Callback         | string     | `Callback: "https://example.com"`  |
+| Keywords         | []string   | `Keywords: []string{"Hannah"}`     |
+| Paragraphs       | bool       | `Paragraphs: true`                 |
+| Summarize        | bool       | `Summarize: true`                  |
+| DetectTopics     | bool       | `DetectTopics: true`               |
+| Utterances       | bool       | `Utterances: true`                 |
+| Utt_split        | int        | `Utt_split: 9`                     |
 
 # Generating Captions
 
@@ -133,11 +168,18 @@ stt, err := res.ToSRT()
 
 ## Live Audio
 
-To be updated
+```go
+dg := *deepgram.NewClient("DEEPGRAM_API_KEY")
+options := deepgram.LiveTranscriptionOptions{
+		Language:  "en-US",
+		Punctuate: true,
+	}
+ws, _, err := dg.LiveTranscription(options)
+```
 
 #### LiveTranscriptionOptions
 
-To be updated
+See [API Reference](https://developers.deepgram.com/reference/streaming)
 
 # Projects
 
