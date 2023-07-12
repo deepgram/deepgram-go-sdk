@@ -11,13 +11,13 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 - [Configuration](#configuration)
 - [Transcription](#transcription)
   - [Remote Files](#remote-files)
-    - [UrlSource](####urlsource)
+    - [UrlSource](#urlsource)
   - [Local Files](#local-files)
-    - [StreamSource](####streamsource)
-    - [PrerecordedTranscriptionOptions](####prerecordedtranscriptionoptions)
+    - [ReadStreamSource](#readstreamsource)
+    - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
   - [Generating Captions](#generating-captions)
   - [Live Audio](#live-audio)
-    - [LiveTranscriptionOptions](####livetranscriptionoptions)
+    - [LiveTranscriptionOptions](#livetranscriptionoptions)
 - [Projects](#projects)
   - [Get Projects](#get-projects)
   - [Get Project](#get-project)
@@ -41,12 +41,12 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
   - [Leave Project](#leave-project)
 - [Usage](#usage)
   - [Get All Requests](#get-all-requests)
-    - [ListAllRequestOptions](####listallrequestoptions)
+    - [ListAllRequestOptions](#listallrequestoptions)
   - [Get Request](#get-request)
   - [Summarize Usage](#summarize-usage)
-    - [GetUsageSummaryOptions](####getusagesummaryoptions)
+    - [GetUsageSummaryOptions](#getusagesummaryoptions)
   - [Get Fields](#get-fields)
-    - [GetUsageFieldsOptions](####getusagefieldsoptions)
+    - [GetUsageFieldsOptions](#getusagefieldsoptions)
 - [Billing](#billing)
   - [Get All Balances](#get-all-balances)
   - [Get Balance](#get-balance)
@@ -83,8 +83,7 @@ dg := deepgram.NewClient(DEEPGRAM_API_KEY)
 ## Remote Files
 
 ```go
-credentials := "DEEPGRAM_API_KEY"
-dg := deepgram.NewClient(credentials)
+dg := deepgram.NewClient("DEEPGRAM_API_KEY")
 
 res, err := dg.PreRecordedFromURL(deepgram.UrlSource{Url: "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"},
 deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances: true})
@@ -499,10 +498,10 @@ res, err := dg.GetUsage(projectID, options)
 
 #### UsageOptions
 
-| Property | Value  |                                              Description                                              |
-| -------- | :----- | :---------------------------------------------------------------------------------------------------: |
+| Property | Value  | Description                                                                                           |
+| -------- | :----- | :---------------------------------------------------------------------------------------------------- |
 | Start    | string | Start date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM |
-| End      | string |  End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM  |
+| End      | string | End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM   |
 
 [See our API reference for more info](https://developers.deepgram.com/reference/summarize-usage).
 
@@ -522,10 +521,10 @@ res, err := dg.GetFields(projectID, options)
 
 #### GetUsageFieldsOptions
 
-| Property      | Value    |                                              Description                                              |
-| ------------- | :------- | :---------------------------------------------------------------------------------------------------: |
+| Property      | Value    | Description                                                                                           |
+| ------------- | :------- | :---------------------------------------------------------------------------------------------------- |
 | StartDateTime | DateTime | Start date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM |
-| EndDateTime   | DateTime |  End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM  |
+| EndDateTime   | DateTime | End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM   |
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-fields).
 
