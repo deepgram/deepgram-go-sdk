@@ -65,7 +65,7 @@ You can learn more about the full Deepgram API at [https://developers.deepgram.c
 # Installation
 
 ```bash
-go get https://github.com/deepgram-devs/deepgram-go-sdk
+go get github.com/deepgram-devs/deepgram-go-sdk
 ```
 
 # Requirements
