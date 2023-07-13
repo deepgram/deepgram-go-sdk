@@ -49,7 +49,7 @@ type PreRecordedTranscriptionOptions struct {
 	Times              bool        `json:"times" url:"times,omitempty"` // Indicates whether to convert times from written format (e.g., 3:00 pm) to numerical format (e.g., 15:00).
 	Translate          string      `json:"translate" url:"translate,omitempty" `
 	Utterances         bool        `json:"utterances" url:"utterances,omitempty" `
-	Utt_split          int         `json:"utt_split" url:"utt_split,omitempty" `
+	Utt_split          float64         `json:"utt_split" url:"utt_split,omitempty" `
 	Version            string      `json:"version" url:"version,omitempty" `
 }
 
