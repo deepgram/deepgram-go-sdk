@@ -21,7 +21,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 	// Specify query params that are acceptable. A nil means no check
 	var acceptParams = map[string][]string{
 		"model":   nil,
-		"tier":    {"nova", "enhance", "base"},
+		"tier":    {"nova", "enhanced", "base"},
 		"version": nil,
 		"language": {"da", "en", "en-AU", "en-GB", "en-IN", "en-NZ",
 			"en-US", "es", "es-419", "fr", "fr-CA", "hi", "hi-Latn", "id",
