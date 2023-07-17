@@ -35,6 +35,7 @@ type LiveTranscriptionOptions struct {
 	Replace          string   `json:"replace" url:"replace,omitempty" `
 	Sample_rate      int      `json:"sample_rate" url:"sample_rate,omitempty" `
 	Search           []string `json:"search" url:"search,omitempty" `
+	Smart_format     bool     `json:"smart_format" url:"smart_format,omitempty" `
 	Tag              []string `json:"tag" url:"tag,omitempty" `
 	Tier             string   `json:"tier" url:"tier,omitempty" `
 	Times            bool     `json:"times" url:"times,omitempty" `
