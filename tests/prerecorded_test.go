@@ -94,7 +94,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 					}
 				}
 
-				t.Errorf("unexpected value of key %v in prerecored options: %v", k, v)
+				t.Errorf("unexpected value of key %v in prerecorded options: %v", k, v)
 			}
 		}
 
