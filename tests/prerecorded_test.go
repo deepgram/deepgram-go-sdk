@@ -79,7 +79,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 		for k, values := range options {
 			acceptValues, found := acceptParams[k]
 			if !found {
-				t.Errorf("unexpected query key in prerecored options: %v", k)
+				t.Errorf("unexpected query key in prerecorded options: %v", k)
 			}
 
 			if acceptValues == nil {
