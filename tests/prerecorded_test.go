@@ -148,7 +148,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 			})
 
 		if err != nil {
-			t.Errorf("Summarize v2 sholud succeeed, but got %s", err)
+			t.Errorf("Summarize v2 should succeed, but got %s", err)
 		}
 	})
 }
