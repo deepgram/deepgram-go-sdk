@@ -122,7 +122,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 			deepgram.PreRecordedTranscriptionOptions{})
 
 		if err != nil {
-			t.Errorf("sholud succeeed, but got %s", err)
+			t.Errorf("should succeed, but got %s", err)
 		}
 	})
 
