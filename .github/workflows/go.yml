@@ -26,8 +26,5 @@ jobs:
       - name: Go Mod Verify
         run: go mod verify
 
-      - name: Build
-        run: go build -v ./deepgram
-
       - name: Run Tests
         run: go build -v ./tests
