@@ -49,7 +49,7 @@ type PreRecordedTranscriptionOptions struct {
 	Times              bool        `json:"times" url:"times,omitempty"` // Indicates whether to convert times from written format (e.g., 3:00 pm) to numerical format (e.g., 15:00).
 	Translate          string      `json:"translate" url:"translate,omitempty" `
 	Utterances         bool        `json:"utterances" url:"utterances,omitempty" `
-	Utt_split          float64         `json:"utt_split" url:"utt_split,omitempty" `
+	Utt_split          float64     `json:"utt_split" url:"utt_split,omitempty" `
 	Version            string      `json:"version" url:"version,omitempty" `
 }
 
@@ -179,7 +179,7 @@ type SummaryV2 struct {
 func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
 	client := &http.Client{}
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.TranscriptionPath, RawQuery: query.Encode()}
 
 	// TODO: accept file path as string build io.Reader here
 	req, err := http.NewRequest("POST", u.String(), source.Stream)
@@ -218,7 +218,7 @@ func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreReco
 func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
 	client := new(http.Client)
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
+	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.TranscriptionPath, RawQuery: query.Encode()}
 	jsonStr, err := json.Marshal(source)
 	if err != nil {
 		log.Fatal(err)
