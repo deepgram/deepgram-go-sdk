@@ -71,6 +71,13 @@ type Metadata struct {
 		Version string `json:"version"`
 		Arch    string `json:"arch"`
 	} `json:"model_info"`
+	Warnings []*Warning `json:"warnings,omitempty"`
+}
+
+type Warning struct {
+	Parameter string `json:"parameter"`
+	Type      string `json:"type"`
+	Message   string `json:"message"`
 }
 
 type Hit struct {
@@ -174,7 +181,8 @@ type SummaryV1 struct {
 }
 
 type SummaryV2 struct {
-	Short string `json:"short"`
+	Short  string `json:"short"`
+	Result string `json:"result"`
 }
 
 func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
