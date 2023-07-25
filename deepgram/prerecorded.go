@@ -93,6 +93,7 @@ type WordBase struct {
 	Speaker           *int    `json:"speaker,omitempty"`
 	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
 	Punctuated_Word   string  `json:"punctuated_word,omitempty"`
+	Sentiment         string  `json:"sentiment,omitempty"`
 }
 
 type Alternative struct {
