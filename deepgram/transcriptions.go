@@ -41,6 +41,7 @@ type LiveTranscriptionOptions struct {
 	Times            bool     `json:"times" url:"times,omitempty" `
 	Vad_turnoff      int      `json:"vad_turnoff" url:"vad_turnoff,omitempty" `
 	Version          string   `json:"version" url:"version,omitempty" `
+	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
 }
 
 func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {

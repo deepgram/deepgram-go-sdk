@@ -51,6 +51,7 @@ type PreRecordedTranscriptionOptions struct {
 	Utterances         bool        `json:"utterances" url:"utterances,omitempty" `
 	Utt_split          float64     `json:"utt_split" url:"utt_split,omitempty" `
 	Version            string      `json:"version" url:"version,omitempty" `
+	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
 }
 
 type PreRecordedResponse struct {
