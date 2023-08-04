@@ -231,14 +231,14 @@ func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTransc
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.TranscriptionPath, RawQuery: query.Encode()}
 	jsonStr, err := json.Marshal(source)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 		return PreRecordedResponse{}, err
 	}
 
 	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -255,7 +255,7 @@ func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTransc
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 
 	jsonErr := GetJson(res, &result)

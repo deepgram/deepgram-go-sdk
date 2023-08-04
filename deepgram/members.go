@@ -32,7 +32,7 @@ func (dg *Client) ListMembers(projectId string) (MemberList, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -49,7 +49,7 @@ func (dg *Client) ListMembers(projectId string) (MemberList, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -68,7 +68,7 @@ func (dg *Client) RemoveMember(projectId string, memberId string) (Message, erro
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -85,7 +85,7 @@ func (dg *Client) RemoveMember(projectId string, memberId string) (Message, erro
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -104,7 +104,7 @@ func (dg *Client) GetMemberScopes(projectId string, memberId string) (ScopeList,
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -121,7 +121,7 @@ func (dg *Client) GetMemberScopes(projectId string, memberId string) (ScopeList,
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -145,7 +145,7 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	req, err := http.NewRequest("PUT", u.String(), strings.NewReader(newScope))
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -163,7 +163,7 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	if res.StatusCode != 200 {
 
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -182,7 +182,7 @@ func (dg *Client) LeaveProject(projectId string) (Message, error) {
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -200,7 +200,7 @@ func (dg *Client) LeaveProject(projectId string) (Message, error) {
 	if res.StatusCode != 200 {
 
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 

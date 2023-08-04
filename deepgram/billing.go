@@ -26,7 +26,7 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -43,7 +43,7 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -62,7 +62,7 @@ func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -79,7 +79,7 @@ func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 

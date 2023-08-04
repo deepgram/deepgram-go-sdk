@@ -38,12 +38,12 @@ func main() {
 			_, message, err := dgConn.ReadMessage()
 			if err != nil {
 				fmt.Println("ERROR reading message")
-				log.Fatal(err)
+				log.Panic(err)
 			}
 
 			jsonParsed, jsonErr := gabs.ParseJSON(message)
 			if jsonErr != nil {
-				log.Fatal(err)
+				log.Panic(err)
 			}
 			log.Printf("recv: %s", jsonParsed.Path("channel.alternatives.0.transcript").String())
 
@@ -55,7 +55,7 @@ func main() {
 
 		if err != nil {
 			fmt.Println("ERROR reading chunk")
-			log.Fatal(err)
+			log.Panic(err)
 		}
 		dgConn.WriteMessage(websocket.BinaryMessage, chunk[:bytesRead])
 		time.Sleep(10 * time.Millisecond)

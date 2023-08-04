@@ -48,7 +48,7 @@ func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -65,7 +65,7 @@ func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -84,7 +84,7 @@ func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error)
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -102,7 +102,7 @@ func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error)
 	if res.StatusCode != 200 {
 
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -130,7 +130,7 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 	fmt.Println(string(out))
 	buf := bytes.NewBuffer(out)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	client := new(http.Client)
 	path := fmt.Sprintf("%s/%s/keys", dg.Path, projectId)
@@ -138,7 +138,7 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 	req, err := http.NewRequest("POST", u.String(), buf)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -156,7 +156,7 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 	if res.StatusCode != 200 {
 
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -175,7 +175,7 @@ func (dg *Client) DeleteKey(projectId string, keyId string) (Message, error) {
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -192,7 +192,7 @@ func (dg *Client) DeleteKey(projectId string, keyId string) (Message, error) {
 	if res.StatusCode != 200 {
 
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
