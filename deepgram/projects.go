@@ -32,7 +32,7 @@ func (dg *Client) ListProjects() (ProjectResponse, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -49,7 +49,7 @@ func (dg *Client) ListProjects() (ProjectResponse, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -68,7 +68,7 @@ func (dg *Client) GetProject(projectId string) (Project, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -85,7 +85,7 @@ func (dg *Client) GetProject(projectId string) (Project, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -103,13 +103,13 @@ func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) 
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
 	jsonStr, err := json.Marshal(options)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 		return Message{}, err
 	}
 	req, err := http.NewRequest("PATCH", u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -126,7 +126,7 @@ func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) 
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -146,7 +146,7 @@ func (dg *Client) DeleteProject(projectId string) (Message, error) {
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -163,7 +163,7 @@ func (dg *Client) DeleteProject(projectId string) (Message, error) {
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 

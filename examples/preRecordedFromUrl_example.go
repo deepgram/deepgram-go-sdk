@@ -25,7 +25,7 @@ func main() {
 	// Convert the results to WebVTT format
 	vtt, err := res.ToWebVTT()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	f.WriteString(vtt)
 
@@ -36,7 +36,7 @@ func main() {
 	}
 	srt, err := res.ToSRT()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	srtF.WriteString(srt)
 

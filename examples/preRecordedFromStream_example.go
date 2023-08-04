@@ -21,7 +21,7 @@ func main() {
 	dg := deepgram.NewClient(*key)
 	file, err := os.Open(*file)
 	if err != nil {
-		log.Fatalf("error opening file %s: %v", *file, err)
+		log.Panicf("error opening file %s: %v", *file, err)
 	}
 	source := deepgram.ReadStreamSource{Stream: file, Mimetype: *mimetype}
 	res, err := dg.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Diarize: true, Language: "en-US", Utterances: true})
@@ -38,7 +38,7 @@ func main() {
 	// Convert the results to WebVTT format
 	vtt, err := res.ToWebVTT()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	f.WriteString(vtt)
 
@@ -49,7 +49,7 @@ func main() {
 	}
 	srt, err := res.ToSRT()
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 	srtF.WriteString(srt)
 

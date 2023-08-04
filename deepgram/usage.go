@@ -90,7 +90,7 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -107,7 +107,7 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -127,7 +127,7 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -144,7 +144,7 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -164,7 +164,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -181,7 +181,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -201,7 +201,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
@@ -218,7 +218,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
