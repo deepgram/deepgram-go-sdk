@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Update SDK Version
         run: |
           # Extract the new tag name from the event payload
@@ -16,14 +15,12 @@ jobs:
 
           # Update the sdkVersion variable in deepgram.go file
           sed -i "s/var sdkVersion string = .*/var sdkVersion string = \"$TAG_NAME\"/" deepgram/deepgram.go
-
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
           git commit -m "Update sdkVersion to ${{ github.event.release.tag_name }}" deepgram/deepgram.go
-
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
