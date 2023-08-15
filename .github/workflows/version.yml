@@ -19,9 +19,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add .
           git commit -m "Update sdkVersion to ${{ github.event.release.tag_name }}" deepgram/deepgram.go
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git push origin HEAD:${{ github.head_ref }}
