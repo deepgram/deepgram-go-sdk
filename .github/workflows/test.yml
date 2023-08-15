@@ -1,0 +1,25 @@
+name: Test Release Workflow on PR
+on:
+  push:
+    branches:
+      - pr-branch-name
+jobs:
+  test-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
+
+      - name: Run Release Workflow
+        run: |
+          TAG_NAME="v1.0.0"  # Set your desired tag name
+          sed -i "s/var sdkVersion string = .*/var sdkVersion string = \"$TAG_NAME\"/" deepgram/deepgram.go
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Update sdkVersion to $TAG_NAME" deepgram/deepgram.go
