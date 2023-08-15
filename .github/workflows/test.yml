@@ -2,7 +2,7 @@ name: Test Release Workflow on PR
 on:
   push:
     branches:
-      - pr-branch-name
+      - sr/update-version-sdk-2
 jobs:
   test-release:
     runs-on: ubuntu-latest
