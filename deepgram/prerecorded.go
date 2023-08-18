@@ -55,6 +55,7 @@ type PreRecordedTranscriptionOptions struct {
 }
 
 type PreRecordedResponse struct {
+	Request_id string `json:"request_id,omitempty"`
 	Metadata Metadata `json:"metadata"`
 	Results  Results  `json:"results"`
 }
