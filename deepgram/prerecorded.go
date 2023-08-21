@@ -51,13 +51,13 @@ type PreRecordedTranscriptionOptions struct {
 	Utterances         bool        `json:"utterances" url:"utterances,omitempty" `
 	Utt_split          float64     `json:"utt_split" url:"utt_split,omitempty" `
 	Version            string      `json:"version" url:"version,omitempty" `
-	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
+	FillerWords        string      `json:"filler_words" url:"filler_words,omitempty" `
 }
 
 type PreRecordedResponse struct {
-	Request_id string `json:"request_id,omitempty"`
-	Metadata Metadata `json:"metadata"`
-	Results  Results  `json:"results"`
+	Request_id string   `json:"request_id,omitempty"`
+	Metadata   Metadata `json:"metadata"`
+	Results    Results  `json:"results"`
 }
 
 type Metadata struct {
@@ -203,7 +203,7 @@ func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreReco
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{source.Mimetype},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	res, err := client.Do(req)
@@ -246,7 +246,7 @@ func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTransc
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result PreRecordedResponse
