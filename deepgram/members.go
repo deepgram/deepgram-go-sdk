@@ -39,7 +39,7 @@ func (dg *Client) ListMembers(projectId string) (MemberList, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result MemberList
@@ -75,7 +75,7 @@ func (dg *Client) RemoveMember(projectId string, memberId string) (Message, erro
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -111,7 +111,7 @@ func (dg *Client) GetMemberScopes(projectId string, memberId string) (ScopeList,
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result ScopeList
@@ -152,7 +152,7 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -189,7 +189,7 @@ func (dg *Client) LeaveProject(projectId string) (Message, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message

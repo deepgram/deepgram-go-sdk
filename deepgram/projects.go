@@ -39,7 +39,7 @@ func (dg *Client) ListProjects() (ProjectResponse, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result ProjectResponse
@@ -75,7 +75,7 @@ func (dg *Client) GetProject(projectId string) (Project, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Project
@@ -116,7 +116,7 @@ func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) 
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -153,7 +153,7 @@ func (dg *Client) DeleteProject(projectId string) (Message, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
