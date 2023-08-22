@@ -24,7 +24,7 @@ func (dg *Client) ListInvitations(projectId string) (InvitationList, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result InvitationList
@@ -60,7 +60,7 @@ func (dg *Client) SendInvitation(projectId string, options InvitationOptions) (M
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -95,7 +95,7 @@ func (dg *Client) DeleteInvitation(projectId string, email string) (Message, err
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message

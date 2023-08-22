@@ -33,7 +33,7 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result BalanceList
@@ -69,7 +69,7 @@ func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Balance

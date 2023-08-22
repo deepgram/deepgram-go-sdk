@@ -55,7 +55,7 @@ func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result KeyResponse
@@ -91,7 +91,7 @@ func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error)
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result KeyResponseObj
@@ -145,7 +145,7 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Key
@@ -182,7 +182,7 @@ func (dg *Client) DeleteKey(projectId string, keyId string) (Message, error) {
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 	var result Message
 	res, err := client.Do(req)

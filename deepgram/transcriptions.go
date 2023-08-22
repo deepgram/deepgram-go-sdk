@@ -52,7 +52,7 @@ func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocke
 	header := http.Header{
 		"Host":          []string{dg.Host},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)

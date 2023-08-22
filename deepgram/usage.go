@@ -97,7 +97,7 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageRequestList
@@ -134,7 +134,7 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageRequest
@@ -171,7 +171,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result interface{}
@@ -208,7 +208,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageSummary
