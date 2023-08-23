@@ -32,12 +32,14 @@ var MockInvalidCredentials = map[string]any{
 var MockKey = deepgram.Key{
 	ApiKeyId: MockUuid,
 	Key:      "string",
-	Comment:  "String",
+	Comment:  "string",
+	Created:  "string",
+	Scopes:   MockScopes,
 }
 
 var MockListKeys = deepgram.KeyResponse{
 	ApiKeys: []deepgram.KeyResponseObj{
-		deepgram.KeyResponseObj{
+		{
 			Member: MockMember,
 			ApiKey: MockKey,
 		},
