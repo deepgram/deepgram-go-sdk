@@ -61,19 +61,21 @@ type PreRecordedResponse struct {
 }
 
 type Metadata struct {
-	TransactionKey string   `json:"transaction_key"`
-	RequestId      string   `json:"request_id"`
-	Sha256         string   `json:"sha256"`
-	Created        string   `json:"created"`
-	Duration       float64  `json:"duration"`
-	Channels       int      `json:"channels"`
-	Models         []string `json:"models"`
-	ModelInfo      map[string]struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		Arch    string `json:"arch"`
-	} `json:"model_info"`
-	Warnings []*Warning `json:"warnings,omitempty"`
+	TransactionKey string               `json:"transaction_key"`
+	RequestId      string               `json:"request_id"`
+	Sha256         string               `json:"sha256"`
+	Created        string               `json:"created"`
+	Duration       float64              `json:"duration"`
+	Channels       int                  `json:"channels"`
+	Models         []string             `json:"models"`
+	ModelInfo      map[string]ModelInfo `json:"model_info"`
+	Warnings       []*Warning           `json:"warnings,omitempty"`
+}
+
+type ModelInfo struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Arch    string `json:"arch"`
 }
 
 type Warning struct {
@@ -203,7 +205,7 @@ func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreReco
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{source.Mimetype},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	res, err := client.Do(req)
@@ -246,7 +248,7 @@ func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTransc
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
+		"X-DG-Agent":    []string{dgAgent},
 	}
 
 	var result PreRecordedResponse
