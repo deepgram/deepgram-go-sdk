@@ -90,14 +90,14 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageRequestList
@@ -107,7 +107,7 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -127,14 +127,14 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageRequest
@@ -144,7 +144,7 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -164,14 +164,14 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result interface{}
@@ -181,7 +181,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 
@@ -201,14 +201,14 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result UsageSummary
@@ -218,7 +218,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 	}
 	if res.StatusCode != 200 {
 		b, _ := io.ReadAll(res.Body)
-		log.Fatal(string(b))
+		log.Panic(string(b))
 	}
 	jsonErr := GetJson(res, &result)
 

@@ -35,11 +35,13 @@ type LiveTranscriptionOptions struct {
 	Replace          string   `json:"replace" url:"replace,omitempty" `
 	Sample_rate      int      `json:"sample_rate" url:"sample_rate,omitempty" `
 	Search           []string `json:"search" url:"search,omitempty" `
+	Smart_format     bool     `json:"smart_format" url:"smart_format,omitempty" `
 	Tag              []string `json:"tag" url:"tag,omitempty" `
 	Tier             string   `json:"tier" url:"tier,omitempty" `
 	Times            bool     `json:"times" url:"times,omitempty" `
 	Vad_turnoff      int      `json:"vad_turnoff" url:"vad_turnoff,omitempty" `
 	Version          string   `json:"version" url:"version,omitempty" `
+	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
 }
 
 func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
@@ -50,7 +52,7 @@ func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocke
 	header := http.Header{
 		"Host":          []string{dg.Host},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
@@ -59,7 +61,7 @@ func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocke
 		if resp != nil {
 			log.Printf("handshake failed with status %s", resp.Status)
 		}
-		log.Fatal("dial failed:", err)
+		log.Printf("dial failed:", err)
 		return c, resp, err
 	}
 	return c, resp, nil

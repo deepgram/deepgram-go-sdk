@@ -17,14 +17,14 @@ func (dg *Client) ListInvitations(projectId string) (InvitationList, error) {
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result InvitationList
@@ -47,20 +47,20 @@ func (dg *Client) SendInvitation(projectId string, options InvitationOptions) (M
 	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
 	jsonStr, err := json.Marshal(options)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 		return Message{}, err
 	}
 	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(jsonStr))
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
@@ -88,14 +88,14 @@ func (dg *Client) DeleteInvitation(projectId string, email string) (Message, err
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header = http.Header{
 		"Host":          []string{dg.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
-		"X-DG-Agent":    []string{dgAgent},
+		"User-Agent":    []string{dgAgent},
 	}
 
 	var result Message
