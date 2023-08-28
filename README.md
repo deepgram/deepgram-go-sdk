@@ -1,55 +1,55 @@
 # Deepgram Go SDK
 
-Community Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with world-class speech and Language AI models.
+Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
 > This SDK only supports hosted usage of api.deepgram.com.
 
-* [Deepgram Go SDK](#deepgram-go-sdk)
-* [Getting an API Key](#getting-an-api-key)
-* [Documentation](#documentation)
-* [Installation](#installation)
-* [Requirements](#requirements)
-* [Configuration](#configuration)
-* [Transcription](#transcription)
-  * [Remote Files](#remote-files)
-      * [UrlSource](#urlsource)
-  * [Local files](#local-files)
-      * [ReadStreamSource](#readstreamsource)
-      * [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
-* [Generating Captions](#generating-captions)
-  * [Live Audio](#live-audio)
-      * [LiveTranscriptionOptions](#livetranscriptionoptions)
-* [Projects](#projects)
-  * [Get Projects](#get-projects)
-  * [Get Project](#get-project)
-  * [Update Project](#update-project)
-  * [Delete Project](#delete-project)
-* [Keys](#keys)
-  * [List Keys](#list-keys)
-  * [Get Key](#get-key)
-  * [Create Key](#create-key)
-  * [Delete Key](#delete-key)
-* [Members](#members)
-  * [Get Members](#get-members)
-  * [Remove Member](#remove-member)
-* [Scopes](#scopes)
-  * [Get Member Scopes](#get-member-scopes)
-  * [Update Scope](#update-scope)
-* [Invitations](#invitations)
-  * [List Invites](#list-invites)
-  * [Send Invite](#send-invite)
-  * [Delete Invite](#delete-invite)
-  * [Leave Project](#leave-project)
-* [Usage](#usage)
-  * [Get All Requests](#get-all-requests)
-      * [UsageRequestListOptions](#usagerequestlistoptions)
-  * [Get Request](#get-request)
-  * [Summarize Usage](#summarize-usage)
-      * [UsageOptions](#usageoptions)
-  * [Get Fields](#get-fields)
-      * [GetUsageFieldsOptions](#getusagefieldsoptions)
-  * [Development and Contributing](#development-and-contributing)
-  * [Getting Help](#getting-help)
+- [Deepgram Go SDK](#deepgram-go-sdk)
+- [Getting an API Key](#getting-an-api-key)
+- [Documentation](#documentation)
+- [Installation](#installation)
+- [Requirements](#requirements)
+- [Configuration](#configuration)
+- [Transcription](#transcription)
+  - [Remote Files](#remote-files)
+    - [UrlSource](#urlsource)
+  - [Local files](#local-files)
+    - [ReadStreamSource](#readstreamsource)
+    - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
+- [Generating Captions](#generating-captions)
+  - [Live Audio](#live-audio)
+    - [LiveTranscriptionOptions](#livetranscriptionoptions)
+- [Projects](#projects)
+  - [Get Projects](#get-projects)
+  - [Get Project](#get-project)
+  - [Update Project](#update-project)
+  - [Delete Project](#delete-project)
+- [Keys](#keys)
+  - [List Keys](#list-keys)
+  - [Get Key](#get-key)
+  - [Create Key](#create-key)
+  - [Delete Key](#delete-key)
+- [Members](#members)
+  - [Get Members](#get-members)
+  - [Remove Member](#remove-member)
+- [Scopes](#scopes)
+  - [Get Member Scopes](#get-member-scopes)
+  - [Update Scope](#update-scope)
+- [Invitations](#invitations)
+  - [List Invites](#list-invites)
+  - [Send Invite](#send-invite)
+  - [Delete Invite](#delete-invite)
+  - [Leave Project](#leave-project)
+- [Usage](#usage)
+  - [Get All Requests](#get-all-requests)
+    - [UsageRequestListOptions](#usagerequestlistoptions)
+  - [Get Request](#get-request)
+  - [Summarize Usage](#summarize-usage)
+    - [UsageOptions](#usageoptions)
+  - [Get Fields](#get-fields)
+    - [GetUsageFieldsOptions](#getusagefieldsoptions)
+  - [Development and Contributing](#development-and-contributing)
+  - [Getting Help](#getting-help)
 
 # Getting an API Key
 
@@ -74,6 +74,19 @@ go get github.com/deepgram-devs/deepgram-go-sdk
 ```go
 dg := deepgram.NewClient(DEEPGRAM_API_KEY)
 ```
+
+# Testing
+
+## Using Example Projects to test new features
+
+Contributors to the SDK can test their changes locally by running the projects in the `examples` folder. This can be done when making changes without adding a unit test, but of course it is recommended that you add unit tests for any feature additions made to the SDK.
+
+Go to the folder `examples` and look for these two projects, which can be used to test out features in the Deepgram Go SDK:
+
+- prerecorded
+- streaming
+
+These are standalone projects, so you will need to follow the instructions in the README.md files for each project to get it running.
 
 # Transcription
 
