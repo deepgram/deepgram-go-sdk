@@ -4,10 +4,7 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 
 > This SDK only supports hosted usage of api.deepgram.com.
 
-<<<<<<< Updated upstream
-=======
 - [Deepgram Go SDK](#deepgram-go-sdk)
->>>>>>> Stashed changes
 - [Getting an API Key](#getting-an-api-key)
 - [Documentation](#documentation)
 - [Installation](#installation)
@@ -16,17 +13,10 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 - [Transcription](#transcription)
   - [Remote Files](#remote-files)
     - [UrlSource](#urlsource)
-<<<<<<< Updated upstream
-  - [Local Files](#local-files)
-    - [ReadStreamSource](#readstreamsource)
-    - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
-  - [Generating Captions](#generating-captions)
-=======
   - [Local files](#local-files)
     - [ReadStreamSource](#readstreamsource)
     - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
 - [Generating Captions](#generating-captions)
->>>>>>> Stashed changes
   - [Live Audio](#live-audio)
     - [LiveTranscriptionOptions](#livetranscriptionoptions)
 - [Projects](#projects)
@@ -52,20 +42,6 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
   - [Leave Project](#leave-project)
 - [Usage](#usage)
   - [Get All Requests](#get-all-requests)
-<<<<<<< Updated upstream
-    - [ListAllRequestOptions](#listallrequestoptions)
-  - [Get Request](#get-request)
-  - [Summarize Usage](#summarize-usage)
-    - [GetUsageSummaryOptions](#getusagesummaryoptions)
-  - [Get Fields](#get-fields)
-    - [GetUsageFieldsOptions](#getusagefieldsoptions)
-- [Billing](#billing)
-  - [Get All Balances](#get-all-balances)
-  - [Get Balance](#get-balance)
-- [Logging](#Logging)
-- [Development and Contributing](#development-and-contributing)
-- [Getting Help](#getting-help)
-=======
     - [UsageRequestListOptions](#usagerequestlistoptions)
   - [Get Request](#get-request)
   - [Summarize Usage](#summarize-usage)
@@ -74,7 +50,6 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
     - [GetUsageFieldsOptions](#getusagefieldsoptions)
   - [Development and Contributing](#development-and-contributing)
   - [Getting Help](#getting-help)
->>>>>>> Stashed changes
 
 # Getting an API Key
 
