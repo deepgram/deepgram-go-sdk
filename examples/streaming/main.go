@@ -14,10 +14,10 @@ import (
 )
 
 const (
-	DEEPGRAM_API_KEY   			= "DEEPGRAM_API_KEY"
-	STREAM_URL            	= "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
-	CHUNK_SIZE            	= 1024 * 2
-	TEN_MILLISECONDS_SLEEP 	= 10 * time.Millisecond
+	DEEPGRAM_API_KEY       = "DEEPGRAM_API_KEY"
+	STREAM_URL             = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
+	CHUNK_SIZE             = 1024 * 2
+	TEN_MILLISECONDS_SLEEP = 10 * time.Millisecond
 )
 
 func main() {
