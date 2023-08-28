@@ -4,6 +4,10 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 
 > This SDK only supports hosted usage of api.deepgram.com.
 
+<<<<<<< Updated upstream
+=======
+- [Deepgram Go SDK](#deepgram-go-sdk)
+>>>>>>> Stashed changes
 - [Getting an API Key](#getting-an-api-key)
 - [Documentation](#documentation)
 - [Installation](#installation)
@@ -12,10 +16,17 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 - [Transcription](#transcription)
   - [Remote Files](#remote-files)
     - [UrlSource](#urlsource)
+<<<<<<< Updated upstream
   - [Local Files](#local-files)
     - [ReadStreamSource](#readstreamsource)
     - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
   - [Generating Captions](#generating-captions)
+=======
+  - [Local files](#local-files)
+    - [ReadStreamSource](#readstreamsource)
+    - [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
+- [Generating Captions](#generating-captions)
+>>>>>>> Stashed changes
   - [Live Audio](#live-audio)
     - [LiveTranscriptionOptions](#livetranscriptionoptions)
 - [Projects](#projects)
@@ -41,6 +52,7 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
   - [Leave Project](#leave-project)
 - [Usage](#usage)
   - [Get All Requests](#get-all-requests)
+<<<<<<< Updated upstream
     - [ListAllRequestOptions](#listallrequestoptions)
   - [Get Request](#get-request)
   - [Summarize Usage](#summarize-usage)
@@ -53,6 +65,16 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 - [Logging](#Logging)
 - [Development and Contributing](#development-and-contributing)
 - [Getting Help](#getting-help)
+=======
+    - [UsageRequestListOptions](#usagerequestlistoptions)
+  - [Get Request](#get-request)
+  - [Summarize Usage](#summarize-usage)
+    - [UsageOptions](#usageoptions)
+  - [Get Fields](#get-fields)
+    - [GetUsageFieldsOptions](#getusagefieldsoptions)
+  - [Development and Contributing](#development-and-contributing)
+  - [Getting Help](#getting-help)
+>>>>>>> Stashed changes
 
 # Getting an API Key
 
@@ -77,6 +99,19 @@ go get github.com/deepgram-devs/deepgram-go-sdk
 ```go
 dg := deepgram.NewClient(DEEPGRAM_API_KEY)
 ```
+
+# Testing
+
+## Using Example Projects to test new features
+
+Contributors to the SDK can test their changes locally by running the projects in the `examples` folder. This can be done when making changes without adding a unit test, but of course it is recommended that you add unit tests for any feature additions made to the SDK.
+
+Go to the folder `examples` and look for these two projects, which can be used to test out features in the Deepgram Go SDK:
+
+- prerecorded
+- streaming
+
+These are standalone projects, so you will need to follow the instructions in the README.md files for each project to get it running.
 
 # Transcription
 
