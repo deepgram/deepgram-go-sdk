@@ -1,4 +1,5 @@
 # Deepgram Go SDK
+[![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4)](https://discord.gg/xWRaCDBtW4)
 
 Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
