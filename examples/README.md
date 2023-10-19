@@ -18,12 +18,12 @@ If the project requires third-party dependencies and not just standard library d
 go mod tidy
 ```
 
-### Edit the API key, the file, and the mimetype (as needed)
+### Set your API Key as an Environment Variable named "DEEPGRAM_API_KEY"
 
-Replace the API key where it says "YOUR_DEEPGRAM_API_KEY"
+If using bash, this could be done in your `.bash_profile` or this could also be done by a simple export seen below.
 
-```go
-DEEPGRAM_API_KEY = "YOUR_DEEPGRAM_API_KEY"
+```bash
+export DEEPGRAM_API_KEY = "YOUR_DEEPGRAM_API_KEY"
 ```
 
 ### Run the project

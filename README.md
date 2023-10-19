@@ -96,9 +96,10 @@ These are standalone projects, so you will need to follow the instructions in th
 ## Remote Files
 
 ```go
-dg := deepgram.NewClient("DEEPGRAM_API_KEY")
+dg := prerecorded.NewClient("DEEPGRAM_API_KEY")
+prClient := api.New(dg)
 
-res, err := dg.PreRecordedFromURL(deepgram.UrlSource{Url: "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"},
+res, err := prClient.PreRecordedFromURL(deepgram.UrlSource{Url: "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"},
 deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances: true})
 ```
 
@@ -113,15 +114,17 @@ deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances: true})
 ## Local files
 
 ```go
-dg := deepgram.NewClient("DEEPGRAM_API_KEY")
+dg := prerecorded.NewClient("DEEPGRAM_API_KEY")
+prClient := api.New(dg)
+
 file, err := os.Open("PATH_TO_LOCAL_FILE")
 
 if err != nil {
   fmt.Printf("error opening file %s:", file.Name())
   }
 
-source := deepgram.ReadStreamSource{Stream: file, Mimetype: "MIMETYPE_OF_YOUR_FILE"}
-res, err := dg.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true})
+source := api.ReadStreamSource{Stream: file, Mimetype: "MIMETYPE_OF_YOUR_FILE"}
+res, err := prClient.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true})
 if err != nil {
   fmt.Println("ERROR", err)
   return
@@ -169,7 +172,7 @@ if err != nil {
 ```go
 // The request can be from a local file stream or a URL
 // Turn on utterances with {Utterances: true} for captions to work
-res, err := dg.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances:true})
+res, err := prClient.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances:true})
 
 // Convert the results to WebVTT format
 vtt, err := res.ToWebVTT()
@@ -181,12 +184,11 @@ stt, err := res.ToSRT()
 ## Live Audio
 
 ```go
-dg := *deepgram.NewClient("DEEPGRAM_API_KEY")
 options := deepgram.LiveTranscriptionOptions{
 		Language:  "en-US",
 		Punctuate: true,
 	}
-ws, _, err := dg.LiveTranscription(options)
+dg, _, err := live.New(options, "DEEPGRAM_API_KEY")
 ```
 
 #### LiveTranscriptionOptions
@@ -202,8 +204,9 @@ See [API Reference](https://developers.deepgram.com/reference/streaming)
 Returns all projects accessible by the API key.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
-res, err := dg.ListProjects()
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+res, err := mgClient.ListProjects()
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-projects).
@@ -213,8 +216,9 @@ res, err := dg.ListProjects()
 Retrieves a specific project based on the provided projectId.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
-res, err := dg.GetProject(projectId)
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+res, err := mgClient.GetProject(projectId)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-project).
@@ -224,14 +228,16 @@ res, err := dg.GetProject(projectId)
 Update a project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 options := deepgram.ProjectUpdateOptions{
 	Name: "NAME_OF_PROJECT",
 	Company:"COMPANY",
 }
 
-res, err := dg.UpdateProject(projectID, options)
+res, err := mgClient.UpdateProject(projectID, options)
 ```
 
 **Project Type**
@@ -249,10 +255,12 @@ res, err := dg.UpdateProject(projectID, options)
 Delete a project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 
-res, err := dg.DeleteProject(projectID)
+res, err := mgClient.DeleteProject(projectID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/delete-project).
@@ -266,10 +274,12 @@ res, err := dg.DeleteProject(projectID)
 Retrieves all keys associated with the provided project_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 
-res, err := dg.ListKeys(projectID)
+res, err := mgClient.ListKeys(projectID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/list-keys).
@@ -279,11 +289,13 @@ res, err := dg.ListKeys(projectID)
 Retrieves a specific key associated with the provided project_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 keyID := "YOUR_KEY_ID"
 
-res, err := dg.GetKey(projectID, keyID)
+res, err := mgClient.GetKey(projectID, keyID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-key).
@@ -293,7 +305,9 @@ res, err := dg.GetKey(projectID, keyID)
 Creates an API key with the provided scopes.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 comment := "A comment"
 scopes := []string{"admin", "member"}
@@ -303,7 +317,7 @@ options := deepgram.CreateKeyOptions{
 		Tags:           []string{"tag1", "tag2"},
 }
 
-res, err := dg.CreateKey(projectID, comment, scopes, options)
+res, err := mgClient.CreateKey(projectID, comment, scopes, options)
 
 ```
 
@@ -314,11 +328,13 @@ res, err := dg.CreateKey(projectID, comment, scopes, options)
 Deletes a specific key associated with the provided project_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 keyID := "YOUR_KEY_ID"
 
-res, err := dg.DeleteKey(projectID, keyID)
+res, err := mgClient.DeleteKey(projectID, keyID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/delete-key).
@@ -332,10 +348,12 @@ res, err := dg.DeleteKey(projectID, keyID)
 Retrieves account objects for all of the accounts in the specified project_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 
-res, err := dg.ListMembers(projectID)
+res, err := mgClient.ListMembers(projectID)
 
 ```
 
@@ -346,11 +364,13 @@ res, err := dg.ListMembers(projectID)
 Removes member account for specified member_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 memberID := "YOUR_MEMBER_ID"
 
-res, err := dg.RemoveMember(projectID, memberID)
+res, err := mgClient.RemoveMember(projectID, memberID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/remove-member).
@@ -364,11 +384,13 @@ res, err := dg.RemoveMember(projectID, memberID)
 Retrieves scopes of the specified member in the specified project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 memberID := "YOUR_MEMBER_ID"
 
-res, err := dg.GetMemberScopes(projectID, memberID)
+res, err := mgClient.GetMemberScopes(projectID, memberID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-member-scopes).
@@ -378,12 +400,14 @@ res, err := dg.GetMemberScopes(projectID, memberID)
 Updates the scope for the specified member in the specified project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 memberID := "THEIR_MEMBER_ID"
 scope := "SCOPE_TO_ASSIGN"
 
-res, err := dg.UpdateMemberScopes(projectID, memberID, scope)
+res, err := mgClient.UpdateMemberScopes(projectID, memberID, scope)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/update-scope).
@@ -395,10 +419,12 @@ res, err := dg.UpdateMemberScopes(projectID, memberID, scope)
 Retrieves all invitations associated with the provided project_id.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 
-res, err := dg.ListInvitations(projectID)
+res, err := mgClient.ListInvitations(projectID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/list-invites).
@@ -408,14 +434,16 @@ res, err := dg.ListInvitations(projectID)
 Sends an invitation to the provided email address.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 invitationOptions := deepgram.InvitationOptions{
     Email: "",
 		Scope: "",
 }
 
-res, err := dg.SendInvitation(projectID, invitationOptions)
+res, err := mgClient.SendInvitation(projectID, invitationOptions)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/send-invites).
@@ -425,11 +453,13 @@ res, err := dg.SendInvitation(projectID, invitationOptions)
 Removes the specified invitation from the project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 email := ""
 
-res, err := dg.DeleteInvitation(projectID, email)
+res, err := mgClient.DeleteInvitation(projectID, email)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/delete-invite).
@@ -439,10 +469,12 @@ res, err := dg.DeleteInvitation(projectID, email)
 Removes the authenticated user from the project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 
-res, err := dg.LeaveProject(projectID)
+res, err := mgClient.LeaveProject(projectID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/leave-project).
@@ -456,7 +488,9 @@ res, err := dg.LeaveProject(projectID)
 Retrieves all requests associated with the provided projectId based on the provided options.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 options := deepgram.UsageRequestListOptions{
     Start: "2009-11-10",
@@ -466,7 +500,7 @@ options := deepgram.UsageRequestListOptions{
 		Status: "failed",
 }
 
-res, err := dg.ListRequests(projectID, options)
+res, err := mgClient.ListRequests(projectID, options)
 ```
 
 #### UsageRequestListOptions
@@ -486,10 +520,12 @@ res, err := dg.ListRequests(projectID, options)
 Retrieves a specific request associated with the provided projectId.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 requestID := "REQUEST_ID"
-res, err := dg.GetRequest(projectID, requestID)
+res, err := mgClient.GetRequest(projectID, requestID)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/get-request).
@@ -499,14 +535,16 @@ res, err := dg.GetRequest(projectID, requestID)
 Retrieves usage associated with the provided project_id based on the provided options.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 options := deepgram.UsageOptions{
 	  Start: "2009-11-10",
 		End: "2029-11-10",
 }
 
-res, err := dg.GetUsage(projectID, options)
+res, err := mgClient.GetUsage(projectID, options)
 ```
 
 #### UsageOptions
@@ -523,13 +561,15 @@ res, err := dg.GetUsage(projectID, options)
 Lists the features, models, tags, languages, and processing method used for requests in the specified project.
 
 ```go
-dg := deepgram.NewClient("YOUR_API_KEY")
+dg := manage.New("YOUR_API_KEY")
+mgClient := api.New(dg)
+
 projectID := "YOUR_PROJECT_ID"
 options := deepgram.UsageRequestListOptions{
     Start: "2009-11-10",
 		End: "2029-11-10",
 }
-res, err := dg.GetFields(projectID, options)
+res, err := mgClient.GetFields(projectID, options)
 ```
 
 #### GetUsageFieldsOptions

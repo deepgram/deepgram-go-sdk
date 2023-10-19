@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"fmt"
@@ -25,10 +25,10 @@ type ScopeList struct {
 	Scopes []string `json:"scopes"`
 }
 
-func (dg *Client) ListMembers(projectId string) (MemberList, error) {
+func (dg *ManageClient) ListMembers(projectId string) (MemberList, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/members", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/members", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -36,7 +36,7 @@ func (dg *Client) ListMembers(projectId string) (MemberList, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -61,10 +61,10 @@ func (dg *Client) ListMembers(projectId string) (MemberList, error) {
 	}
 }
 
-func (dg *Client) RemoveMember(projectId string, memberId string) (Message, error) {
+func (dg *ManageClient) RemoveMember(projectId string, memberId string) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/members/%s", dg.Path, projectId, memberId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/members/%s", dg.Client.Path, projectId, memberId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -72,7 +72,7 @@ func (dg *Client) RemoveMember(projectId string, memberId string) (Message, erro
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -97,10 +97,10 @@ func (dg *Client) RemoveMember(projectId string, memberId string) (Message, erro
 	}
 }
 
-func (dg *Client) GetMemberScopes(projectId string, memberId string) (ScopeList, error) {
+func (dg *ManageClient) GetMemberScopes(projectId string, memberId string) (ScopeList, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/members/%s/scopes", dg.Path, projectId, memberId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/members/%s/scopes", dg.Client.Path, projectId, memberId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -108,7 +108,7 @@ func (dg *Client) GetMemberScopes(projectId string, memberId string) (ScopeList,
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -137,11 +137,11 @@ type MemberScope struct {
 	Scope string `json:"scope"`
 }
 
-func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope string) (Message, error) {
+func (dg *ManageClient) UpdateMemberScopes(projectId string, memberId string, scope string) (Message, error) {
 	newScope := fmt.Sprintf(`{"scope":"%s"}`, scope)
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/members/%s/scopes", dg.Path, projectId, memberId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/members/%s/scopes", dg.Client.Path, projectId, memberId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("PUT", u.String(), strings.NewReader(newScope))
 	if err != nil {
 		//Handle Error
@@ -149,7 +149,7 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -175,10 +175,10 @@ func (dg *Client) UpdateMemberScopes(projectId string, memberId string, scope st
 	}
 }
 
-func (dg *Client) LeaveProject(projectId string) (Message, error) {
+func (dg *ManageClient) LeaveProject(projectId string) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/leave", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/leave", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -186,7 +186,7 @@ func (dg *Client) LeaveProject(projectId string) (Message, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},

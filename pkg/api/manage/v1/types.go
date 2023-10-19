@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"bytes"

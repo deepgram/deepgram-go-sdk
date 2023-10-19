@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"bytes"
@@ -25,10 +25,10 @@ type ProjectUpdateOptions struct {
 	Company string `json:"company,omitempty"`
 }
 
-func (dg *Client) ListProjects() (ProjectResponse, error) {
+func (dg *ManageClient) ListProjects() (ProjectResponse, error) {
 	client := new(http.Client)
-	// path := fmt.Sprintf("%s", dg.Path)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.Path}
+	// path := fmt.Sprintf("%s", dg.Client.Path)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: dg.Client.Path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -36,7 +36,7 @@ func (dg *Client) ListProjects() (ProjectResponse, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -61,10 +61,10 @@ func (dg *Client) ListProjects() (ProjectResponse, error) {
 	}
 }
 
-func (dg *Client) GetProject(projectId string) (Project, error) {
+func (dg *ManageClient) GetProject(projectId string) (Project, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -72,7 +72,7 @@ func (dg *Client) GetProject(projectId string) (Project, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -97,10 +97,10 @@ func (dg *Client) GetProject(projectId string) (Project, error) {
 	}
 }
 
-func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) (Message, error) {
+func (dg *ManageClient) UpdateProject(projectId string, options ProjectUpdateOptions) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	jsonStr, err := json.Marshal(options)
 	if err != nil {
 		log.Panic(err)
@@ -113,7 +113,7 @@ func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) 
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -138,10 +138,10 @@ func (dg *Client) UpdateProject(projectId string, options ProjectUpdateOptions) 
 	}
 }
 
-func (dg *Client) DeleteProject(projectId string) (Message, error) {
+func (dg *ManageClient) DeleteProject(projectId string) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
@@ -150,7 +150,7 @@ func (dg *Client) DeleteProject(projectId string) (Message, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},

@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"bytes"
@@ -41,10 +41,10 @@ type CreateKeyRequest struct {
 	TimeToLive     int      `json:"time_to_live,omitempty"`
 }
 
-func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
+func (dg *ManageClient) ListKeys(projectId string) (KeyResponse, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/keys", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -52,7 +52,7 @@ func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -77,10 +77,10 @@ func (dg *Client) ListKeys(projectId string) (KeyResponse, error) {
 	}
 }
 
-func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error) {
+func (dg *ManageClient) GetKey(projectId string, keyId string) (KeyResponseObj, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys/%s", dg.Path, projectId, keyId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/keys/%s", dg.Client.Path, projectId, keyId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -88,7 +88,7 @@ func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error)
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -114,7 +114,7 @@ func (dg *Client) GetKey(projectId string, keyId string) (KeyResponseObj, error)
 	}
 }
 
-func (dg *Client) CreateKey(projectId string, comment string, scopes []string, options CreateKeyOptions) (Key, error) {
+func (dg *ManageClient) CreateKey(projectId string, comment string, scopes []string, options CreateKeyOptions) (Key, error) {
 	var expirationDate string
 	if options.ExpirationDate.IsZero() {
 		expirationDate = ""
@@ -133,8 +133,8 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 		log.Panic(err)
 	}
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/keys", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("POST", u.String(), buf)
 	if err != nil {
 		//Handle Error
@@ -142,7 +142,7 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -168,10 +168,10 @@ func (dg *Client) CreateKey(projectId string, comment string, scopes []string, o
 	}
 }
 
-func (dg *Client) DeleteKey(projectId string, keyId string) (Message, error) {
+func (dg *ManageClient) DeleteKey(projectId string, keyId string) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys/%s", dg.Path, projectId, keyId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/keys/%s", dg.Client.Path, projectId, keyId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -179,7 +179,7 @@ func (dg *Client) DeleteKey(projectId string, keyId string) (Message, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
