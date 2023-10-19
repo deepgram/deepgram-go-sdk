@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"fmt"
@@ -19,10 +19,10 @@ type BalanceList struct {
 	Balances []Balance `json:"balances"`
 }
 
-func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
+func (dg *ManageClient) ListBalances(projectId string) (BalanceList, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/balances", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/balances", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -30,7 +30,7 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -55,10 +55,10 @@ func (dg *Client) ListBalances(projectId string) (BalanceList, error) {
 	}
 }
 
-func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error) {
+func (dg *ManageClient) GetBalance(projectId string, balanceId string) (Balance, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/balances/%s", dg.Path, projectId, balanceId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/balances/%s", dg.Client.Path, projectId, balanceId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -66,7 +66,7 @@ func (dg *Client) GetBalance(projectId string, balanceId string) (Balance, error
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},

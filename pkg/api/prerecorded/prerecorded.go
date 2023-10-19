@@ -1,4 +1,4 @@
-package deepgram
+package prerecorded
 
 import (
 	"bytes"
@@ -9,10 +9,32 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"runtime"
 	"strings"
 
 	"github.com/google/go-querystring/query"
+
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
+
+var sdkVersion string = "0.10.0"
+var dgAgent string = "@deepgram/sdk/" + sdkVersion + " go/" + goVersion()
+
+func goVersion() string {
+	version := runtime.Version()
+	if strings.HasPrefix(version, "go") {
+		return version[2:]
+	}
+	return version
+}
+
+type PrerecordedClient struct {
+	*client.Client
+}
+
+func New(client *client.Client) *PrerecordedClient {
+	return &PrerecordedClient{client}
+}
 
 type PreRecordedTranscriptionOptions struct {
 	Alternatives       int         `json:"alternatives" url:"alternatives,omitempty" `
@@ -187,10 +209,10 @@ type SummaryV2 struct {
 	Result string `json:"result"`
 }
 
-func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
+func (dg *PrerecordedClient) PreRecordedFromStream(source ReadStreamSource, options PreRecordedTranscriptionOptions) (*PreRecordedResponse, error) {
 	client := &http.Client{}
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.TranscriptionPath, RawQuery: query.Encode()}
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: dg.Client.TranscriptionPath, RawQuery: query.Encode()}
 
 	// TODO: accept file path as string build io.Reader here
 	req, err := http.NewRequest("POST", u.String(), source.Stream)
@@ -200,9 +222,9 @@ func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreReco
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{source.Mimetype},
-		"Authorization": []string{"token " + dg.ApiKey},
+		"Authorization": []string{"token " + dg.Client.ApiKey},
 		"User-Agent":    []string{dgAgent},
 	}
 
@@ -226,10 +248,10 @@ func (dg *Client) PreRecordedFromStream(source ReadStreamSource, options PreReco
 	return &result, nil
 }
 
-func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
+func (dg *PrerecordedClient) PreRecordedFromURL(source UrlSource, options PreRecordedTranscriptionOptions) (PreRecordedResponse, error) {
 	client := new(http.Client)
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: dg.TranscriptionPath, RawQuery: query.Encode()}
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: dg.Client.TranscriptionPath, RawQuery: query.Encode()}
 	jsonStr, err := json.Marshal(source)
 	if err != nil {
 		log.Panic(err)
@@ -243,9 +265,9 @@ func (dg *Client) PreRecordedFromURL(source UrlSource, options PreRecordedTransc
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
+		"Authorization": []string{"token " + dg.Client.ApiKey},
 		"User-Agent":    []string{dgAgent},
 	}
 
@@ -310,4 +332,10 @@ func SecondsToTimestamp(seconds float64) string {
 	minutes := int((seconds - float64(hours*3600)) / 60)
 	seconds = seconds - float64(hours*3600) - float64(minutes*60)
 	return fmt.Sprintf("%02d:%02d:%02.3f", hours, minutes, seconds)
+}
+
+func GetJson(resp *http.Response, target interface{}) error {
+	defer resp.Body.Close()
+
+	return json.NewDecoder(resp.Body).Decode(target)
 }

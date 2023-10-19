@@ -7,21 +7,32 @@ import (
 	"os"
 	"strings"
 
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded"
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func main() {
-	credentials := "DEEPGRAM_API_KEY"
-	dg := deepgram.NewClient(credentials)
+	var deepgramApiKey string
+	if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
+		log.Println("DEEPGRAM_API_KEY found")
+		deepgramApiKey = v
+	} else {
+		log.Fatal("DEEPGRAM_API_KEY not found")
+		os.Exit(1)
+	}
+
+	dg := client.New(deepgramApiKey)
+
+	prClient := api.New(dg)
 
 	filePath := "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
 	var res interface{}
 	var err error
 
 	if isURL(filePath) {
-		res, err = dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: filePath},
-			deepgram.PreRecordedTranscriptionOptions{
+		res, err = prClient.PreRecordedFromURL(
+			api.UrlSource{Url: filePath},
+			api.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
@@ -39,11 +50,11 @@ func main() {
 		}
 		defer file.Close()
 
-		source := deepgram.ReadStreamSource{Stream: file, Mimetype: "YOUR_FILE_MIME_TYPE"}
+		source := api.ReadStreamSource{Stream: file, Mimetype: "YOUR_FILE_MIME_TYPE"}
 
-		res, err = dg.PreRecordedFromStream(
+		res, err = prClient.PreRecordedFromStream(
 			source,
-			deepgram.PreRecordedTranscriptionOptions{
+			api.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
