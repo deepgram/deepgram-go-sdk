@@ -20,25 +20,18 @@ import (
 )
 
 func main() {
-	var deepgramApiKey string
-	if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-		log.Println("DEEPGRAM_API_KEY found")
-		deepgramApiKey = v
-	} else {
-		log.Fatal("DEEPGRAM_API_KEY not found")
-		os.Exit(1)
-	}
-
 	// context
 	ctx := context.Background()
 
-	c := client.New(deepgramApiKey)
+	//client
+	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
 
 	filePath := "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
 	var res interface{}
 	var err error
 
+	// send stream
 	if isURL(filePath) {
 		res, err = dg.FromURL(
 			ctx,

@@ -5,11 +5,6 @@
 package interfaces
 
 type PreRecordedTranscriptionOptions struct {
-	// internal
-	Host       string `url:"-"`
-	ApiVersion string `url:"-"`
-
-	// live options
 	Alternatives       int         `json:"alternatives" url:"alternatives,omitempty" `
 	AnalyzeSentiment   bool        `json:"analyze_sentiment" url:"analyze_sentiment,omitempty" `
 	Callback           string      `json:"callback" url:"callback,omitempty" `

@@ -11,10 +11,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 
 	"github.com/google/go-querystring/query"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
 )
 
 const (
@@ -22,15 +24,33 @@ const (
 	PrerecordedAPIVersion string = "v1"
 
 	// paths
-	PrerecordedPath string = "%s/listen"
+	PrerecordedPath string = "listen"
 )
 
-func GetPrerecordedAPI(ctx context.Context, options interfaces.PreRecordedTranscriptionOptions) (string, error) {
-	if options.Host == "" {
-		options.Host = DefaultHost
+func GetPrerecordedAPI(ctx context.Context, host, version, path string, options interfaces.PreRecordedTranscriptionOptions, args ...interface{}) (string, error) {
+	if path == "" {
+		return "", ErrInvalidPath
 	}
-	if options.ApiVersion == "" {
-		options.ApiVersion = PrerecordedAPIVersion
+
+	if host == "" {
+		host = common.DefaultHost
+	}
+	if version == "" {
+		version = PrerecordedAPIVersion
+	}
+
+	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
+	if err != nil {
+		// fmt.Printf("regexp.Compile err: %v\n", err)
+		return "", err
+	}
+
+	match := r.MatchString(path)
+	fmt.Printf("match: %t\n", match)
+
+	if match {
+		// version = r.FindStringSubmatch(path)[0]
+		path = r.ReplaceAllString(path, "")
 	}
 
 	q, err := query.Values(options)
@@ -46,6 +66,9 @@ func GetPrerecordedAPI(ctx context.Context, options interfaces.PreRecordedTransc
 		}
 	}
 
-	u := url.URL{Scheme: "https", Host: options.Host, Path: fmt.Sprintf(PrerecordedPath, options.ApiVersion), RawQuery: q.Encode()}
+	fullpath := fmt.Sprintf("%%s/%s", path)
+	completeFullpath := fmt.Sprintf(fullpath, append([]interface{}{version}, args...)...)
+	u := url.URL{Scheme: "https", Host: host, Path: completeFullpath, RawQuery: q.Encode()}
+
 	return u.String(), nil
 }

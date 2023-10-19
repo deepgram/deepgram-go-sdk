@@ -25,11 +25,11 @@ import (
 )
 
 func NewWithDefaults(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, apiKey, options, nil)
+	return New(ctx, apiKey, &ClientOptions{}, options, nil)
 }
 
 // New create new websocket connection
-func New(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func New(ctx context.Context, apiKey string, cOptions *ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
@@ -46,7 +46,8 @@ func New(ctx context.Context, apiKey string, options interfaces.LiveTranscriptio
 	// init
 	conn := Client{
 		apiKey:   apiKey,
-		options:  options,
+		cOptions: cOptions,
+		tOptions: tOptions,
 		sendBuf:  make(chan []byte, 1),
 		callback: callback,
 		router:   live.New(callback),
@@ -96,8 +97,8 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
 		TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
-		RedirectService:  c.options.RedirectService,
-		SkipServerAuth:   c.options.SkipServerAuth,
+		RedirectService:  c.cOptions.RedirectService,
+		SkipServerAuth:   c.cOptions.SkipServerAuth,
 	}
 
 	// set websocket headers
@@ -114,7 +115,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	}
 
 	// sets the API key
-	myHeader.Set("Host", c.options.Host)
+	myHeader.Set("Host", c.cOptions.Host)
 	myHeader.Set("Authorization", "token "+c.apiKey)
 	myHeader.Set("User-Agent", interfaces.DgAgent)
 
@@ -135,7 +136,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		i++
 
 		// create new connection
-		url, err := version.GetLiveAPI(c.org, c.options)
+		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.ApiVersion, version.LivePath, c.tOptions)
 		if err != nil {
 			log.Printf("version.GetLiveAPI failed. Err: %v\n", err)
 			return nil // no point in retrying because this is going to fail on every retry
@@ -147,7 +148,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		// c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
 		ws, _, err := dialer.DialContext(c.ctx, url, myHeader)
 		if err != nil {
-			log.Printf("Cannot connect to websocket: %s\n", c.options.Host)
+			log.Printf("Cannot connect to websocket: %s\n", c.cOptions.Host)
 			continue
 		}
 

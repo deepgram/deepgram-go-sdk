@@ -5,13 +5,10 @@
 package manage
 
 import (
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	"errors"
 )
 
-type ManageClient struct {
-	*client.Client
-}
-
-func New(client *client.Client) *ManageClient {
-	return &ManageClient{client}
-}
+var (
+	// ErrUnexpectedInterface unexpected interface encountered
+	ErrUnexpectedInterface = errors.New("unexpected interface encountered")
+)

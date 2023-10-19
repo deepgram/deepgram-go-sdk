@@ -15,10 +15,18 @@ import (
 	"os"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
 )
 
+func NewWithDefaults() *Client {
+	return New("", &ClientOptions{})
+}
+
 // New allocated a REST client
-func New(apiKey string) *Client {
+func New(apiKey string, options *ClientOptions) *Client {
+	if options.Host == "" {
+		options.Host = common.DefaultHost
+	}
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
@@ -31,7 +39,8 @@ func New(apiKey string) *Client {
 
 	c := Client{
 		HttpClient: NewHTTPClient(),
-		ApiKey:     apiKey,
+		Options:    options,
+		apiKey:     apiKey,
 	}
 	return &c
 }
@@ -51,7 +60,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	// req.Header.Set("Host", c.options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {

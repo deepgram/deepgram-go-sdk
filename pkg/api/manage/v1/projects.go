@@ -6,177 +6,199 @@ package manage
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"net/url"
+
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
+	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-type Project struct {
-	ProjectId string `json:"project_id"`
-	Name      string `json:"name,omitempty"`
-	Company   string `json:"company,omitempty"`
+func (c *ManageClient) ListProjects(ctx context.Context) (*api.ProjectsResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsURI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.ProjectsResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-type ProjectResponse struct {
-	Projects []Project `json:"projects"`
+func (c *ManageClient) GetProject(ctx context.Context, projectId string) (*api.ProjectResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.ProjectResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-type ProjectUpdateOptions struct {
-	Name    string `json:"name,omitempty"`
-	Company string `json:"company,omitempty"`
+func (c *ManageClient) UpdateProject(ctx context.Context, projectId string, proj *api.ProjectUpdateRequest) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	jsonStr, err := json.Marshal(proj)
+	if err != nil {
+		// klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "PATCH", URI, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-func (dg *ManageClient) ListProjects() (ProjectResponse, error) {
-	client := new(http.Client)
-	// path := fmt.Sprintf("%s", dg.Client.Path)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: dg.Client.Path}
-	req, err := http.NewRequest("GET", u.String(), nil)
+func (c *ManageClient) DeleteProject(ctx context.Context, projectId string) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
 	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
+	log.Printf("Calling %s\n", URI) // TODO
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result ProjectResponse
-	res, err := client.Do(req)
+	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
 	if err != nil {
-		return result, err
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
-	if res.StatusCode != 200 {
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
 
-	if jsonErr != nil {
-		fmt.Printf("error getting projects: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
 
-func (dg *ManageClient) GetProject(projectId string) (Project, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result Project
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error getting project %s: %s\n", projectId, jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
-
-func (dg *ManageClient) UpdateProject(projectId string, options ProjectUpdateOptions) (Message, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	jsonStr, err := json.Marshal(options)
-	if err != nil {
-		log.Panic(err)
-		return Message{}, err
-	}
-	req, err := http.NewRequest("PATCH", u.String(), bytes.NewBuffer(jsonStr))
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
-	}
-
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result Message
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error updating project %s: %s\n", projectId, jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
-
-func (dg *ManageClient) DeleteProject(projectId string) (Message, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-
-	req, err := http.NewRequest("DELETE", u.String(), nil)
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
-	}
-
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result Message
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error deleting project %s: %s\n", projectId, jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return Message{
-			Message: "Project Successfully Deleted",
-		}, nil
-	}
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }

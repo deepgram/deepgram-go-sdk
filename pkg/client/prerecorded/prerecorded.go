@@ -26,7 +26,11 @@ type urlSource struct {
 }
 
 // New allocated a REST client
-func New(apiKey string) *Client {
+func NewWithDefaults() *Client {
+	return New("", &ClientOptions{})
+}
+
+func New(apiKey string, options *ClientOptions) *Client {
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
@@ -38,7 +42,11 @@ func New(apiKey string) *Client {
 	}
 
 	c := Client{
-		Client: rest.New(apiKey),
+		Client: rest.New(apiKey, &rest.ClientOptions{
+			Host:    options.Host,
+			Version: options.Version,
+		}),
+		apiKey: apiKey,
 	}
 	return &c
 }
@@ -71,7 +79,7 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 	//klog.V(6).Infof("rest.doCommonFile ENTER\n")
 
 	// obtain URL
-	URI, err := version.GetPrerecordedAPI(ctx, options)
+	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
 		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		return err
@@ -95,10 +103,10 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		}
 	}
 
-	req.Header.Set("Host", options.Host)
+	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	err = c.HttpClient.Do(ctx, req, func(res *http.Response) error {
@@ -176,7 +184,7 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 	}
 
 	// obtain URL
-	URI, err := version.GetPrerecordedAPI(ctx, options)
+	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
 		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		return err
@@ -208,9 +216,9 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 		}
 	}
 
-	req.Header.Set("Host", options.Host)
+	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
@@ -289,7 +297,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	// req.Header.Set("Host", c.options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {

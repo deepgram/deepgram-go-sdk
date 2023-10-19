@@ -11,10 +11,12 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"regexp"
 
 	"github.com/google/go-querystring/query"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
 )
 
 const (
@@ -22,15 +24,33 @@ const (
 	LiveAPIVersion string = "v1"
 
 	// paths
-	LivePath string = "%s/listen"
+	LivePath string = "listen"
 )
 
-func GetLiveAPI(ctx context.Context, options interfaces.LiveTranscriptionOptions) (string, error) {
-	if options.Host == "" {
-		options.Host = DefaultHost
+func GetLiveAPI(ctx context.Context, host, version, path string, options interfaces.LiveTranscriptionOptions, args ...interface{}) (string, error) {
+	if path == "" {
+		return "", ErrInvalidPath
 	}
-	if options.ApiVersion == "" {
-		options.ApiVersion = LiveAPIVersion
+
+	if host == "" {
+		host = common.DefaultHost
+	}
+	if version == "" {
+		version = LiveAPIVersion
+	}
+
+	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
+	if err != nil {
+		// fmt.Printf("regexp.Compile err: %v\n", err)
+		return "", err
+	}
+
+	match := r.MatchString(path)
+	fmt.Printf("match: %t\n", match)
+
+	if match {
+		// version = r.FindStringSubmatch(path)[0]
+		path = r.ReplaceAllString(path, "")
 	}
 
 	q, err := query.Values(options)
@@ -46,6 +66,9 @@ func GetLiveAPI(ctx context.Context, options interfaces.LiveTranscriptionOptions
 		}
 	}
 
-	u := url.URL{Scheme: "wss", Host: options.Host, Path: fmt.Sprintf(LivePath, options.ApiVersion), RawQuery: q.Encode()}
+	fullpath := fmt.Sprintf("%%s/%s", path)
+	completeFullpath := fmt.Sprintf(fullpath, append([]interface{}{version}, args...)...)
+	u := url.URL{Scheme: "wss", Host: host, Path: completeFullpath, RawQuery: q.Encode()}
+
 	return u.String(), nil
 }

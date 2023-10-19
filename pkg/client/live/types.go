@@ -15,10 +15,20 @@ import (
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
+// ClientOptions defines any options for the client
+type ClientOptions struct {
+	Host            string
+	ApiVersion      string
+	Path            string
+	RedirectService bool
+	SkipServerAuth  bool
+}
+
 // Client return websocket client connection
 type Client struct {
-	apiKey  string
-	options interfaces.LiveTranscriptionOptions
+	cOptions *ClientOptions
+	apiKey   string
+	tOptions interfaces.LiveTranscriptionOptions
 
 	sendBuf   chan []byte
 	org       context.Context

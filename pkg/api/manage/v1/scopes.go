@@ -5,7 +5,9 @@
 package manage
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -14,14 +16,14 @@ import (
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.MembersResult, error) {
+func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, memberId string) (*api.ScopeResult, error) {
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
@@ -37,7 +39,7 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	}
 
 	// Do it!
-	var resp api.MembersResult
+	var resp api.ScopeResult
 	err = c.Client.Do(ctx, req, &resp)
 
 	if err != nil {
@@ -59,14 +61,14 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	return &resp, nil
 }
 
-func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, memberId string) (*api.MessageResult, error) {
+func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string, memberId string, scope *api.ScopeUpdateRequest) (*api.MessageResult, error) {
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersByIdURI, nil, projectId, memberId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
@@ -74,7 +76,14 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	}
 	log.Printf("Calling %s\n", URI) // TODO
 
-	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
+	jsonStr, err := json.Marshal(scope)
+	if err != nil {
+		// klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "PUT", URI, bytes.NewBuffer(jsonStr))
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
