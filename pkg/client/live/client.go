@@ -12,33 +12,28 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"time"
 
 	// gabs "github.com/Jeffail/gabs/v2"
 	"github.com/dvonthenen/websocket"
-	"github.com/google/go-querystring/query"
 
 	live "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1"
 	msginterfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-func NewWithDefaults(ctx context.Context, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	creds := Credentials{}
-	return New(ctx, &creds, options, nil)
+func NewWithDefaults(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions) (*Client, error) {
+	return New(ctx, apiKey, options, nil)
 }
 
 // New create new websocket connection
-func New(ctx context.Context, creds *Credentials, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	if creds.Host == "" {
-		creds.Host = "api.deepgram.com"
-	}
-	if creds.ApiKey == "" {
+func New(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
-			creds.ApiKey = v
+			apiKey = v
 		} else {
 			return nil, errors.New("DEEPGRAM_API_KEY not found")
 		}
@@ -50,8 +45,8 @@ func New(ctx context.Context, creds *Credentials, options interfaces.LiveTranscr
 
 	// init
 	conn := Client{
+		apiKey:   apiKey,
 		options:  options,
-		creds:    creds,
 		sendBuf:  make(chan []byte, 1),
 		callback: callback,
 		router:   live.New(callback),
@@ -101,8 +96,8 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
 		TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
-		RedirectService:  c.creds.RedirectService,
-		SkipServerAuth:   c.creds.SkipServerAuth,
+		RedirectService:  c.options.RedirectService,
+		SkipServerAuth:   c.options.SkipServerAuth,
 	}
 
 	// set websocket headers
@@ -119,8 +114,8 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	}
 
 	// sets the API key
-	myHeader.Set("Host", "token "+c.creds.Host)
-	myHeader.Set("Authorization", "token "+c.creds.ApiKey)
+	myHeader.Set("Host", c.options.Host)
+	myHeader.Set("Authorization", "token "+c.apiKey)
 	myHeader.Set("User-Agent", interfaces.DgAgent)
 
 	// attempt to establish connection
@@ -140,16 +135,19 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		i++
 
 		// create new connection
-		query, _ := query.Values(c.options)
-		u := url.URL{Scheme: "wss", Host: c.creds.Host, Path: "/v1/listen", RawQuery: query.Encode()}
-
-		// TODO: DO NOT PRINT
-		// log.Printf("***REMOVE*** connecting to %s", u.String())
-
-		// c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
-		ws, _, err := dialer.DialContext(c.ctx, u.String(), myHeader)
+		url, err := version.GetLiveAPI(c.org, c.options)
 		if err != nil {
-			log.Printf("Cannot connect to websocket: %s\n", u.Host)
+			log.Printf("version.GetLiveAPI failed. Err: %v\n", err)
+			return nil // no point in retrying because this is going to fail on every retry
+		}
+		// TODO: DO NOT PRINT
+		log.Printf("Connecting to %s\n", url)
+
+		// TODO: handle resp variable
+		// c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
+		ws, _, err := dialer.DialContext(c.ctx, url, myHeader)
+		if err != nil {
+			log.Printf("Cannot connect to websocket: %s\n", c.options.Host)
 			continue
 		}
 

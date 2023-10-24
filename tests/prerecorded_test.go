@@ -5,6 +5,7 @@
 package deepgram_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,7 +13,8 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
-	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded"
+	prerecorded "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
@@ -122,11 +124,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
 
 	t.Run("Test Basic PreRecordedFromURL", func(t *testing.T) {
-		dg := client.New(MockAPIKey)
-		prClient := api.New(dg)
-		_, err := prClient.PreRecordedFromURL(
-			api.UrlSource{Url: MockAudioURL},
-			api.PreRecordedTranscriptionOptions{})
+		c := client.New(MockAPIKey)
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{})
 
 		if err != nil {
 			t.Errorf("should succeed, but got %s", err)
@@ -134,11 +138,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v1", func(t *testing.T) {
-		dg := client.New(MockAPIKey)
-		prClient := api.New(dg)
-		_, err := prClient.PreRecordedFromURL(
-			api.UrlSource{Url: MockAudioURL},
-			api.PreRecordedTranscriptionOptions{
+		c := client.New(MockAPIKey)
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{
 				Summarize: true,
 			})
 
@@ -148,11 +154,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v2", func(t *testing.T) {
-		dg := client.New(MockAPIKey).WithHost(betaHost)
-		prClient := api.New(dg)
-		_, err := prClient.PreRecordedFromURL(
-			api.UrlSource{Url: MockAudioURL},
-			api.PreRecordedTranscriptionOptions{
+		c := client.New(MockAPIKey)
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{
 				Summarize: "v2",
 			})
 

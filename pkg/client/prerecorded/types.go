@@ -4,6 +4,11 @@
 
 package prerecorded
 
-// type urlSource struct {
-// 	Url string `json:"url"`
-// }
+import (
+	rest "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/rest"
+)
+
+// Client implements helper functionality for Prerecorded API
+type Client struct {
+	*rest.Client
+}

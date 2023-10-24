@@ -5,13 +5,17 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
-	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	prettyjson "github.com/hokaccha/go-prettyjson"
+
+	prerecorded "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
@@ -25,18 +29,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	dg := client.New(deepgramApiKey)
+	// context
+	ctx := context.Background()
 
-	prClient := api.New(dg)
+	c := client.New(deepgramApiKey)
+	dg := prerecorded.New(c)
 
 	filePath := "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
 	var res interface{}
 	var err error
 
 	if isURL(filePath) {
-		res, err = prClient.PreRecordedFromURL(
-			api.UrlSource{Url: filePath},
-			api.PreRecordedTranscriptionOptions{
+		res, err = dg.FromURL(
+			ctx,
+			filePath,
+			interfaces.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
@@ -54,11 +61,10 @@ func main() {
 		}
 		defer file.Close()
 
-		source := api.ReadStreamSource{Stream: file, Mimetype: "YOUR_FILE_MIME_TYPE"}
-
-		res, err = prClient.PreRecordedFromStream(
-			source,
-			api.PreRecordedTranscriptionOptions{
+		res, err = dg.FromStream(
+			ctx,
+			file,
+			interfaces.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
@@ -71,13 +77,18 @@ func main() {
 		}
 	}
 
-	jsonStr, err := json.MarshalIndent(res, "", "  ")
+	data, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
+		log.Printf("RecognitionResult json.Marshal failed. Err: %v\n", err)
 		return
 	}
 
-	log.Printf("%s", jsonStr)
+	prettyJson, err := prettyjson.Format(data)
+	if err != nil {
+		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
+		return
+	}
+	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
 }
 
 // Function to check if a string is a valid URL
