@@ -5,27 +5,36 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"time"
 
-	"github.com/Jeffail/gabs/v2"
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
-	"github.com/gorilla/websocket"
+	gabs "github.com/Jeffail/gabs/v2"
+	"github.com/dvonthenen/websocket"
+
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
 )
 
 const (
-	DEEPGRAM_API_KEY       = "DEEPGRAM_API_KEY"
 	STREAM_URL             = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 	CHUNK_SIZE             = 1024 * 2
 	TEN_MILLISECONDS_SLEEP = 10 * time.Millisecond
 )
 
 func main() {
-	client := new(http.Client)
+	var deepgramApiKey string
+	if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
+		log.Println("DEEPGRAM_API_KEY found")
+		deepgramApiKey = v
+	} else {
+		log.Fatal("DEEPGRAM_API_KEY not found")
+		os.Exit(1)
+	}
 
-	dg := *deepgram.NewClient(DEEPGRAM_API_KEY)
+	// HTTP client
+	httpClient := new(http.Client)
 
-	res, err := client.Get(STREAM_URL)
+	res, err := httpClient.Get(STREAM_URL)
 	if err != nil {
 		log.Println("ERROR getting stream", err)
 		return
@@ -36,20 +45,21 @@ func main() {
 
 	reader := bufio.NewReader(res.Body)
 
-	liveTranscriptionOptions := deepgram.LiveTranscriptionOptions{
+	// live transcription
+	liveTranscriptionOptions := client.LiveTranscriptionOptions{
 		Language:  "en-US",
 		Punctuate: true,
 	}
 
-	dgConn, _, err := dg.LiveTranscription(liveTranscriptionOptions)
+	dgConn, _, err := client.New(deepgramApiKey, liveTranscriptionOptions)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
 	defer dgConn.Close()
 
+	// process messages
 	chunk := make([]byte, CHUNK_SIZE)
-
 	go func() {
 		for {
 			_, message, err := dgConn.ReadMessage()

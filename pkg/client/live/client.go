@@ -1,15 +1,18 @@
-package deepgram
+package live
 
 import (
 	"log"
 	"net/http"
 	"net/url"
+	"runtime"
+	"strings"
 
+	"github.com/dvonthenen/websocket"
 	"github.com/google/go-querystring/query"
-	"github.com/gorilla/websocket"
 )
 
 type LiveTranscriptionOptions struct {
+	Host             string
 	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
 	Callback         string   `json:"callback" url:"callback,omitempty" `
 	Channels         int      `json:"channels" url:"channels,omitempty" `
@@ -44,14 +47,29 @@ type LiveTranscriptionOptions struct {
 	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
 }
 
-func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
+var sdkVersion string = "0.10.0"
+var dgAgent string = "@deepgram/sdk/" + sdkVersion + " go/" + goVersion()
+
+func goVersion() string {
+	version := runtime.Version()
+	if strings.HasPrefix(version, "go") {
+		return version[2:]
+	}
+	return version
+}
+
+func New(apiKey string, options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
+	if options.Host == "" {
+		options.Host = "api.deepgram.com"
+	}
+
 	query, _ := query.Values(options)
-	u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
+	u := url.URL{Scheme: "wss", Host: options.Host, Path: "/v1/listen", RawQuery: query.Encode()}
 	log.Printf("connecting to %s", u.String())
 
 	header := http.Header{
-		"Host":          []string{dg.Host},
-		"Authorization": []string{"token " + dg.ApiKey},
+		"Host":          []string{options.Host},
+		"Authorization": []string{"token " + apiKey},
 		"User-Agent":    []string{dgAgent},
 	}
 

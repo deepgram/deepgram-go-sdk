@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"fmt"
@@ -81,11 +81,11 @@ type UsageRequest struct {
 	Callback  interface{} `json:"callback" url:"callback,omitempty"`
 }
 
-func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
+func (dg *ManageClient) ListRequests(projectId string, options UsageRequestListOptions) (UsageRequestList, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/requests", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path, RawQuery: query.Encode()}
+	path := fmt.Sprintf("%s/%s/requests", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path, RawQuery: query.Encode()}
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -94,7 +94,7 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -120,10 +120,10 @@ func (dg *Client) ListRequests(projectId string, options UsageRequestListOptions
 
 }
 
-func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, error) {
+func (dg *ManageClient) GetRequest(projectId string, requestId string) (UsageRequest, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/requests/%s", dg.Path, projectId, requestId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/requests/%s", dg.Client.Path, projectId, requestId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -131,7 +131,7 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -156,11 +156,11 @@ func (dg *Client) GetRequest(projectId string, requestId string) (UsageRequest, 
 	}
 }
 
-func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (interface{}, error) {
+func (dg *ManageClient) GetFields(projectId string, options UsageRequestListOptions) (interface{}, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/usage/fields", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path, RawQuery: query.Encode()}
+	path := fmt.Sprintf("%s/%s/usage/fields", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path, RawQuery: query.Encode()}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -168,7 +168,7 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -193,11 +193,11 @@ func (dg *Client) GetFields(projectId string, options UsageRequestListOptions) (
 	}
 }
 
-func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary, error) {
+func (dg *ManageClient) GetUsage(projectId string, options UsageOptions) (UsageSummary, error) {
 	query, _ := query.Values(options)
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/usage", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path, RawQuery: query.Encode()}
+	path := fmt.Sprintf("%s/%s/usage", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path, RawQuery: query.Encode()}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -205,7 +205,7 @@ func (dg *Client) GetUsage(projectId string, options UsageOptions) (UsageSummary
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},

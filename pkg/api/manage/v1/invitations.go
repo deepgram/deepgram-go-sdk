@@ -1,4 +1,4 @@
-package deepgram
+package manage
 
 import (
 	"bytes"
@@ -9,10 +9,10 @@ import (
 	"net/url"
 )
 
-func (dg *Client) ListInvitations(projectId string) (InvitationList, error) {
+func (dg *ManageClient) ListInvitations(projectId string) (InvitationList, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/invites", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
@@ -21,7 +21,7 @@ func (dg *Client) ListInvitations(projectId string) (InvitationList, error) {
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -41,10 +41,10 @@ func (dg *Client) ListInvitations(projectId string) (InvitationList, error) {
 	}
 }
 
-func (dg *Client) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
+func (dg *ManageClient) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
 	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/invites", dg.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	path := fmt.Sprintf("%s/%s/invites", dg.Client.Path, projectId)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	jsonStr, err := json.Marshal(options)
 	if err != nil {
 		log.Panic(err)
@@ -57,7 +57,7 @@ func (dg *Client) SendInvitation(projectId string, options InvitationOptions) (M
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},
@@ -80,11 +80,11 @@ func (dg *Client) SendInvitation(projectId string, options InvitationOptions) (M
 	}
 }
 
-func (dg *Client) DeleteInvitation(projectId string, email string) (Message, error) {
+func (dg *ManageClient) DeleteInvitation(projectId string, email string) (Message, error) {
 	client := new(http.Client)
-	// url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Host, dg.Path, projectId, email)
-	path := fmt.Sprintf("%s/%s/invites/%s", dg.Path, projectId, email)
-	u := url.URL{Scheme: "https", Host: dg.Host, Path: path}
+	// url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Client.Host, dg.Client.Path, projectId, email)
+	path := fmt.Sprintf("%s/%s/invites/%s", dg.Client.Path, projectId, email)
+	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
 	req, err := http.NewRequest("DELETE", u.String(), nil)
 	if err != nil {
 		//Handle Error
@@ -92,7 +92,7 @@ func (dg *Client) DeleteInvitation(projectId string, email string) (Message, err
 	}
 
 	req.Header = http.Header{
-		"Host":          []string{dg.Host},
+		"Host":          []string{dg.Client.Host},
 		"Content-Type":  []string{"application/json"},
 		"Authorization": []string{"token " + dg.ApiKey},
 		"User-Agent":    []string{dgAgent},

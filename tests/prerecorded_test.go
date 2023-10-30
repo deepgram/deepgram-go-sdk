@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
 	"github.com/jarcoal/httpmock"
+
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded"
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func TestPrerecordedFromURL(t *testing.T) {
@@ -116,10 +118,11 @@ func TestPrerecordedFromURL(t *testing.T) {
 	httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
 
 	t.Run("Test Basic PreRecordedFromURL", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{})
+		dg := client.New(MockAPIKey)
+		prClient := api.New(dg)
+		_, err := prClient.PreRecordedFromURL(
+			api.UrlSource{Url: MockAudioURL},
+			api.PreRecordedTranscriptionOptions{})
 
 		if err != nil {
 			t.Errorf("should succeed, but got %s", err)
@@ -127,10 +130,11 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v1", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{
+		dg := client.New(MockAPIKey)
+		prClient := api.New(dg)
+		_, err := prClient.PreRecordedFromURL(
+			api.UrlSource{Url: MockAudioURL},
+			api.PreRecordedTranscriptionOptions{
 				Summarize: true,
 			})
 
@@ -140,10 +144,11 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v2", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey).WithHost(betaHost)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{
+		dg := client.New(MockAPIKey).WithHost(betaHost)
+		prClient := api.New(dg)
+		_, err := prClient.PreRecordedFromURL(
+			api.UrlSource{Url: MockAudioURL},
+			api.PreRecordedTranscriptionOptions{
 				Summarize: "v2",
 			})
 
