@@ -2,210 +2,237 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package contains the code for the Keys APIs in the Deepgram Manage API
+
+Please see:
+https://developers.deepgram.com/reference/list-keys
+https://developers.deepgram.com/reference/get-key
+https://developers.deepgram.com/reference/create-key
+https://developers.deepgram.com/reference/delete-key
+*/
 package manage
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
+
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
+	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-type Key struct {
-	ApiKeyId string   `json:"api_key_id"`
-	Key      string   `json:"key"`
-	Comment  string   `json:"comment"`
-	Created  string   `json:"created"`
-	Scopes   []string `json:"scopes"`
+// ListKeys lists all keys for a project
+func (c *ManageClient) ListKeys(ctx context.Context, projectId string) (*api.KeysResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.KeysResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-type KeyResponseObj struct {
-	Member Member `json:"member"`
-	ApiKey Key    `json:"api_key"`
+// GetKey gets a key for a project
+func (c *ManageClient) GetKey(ctx context.Context, projectId string, keyId string) (*api.KeyResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysByIdURI, nil, projectId, keyId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.KeyResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-type KeyResponse struct {
-	ApiKeys []KeyResponseObj `json:"api_keys"`
+// CreateKey creates a key for a project
+func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api.KeyCreateRequest) (*api.Key, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var expirationStr string
+	if !key.ExpirationDate.IsZero() {
+		expirationStr = key.ExpirationDate.Format(time.RFC3339)
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	type InternalKeyCreateRequest struct {
+		Comment        string   `json:"comment"`
+		Scopes         []string `json:"scopes"`
+		ExpirationDate string   `json:"expiration_date,omitempty"`
+		TimeToLive     int      `json:"time_to_live,omitempty"`
+		// Tags           []string `json:"tags"`
+	}
+	internalKey := InternalKeyCreateRequest{
+		Comment:        key.Comment,
+		Scopes:         key.Scopes,
+		ExpirationDate: expirationStr,
+		TimeToLive:     key.TimeToLive,
+		// Tags:           key.Tags,
+	}
+
+	jsonStr, err := json.Marshal(internalKey)
+	if err != nil {
+		// klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", URI, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.Key
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-type CreateKeyOptions struct {
-	ExpirationDate time.Time `json:"expiration_date"`
-	TimeToLive     int       `json:"time_to_live"`
-	Tags           []string  `json:"tags"`
-}
+// DeleteKey deletes a key for a project
+func (c *ManageClient) DeleteKey(ctx context.Context, projectId string, keyId string) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
-type CreateKeyRequest struct {
-	Comment        string   `json:"comment"`
-	Scopes         []string `json:"scopes"`
-	ExpirationDate string   `json:"expiration_date,omitempty"`
-	TimeToLive     int      `json:"time_to_live,omitempty"`
-}
-
-func (dg *ManageClient) ListKeys(projectId string) (KeyResponse, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("GET", u.String(), nil)
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysByIdURI, nil, projectId, keyId)
 	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
+	log.Printf("Calling %s\n", URI) // TODO
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result KeyResponse
-	res, err := client.Do(req)
+	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
 	if err != nil {
-		return result, err
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
-	if res.StatusCode != 200 {
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
 
-	if jsonErr != nil {
-		fmt.Printf("error getting keys: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
 
-func (dg *ManageClient) GetKey(projectId string, keyId string) (KeyResponseObj, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys/%s", dg.Client.Path, projectId, keyId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result KeyResponseObj
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error getting key: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
-
-func (dg *ManageClient) CreateKey(projectId string, comment string, scopes []string, options CreateKeyOptions) (Key, error) {
-	var expirationDate string
-	if options.ExpirationDate.IsZero() {
-		expirationDate = ""
-	} else {
-		expirationDate = options.ExpirationDate.Format(time.RFC3339)
-	}
-	out, err := json.Marshal(CreateKeyRequest{
-		Comment:        comment,
-		Scopes:         scopes,
-		ExpirationDate: expirationDate,
-		TimeToLive:     options.TimeToLive,
-	})
-	fmt.Println(string(out))
-	buf := bytes.NewBuffer(out)
-	if err != nil {
-		log.Panic(err)
-	}
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("POST", u.String(), buf)
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
-	}
-
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result Key
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error Creating key: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
-
-func (dg *ManageClient) DeleteKey(projectId string, keyId string) (Message, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/keys/%s", dg.Client.Path, projectId, keyId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("DELETE", u.String(), nil)
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
-	}
-
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-	var result Message
-	res, err := client.Do(req)
-	if err != nil {
-		return result, err
-	}
-	if res.StatusCode != 200 {
-
-		b, _ := io.ReadAll(res.Body)
-		log.Panic(string(b))
-	}
-	jsonErr := GetJson(res, &result)
-
-	if jsonErr != nil {
-		fmt.Printf("error Creating key: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return Message{
-			Message: "Key Deleted",
-		}, nil
-	}
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
