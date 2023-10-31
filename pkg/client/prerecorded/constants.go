@@ -2,9 +2,13 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package interfaces
+package prerecorded
 
-// API constants
-// const (
-// 	DefaultHost string = "api.deepgram.com"
-// )
+import (
+	"errors"
+)
+
+var (
+	// ErrInvalidInput required input was not found
+	ErrInvalidInput = errors.New("required input was not found")
+)

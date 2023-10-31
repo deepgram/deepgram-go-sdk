@@ -13,6 +13,11 @@ import (
 	"strings"
 )
 
+// constants
+const (
+	sdkVersion string = "v1.0.0"
+)
+
 // connection agent
 var DgAgent string = "@deepgram/sdk/" + sdkVersion + " go/" + goVersion()
 

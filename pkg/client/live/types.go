@@ -1,3 +1,7 @@
+// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
+
 package live
 
 import (
@@ -11,16 +15,9 @@ import (
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-// Credentials for connecting to the platform
-type Credentials struct {
-	Host            string
-	ApiKey          string
-	RedirectService bool
-	SkipServerAuth  bool
-}
-
 // Client return websocket client connection
 type Client struct {
+	apiKey  string
 	options interfaces.LiveTranscriptionOptions
 
 	sendBuf   chan []byte
@@ -32,7 +29,6 @@ type Client struct {
 	wsconn *websocket.Conn
 	retry  bool
 
-	creds    *Credentials
 	callback msginterface.LiveMessageCallback
 	router   *live.MessageRouter
 }

@@ -5,6 +5,13 @@
 package interfaces
 
 type LiveTranscriptionOptions struct {
+	// internal
+	Host            string `url:"-"`
+	ApiVersion      string `url:"-"`
+	RedirectService bool   `url:"-"`
+	SkipServerAuth  bool   `url:"-"`
+
+	// live options
 	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
 	Callback         string   `json:"callback" url:"callback,omitempty" `
 	Channels         int      `json:"channels" url:"channels,omitempty" `

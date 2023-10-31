@@ -2,9 +2,16 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package interfaces
+package version
 
-// API constants
-// const (
-// 	DefaultHost string = "api.deepgram.com"
-// )
+import "errors"
+
+const (
+	// default host
+	DefaultHost string = "api.deepgram.com"
+)
+
+var (
+	// ErrInvalidPath invalid path
+	ErrInvalidPath = errors.New("invalid path")
+)
