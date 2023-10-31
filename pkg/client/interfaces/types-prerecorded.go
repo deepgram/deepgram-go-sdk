@@ -2,14 +2,19 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package contains the interface to manage the prerecorded interfaces for the Deepgram API
+*/
 package interfaces
 
-type PreRecordedTranscriptionOptions struct {
-	// internal
-	Host       string `url:"-"`
-	ApiVersion string `url:"-"`
+/*
+PreRecordedTranscriptionOptions contain all of the knobs and dials to control a Prerecorded transcription
+from the Deepgram API
 
-	// live options
+Please see the documentation for live/streaming for more details:
+https://developers.deepgram.com/reference/pre-recorded
+*/
+type PreRecordedTranscriptionOptions struct {
 	Alternatives       int         `json:"alternatives" url:"alternatives,omitempty" `
 	AnalyzeSentiment   bool        `json:"analyze_sentiment" url:"analyze_sentiment,omitempty" `
 	Callback           string      `json:"callback" url:"callback,omitempty" `

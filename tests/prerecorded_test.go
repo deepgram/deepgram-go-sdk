@@ -124,7 +124,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 	httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
 
 	t.Run("Test Basic PreRecordedFromURL", func(t *testing.T) {
-		c := client.New(MockAPIKey)
+		c := client.New(MockAPIKey, &client.ClientOptions{})
 		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
 		dg := prerecorded.New(c)
 		_, err := dg.FromURL(
@@ -138,7 +138,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v1", func(t *testing.T) {
-		c := client.New(MockAPIKey)
+		c := client.New(MockAPIKey, &client.ClientOptions{})
 		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
 		dg := prerecorded.New(c)
 		_, err := dg.FromURL(
@@ -154,7 +154,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v2", func(t *testing.T) {
-		c := client.New(MockAPIKey)
+		c := client.New(MockAPIKey, &client.ClientOptions{})
 		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
 		dg := prerecorded.New(c)
 		_, err := dg.FromURL(
