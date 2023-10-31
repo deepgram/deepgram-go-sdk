@@ -2,6 +2,9 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package provides the live/streaming client implementation for the Deepgram API
+*/
 package live
 
 import (
@@ -24,12 +27,28 @@ import (
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
+/*
+NewWithDefaults() creates a new websocket connection with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+  - The callback handler is set to the default handler which just prints all messages to the console
+*/
 func NewWithDefaults(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, apiKey, options, nil)
+	return New(ctx, apiKey, &ClientOptions{}, options, nil)
 }
 
-// New create new websocket connection
-func New(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+/*
+New() creates a new websocket connection with the specified options
+
+Input parameters:
+- ctx: context.Context object
+- apiKey: string containing the Deepgram API key
+- cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
+- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
+- callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
+*/
+func New(ctx context.Context, apiKey string, cOptions *ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
@@ -46,7 +65,8 @@ func New(ctx context.Context, apiKey string, options interfaces.LiveTranscriptio
 	// init
 	conn := Client{
 		apiKey:   apiKey,
-		options:  options,
+		cOptions: cOptions,
+		tOptions: tOptions,
 		sendBuf:  make(chan []byte, 1),
 		callback: callback,
 		router:   live.New(callback),
@@ -64,13 +84,14 @@ func (c *Client) Connect() *websocket.Conn {
 	return c.ConnectWithRetry(defaultConnectRetry)
 }
 
-// AttemptReconnect does exactly that...
+// AttemptReconnect does exactly that with "retries" number of retries.
+// If "retries" is set to -1, then it will retry forever.
 func (c *Client) AttemptReconnect(retries int64) *websocket.Conn {
 	c.retry = true
 	return c.ConnectWithRetry(retries)
 }
 
-// ConnectWithRetry is a function to explicitly do a reconnect
+// ConnectWithRetry is a function to explicitly do a connection with "retries" number of retries.
 func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
@@ -96,8 +117,8 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
 		TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
-		RedirectService:  c.options.RedirectService,
-		SkipServerAuth:   c.options.SkipServerAuth,
+		RedirectService:  c.cOptions.RedirectService,
+		SkipServerAuth:   c.cOptions.SkipServerAuth,
 	}
 
 	// set websocket headers
@@ -114,7 +135,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	}
 
 	// sets the API key
-	myHeader.Set("Host", c.options.Host)
+	myHeader.Set("Host", c.cOptions.Host)
 	myHeader.Set("Authorization", "token "+c.apiKey)
 	myHeader.Set("User-Agent", interfaces.DgAgent)
 
@@ -135,7 +156,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		i++
 
 		// create new connection
-		url, err := version.GetLiveAPI(c.org, c.options)
+		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.ApiVersion, version.LivePath, c.tOptions)
 		if err != nil {
 			log.Printf("version.GetLiveAPI failed. Err: %v\n", err)
 			return nil // no point in retrying because this is going to fail on every retry
@@ -143,11 +164,10 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		// TODO: DO NOT PRINT
 		log.Printf("Connecting to %s\n", url)
 
-		// TODO: handle resp variable
-		// c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
+		// perform the websocket connection
 		ws, _, err := dialer.DialContext(c.ctx, url, myHeader)
 		if err != nil {
-			log.Printf("Cannot connect to websocket: %s\n", c.options.Host)
+			log.Printf("Cannot connect to websocket: %s\n", c.cOptions.Host)
 			continue
 		}
 
@@ -156,7 +176,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		c.wsconn = ws
 		c.retry = true
 
-		// kick off threads
+		// kick off threads to listen for messages and ping/keepalive
 		go c.listen()
 		go c.ping()
 
@@ -202,7 +222,7 @@ func (c *Client) listen() {
 	}
 }
 
-// Stream is a helper function to stream audio data to deepgram
+// Stream is a helper function to stream audio data from a io.Reader object to deepgram
 func (c *Client) Stream(r io.Reader) error {
 	chunk := make([]byte, CHUNK_SIZE)
 
@@ -232,7 +252,7 @@ func (c *Client) Stream(r io.Reader) error {
 	}
 }
 
-// WriteBinary writes a Go struct to the websocket server
+// WriteBinary writes binary data to the websocket server
 func (c *Client) WriteBinary(byData []byte) error {
 	// doing a write, need to lock
 	c.mu.Lock()
@@ -258,7 +278,10 @@ func (c *Client) WriteBinary(byData []byte) error {
 	return nil
 }
 
-// WriteJSON writes a JSON payload to the websocket server
+/*
+WriteJSON writes a JSON control payload to the websocket server. These are control messages for
+managing the live transcription session on the Deepgram server.
+*/
 func (c *Client) WriteJSON(payload interface{}) error {
 	// doing a write, need to lock
 	c.mu.Lock()
@@ -290,7 +313,10 @@ func (c *Client) WriteJSON(payload interface{}) error {
 	return nil
 }
 
-// Write performs the lower level websocket write operation
+/*
+Write performs the lower level websocket write operation.
+This is needed to implement the io.Writer interface. (aka the streaming interface)
+*/
 func (c *Client) Write(p []byte) (int, error) {
 	byteLen := len(p)
 	err := c.WriteBinary(p)
@@ -323,7 +349,7 @@ func (c *Client) closeWs() {
 		}
 		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure
 
-		// protocol message
+		// websocket protocol message
 		errProto := c.wsconn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		if errProto != nil {
 			log.Printf("Failed to send CloseNormalClosure. Err: %v\n", errProto)
@@ -355,13 +381,13 @@ func (c *Client) ping() {
 			c.mu.Lock()
 			log.Printf("Sending ping... need reply in %d\n", (pingPeriod / 2))
 
-			// deepgram keepalive
+			// deepgram keepalive message
 			errDg := ws.WriteMessage(websocket.BinaryMessage, []byte("{ \"type\": \"KeepAlive\" }"))
 			if errDg != nil {
 				log.Printf("Failed to send CloseNormalClosure. Err: %v\n", errDg)
 			}
 
-			// protocol ping/pong
+			// websocket protocol ping/pong
 			errProto := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pingPeriod/2))
 			if errProto != nil {
 				log.Printf("Failed to send CloseNormalClosure. Err: %v\n", errProto)

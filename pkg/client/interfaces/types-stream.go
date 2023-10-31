@@ -2,16 +2,19 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package contains the interface to manage the live/streaming interfaces for the Deepgram API
+*/
 package interfaces
 
-type LiveTranscriptionOptions struct {
-	// internal
-	Host            string `url:"-"`
-	ApiVersion      string `url:"-"`
-	RedirectService bool   `url:"-"`
-	SkipServerAuth  bool   `url:"-"`
+/*
+LiveTranscriptionOptions contain all of the knobs and dials to control the live transcription
+from the Deepgram API
 
-	// live options
+Please see the documentation for live/streaming for more details:
+https://developers.deepgram.com/reference/streaming
+*/
+type LiveTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
 	Callback         string   `json:"callback" url:"callback,omitempty" `
 	Channels         int      `json:"channels" url:"channels,omitempty" `
