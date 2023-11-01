@@ -10,9 +10,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
+
+	klog "k8s.io/klog/v2"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
@@ -29,10 +30,10 @@ func New(apiKey string, options *ClientOptions) *Client {
 	}
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-			log.Println("DEEPGRAM_API_KEY found")
+			klog.V(3).Infof("DEEPGRAM_API_KEY found")
 			apiKey = v
 		} else {
-			log.Println("DEEPGRAM_API_KEY not set")
+			klog.V(1).Infof("DEEPGRAM_API_KEY not set")
 			return nil
 		}
 	}
@@ -47,25 +48,25 @@ func New(apiKey string, options *ClientOptions) *Client {
 
 // Do is a generic REST API call to the platform
 func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
-	//klog.V(6).Infof("rest.Do ENTER\n")
+	klog.V(6).Infof("rest.Do() ENTER\n")
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				//klog.V(3).Infof("Do() Custom Header: %s = %s\n", k, v)
+				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
 				req.Header.Add(k, v)
 			}
 		}
 	}
 
-	// req.Header.Set("Host", c.options.Host)
+	req.Header.Set("Host", c.Options.Host)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
 	case http.MethodPost, http.MethodPatch, http.MethodPut:
-		//klog.V(3).Infof("Content-Type = application/json\n")
+		klog.V(3).Infof("Content-Type = application/json\n")
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -75,50 +76,50 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 		case http.StatusCreated:
 		case http.StatusNoContent:
 		case http.StatusBadRequest:
-			//klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
 			detail, errBody := io.ReadAll(res.Body)
 			if errBody != nil {
-				//klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				//klog.V(6).Infof("rest.DoFile LEAVE\n")
+				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
+				klog.V(6).Infof("rest.Do() LEAVE\n")
 				return &interfaces.StatusError{res}
 			}
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
 		default:
 			return &interfaces.StatusError{res}
 		}
 
 		if resBody == nil {
-			//klog.V(1).Infof("resBody == nil\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(1).Infof("resBody == nil\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return nil
 		}
 
 		switch b := resBody.(type) {
 		case *interfaces.RawResponse:
-			//klog.V(3).Infof("RawResponse\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(3).Infof("RawResponse\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return res.Write(b)
 		case io.Writer:
-			//klog.V(3).Infof("io.Writer\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
 			_, err := io.Copy(b, res.Body)
+			klog.V(3).Infof("io.Writer\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return err
 		default:
-			//klog.V(3).Infof("json.NewDecoder\n")
 			d := json.NewDecoder(res.Body)
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(3).Infof("json.NewDecoder\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return d.Decode(resBody)
 		}
 	})
 
 	if err != nil {
-		//klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.Do LEAVE\n")
+		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.Do() LEAVE\n")
 		return err
 	}
 
-	//klog.V(3).Infof("rest.Do Succeeded\n")
-	//klog.V(6).Infof("rest.Do LEAVE\n")
+	klog.V(3).Infof("rest.Do Succeeded\n")
+	klog.V(6).Infof("rest.Do() LEAVE\n")
 	return nil
 }

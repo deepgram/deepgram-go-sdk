@@ -15,6 +15,9 @@ import (
 )
 
 func main() {
+	// init library
+	client.InitWithDefault()
+
 	// context
 	ctx := context.Background()
 

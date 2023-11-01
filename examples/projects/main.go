@@ -15,6 +15,9 @@ import (
 )
 
 func main() {
+	// init library
+	client.InitWithDefault()
+
 	// context
 	ctx := context.Background()
 
@@ -39,9 +42,9 @@ func main() {
 	}
 
 	// if deleteId == "" {
-	// 	fmt.Print("This example requires a project who already exists where \"DELETE-ME\" is in the name.\n")
-	// 	fmt.Printf("This is required to exercise the UpdateProject and DeleteProject function.\n")
-	// 	fmt.Printf("In the absence of this, this example will exit early.\n")
+	// 	log.Printf("This example requires a project who already exists where \"DELETE-ME\" is in the name.\n")
+	// 	log.Printf("This is required to exercise the UpdateProject and DeleteProject function.\n")
+	// 	log.Printf("In the absence of this, this example will exit early.\n")
 	// 	os.Exit(0)
 	// }
 

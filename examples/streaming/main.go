@@ -25,6 +25,9 @@ const (
 )
 
 func main() {
+	// init library
+	client.InitWithDefault()
+
 	// context
 	ctx := context.Background()
 
@@ -56,7 +59,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
+	log.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
 	// this is a blocking call...
 	go func() {
@@ -73,5 +76,5 @@ func main() {
 	// close client
 	dgClient.Stop()
 
-	fmt.Printf("Succeeded!\n\n")
+	log.Printf("Succeeded!\n\n")
 }

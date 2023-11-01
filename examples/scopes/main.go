@@ -6,7 +6,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -20,6 +19,9 @@ const (
 )
 
 func main() {
+	// init library
+	client.InitWithDefault()
+
 	// context
 	ctx := context.Background()
 
@@ -64,9 +66,9 @@ func main() {
 	}
 
 	if updateID == "" {
-		fmt.Printf("This example requires a member who already email is %s.\n", TestAccountName)
-		fmt.Printf("This is required to exercise the RemoveMember function.\n")
-		fmt.Printf("In the absence of this, this example will exit early.\n")
+		log.Printf("This example requires a member who already email is %s.\n", TestAccountName)
+		log.Printf("This is required to exercise the RemoveMember function.\n")
+		log.Printf("In the absence of this, this example will exit early.\n")
 		os.Exit(0)
 	}
 

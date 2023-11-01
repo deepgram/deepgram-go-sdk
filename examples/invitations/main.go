@@ -15,6 +15,9 @@ import (
 )
 
 func main() {
+	// init library
+	client.InitWithDefault()
+
 	// context
 	ctx := context.Background()
 
@@ -95,7 +98,7 @@ func main() {
 		log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
 	}
 
-	// TODO: There isnt an API call to add a member to a project. So will leave this commented out as an example
+	// There isnt an API call to add a member to a project. So will leave this commented out as an example
 	// Leave Project
 	// respMessage, err = mgClient.LeaveProject(ctx, projectId)
 	// if err != nil {

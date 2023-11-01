@@ -120,13 +120,13 @@ prClient := api.New(dg)
 file, err := os.Open("PATH_TO_LOCAL_FILE")
 
 if err != nil {
-  fmt.Printf("error opening file %s:", file.Name())
+  log.Printf("error opening file %s\n", file.Name())
   }
 
 source := api.ReadStreamSource{Stream: file, Mimetype: "MIMETYPE_OF_YOUR_FILE"}
 res, err := prClient.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true})
 if err != nil {
-  fmt.Println("ERROR", err)
+  log.Printf("ERROR", err)
   return
   }
 ```

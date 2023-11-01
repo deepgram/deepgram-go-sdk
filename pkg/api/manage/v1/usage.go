@@ -15,8 +15,9 @@ package manage
 
 import (
 	"context"
-	"log"
 	"net/http"
+
+	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
 	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
@@ -25,6 +26,8 @@ import (
 
 // ListRequests lists all requests for a project
 func (c *ManageClient) ListRequests(ctx context.Context, projectId string, use *api.UsageListRequest) (*api.UsageListResult, error) {
+	klog.V(6).Infof("manage.ListRequests() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -33,16 +36,16 @@ func (c *ManageClient) ListRequests(ctx context.Context, projectId string, use *
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageRequestURI, use, projectId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.ListRequests() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.ListRequests() LEAVE\n")
 		return nil, err
 	}
 
@@ -53,24 +56,26 @@ func (c *ManageClient) ListRequests(ctx context.Context, projectId string, use *
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.ListRequests() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.ListRequests() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("ListRequests Succeeded\n")
+	klog.V(6).Infof("manage.ListRequests() LEAVE\n")
 	return &resp, nil
 }
 
 // GetRequest gets a request by ID
 func (c *ManageClient) GetRequest(ctx context.Context, projectId string, requestId string) (*api.UsageRequestResult, error) {
+	klog.V(6).Infof("manage.GetRequest() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -79,16 +84,16 @@ func (c *ManageClient) GetRequest(ctx context.Context, projectId string, request
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageRequestByIdURI, nil, projectId, requestId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetRequest() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetRequest() LEAVE\n")
 		return nil, err
 	}
 
@@ -99,24 +104,26 @@ func (c *ManageClient) GetRequest(ctx context.Context, projectId string, request
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.GetRequest() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.GetRequest() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("GetRequest Succeeded\n")
+	klog.V(6).Infof("manage.GetRequest() LEAVE\n")
 	return &resp, nil
 }
 
 // GetFields gets a list of fields for a project
 func (c *ManageClient) GetFields(ctx context.Context, projectId string, use *api.UsageListRequest) (*api.UsageFieldResult, error) {
+	klog.V(6).Infof("manage.GetFields() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -125,16 +132,16 @@ func (c *ManageClient) GetFields(ctx context.Context, projectId string, use *api
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageFieldsURI, use, projectId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetFields() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetFields() LEAVE\n")
 		return nil, err
 	}
 
@@ -145,24 +152,26 @@ func (c *ManageClient) GetFields(ctx context.Context, projectId string, use *api
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.GetFields() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.GetFields() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("GetFields Succeeded\n")
+	klog.V(6).Infof("manage.GetFields() LEAVE\n")
 	return &resp, nil
 }
 
 // GetUsage gets a usage by ID
 func (c *ManageClient) GetUsage(ctx context.Context, projectId string, use *api.UsageRequest) (*api.UsageResult, error) {
+	klog.V(6).Infof("manage.GetUsage() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -171,16 +180,16 @@ func (c *ManageClient) GetUsage(ctx context.Context, projectId string, use *api.
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageURI, use, projectId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetUsage() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetUsage() LEAVE\n")
 		return nil, err
 	}
 
@@ -191,18 +200,18 @@ func (c *ManageClient) GetUsage(ctx context.Context, projectId string, use *api.
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.GetUsage() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.GetUsage() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("GetUsage Succeeded\n")
+	klog.V(6).Infof("manage.GetUsage() LEAVE\n")
 	return &resp, nil
 }
