@@ -6,11 +6,6 @@ package version
 
 import "errors"
 
-const (
-	// default host
-	DefaultHost string = "api.deepgram.com"
-)
-
 var (
 	// ErrInvalidPath invalid path
 	ErrInvalidPath = errors.New("invalid path")

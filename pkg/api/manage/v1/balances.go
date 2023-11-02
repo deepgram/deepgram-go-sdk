@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Members APIs in the Deepgram Manage API
+This package contains the code for the Balances APIs in the Deepgram Manage API
 
 Please see:
-https://developers.deepgram.com/reference/get-members
-https://developers.deepgram.com/reference/remove-member
+https://developers.deepgram.com/reference/get-all-balances
+https://developers.deepgram.com/reference/get-balance
 */
 package manage
 
@@ -21,15 +21,15 @@ import (
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-// ListMembers lists all members for a project
-func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.MembersResult, error) {
+// ListBalances lists all balances for a project
+func (c *ManageClient) ListBalances(ctx context.Context, projectId string) (*api.BalancesResult, error) {
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.BalancesURI, nil, projectId)
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
@@ -45,7 +45,7 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	}
 
 	// Do it!
-	var resp api.MembersResult
+	var resp api.BalancesResult
 	err = c.Client.Do(ctx, req, &resp)
 
 	if err != nil {
@@ -67,15 +67,15 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	return &resp, nil
 }
 
-// RemoveMember removes a member from a project
-func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, memberId string) (*api.MessageResult, error) {
+// GetBalance gets a balance for a project
+func (c *ManageClient) GetBalance(ctx context.Context, projectId string, balanceId string) (*api.BalanceResult, error) {
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersByIdURI, nil, projectId, memberId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.BalancesByIdURI, nil, projectId, balanceId)
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
@@ -83,7 +83,7 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	}
 	log.Printf("Calling %s\n", URI) // TODO
 
-	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
 		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
@@ -91,7 +91,7 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	}
 
 	// Do it!
-	var resp api.MessageResult
+	var resp api.BalanceResult
 	err = c.Client.Do(ctx, req, &resp)
 
 	if err != nil {

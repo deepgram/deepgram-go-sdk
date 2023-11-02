@@ -2,116 +2,216 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package contains the code for the Invitations APIs in the Deepgram Manage API
+
+Please see:
+https://developers.deepgram.com/reference/list-invites
+https://developers.deepgram.com/reference/send-invites
+https://developers.deepgram.com/reference/delete-invite
+https://developers.deepgram.com/reference/leave-project
+*/
 package manage
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"net/url"
+
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
+	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-func (dg *ManageClient) ListInvitations(projectId string) (InvitationList, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/invites", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
+// ListInvitations lists all invitations for a project
+func (c *ManageClient) ListInvitations(ctx context.Context, projectId string) (*api.InvitationsResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
-	req, err := http.NewRequest("GET", u.String(), nil)
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsURI, nil, projectId)
 	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
+	log.Printf("Calling %s\n", URI) // TODO
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	var result InvitationList
-	res, err := client.Do(req)
+	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		return result, err
-	}
-	jsonErr := GetJson(res, &result)
-	if jsonErr != nil {
-		fmt.Printf("error getting invitation list: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
-	}
-}
-
-func (dg *ManageClient) SendInvitation(projectId string, options InvitationOptions) (Message, error) {
-	client := new(http.Client)
-	path := fmt.Sprintf("%s/%s/invites", dg.Client.Path, projectId)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	jsonStr, err := json.Marshal(options)
-	if err != nil {
-		log.Panic(err)
-		return Message{}, err
-	}
-	req, err := http.NewRequest("POST", u.String(), bytes.NewBuffer(jsonStr))
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
+	// Do it!
+	var resp api.InvitationsResult
+	err = c.Client.Do(ctx, req, &resp)
 
-	var result Message
-	res, err := client.Do(req)
 	if err != nil {
-		return result, err
-	}
-	jsonErr := GetJson(res, &result)
-	if jsonErr != nil {
-		fmt.Printf("error sending invitation: %s\n", jsonErr.Error())
-		if e, ok := err.(*json.SyntaxError); ok {
-			log.Printf("syntax error at byte offset %d", e.Offset)
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
 		}
-		return result, jsonErr
-	} else {
-		return result, nil
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
 
-func (dg *ManageClient) DeleteInvitation(projectId string, email string) (Message, error) {
-	client := new(http.Client)
-	// url := fmt.Sprintf("%s%s/%s/invites/%s", dg.Client.Host, dg.Client.Path, projectId, email)
-	path := fmt.Sprintf("%s/%s/invites/%s", dg.Client.Path, projectId, email)
-	u := url.URL{Scheme: "https", Host: dg.Client.Host, Path: path}
-	req, err := http.NewRequest("DELETE", u.String(), nil)
-	if err != nil {
-		//Handle Error
-		log.Panic(err)
+// SendInvitation sends an invitation to a project
+func (c *ManageClient) SendInvitation(ctx context.Context, projectId string, invite *api.InvitationRequest) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
 	}
 
-	req.Header = http.Header{
-		"Host":          []string{dg.Client.Host},
-		"Content-Type":  []string{"application/json"},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	jsonStr, err := json.Marshal(invite)
+	if err != nil {
+		// klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
 
-	var result Message
-	res, err := client.Do(req)
+	req, err := http.NewRequestWithContext(ctx, "POST", URI, bytes.NewBuffer(jsonStr))
 	if err != nil {
-		return result, err
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
-	jsonErr := GetJson(res, &result)
-	if jsonErr != nil {
-		fmt.Printf("error deleting invitation: %s\n", jsonErr.Error())
-		return result, jsonErr
-	} else {
-		return result, nil
+
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
 	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
+}
+
+// DeleteInvitation deletes an invitation to a project
+func (c *ManageClient) DeleteInvitation(ctx context.Context, projectId string, email string) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsByIdURI, nil, projectId, email)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
+}
+
+// LeaveProject leaves a project
+func (c *ManageClient) LeaveProject(ctx context.Context, projectId string) (*api.MessageResult, error) {
+	// checks
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	// request
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsLeaveURI, nil, projectId)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+	log.Printf("Calling %s\n", URI) // TODO
+
+	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
+	if err != nil {
+		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// Do it!
+	var resp api.MessageResult
+	err = c.Client.Do(ctx, req, &resp)
+
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			if e.Resp.StatusCode != http.StatusOK {
+				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				return nil, err
+			}
+		}
+
+		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		return nil, err
+	}
+
+	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
+	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	return &resp, nil
 }
