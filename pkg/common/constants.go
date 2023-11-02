@@ -2,9 +2,9 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package interfaces
+package common
 
-// API constants
-// const (
-// 	DefaultHost string = "api.deepgram.com"
-// )
+const (
+	// default host
+	DefaultHost string = "api.deepgram.com"
+)
