@@ -28,7 +28,7 @@ import (
 )
 
 /*
-NewWithDefaults() creates a new websocket connection with all default options
+NewWithDefaults creates a new websocket connection with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
@@ -39,7 +39,7 @@ func NewWithDefaults(ctx context.Context, apiKey string, options interfaces.Live
 }
 
 /*
-New() creates a new websocket connection with the specified options
+New creates a new websocket connection with the specified options
 
 Input parameters:
 - ctx: context.Context object

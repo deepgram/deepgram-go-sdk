@@ -8,7 +8,15 @@ import (
 	rest "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/rest"
 )
 
+// ClientOptions defines any options for the client
+type ClientOptions struct {
+	Host    string
+	Version string
+}
+
 // Client implements helper functionality for Prerecorded API
 type Client struct {
 	*rest.Client
+
+	apiKey string
 }

@@ -8,6 +8,12 @@ import (
 	"net/http"
 )
 
+// ClientOptions defines any options for the client
+type ClientOptions struct {
+	Host    string
+	Version string
+}
+
 // HttpClient which extends HTTP client
 type HttpClient struct {
 	http.Client
@@ -20,5 +26,6 @@ type HttpClient struct {
 type Client struct {
 	*HttpClient
 
-	ApiKey string
+	Options *ClientOptions
+	apiKey  string
 }

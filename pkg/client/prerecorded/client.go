@@ -25,8 +25,25 @@ type urlSource struct {
 	Url string `json:"url"`
 }
 
-// New allocated a REST client
-func New(apiKey string) *Client {
+/*
+NewWithDefaults creates a new websocket connection with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+*/
+func NewWithDefaults() *Client {
+	return New("", &ClientOptions{})
+}
+
+/*
+New creates a new websocket connection with the specified options
+
+Input parameters:
+- ctx: context.Context object
+- apiKey: string containing the Deepgram API key
+- options: ClientOptions which allows overriding things like hostname, version of the API, etc.
+*/
+func New(apiKey string, options *ClientOptions) *Client {
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			log.Println("DEEPGRAM_API_KEY found")
@@ -38,12 +55,25 @@ func New(apiKey string) *Client {
 	}
 
 	c := Client{
-		Client: rest.New(apiKey),
+		Client: rest.New(apiKey, &rest.ClientOptions{
+			Host:    options.Host,
+			Version: options.Version,
+		}),
+		apiKey: apiKey,
 	}
 	return &c
 }
 
-// DoFile posts a file capturing a conversation to a given REST endpoint
+/*
+DoFile posts a file capturing a conversation to a given REST endpoint
+
+Input parameters:
+- filePath: string containing the path to the file to be posted
+- req: PreRecordedTranscriptionOptions which allows overriding things like language, etc.
+
+Output parameters:
+- resBody: interface{} which will be populated with the response from the server
+*/
 func (c *Client) DoFile(ctx context.Context, filePath string, req interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	// file?
 	fileInfo, err := os.Stat(filePath)
@@ -67,11 +97,21 @@ func (c *Client) DoFile(ctx context.Context, filePath string, req interfaces.Pre
 	return c.DoStream(ctx, file, req, resBody)
 }
 
+/*
+DoStream posts a stream capturing a conversation to a given REST endpoint
+
+Input parameters:
+- src: io.Reader containing the stream to be posted
+- req: PreRecordedTranscriptionOptions which allows overriding things like language, etc.
+
+Output parameters:
+- resBody: interface{} which will be populated with the response from the server
+*/
 func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	//klog.V(6).Infof("rest.doCommonFile ENTER\n")
 
-	// obtain URL
-	URI, err := version.GetPrerecordedAPI(ctx, options)
+	// obtain URL for the REST API call
+	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
 		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		return err
@@ -95,10 +135,10 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		}
 	}
 
-	req.Header.Set("Host", options.Host)
+	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	err = c.HttpClient.Do(ctx, req, func(res *http.Response) error {
@@ -162,7 +202,16 @@ func IsUrl(str string) bool {
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
 
-// DoURL performs a REST call using a URL conversation source
+/*
+DoURL posts a URL capturing a conversation to a given REST endpoint
+
+Input parameters:
+- url: string containing the URL to be posted
+- req: PreRecordedTranscriptionOptions which allows overriding things like language, etc.
+
+Output parameters:
+- resBody: interface{} which will be populated with the response from the server
+*/
 func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	//klog.V(6).Infof("rest.DoURL ENTER\n")
 	//klog.V(4).Infof("rest.doCommonURL apiURI: %s\n", apiURI)
@@ -176,7 +225,7 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 	}
 
 	// obtain URL
-	URI, err := version.GetPrerecordedAPI(ctx, options)
+	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
 		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		return err
@@ -208,9 +257,9 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 		}
 	}
 
-	req.Header.Set("Host", options.Host)
+	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
@@ -274,7 +323,15 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 	return nil
 }
 
-// Do is a generic REST API call to the platform
+/*
+Do is a generic REST API call to the platform
+
+Input parameters:
+- req: http.Request object
+
+Output parameters:
+- resBody: interface{} which will be populated with the response from the server
+*/
 func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
 	//klog.V(6).Infof("rest.Do ENTER\n")
 
@@ -289,7 +346,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	// req.Header.Set("Host", c.options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.ApiKey)
+	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
