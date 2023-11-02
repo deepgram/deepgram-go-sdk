@@ -13,8 +13,9 @@ package manage
 
 import (
 	"context"
-	"log"
 	"net/http"
+
+	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
 	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
@@ -23,6 +24,8 @@ import (
 
 // ListMembers lists all members for a project
 func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.MembersResult, error) {
+	klog.V(6).Infof("manage.ListMembers() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -31,16 +34,16 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersURI, nil, projectId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.ListMembers() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.ListMembers() LEAVE\n")
 		return nil, err
 	}
 
@@ -51,24 +54,26 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.ListMembers() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.ListMembers() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("ListMembers Succeeded\n")
+	klog.V(6).Infof("manage.ListMembers() LEAVE\n")
 	return &resp, nil
 }
 
 // RemoveMember removes a member from a project
 func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, memberId string) (*api.MessageResult, error) {
+	klog.V(6).Infof("manage.RemoveMember() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -77,16 +82,16 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersByIdURI, nil, projectId, memberId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "DELETE", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
 		return nil, err
 	}
 
@@ -97,18 +102,18 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("RemoveMember Succeeded\n")
+	klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
 	return &resp, nil
 }

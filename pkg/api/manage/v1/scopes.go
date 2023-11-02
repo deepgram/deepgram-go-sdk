@@ -15,8 +15,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
+
+	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
 	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
@@ -25,6 +26,8 @@ import (
 
 // GetMemberScopes gets the scopes for a member
 func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, memberId string) (*api.ScopeResult, error) {
+	klog.V(6).Infof("manage.GetMemberScopes() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -33,16 +36,16 @@ func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, me
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
@@ -53,24 +56,26 @@ func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, me
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("GetMemberScopes Succeeded\n")
+	klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 	return &resp, nil
 }
 
 // UpdateMemberScopes updates the scopes for a member
 func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string, memberId string, scope *api.ScopeUpdateRequest) (*api.MessageResult, error) {
+	klog.V(6).Infof("manage.UpdateMemberScopes() ENTER\n")
+
 	// checks
 	if ctx == nil {
 		ctx = context.Background()
@@ -79,23 +84,23 @@ func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string,
 	// request
 	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 		return nil, err
 	}
-	log.Printf("Calling %s\n", URI) // TODO
+	klog.V(4).Infof("Calling %s\n", URI)
 
 	jsonStr, err := json.Marshal(scope)
 	if err != nil {
-		// klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "PUT", URI, bytes.NewBuffer(jsonStr))
 	if err != nil {
-		// klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
@@ -106,18 +111,18 @@ func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string,
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
-				// klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+				klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 				return nil, err
 			}
 		}
 
-		// klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
-	// klog.V(3).Infof("XXXXXXXX Succeeded\n")
-	// klog.V(6).Infof("XXXXXXXX LEAVE\n")
+	klog.V(3).Infof("UpdateMemberScopes Succeeded\n")
+	klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 	return &resp, nil
 }

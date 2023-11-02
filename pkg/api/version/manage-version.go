@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"regexp"
 
+	klog "k8s.io/klog/v2"
+
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
 	"github.com/google/go-querystring/query"
@@ -67,12 +69,12 @@ func GetManageAPI(ctx context.Context, host, version, path string, vals interfac
 
 	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
 	if err != nil {
-		// fmt.Printf("regexp.Compile err: %v\n", err)
+		klog.V(1).Infof("regexp.Compile err: %v\n", err)
 		return "", err
 	}
 
 	match := r.MatchString(path)
-	fmt.Printf("match: %t\n", match)
+	klog.V(3).Infof("match: %t\n", match)
 
 	if match {
 		// version = r.FindStringSubmatch(path)[0]

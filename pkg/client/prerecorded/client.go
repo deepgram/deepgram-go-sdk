@@ -11,10 +11,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
+
+	klog "k8s.io/klog/v2"
 
 	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
@@ -46,10 +47,10 @@ Input parameters:
 func New(apiKey string, options *ClientOptions) *Client {
 	if apiKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-			log.Println("DEEPGRAM_API_KEY found")
+			klog.V(3).Infof("DEEPGRAM_API_KEY found")
 			apiKey = v
 		} else {
-			log.Println("DEEPGRAM_API_KEY not set")
+			klog.V(1).Infof("DEEPGRAM_API_KEY not set")
 			return nil
 		}
 	}
@@ -75,24 +76,31 @@ Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
 func (c *Client) DoFile(ctx context.Context, filePath string, req interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
+	klog.V(6).Infof("prerecorded.DoFile() ENTER\n")
+
 	// file?
 	fileInfo, err := os.Stat(filePath)
 	if err != nil || errors.Is(err, os.ErrNotExist) {
-		//klog.V(1).Infof("File %s does not exist. Err : %v\n", filePath, err)
+		klog.V(1).Infof("File %s does not exist. Err : %v\n", filePath, err)
+		klog.V(6).Infof("prerecorded.DoFile() LEAVE\n")
 		return err
 	}
 
 	if fileInfo.IsDir() || fileInfo.Size() == 0 {
-		//klog.V(1).Infof("%s is a directory not a file\n", filePath)
+		klog.V(1).Infof("%s is a directory not a file\n", filePath)
+		klog.V(6).Infof("prerecorded.DoFile() LEAVE\n")
 		return ErrInvalidInput
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		//klog.V(1).Infof("os.Open(%s) failed. Err : %v\n", filePath, err)
+		klog.V(1).Infof("os.Open(%s) failed. Err : %v\n", filePath, err)
+		klog.V(6).Infof("prerecorded.DoFile() LEAVE\n")
 		return err
 	}
 	defer file.Close()
+
+	klog.V(6).Infof("prerecorded.DoFile() LEAVE\n")
 
 	return c.DoStream(ctx, file, req, resBody)
 }
@@ -108,28 +116,28 @@ Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
 func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
-	//klog.V(6).Infof("rest.doCommonFile ENTER\n")
+	klog.V(6).Infof("rest.DoStream() ENTER\n")
 
 	// obtain URL for the REST API call
 	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
-		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
+		klog.V(1).Infof("version.GetPrerecordedAPI failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoStream() LEAVE\n")
 		return err
 	}
-	// TODO: DO NOT PRINT
-	log.Printf("Connecting to %s\n", URI)
+	klog.V(4).Infof("Connecting to %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", URI, src)
 	if err != nil {
-		//klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoStream() LEAVE\n")
 		return err
 	}
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				//klog.V(3).Infof("doCommonFile() Custom Header: %s = %s\n", k, v)
+				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
 				req.Header.Add(k, v)
 			}
 		}
@@ -147,52 +155,51 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		case http.StatusCreated:
 		case http.StatusNoContent:
 		case http.StatusBadRequest:
-			//klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			// detail, errBody := io.ReadAll(res.Body)
-			detail, _ := io.ReadAll(res.Body)
+			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			detail, errBody := io.ReadAll(res.Body)
 			if err != nil {
-				//klog.V(4).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+				klog.V(4).Infof("io.ReadAll failed. Err: %e\n", errBody)
+				klog.V(6).Infof("rest.DoStream() LEAVE\n")
 				return &interfaces.StatusError{res}
 			}
-			//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+			klog.V(6).Infof("rest.DoStream() LEAVE\n")
 			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
 		default:
 			return &interfaces.StatusError{res}
 		}
 
 		if resBody == nil {
-			//klog.V(1).Infof("resBody == nil\n")
-			//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+			klog.V(1).Infof("resBody == nil\n")
+			klog.V(6).Infof("rest.DoStream() LEAVE\n")
 			return nil
 		}
 
 		switch b := resBody.(type) {
 		case *interfaces.RawResponse:
-			//klog.V(3).Infof("RawResponse\n")
-			//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+			klog.V(3).Infof("RawResponse\n")
+			klog.V(6).Infof("rest.DoStream() LEAVE\n")
 			return res.Write(b)
 		case io.Writer:
-			//klog.V(3).Infof("io.Writer\n")
-			//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+			klog.V(3).Infof("io.Writer\n")
+			klog.V(6).Infof("rest.DoStream() LEAVE\n")
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			//klog.V(3).Infof("json.NewDecoder\n")
 			d := json.NewDecoder(res.Body)
-			//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+			klog.V(3).Infof("json.NewDecoder\n")
+			klog.V(6).Infof("rest.DoStream() LEAVE\n")
 			return d.Decode(resBody)
 		}
 	})
 
 	if err != nil {
-		//klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoStream() LEAVE\n")
 		return err
 	}
 
-	//klog.V(3).Infof("rest.doCommonFile Succeeded\n")
-	//klog.V(6).Infof("rest.doCommonFile LEAVE\n")
+	klog.V(3).Infof("rest.DoStream() Succeeded\n")
+	klog.V(6).Infof("rest.DoStream() LEAVE\n")
 	return nil
 }
 
@@ -213,45 +220,45 @@ Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
 func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
-	//klog.V(6).Infof("rest.DoURL ENTER\n")
-	//klog.V(4).Infof("rest.doCommonURL apiURI: %s\n", apiURI)
+	klog.V(6).Infof("rest.DoURL() ENTER\n")
+	klog.V(4).Infof("apiURI: %s\n", url)
 
 	// checks
 	validURL := IsUrl(url)
 	if !validURL {
-		//klog.V(1).Infof("Invalid URL: %s\n", ufRequest.URL)
-		//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+		klog.V(1).Infof("Invalid URL: %s\n", url)
+		klog.V(6).Infof("rest.DoURL() LEAVE\n")
 		return ErrInvalidInput
 	}
 
 	// obtain URL
 	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
 	if err != nil {
-		log.Printf("version.GetPrerecordedAPI failed. Err: %v\n", err)
+		klog.V(1).Infof("version.GetPrerecordedAPI failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoURL() LEAVE\n")
 		return err
 	}
-	// TODO: DO NOT PRINT
-	log.Printf("Connecting to %s\n", URI)
+	klog.V(4).Infof("Connecting to %s\n", URI)
 
 	var buf bytes.Buffer
 	err = json.NewEncoder(&buf).Encode(urlSource{Url: url})
 	if err != nil {
-		//klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoURL() LEAVE\n")
 		return err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", URI, &buf)
 	if err != nil {
-		//klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoURL() LEAVE\n")
 		return err
 	}
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				//klog.V(3).Infof("doCommonURL() Custom Header: %s = %s\n", k, v)
+				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
 				req.Header.Add(k, v)
 			}
 		}
@@ -264,7 +271,7 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 
 	switch req.Method {
 	case http.MethodPost, http.MethodPatch, http.MethodPut:
-		//klog.V(3).Infof("Content-Type = application/json\n")
+		klog.V(3).Infof("Content-Type = application/json\n")
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -274,52 +281,51 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 		case http.StatusCreated:
 		case http.StatusNoContent:
 		case http.StatusBadRequest:
-			//klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			// detail, errBody := io.ReadAll(res.Body)
-			detail, _ := io.ReadAll(res.Body)
+			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			detail, errBody := io.ReadAll(res.Body)
 			if err != nil {
-				//klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
+				klog.V(6).Infof("rest.DoURL() LEAVE\n")
 				return &interfaces.StatusError{res}
 			}
-			//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+			klog.V(6).Infof("rest.DoURL() LEAVE\n")
 			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
 		default:
 			return &interfaces.StatusError{res}
 		}
 
 		if resBody == nil {
-			//klog.V(1).Infof("resBody == nil\n")
-			//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+			klog.V(1).Infof("resBody == nil\n")
+			klog.V(6).Infof("rest.DoURL() LEAVE\n")
 			return nil
 		}
 
 		switch b := resBody.(type) {
 		case *interfaces.RawResponse:
-			//klog.V(3).Infof("RawResponse\n")
-			//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+			klog.V(3).Infof("RawResponse\n")
+			klog.V(6).Infof("rest.DoURL() LEAVE\n")
 			return res.Write(b)
 		case io.Writer:
-			//klog.V(3).Infof("io.Writer\n")
-			//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+			klog.V(3).Infof("io.Writer\n")
+			klog.V(6).Infof("rest.DoURL() LEAVE\n")
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			//klog.V(3).Infof("json.NewDecoder\n")
 			d := json.NewDecoder(res.Body)
-			//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+			klog.V(3).Infof("json.NewDecoder\n")
+			klog.V(6).Infof("rest.DoURL() LEAVE\n")
 			return d.Decode(resBody)
 		}
 	})
 
 	if err != nil {
-		//klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.DoURL() LEAVE\n")
 		return err
 	}
 
-	//klog.V(3).Infof("rest.doCommonURL Succeeded\n")
-	//klog.V(6).Infof("rest.doCommonURL LEAVE\n")
+	klog.V(3).Infof("rest.DoURL() Succeeded\n")
+	klog.V(6).Infof("rest.DoURL() LEAVE\n")
 	return nil
 }
 
@@ -333,25 +339,25 @@ Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
 func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
-	//klog.V(6).Infof("rest.Do ENTER\n")
+	klog.V(6).Infof("rest.Do() ENTER\n")
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				//klog.V(3).Infof("Do() Custom Header: %s = %s\n", k, v)
+				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
 				req.Header.Add(k, v)
 			}
 		}
 	}
 
-	// req.Header.Set("Host", c.options.Host)
+	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
 	case http.MethodPost, http.MethodPatch, http.MethodPut:
-		//klog.V(3).Infof("Content-Type = application/json\n")
+		klog.V(3).Infof("Content-Type = application/json\n")
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -361,50 +367,50 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 		case http.StatusCreated:
 		case http.StatusNoContent:
 		case http.StatusBadRequest:
-			//klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
 			detail, errBody := io.ReadAll(res.Body)
 			if errBody != nil {
-				//klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				//klog.V(6).Infof("rest.DoFile LEAVE\n")
+				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
+				klog.V(6).Infof("rest.Do() LEAVE\n")
 				return &interfaces.StatusError{res}
 			}
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
 		default:
 			return &interfaces.StatusError{res}
 		}
 
 		if resBody == nil {
-			//klog.V(1).Infof("resBody == nil\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(1).Infof("resBody == nil\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return nil
 		}
 
 		switch b := resBody.(type) {
 		case *interfaces.RawResponse:
-			//klog.V(3).Infof("RawResponse\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(3).Infof("RawResponse\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return res.Write(b)
 		case io.Writer:
-			//klog.V(3).Infof("io.Writer\n")
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(3).Infof("io.Writer\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			//klog.V(3).Infof("json.NewDecoder\n")
 			d := json.NewDecoder(res.Body)
-			//klog.V(6).Infof("rest.Do LEAVE\n")
+			klog.V(3).Infof("json.NewDecoder\n")
+			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return d.Decode(resBody)
 		}
 	})
 
 	if err != nil {
-		//klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		//klog.V(6).Infof("rest.Do LEAVE\n")
+		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
+		klog.V(6).Infof("rest.Do() LEAVE\n")
 		return err
 	}
 
-	//klog.V(3).Infof("rest.Do Succeeded\n")
-	//klog.V(6).Infof("rest.Do LEAVE\n")
+	klog.V(3).Infof("rest.Do() Succeeded\n")
+	klog.V(6).Infof("rest.Do() LEAVE\n")
 	return nil
 }
