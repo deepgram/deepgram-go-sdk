@@ -36,7 +36,7 @@ type LiveTranscriptionOptions struct {
 	Numerals         bool     `json:"numerals" url:"numerals,omitempty" `
 	Profanity_filter bool     `json:"profanity_filter" url:"profanity_filter,omitempty" `
 	Punctuate        bool     `json:"punctuate" url:"punctuate,omitempty" `
-	Redact           bool     `json:"redact" url:"redact,omitempty" `
+	Redact           []string `json:"redact" url:"redact,omitempty" `
 	Replace          string   `json:"replace" url:"replace,omitempty" `
 	Sample_rate      int      `json:"sample_rate" url:"sample_rate,omitempty" `
 	Search           []string `json:"search" url:"search,omitempty" `

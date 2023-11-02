@@ -21,7 +21,9 @@ import (
 
 func main() {
 	// init library
-	client.InitWithDefault()
+	client.Init(client.InitLib{
+		LogLevel: client.LogLevelFull,
+	})
 
 	// context
 	ctx := context.Background()
@@ -44,6 +46,7 @@ func main() {
 				Diarize:    true,
 				Language:   "en-US",
 				Utterances: true,
+				Redact:     []string{"pci", "ssn"},
 			},
 		)
 		if err != nil {

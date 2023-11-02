@@ -37,7 +37,7 @@ type PreRecordedTranscriptionOptions struct {
 	Paragraphs         bool        `json:"paragraphs" url:"paragraphs,omitempty" `
 	Profanity_filter   bool        `json:"profanity_filter" url:"profanity_filter,omitempty" `
 	Punctuate          bool        `json:"punctuate" url:"punctuate,omitempty" `
-	Redact             bool        `json:"redact" url:"redact,omitempty" `
+	Redact             []string    `json:"redact" url:"redact,omitempty" `
 	Replace            []string    `json:"replace" url:"replace,omitempty" `
 	Search             []string    `json:"search" url:"search,omitempty" `
 	Sentiment          bool        `json:"sentiment" url:"sentiment,omitempty" `
