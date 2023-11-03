@@ -1,13 +1,21 @@
+// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
+
 package deepgram_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
 
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
 	"github.com/jarcoal/httpmock"
+
+	prerecorded "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func TestPrerecordedFromURL(t *testing.T) {
@@ -116,10 +124,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
 
 	t.Run("Test Basic PreRecordedFromURL", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{})
+		c := client.New(MockAPIKey, &client.ClientOptions{})
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{})
 
 		if err != nil {
 			t.Errorf("should succeed, but got %s", err)
@@ -127,10 +138,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v1", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{
+		c := client.New(MockAPIKey, &client.ClientOptions{})
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{
 				Summarize: true,
 			})
 
@@ -140,10 +154,13 @@ func TestPrerecordedFromURL(t *testing.T) {
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v2", func(t *testing.T) {
-		dg := deepgram.NewClient(MockAPIKey).WithHost(betaHost)
-		_, err := dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: MockAudioURL},
-			deepgram.PreRecordedTranscriptionOptions{
+		c := client.New(MockAPIKey, &client.ClientOptions{})
+		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		dg := prerecorded.New(c)
+		_, err := dg.FromURL(
+			context.Background(),
+			MockAudioURL,
+			interfaces.PreRecordedTranscriptionOptions{
 				Summarize: "v2",
 			})
 

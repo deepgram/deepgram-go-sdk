@@ -1,31 +1,52 @@
+// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
+	prettyjson "github.com/hokaccha/go-prettyjson"
+
+	prerecorded "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func main() {
-	credentials := "DEEPGRAM_API_KEY"
-	dg := deepgram.NewClient(credentials)
+	// init library
+	client.Init(client.InitLib{
+		LogLevel: client.LogLevelFull,
+	})
+
+	// context
+	ctx := context.Background()
+
+	//client
+	c := client.NewWithDefaults()
+	dg := prerecorded.New(c)
 
 	filePath := "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
 	var res interface{}
 	var err error
 
+	// send stream
 	if isURL(filePath) {
-		res, err = dg.PreRecordedFromURL(
-			deepgram.UrlSource{Url: filePath},
-			deepgram.PreRecordedTranscriptionOptions{
+		res, err = dg.FromURL(
+			ctx,
+			filePath,
+			interfaces.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
 				Utterances: true,
+				Redact:     []string{"pci", "ssn"},
 			},
 		)
 		if err != nil {
@@ -39,11 +60,10 @@ func main() {
 		}
 		defer file.Close()
 
-		source := deepgram.ReadStreamSource{Stream: file, Mimetype: "YOUR_FILE_MIME_TYPE"}
-
-		res, err = dg.PreRecordedFromStream(
-			source,
-			deepgram.PreRecordedTranscriptionOptions{
+		res, err = dg.FromStream(
+			ctx,
+			file,
+			interfaces.PreRecordedTranscriptionOptions{
 				Punctuate:  true,
 				Diarize:    true,
 				Language:   "en-US",
@@ -56,13 +76,18 @@ func main() {
 		}
 	}
 
-	jsonStr, err := json.MarshalIndent(res, "", "  ")
+	data, err := json.Marshal(res)
 	if err != nil {
-		fmt.Println("Error marshaling JSON:", err)
+		log.Printf("RecognitionResult json.Marshal failed. Err: %v\n", err)
 		return
 	}
 
-	log.Printf("%s", jsonStr)
+	prettyJson, err := prettyjson.Format(data)
+	if err != nil {
+		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
+		return
+	}
+	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
 }
 
 // Function to check if a string is a valid URL

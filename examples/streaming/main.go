@@ -1,84 +1,80 @@
+// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"reflect"
 	"time"
 
-	"github.com/Jeffail/gabs/v2"
-	"github.com/deepgram-devs/deepgram-go-sdk/deepgram"
-	"github.com/gorilla/websocket"
+	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
 )
 
 const (
-	DEEPGRAM_API_KEY       = "DEEPGRAM_API_KEY"
 	STREAM_URL             = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 	CHUNK_SIZE             = 1024 * 2
 	TEN_MILLISECONDS_SLEEP = 10 * time.Millisecond
 )
 
 func main() {
-	client := new(http.Client)
+	// init library
+	client.InitWithDefault()
 
-	dg := *deepgram.NewClient(DEEPGRAM_API_KEY)
+	// context
+	ctx := context.Background()
 
-	res, err := client.Get(STREAM_URL)
-	if err != nil {
-		log.Println("ERROR getting stream", err)
-		return
-	}
-	defer res.Body.Close()
-
-	fmt.Println("Stream is up and running ", reflect.TypeOf(res))
-
-	reader := bufio.NewReader(res.Body)
-
-	liveTranscriptionOptions := deepgram.LiveTranscriptionOptions{
+	// options
+	transcriptOptions := interfaces.LiveTranscriptionOptions{
 		Language:  "en-US",
 		Punctuate: true,
 	}
 
-	dgConn, _, err := dg.LiveTranscription(liveTranscriptionOptions)
+	dgClient, err := client.NewWithDefaults(ctx, "", transcriptOptions)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
-	defer dgConn.Close()
 
-	chunk := make([]byte, CHUNK_SIZE)
+	// call connect!
+	wsconn := dgClient.Connect()
+	if wsconn == nil {
+		log.Println("Client.Connect failed")
+		os.Exit(1)
+	}
 
+	// feed the stream to the websocket
+	httpClient := new(http.Client)
+
+	res, err := httpClient.Get(STREAM_URL)
+	if err != nil {
+		log.Printf("httpClient.Get failed. Err: %v\n", err)
+		return
+	}
+
+	log.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
+
+	// this is a blocking call...
 	go func() {
-		for {
-			_, message, err := dgConn.ReadMessage()
-			if err != nil {
-				log.Println("ERROR reading message:", err)
-				return
-			}
-
-			jsonParsed, jsonErr := gabs.ParseJSON(message)
-			if jsonErr != nil {
-				log.Println("ERROR parsing JSON message:", err)
-				return
-			}
-			log.Printf("recv: %s", jsonParsed.Path("channel.alternatives.0.transcript").String())
-		}
+		dgClient.Stream(bufio.NewReader(res.Body))
 	}()
 
-	for {
-		bytesRead, err := reader.Read(chunk)
+	fmt.Print("Press ENTER to exit!\n\n")
+	input := bufio.NewScanner(os.Stdin)
+	input.Scan()
 
-		if err != nil {
-			log.Println("ERROR reading chunk:", err)
-			return
-		}
-		err = dgConn.WriteMessage(websocket.BinaryMessage, chunk[:bytesRead])
-		if err != nil {
-			log.Println("ERROR writing message:", err)
-			return
-		}
-		time.Sleep(TEN_MILLISECONDS_SLEEP)
-	}
+	// close HTTP stream
+	res.Body.Close()
+
+	// close client
+	dgClient.Stop()
+
+	log.Printf("Succeeded!\n\n")
 }

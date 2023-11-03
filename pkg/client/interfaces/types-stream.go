@@ -1,14 +1,19 @@
-package deepgram
+// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
-import (
-	"log"
-	"net/http"
-	"net/url"
+/*
+This package contains the interface to manage the live/streaming interfaces for the Deepgram API
+*/
+package interfaces
 
-	"github.com/google/go-querystring/query"
-	"github.com/gorilla/websocket"
-)
+/*
+LiveTranscriptionOptions contain all of the knobs and dials to control the live transcription
+from the Deepgram API
 
+Please see the documentation for live/streaming for more details:
+https://developers.deepgram.com/reference/streaming
+*/
 type LiveTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
 	Callback         string   `json:"callback" url:"callback,omitempty" `
@@ -31,7 +36,7 @@ type LiveTranscriptionOptions struct {
 	Numerals         bool     `json:"numerals" url:"numerals,omitempty" `
 	Profanity_filter bool     `json:"profanity_filter" url:"profanity_filter,omitempty" `
 	Punctuate        bool     `json:"punctuate" url:"punctuate,omitempty" `
-	Redact           bool     `json:"redact" url:"redact,omitempty" `
+	Redact           []string `json:"redact" url:"redact,omitempty" `
 	Replace          string   `json:"replace" url:"replace,omitempty" `
 	Sample_rate      int      `json:"sample_rate" url:"sample_rate,omitempty" `
 	Search           []string `json:"search" url:"search,omitempty" `
@@ -42,27 +47,4 @@ type LiveTranscriptionOptions struct {
 	Vad_turnoff      int      `json:"vad_turnoff" url:"vad_turnoff,omitempty" `
 	Version          string   `json:"version" url:"version,omitempty" `
 	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
-}
-
-func (dg *Client) LiveTranscription(options LiveTranscriptionOptions) (*websocket.Conn, *http.Response, error) {
-	query, _ := query.Values(options)
-	u := url.URL{Scheme: "wss", Host: dg.Host, Path: "/v1/listen", RawQuery: query.Encode()}
-	log.Printf("connecting to %s", u.String())
-
-	header := http.Header{
-		"Host":          []string{dg.Host},
-		"Authorization": []string{"token " + dg.ApiKey},
-		"User-Agent":    []string{dgAgent},
-	}
-
-	c, resp, err := websocket.DefaultDialer.Dial(u.String(), header)
-
-	if err != nil {
-		if resp != nil {
-			log.Printf("handshake failed with status %s", resp.Status)
-		}
-		log.Printf("dial failed:", err)
-		return c, resp, err
-	}
-	return c, resp, nil
 }
