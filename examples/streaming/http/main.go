@@ -12,16 +12,13 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"time"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
 )
 
 const (
-	STREAM_URL             = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
-	CHUNK_SIZE             = 1024 * 2
-	TEN_MILLISECONDS_SLEEP = 10 * time.Millisecond
+	STREAM_URL = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 )
 
 func main() {
@@ -75,6 +72,4 @@ func main() {
 
 	// close client
 	dgClient.Stop()
-
-	log.Printf("Succeeded!\n\n")
 }
