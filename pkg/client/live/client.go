@@ -215,7 +215,7 @@ func (c *Client) listen() {
 
 				msgType, byMsg, err := ws.ReadMessage()
 				if err != nil {
-					klog.V(1).Infof("WebSocketClient::listen: Cannot read websocket message. Err: %v\n", err)
+					klog.V(3).Infof("WebSocketClient::listen: Cannot read websocket message. Err: %v\n", err)
 					break
 				}
 
@@ -376,14 +376,18 @@ func (c *Client) closeWs() {
 	if c.wsconn != nil {
 		// deepgram requires a close message to be sent
 		errDg := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"CloseStream\" }"))
-		if errDg != nil {
+		if errDg == websocket.ErrCloseSent {
+			klog.V(3).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
+		} else if errDg != nil {
 			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
 		}
 		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure
 
 		// websocket protocol message
 		errProto := c.wsconn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		if errProto != nil {
+		if errProto == websocket.ErrCloseSent {
+			klog.V(3).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
+		} else if errProto != nil {
 			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
 		}
 		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure

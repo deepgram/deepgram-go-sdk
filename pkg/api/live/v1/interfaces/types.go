@@ -48,6 +48,18 @@ type MessageResponse struct {
 	Type         string   `json:"type,omitempty"`
 }
 
+type MetadataResponse struct {
+	Channels       int                  `json:"channels,omitempty"`
+	Created        string               `json:"created,omitempty"`
+	Duration       float64              `json:"duration,omitempty"`
+	ModelInfo      map[string]ModelInfo `json:"model_info,omitempty"`
+	Models         []string             `json:"models,omitempty"`
+	RequestID      string               `json:"request_id,omitempty"`
+	Sha256         string               `json:"sha256,omitempty"`
+	TransactionKey string               `json:"transaction_key,omitempty"`
+	Type           string               `json:"type,omitempty"`
+}
+
 type ErrorResponse struct {
 	Description string `json:"description"`
 	Message     string `json:"message"`

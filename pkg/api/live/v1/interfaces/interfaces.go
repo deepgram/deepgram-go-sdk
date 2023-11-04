@@ -7,5 +7,6 @@ package interfaces
 // LiveMessageCallback is a callback used to receive notifcations for platforms messages
 type LiveMessageCallback interface {
 	Message(mr *MessageResponse) error
+	Metadata(md *MetadataResponse) error
 	// TODO: implement other conversation insights
 }
