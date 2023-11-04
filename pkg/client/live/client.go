@@ -110,7 +110,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		select {
 		case <-c.ctx.Done():
 			// continue through to reconnect by recreating the wsconn object
-			klog.V(2).Infof("Connection is broken. Will attempt reconnect.")
+			klog.V(3).Infof("Connection is broken. Will attempt reconnect.")
 			c.ctx, c.ctxCancel = context.WithCancel(c.org)
 		default:
 			klog.V(7).Infof("Connection is good. Return object.")
@@ -149,7 +149,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 	i := int64(0)
 	for {
 		if retries != connectionRetryInfinite && i >= retries {
-			klog.V(2).Infof("Connect timeout... exiting!\n")
+			klog.V(3).Infof("Connect timeout... exiting!\n")
 			break
 		}
 
@@ -361,7 +361,7 @@ func (c *Client) Write(p []byte) (int, error) {
 
 // Stop will send close message and shutdown websocket connection
 func (c *Client) Stop() {
-	klog.V(2).Infof("WebSocketClient::Stop Stopping...\n")
+	klog.V(3).Infof("WebSocketClient::Stop Stopping...\n")
 	c.ctxCancel()
 	c.closeWs()
 }
@@ -402,7 +402,7 @@ func (c *Client) ping() {
 	for {
 		select {
 		case <-c.ctx.Done():
-			klog.V(2).Infof("live.ping() Exiting\n")
+			klog.V(3).Infof("live.ping() Exiting\n")
 			klog.V(6).Infof("live.ping() LEAVE\n")
 			return
 		case <-ticker.C:
