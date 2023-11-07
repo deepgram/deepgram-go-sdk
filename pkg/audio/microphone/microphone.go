@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+// Implementation microphones using portaudio
 package microphone
 
 import (
@@ -30,7 +31,7 @@ func New(cfg AudioConfig) (*Microphone, error) {
 
 	m := &Microphone{
 		stopChan: make(chan struct{}),
-		intBuf:   make([]int16, 2048),
+		intBuf:   make([]int16, defaultBytesToRead),
 		muted:    false,
 	}
 
@@ -70,7 +71,7 @@ func (m *Microphone) Read() ([]int16, error) {
 		return nil, err
 	}
 
-	buf := make([]int16, 2048)
+	buf := make([]int16, defaultBytesToRead)
 	byteCopied := copy(buf, m.intBuf)
 	klog.V(7).Infof("stream.Read bytes copied: %d\n", byteCopied)
 	return buf, nil

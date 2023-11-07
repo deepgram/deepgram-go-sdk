@@ -2,13 +2,9 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package interfaces
+// Implementation microphones using portaudio
+package microphone
 
 const (
-	// message types
-	TypeMessageResponse  string = "Results"
-	TypeMetadataResponse string = "Metadata"
-
-	// Error type
-	TypeErrorResponse string = "Error"
+	defaultBytesToRead int = 2048
 )

@@ -30,7 +30,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
 		data, err := json.Marshal(mr)
 		if err != nil {
-			klog.V(1).Infof("RecognitionResult json.Marshal failed. Err: %v\n", err)
+			klog.V(1).Infof("Message json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
@@ -51,7 +51,39 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 		klog.V(7).Infof("DEEPGRAM - no transcript")
 		return nil
 	}
-	fmt.Printf("%s\n", sentence)
+	fmt.Printf("\n%s\n", sentence)
+
+	return nil
+}
+
+func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		data, err := json.Marshal(md)
+		if err != nil {
+			klog.V(1).Infof("Metadata json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJson, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nMetadata Object:\n%s\n\n", prettyJson)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\nMetadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
+	fmt.Printf("Metadata.Channels: %d\n", md.Channels)
+	fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
 
 	return nil
 }

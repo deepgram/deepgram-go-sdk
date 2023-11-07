@@ -51,6 +51,8 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		return r.HandleError(byMsg)
 	case interfaces.TypeMessageResponse:
 		return r.MessageResponse(byMsg)
+	case interfaces.TypeMetadataResponse:
+		return r.MetadataResponse(byMsg)
 	default:
 		return r.UnhandledMessage(byMsg)
 	}
@@ -61,7 +63,7 @@ func (r *MessageRouter) MessageResponse(byMsg []byte) error {
 	klog.V(6).Infof("router.MessageResponse ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages("MessageResponse", byMsg)
+	r.printDebugMessages(5, "MessageResponse", byMsg)
 
 	var mr interfaces.MessageResponse
 	err := json.Unmarshal(byMsg, &mr)
@@ -88,12 +90,43 @@ func (r *MessageRouter) MessageResponse(byMsg []byte) error {
 	return ErrUserCallbackNotDefined
 }
 
+func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.MetadataResponse ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "MetadataResponse", byMsg)
+
+	var md interfaces.MetadataResponse
+	err := json.Unmarshal(byMsg, &md)
+	if err != nil {
+		klog.V(1).Infof("MetadataResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.MetadataResponse LEAVE\n")
+		return err
+	}
+
+	if r.callback != nil {
+		err := r.callback.Metadata(&md)
+		if err != nil {
+			klog.V(1).Infof("callback.MetadataResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.MetadataResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.MetadataResponse LEAVE\n")
+		return err
+	}
+
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.MetadataResponse ENTER\n")
+
+	return nil
+}
+
 // HandleError handles error messages
 func (r *MessageRouter) HandleError(byMsg []byte) error {
 	klog.V(6).Infof("router.HandleError ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages("HandleError", byMsg)
+	r.printDebugMessages(1, "HandleError", byMsg)
 
 	var er interfaces.ErrorResponse
 	err := json.Unmarshal(byMsg, &er)
@@ -120,20 +153,20 @@ func (r *MessageRouter) UnhandledMessage(byMsg []byte) error {
 	klog.V(6).Infof("router.UnhandledMessage ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages("UnhandledMessage", byMsg)
+	r.printDebugMessages(2, "UnhandledMessage", byMsg)
 
 	klog.V(1).Infof("User callback is undefined\n")
 	klog.V(6).Infof("router.UnhandledMessage LEAVE\n")
 	return ErrInvalidMessageType
 }
 
-func (r *MessageRouter) printDebugMessages(function string, byMsg []byte) {
+func (r *MessageRouter) printDebugMessages(level klog.Level, function string, byMsg []byte) {
 	prettyJson, err := prettyjson.Format(byMsg)
 	if err != nil {
 		klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 	}
 
-	klog.V(5).Infof("\n\n-----------------------------------------------\n")
-	klog.V(5).Infof("%s RAW:\n%s\n", function, prettyJson)
-	klog.V(5).Infof("-----------------------------------------------\n\n\n")
+	klog.V(level).Infof("\n\n-----------------------------------------------\n")
+	klog.V(level).Infof("%s RAW:\n%s\n", function, prettyJson)
+	klog.V(level).Infof("-----------------------------------------------\n\n\n")
 }
