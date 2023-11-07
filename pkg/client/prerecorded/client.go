@@ -145,7 +145,6 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 
 	req.Header.Set("Host", c.Client.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "token "+c.apiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
