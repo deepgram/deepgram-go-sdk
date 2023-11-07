@@ -24,7 +24,7 @@ const (
 func main() {
 	// init library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelFull,
+		LogLevel: client.LogLevelTrace, // LogLevelStandard / LogLevelFull / LogLevelTrace
 	})
 
 	// context
