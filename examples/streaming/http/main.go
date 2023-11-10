@@ -34,7 +34,7 @@ func main() {
 		Punctuate: true,
 	}
 
-	dgClient, err := client.NewWithDefaults(ctx, "", transcriptOptions)
+	dgClient, err := client.NewForDemo(ctx, transcriptOptions)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return

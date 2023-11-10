@@ -15,6 +15,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dvonthenen/websocket"
@@ -27,14 +28,24 @@ import (
 )
 
 /*
+NewForDemo creates a new websocket connection with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+*/
+func NewForDemo(ctx context.Context, options interfaces.LiveTranscriptionOptions) (*Client, error) {
+	return New(ctx, "", &ClientOptions{}, options, nil)
+}
+
+/*
 NewWithDefaults creates a new websocket connection with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
 */
-func NewWithDefaults(ctx context.Context, apiKey string, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, apiKey, &ClientOptions{}, options, nil)
+func NewWithDefaults(ctx context.Context, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+	return New(ctx, "", &ClientOptions{}, options, callback)
 }
 
 /*
@@ -119,10 +130,13 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		}
 	}
 
-	// TODO: Disable the Hostname validation for now
+	bDisable := true
+	if v := os.Getenv("DEEPGRAM_SSL_HOST_VERIFICATION"); v != "" {
+		bDisable = strings.EqualFold(strings.ToLower(v), "false")
+	}
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
-		TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:  &tls.Config{InsecureSkipVerify: bDisable},
 		RedirectService:  c.cOptions.RedirectService,
 		SkipServerAuth:   c.cOptions.SkipServerAuth,
 	}

@@ -34,7 +34,7 @@ func main() {
 
 	var projectId string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectId
+		projectId = item.ProjectID
 		name := item.Name
 		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break

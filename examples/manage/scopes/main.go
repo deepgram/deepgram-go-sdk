@@ -38,7 +38,7 @@ func main() {
 
 	var projectId string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectId
+		projectId = item.ProjectID
 		name := item.Name
 		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
@@ -53,7 +53,7 @@ func main() {
 
 	var updateID string
 	for _, item := range respGet.Members {
-		memberId := item.MemberId
+		memberId := item.MemberID
 		email := item.Email
 		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {
@@ -102,7 +102,7 @@ func main() {
 	}
 
 	for _, item := range respGet.Members {
-		memberId := item.MemberId
+		memberId := item.MemberID
 		email := item.Email
 		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {
@@ -128,7 +128,7 @@ func main() {
 	}
 
 	for _, item := range respGet.Members {
-		memberId := item.MemberId
+		memberId := item.MemberID
 		email := item.Email
 		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {

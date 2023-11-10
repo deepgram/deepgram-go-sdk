@@ -124,7 +124,7 @@ func (c *ManageClient) GetKey(ctx context.Context, projectId string, keyId strin
 }
 
 // CreateKey creates a key for a project
-func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api.KeyCreateRequest) (*api.Key, error) {
+func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api.KeyCreateRequest) (*api.APIKey, error) {
 	klog.V(6).Infof("manage.CreateKey() ENTER\n")
 
 	// checks
@@ -176,7 +176,7 @@ func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api
 	}
 
 	// Do it!
-	var resp api.Key
+	var resp api.APIKey
 	err = c.Client.Do(ctx, req, &resp)
 
 	if err != nil {

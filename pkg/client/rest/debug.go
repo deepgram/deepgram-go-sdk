@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httputil"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -117,6 +118,13 @@ func newDebug() *debugContainer {
 	d := debugContainer{
 		cn: atomic.AddUint64(&cn, 1),
 		rn: 0,
+	}
+
+	if v := os.Getenv("DEEPGRAM_DEBUG_REST"); v != "" {
+		fmt.Printf("\n---------------------------------\n")
+		fmt.Printf("DEEPGRAM_DEBUG_REST found\n")
+		fmt.Printf("---------------------------------\n\n")
+		debug.SetProvider(debug.LogProvider{})
 	}
 
 	if !debug.Enabled() {

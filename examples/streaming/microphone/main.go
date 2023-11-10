@@ -10,11 +10,33 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 
+	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
 	microphone "github.com/deepgram-devs/deepgram-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
 )
+
+type MyCallback struct{}
+
+func (c MyCallback) Message(mr *api.MessageResponse) error {
+	// handle the message
+	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+
+	if len(mr.Channel.Alternatives) == 0 || len(sentence) == 0 {
+		return nil
+	}
+	log.Printf("\n%s\n", sentence)
+	return nil
+}
+func (c MyCallback) Metadata(md *api.MetadataResponse) error {
+	// handle the metadata
+	log.Printf("\nMetadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
+	log.Printf("Metadata.Channels: %d\n", md.Channels)
+	log.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
+	return nil
+}
 
 func main() {
 	// init library
@@ -24,7 +46,9 @@ func main() {
 		DG Streaming API
 	*/
 	// init library
-	client.InitWithDefault()
+	client.Init(client.InitLib{
+		LogLevel: client.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelTrace
+	})
 
 	// context
 	ctx := context.Background()
@@ -38,7 +62,10 @@ func main() {
 		Sample_rate: 16000,
 	}
 
-	dgClient, err := client.NewWithDefaults(ctx, "", transcriptOptions)
+	// callback
+	callback := MyCallback{}
+
+	dgClient, err := client.NewWithDefaults(ctx, transcriptOptions, callback)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return

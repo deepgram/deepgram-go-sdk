@@ -33,7 +33,7 @@ func main() {
 
 	var projectId string
 	for _, item := range respProject.Projects {
-		projectId = item.ProjectId
+		projectId = item.ProjectID
 		name := item.Name
 		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
@@ -49,7 +49,7 @@ func main() {
 	var amount float64
 	var id string
 	for _, item := range respList.Balances {
-		id = item.BalanceId
+		id = item.BalanceID
 		amount = item.Amount
 		log.Printf("ListBalances() - ID: %s, Amount: %f\n", id, amount)
 	}

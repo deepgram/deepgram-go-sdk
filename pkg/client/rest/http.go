@@ -9,6 +9,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
@@ -16,10 +18,12 @@ import (
 
 // New allocated a Simple HTTP client
 func NewHTTPClient() *HttpClient {
-	// TODO: add verification later, pick up from ENV or FILE
-	/* #nosec G402 */
+	bDisable := true
+	if v := os.Getenv("DEEPGRAM_SSL_HOST_VERIFICATION"); v != "" {
+		bDisable = strings.EqualFold(strings.ToLower(v), "false")
+	}
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: bDisable},
 	}
 
 	c := HttpClient{

@@ -34,7 +34,7 @@ func main() {
 
 	var projectId string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectId
+		projectId = item.ProjectID
 		name := item.Name
 		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
@@ -47,11 +47,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, item := range respGet.ApiKeys {
-		id := item.ApiKeyId
-		comment := item.Comment
+	for _, item := range respGet.APIKeys {
+		id := item.APIKey.APIKeyID
+		comment := item.APIKey.Comment
 		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
-		break
 	}
 
 	// create key
@@ -65,16 +64,29 @@ func main() {
 	}
 	log.Printf("CreateKey() - Name: %s\n", respCreate.Comment)
 
+	// list keys
+	respGet, err = mgClient.ListKeys(ctx, projectId)
+	if err != nil {
+		log.Printf("ListKeys failed. Err: %v\n", err)
+		os.Exit(1)
+	}
+
+	for _, item := range respGet.APIKeys {
+		id := item.APIKey.APIKeyID
+		comment := item.APIKey.Comment
+		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
+	}
+
 	// get key
-	respKey, err := mgClient.GetKey(ctx, projectId, respCreate.ApiKeyId)
+	respKey, err := mgClient.GetKey(ctx, projectId, respCreate.APIKeyID)
 	if err != nil {
 		log.Printf("GetKey failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.Key.ApiKeyId, respKey.Key.Comment)
+	log.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.APIKey.APIKeyID, respKey.APIKey.Comment)
 
 	// delete project
-	respMessage, err := mgClient.DeleteKey(ctx, projectId, respKey.Key.ApiKeyId)
+	respMessage, err := mgClient.DeleteKey(ctx, projectId, respKey.APIKey.APIKeyID)
 	if err != nil {
 		log.Printf("DeleteKey failed. Err: %v\n", err)
 		os.Exit(1)
@@ -88,9 +100,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, item := range respGet.ApiKeys {
-		id := item.ApiKeyId
-		comment := item.Comment
+	for _, item := range respGet.APIKeys {
+		id := item.APIKey.APIKeyID
+		comment := item.APIKey.Comment
 		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
 	}
 }
