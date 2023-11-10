@@ -19,7 +19,7 @@ func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 
 	vtt := "WEBVTT\n\n"
 
-	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Metadata.RequestId + "\nCreated: " + resp.Metadata.Created + "\n\n"
+	vtt += "NOTE\nTranscription provided by Deepgram\nRequest ID: " + resp.Metadata.RequestID + "\nCreated: " + resp.Metadata.Created + "\n\n"
 
 	for i, utterance := range resp.Results.Utterances {
 		utterance := utterance

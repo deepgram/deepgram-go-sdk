@@ -6,135 +6,137 @@ package interfaces
 
 // share/common structs
 type Metadata struct {
-	TransactionKey string   `json:"transaction_key"`
-	RequestId      string   `json:"request_id"`
-	Sha256         string   `json:"sha256"`
-	Created        string   `json:"created"`
-	Duration       float64  `json:"duration"`
-	Channels       int      `json:"channels"`
-	Models         []string `json:"models"`
+	TransactionKey string   `json:"transaction_key,omitempty"`
+	RequestID      string   `json:"request_id,omitempty"`
+	Sha256         string   `json:"sha256,omitempty"`
+	Created        string   `json:"created,omitempty"`
+	Duration       float64  `json:"duration,omitempty"`
+	Channels       int      `json:"channels,omitempty"`
+	Models         []string `json:"models,omitempty"`
 	ModelInfo      map[string]struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		Arch    string `json:"arch"`
-	} `json:"model_info"`
-	Warnings []*Warning `json:"warnings,omitempty"`
+		Name    string `json:"name,omitempty"`
+		Version string `json:"version,omitempty"`
+		Arch    string `json:"arch,omitempty"`
+	} `json:"model_info,omitempty"`
+	Warnings []Warning `json:"warnings,omitempty"`
 }
 
 type Warning struct {
-	Parameter string `json:"parameter"`
-	Type      string `json:"type"`
-	Message   string `json:"message"`
+	Parameter string `json:"parameter,omitempty"`
+	Type      string `json:"type,omitempty"`
+	Message   string `json:"message,omitempty"`
 }
 
-type Hit struct {
-	Confidence float64 `json:"confidence"`
-	Start      float64 `json:"start"`
-	End        float64 `json:"end"`
-	Snippet    string  `json:"snippet"`
+type Hits struct {
+	Confidence float64 `json:"confidence,omitempty"`
+	Start      float64 `json:"start,omitempty"`
+	End        float64 `json:"end,omitempty"`
+	Snippet    string  `json:"snippet,omitempty"`
 }
 
 type Search struct {
-	Query string `json:"query"`
-	Hits  []Hit  `json:"hits"`
+	Query string `json:"query,omitempty"`
+	Hits  []Hits `json:"hits,omitempty"`
 }
 
-type WordBase struct {
-	Word              string  `json:"word"`
-	Start             float64 `json:"start"`
-	End               float64 `json:"end"`
-	Confidence        float64 `json:"confidence"`
-	Speaker           *int    `json:"speaker,omitempty"`
+type Words struct {
+	Word              string  `json:"word,omitempty"`
+	Start             float64 `json:"start,omitempty"`
+	End               float64 `json:"end,omitempty"`
+	Confidence        float64 `json:"confidence,omitempty"`
+	Speaker           int     `json:"speaker,omitempty"`
 	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
-	Punctuated_Word   string  `json:"punctuated_word,omitempty"`
+	PunctuatedWord    string  `json:"punctuated_word,omitempty"`
 	Sentiment         string  `json:"sentiment,omitempty"`
 }
 
-type Alternative struct {
-	Transcript string          `json:"transcript"`
-	Confidence float64         `json:"confidence"`
-	Words      []WordBase      `json:"words"`
-	Summaries  []*SummaryV1    `json:"summaries,omitempty"`
-	Paragraphs *ParagraphGroup `json:"paragraphs,omitempty"`
-	Topics     []*TopicBase    `json:"topics,omitempty"`
-	Entities   []*EntityBase   `json:"entities,omitempty"`
+type Alternatives struct {
+	Transcript string      `json:"transcript,omitempty"`
+	Confidence float64     `json:"confidence,omitempty"`
+	Words      []Words     `json:"words,omitempty"`
+	Paragraphs Paragraphs  `json:"paragraphs,omitempty"`
+	Entities   []Entities  `json:"entities,omitempty"`
+	Summaries  []Summaries `json:"summaries,omitempty"`
+	Topics     []Topics    `json:"topics,omitempty"`
 }
 
-type ParagraphGroup struct {
-	Transcript string          `json:"transcript"`
-	Paragraphs []ParagraphBase `json:"paragraphs"`
+type Paragraphs struct {
+	Transcript string      `json:"transcript,omitempty"`
+	Paragraphs []Paragraph `json:"paragraphs,omitempty"`
 }
 
-type ParagraphBase struct {
-	Sentences []SentenceBase `json:"sentences"`
-	NumWords  int            `json:"num_words"`
-	Start     float64        `json:"start"`
-	End       float64        `json:"end"`
+type Paragraph struct {
+	Sentences []Sentences `json:"sentences,omitempty"`
+	NumWords  int         `json:"num_words,omitempty"`
+	Start     float64     `json:"start,omitempty"`
+	End       float64     `json:"end,omitempty"`
 }
 
-type SentenceBase struct {
-	Text  string  `json:"text"`
-	Start float64 `json:"start"`
-	End   float64 `json:"end"`
+type Sentences struct {
+	Text  string  `json:"text,omitempty"`
+	Start float64 `json:"start,omitempty"`
+	End   float64 `json:"end,omitempty"`
 }
 
-type EntityBase struct {
-	Label      string  `json:"label"`
-	Value      string  `json:"value"`
-	Confidence float64 `json:"confidence"`
-	StartWord  int     `json:"start_word"`
-	EndWord    int     `json:"end_word"`
+type Entities struct {
+	Label      string  `json:"label,omitempty"`
+	Value      string  `json:"value,omitempty"`
+	Confidence float64 `json:"confidence,omitempty"`
+	StartWord  float64 `json:"start_word,omitempty"`
+	EndWord    float64 `json:"end_word,omitempty"`
 }
 
-type TopicBase struct {
-	Text      string  `json:"text"`
-	StartWord int     `json:"start_word"`
-	EndWord   int     `json:"end_word"`
-	Topics    []Topic `json:"topics"`
+type Topics struct {
+	Text      string  `json:"text,omitempty"`
+	StartWord int     `json:"start_word,omitempty"`
+	EndWord   int     `json:"end_word,omitempty"`
+	Topics    []Topic `json:"topics,omitempty"`
 }
 
 type Topic struct {
-	Topic      string  `json:"topic"`
-	Confidence float64 `json:"confidence"`
+	Topic      string  `json:"topic,omitempty"`
+	Confidence float64 `json:"confidence,omitempty"`
 }
 
-type Channel struct {
-	Search           []*Search     `json:"search,omitempty"`
-	Alternatives     []Alternative `json:"alternatives"`
-	DetectedLanguage string        `json:"detected_language,omitempty"`
+type Channels struct {
+	Search           []Search       `json:"search,omitempty"`
+	Alternatives     []Alternatives `json:"alternatives,omitempty"`
+	DetectedLanguage string         `json:"detected_language,omitempty"`
 }
 
-type Utterance struct {
-	Start      float64    `json:"start"`
-	End        float64    `json:"end"`
-	Confidence float64    `json:"confidence"`
-	Channel    int        `json:"channel"`
-	Transcript string     `json:"transcript"`
-	Words      []WordBase `json:"words"`
-	Speaker    *int       `json:"speaker,omitempty"`
-	Id         string     `json:"id"`
+type Utterances struct {
+	Start      float64 `json:"start,omitempty"`
+	End        float64 `json:"end,omitempty"`
+	Confidence float64 `json:"confidence,omitempty"`
+	Channel    int     `json:"channel,omitempty"`
+	Transcript string  `json:"transcript,omitempty"`
+	Words      []Words `json:"words,omitempty"`
+	Speaker    int     `json:"speaker,omitempty"`
+	ID         string  `json:"id,omitempty"`
 }
 
 type Results struct {
-	Utterances []*Utterance `json:"utterances,omitempty"`
-	Channels   []Channel    `json:"channels"`
-	Summary    *SummaryV2   `json:"summary,omitempty"`
+	Channels   []Channels   `json:"channels,omitempty"`
+	Utterances []Utterances `json:"utterances,omitempty"`
+	Summary    Summary      `json:"summary,omitempty"`
 }
 
-type SummaryV1 struct {
-	Summary   string `json:"summary"`
-	StartWord int    `json:"start_word"`
-	EndWord   int    `json:"end_word"`
+type Summaries struct {
+	Summary   string `json:"summary,omitempty"`
+	StartWord int    `json:"start_word,omitempty"`
+	EndWord   int    `json:"end_word,omitempty"`
 }
+type SummaryV1 Summaries
 
-type SummaryV2 struct {
-	Short  string `json:"short"`
-	Result string `json:"result"`
+type Summary struct {
+	Short  string `json:"short,omitempty"`
+	Result string `json:"result,omitempty"`
 }
+type SummaryV2 Summary
 
 // Response
 type PreRecordedResponse struct {
-	Request_id string   `json:"request_id,omitempty"`
-	Metadata   Metadata `json:"metadata"`
-	Results    Results  `json:"results"`
+	RequestID string   `json:"request_id,omitempty"` // for ?callback=...
+	Metadata  Metadata `json:"metadata,omitempty"`
+	Results   Results  `json:"results,omitempty"`
 }
