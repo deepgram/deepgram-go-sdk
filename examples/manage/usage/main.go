@@ -34,7 +34,7 @@ func main() {
 
 	var projectId string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectId
+		projectId = item.ProjectID
 		name := item.Name
 		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
@@ -49,7 +49,7 @@ func main() {
 
 	var requestId string
 	for _, item := range respRequestGet.Requests {
-		requestId = item.RequestId
+		requestId = item.RequestID
 		path := item.Path
 		log.Printf("ListRequests() - ID: %s, Path: %s\n", requestId, path)
 	}
@@ -60,7 +60,7 @@ func main() {
 		log.Printf("GetRequest failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetRequest() - ID: %s, Path: %s\n", respRequest.RequestId, respRequest.Path)
+	log.Printf("GetRequest() - ID: %s, Path: %s\n", respRequest.RequestID, respRequest.Path)
 
 	// get fields
 	respFieldsGet, err := mgClient.GetFields(ctx, projectId, &interfaces.UsageListRequest{})

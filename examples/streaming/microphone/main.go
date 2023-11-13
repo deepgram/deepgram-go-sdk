@@ -24,7 +24,9 @@ func main() {
 		DG Streaming API
 	*/
 	// init library
-	client.InitWithDefault()
+	client.Init(client.InitLib{
+		LogLevel: client.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelTrace
+	})
 
 	// context
 	ctx := context.Background()

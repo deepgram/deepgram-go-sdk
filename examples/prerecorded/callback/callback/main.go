@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -18,7 +19,8 @@ import (
 )
 
 const (
-	url string = "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
+	url      string = "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"
+	hostport string = "<REPLACE WITH YOUR HOSTPORT - FORMAT: 127.0.0.1:3000>"
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 			Diarize:    true,
 			Language:   "en-US",
 			Utterances: true,
-			Callback:   "https://136.22.14.123:3000/v1/callback",
+			Callback:   fmt.Sprintf("https://%s/v1/callback", hostport),
 		},
 	)
 	if err != nil {

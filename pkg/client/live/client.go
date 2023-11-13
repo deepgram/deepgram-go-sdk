@@ -15,6 +15,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/dvonthenen/websocket"
@@ -119,10 +120,13 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		}
 	}
 
-	// TODO: Disable the Hostname validation for now
+	bDisable := true
+	if v := os.Getenv("DEEPGRAM_SSL_HOST_VERIFICATION"); v != "" {
+		bDisable = strings.EqualFold(strings.ToLower(v), "false")
+	}
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
-		TLSClientConfig:  &tls.Config{InsecureSkipVerify: true},
+		TLSClientConfig:  &tls.Config{InsecureSkipVerify: bDisable},
 		RedirectService:  c.cOptions.RedirectService,
 		SkipServerAuth:   c.cOptions.SkipServerAuth,
 	}

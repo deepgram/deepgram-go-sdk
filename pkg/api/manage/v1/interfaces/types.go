@@ -14,80 +14,86 @@ import "time"
 /***********************************/
 // Balance provides a balance
 type Balance struct {
-	Amount          float64 `json:"amount"`
-	BalanceId       string  `json:"balance_id"`
-	Units           string  `json:"units"`
-	PurchaseOrderId string  `json:"purchase_order_id"`
+	BalanceID       string  `json:"balance_id,omitempty"`
+	Amount          float64 `json:"amount,omitempty"`
+	Units           string  `json:"units,omitempty"`
+	PurchaseOrderID string  `json:"purchase_order_id,omitempty"`
 }
 
 // BalanceList provides a list of balances
 type BalanceList struct {
-	Balances []Balance `json:"balances"`
+	Balances []Balance `json:"balances,omitempty"`
 }
 
 // Invitation provides an invitation
-type Invitation struct {
-	Email string `json:"email"`
-	Scope string `json:"scope"`
+type Invite struct {
+	Email string `json:"email,omitempty"`
+	Scope string `json:"scope,omitempty"`
 }
 
 // InvitationList provides a list of invitations
-type InvitationList struct {
-	Invites []Invitation `json:"invites"`
+type InvitesList struct {
+	Invites []Invite `json:"invites,omitempty"`
+}
+
+// APIKeyPermission Provides a user and key pairing
+type APIKeyPermission struct {
+	Member Member `json:"member,omitempty"`
+	APIKey APIKey `json:"api_key,omitempty"`
 }
 
 // Key provides a key
-type Key struct {
-	ApiKeyId string   `json:"api_key_id"`
-	Key      string   `json:"key"`
-	Comment  string   `json:"comment"`
-	Created  string   `json:"created"`
-	Scopes   []string `json:"scopes"`
+type APIKey struct {
+	APIKeyID string   `json:"api_key_id,omitempty"`
+	Comment  string   `json:"comment,omitempty"`
+	Scopes   []string `json:"scopes,omitempty"`
+	Created  string   `json:"created,omitempty"`
 }
 
 // KeyList provides a list of keys
-type KeyList struct {
-	ApiKeys []Key `json:"api_key"`
+type APIKeysList struct {
+	APIKeys []APIKeyPermission `json:"api_keys,omitempty"`
 }
 
 // ScopeList provides a list of scopes
 type ScopeList struct {
-	Scopes []string `json:"scopes"`
+	Scopes []string `json:"scopes,omitempty"`
 }
 
 // Member provides a member
 type Member struct {
-	Email     string   `json:"email"`
-	MemberId  string   `json:"member_id"`
-	FirstName string   `json:"first_name"`
-	LastName  string   `json:"last_name"`
-	Scopes    []string `json:"scopes"`
+	MemberID  string   `json:"member_id,omitempty"`
+	Email     string   `json:"email,omitempty"`
+	FirstName string   `json:"first_name,omitempty"`
+	LastName  string   `json:"last_name,omitempty"`
+	Scopes    []string `json:"scopes,omitempty"`
 }
 
 // MemberList provides a list of members
 type MemberList struct {
-	Members []Member `json:"members"`
+	Members []Member `json:"members,omitempty"`
 }
 
 // Project provides a project
 type Project struct {
-	ProjectId string `json:"project_id"`
+	ProjectID string `json:"project_id,omitempty"`
 	Name      string `json:"name,omitempty"`
 	Company   string `json:"company,omitempty"`
 }
 
 // ProjectList provides a list of projects
 type ProjectList struct {
-	Projects []Project `json:"projects"`
+	Projects []Project `json:"projects,omitempty"`
 }
 
 // Config provides a config
 type Config struct {
-	Diarize    bool   `json:"diarize,omitempty"`
-	Language   string `json:"language,omitempty"`
-	Model      string `json:"model,omitempty"`
-	Punctuate  bool   `json:"punctuate,omitempty"`
-	Utterances bool   `json:"utterances,omitempty"`
+	Diarize        bool   `json:"diarize,omitempty"`
+	Language       string `json:"language,omitempty"`
+	Model          string `json:"model,omitempty"`
+	Punctuate      bool   `json:"punctuate,omitempty"`
+	Utterances     bool   `json:"utterances,omitempty"`
+	InterimResults bool   `json:"interim_results,omitempty"`
 }
 
 // Details provides details
@@ -112,6 +118,17 @@ type Response struct {
 	Completed string  `json:"completed,omitempty"`
 }
 
+// Request provides a request
+type Request struct {
+	RequestID string      `json:"request_id,omitempty"`
+	Created   string      `json:"created,omitempty"`
+	Path      string      `json:"path,omitempty"`
+	Accessor  string      `json:"accessor" url:"accessor,omitempty"`
+	APIKeyID  string      `json:"api_key_id,omitempty"`
+	Response  Response    `json:"response,omitempty"`
+	Callback  interface{} `json:"callback,omitempty"`
+}
+
 // Models provides a list of models
 type Models struct {
 	Name     string `json:"name,omitempty"`
@@ -133,6 +150,29 @@ type Results struct {
 	Hours      float64 `json:"hours,omitempty"`
 	TotalHours float64 `json:"total_hours,omitempty"`
 	Requests   int     `json:"requests,omitempty"`
+}
+
+// RequestList provides a list of requests
+type RequestList struct {
+	Page     int       `json:"page,omitempty"`
+	Limit    int       `json:"limit,omitempty"`
+	Requests []Request `json:"requests,omitempty"`
+}
+
+// UsageField provides a usage field
+type UsageField struct {
+	Tags              []any    `json:"tags,omitempty"`
+	Models            []Models `json:"models,omitempty"`
+	ProcessingMethods []string `json:"processing_methods,omitempty"`
+	Features          []string `json:"features,omitempty"`
+}
+
+// Usage provides a usage
+type Usage struct {
+	Start      string     `json:"start,omitempty"`
+	End        string     `json:"end,omitempty"`
+	Resolution Resolution `json:"resolution,omitempty"`
+	Results    []Results  `json:"results,omitempty"`
 }
 
 /***********************************/
@@ -228,18 +268,17 @@ type BalanceResult struct {
 
 // InvitationResult provides a result with a single invitation
 type InvitationsResult struct {
-	InvitationList
+	InvitesList
 }
 
 // InvitationResult provides a result with a single invitation
 type KeysResult struct {
-	KeyList
+	APIKeysList
 }
 
 // KeyResult provides a result with a single key
 type KeyResult struct {
-	Member Member `json:"member"`
-	Key    Key    `json:"api_key"`
+	APIKeyPermission
 }
 
 // MembersResult provides a result with a list of members
@@ -263,35 +302,20 @@ type ScopeResult struct {
 
 // UsageResult provides a result with a list of usage
 type UsageListResult struct {
-	Page     int                  `json:"page" url:"page,omitempty"`
-	Limit    int                  `json:"limit" url:"limit,omitempty"`
-	Requests []UsageRequestResult `json:"requests" url:"requests,omitempty"`
-	// Requests interface{} `json:"requests" url:"requests,omitempty"`
+	RequestList
 }
 
 // UsageRequestResult provides a result with a single usage request
 type UsageRequestResult struct {
-	RequestId string      `json:"request_id" url:"request_id,omitempty"`
-	Created   string      `json:"created" url:"created,omitempty"`
-	Path      string      `json:"path" url:"path,omitempty"`
-	Accessor  string      `json:"accessor" url:"accessor,omitempty"`
-	APIKeyID  string      `json:"api_key_id,omitempty"`
-	Response  Response    `json:"response,omitempty"`
-	Callback  interface{} `json:"callback" url:"callback,omitempty"`
+	Request
 }
 
 // UsageFieldResult provides a result with a list of fields
 type UsageFieldResult struct {
-	Tags              []string `json:"tags,omitempty"`
-	Models            []Models `json:"models,omitempty"`
-	ProcessingMethods []string `json:"processing_methods,omitempty"`
-	Features          []string `json:"features,omitempty"`
+	UsageField
 }
 
 // UsageSummary provides a result with a list of usage
 type UsageResult struct {
-	Start      string     `json:"start,omitempty"`
-	End        string     `json:"end,omitempty"`
-	Resolution Resolution `json:"resolution,omitempty"`
-	Results    []Results  `json:"results,omitempty"`
+	Usage
 }
