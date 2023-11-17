@@ -36,7 +36,7 @@ func main() {
 		Sample_rate: 8000,
 	}
 
-	dgClient, err := client.NewWithDefaults(ctx, "", transcriptOptions)
+	dgClient, err := client.NewForDemo(ctx, transcriptOptions)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
