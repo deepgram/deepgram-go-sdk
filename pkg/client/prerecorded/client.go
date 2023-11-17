@@ -17,9 +17,9 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
-	rest "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/rest"
+	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest"
 )
 
 type urlSource struct {

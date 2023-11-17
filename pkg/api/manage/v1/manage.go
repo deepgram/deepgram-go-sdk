@@ -5,7 +5,7 @@
 package manage
 
 import (
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 // ManageClient is the client for the Deepgram Manage API

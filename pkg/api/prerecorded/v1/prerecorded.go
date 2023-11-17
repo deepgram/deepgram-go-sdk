@@ -11,9 +11,9 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1/interfaces"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 type PrerecordedClient struct {

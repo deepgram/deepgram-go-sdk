@@ -6,8 +6,8 @@
 	This SDK provides Go library for performing Prerecorded and Live/Streaming operations
 	on the Deepgram.com Platform.
 
-	GitHub repo: https://github.com/deepgram-devs/deepgram-go-sdk
-	Go SDK Examples: https://github.com/deepgram-devs/deepgram-go-sdk/tree/main/examples
+	GitHub repo: https://github.com/deepgram/deepgram-go-sdk
+	Go SDK Examples: https://github.com/deepgram/deepgram-go-sdk/tree/main/examples
 
 	Deepgram Platform API reference: https://developers.deepgram.com/reference
 	Documentation: https://developers.deepgram.com/docs
@@ -20,6 +20,6 @@
 package sdk
 
 import (
-	_ "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
-	_ "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	_ "github.com/deepgram/deepgram-go-sdk/pkg/client/live"
+	_ "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )

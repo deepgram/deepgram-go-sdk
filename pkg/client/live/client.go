@@ -21,10 +21,10 @@ import (
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
 
-	live "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1"
-	msginterfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
-	version "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/version"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	live "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
 /*

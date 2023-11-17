@@ -11,7 +11,7 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
 )
 
 // MessageRouter is helper struct that routes events
