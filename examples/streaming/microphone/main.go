@@ -12,10 +12,10 @@ import (
 	"os"
 	"strings"
 
-	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
-	microphone "github.com/deepgram-devs/deepgram-go-sdk/pkg/audio/microphone"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/live"
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	microphone "github.com/deepgram/deepgram-go-sdk/pkg/audio/microphone"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live"
 )
 
 type MyCallback struct{}

@@ -13,9 +13,9 @@ import (
 
 	"github.com/jarcoal/httpmock"
 
-	prerecorded "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/prerecorded/v1"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func TestPrerecordedFromURL(t *testing.T) {

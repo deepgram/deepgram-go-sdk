@@ -14,7 +14,7 @@ export DEEPGRAM_API_KEY=YOUR-APP-KEY-HERE
 
 ## Installation
 
-The Live API (Real-Time) example makes use of a [microphone package](https://github.com/deepgram-devs/deepgram-go-sdk/tree/main/pkg/audio/microphone) contained within the repository. That package makes use of the [PortAudio library](http://www.portaudio.com/) which is a cross-platform open source audio library. If you are on Linux, you can install this library using whatever package manager is available (yum, apt, etc.) on your operating system. If you are on macOS, you can install this library using [brew](https://brew.sh/).
+The Live API (Real-Time) example makes use of a [microphone package](https://github.com/deepgram/deepgram-go-sdk/tree/main/pkg/audio/microphone) contained within the repository. That package makes use of the [PortAudio library](http://www.portaudio.com/) which is a cross-platform open source audio library. If you are on Linux, you can install this library using whatever package manager is available (yum, apt, etc.) on your operating system. If you are on macOS, you can install this library using [brew](https://brew.sh/).
 
 [dg-console]: https://console.deepgram.com/
 [dg-signup]: https://console.deepgram.com/signup

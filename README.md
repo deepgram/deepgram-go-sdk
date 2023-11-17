@@ -65,7 +65,7 @@ You can learn more about the full Deepgram API at [https://developers.deepgram.c
 # Installation
 
 ```bash
-go get github.com/deepgram-devs/deepgram-go-sdk
+go get github.com/deepgram/deepgram-go-sdk
 ```
 
 # Requirements
@@ -594,7 +594,7 @@ To make sure our community is safe for all, be sure to review and agree to our
 We love to hear from you so if you have questions, comments or find a bug in the
 project, let us know! You can either:
 
-- [Open an issue in this repository](https://github.com/deepgram-devs/deepgram-dotnet-sdk/issues/new)
+- [Open an issue in this repository](https://github.com/deepgram/deepgram-dotnet-sdk/issues/new)
 - [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
 - [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)
 

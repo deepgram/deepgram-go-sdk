@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
 // New allocated a Simple HTTP client

@@ -10,9 +10,9 @@ import (
 
 	"github.com/dvonthenen/websocket"
 
-	live "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1"
-	msginterface "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/live/v1/interfaces"
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
+	live "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1"
+	msginterface "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
 // ClientOptions defines any options for the client

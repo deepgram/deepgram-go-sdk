@@ -9,8 +9,8 @@ import (
 	"log"
 	"os"
 
-	api "github.com/deepgram-devs/deepgram-go-sdk/pkg/api/manage/v1"
-	client "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/prerecorded"
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
 func main() {

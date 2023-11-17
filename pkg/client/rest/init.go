@@ -8,7 +8,7 @@ This package contains the initialization code for the Deepgram Go SDK
 package rest
 
 import (
-	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
+	common "github.com/deepgram/deepgram-go-sdk/pkg/common"
 )
 
 const (

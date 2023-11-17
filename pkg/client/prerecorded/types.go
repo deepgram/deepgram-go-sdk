@@ -5,7 +5,7 @@
 package prerecorded
 
 import (
-	rest "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/rest"
+	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest"
 )
 
 // ClientOptions defines any options for the client

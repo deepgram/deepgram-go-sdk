@@ -15,8 +15,8 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram-devs/deepgram-go-sdk/pkg/client/interfaces"
-	common "github.com/deepgram-devs/deepgram-go-sdk/pkg/common"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	common "github.com/deepgram/deepgram-go-sdk/pkg/common"
 	"github.com/google/go-querystring/query"
 )
 
