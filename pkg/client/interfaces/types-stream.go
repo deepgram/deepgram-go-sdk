@@ -15,28 +15,28 @@ Please see the documentation for live/streaming for more details:
 https://developers.deepgram.com/reference/streaming
 */
 type LiveTranscriptionOptions struct {
-	Alternatives     int      `json:"alternatives" url:"alternatives,omitempty" `
-	Callback         string   `json:"callback" url:"callback,omitempty" `
-	Channels         int      `json:"channels" url:"channels,omitempty" `
-	Diarize          bool     `json:"diarize" url:"diarize,omitempty" `
-	Diarize_version  string   `json:"diarize_version" url:"diarize_version,omitempty" `
-	Encoding         string   `json:"encoding" url:"encoding,omitempty" `
-	Endpointing      string   `json:"endpointing" url:"endpointing,omitempty" ` // Can be "false" to disable endpointing, or can be the milliseconds of silence to wait before returning a transcript. Default is 10 milliseconds. Is string here so it can accept "false" as a value.
-	Interim_results  bool     `json:"interim_results" url:"interim_results,omitempty" `
-	Keywords         []string `json:"keywords" url:"keywords,omitempty" `
-	Language         string   `json:"language" url:"language,omitempty" `
-	Model            string   `json:"model" url:"model,omitempty" `
-	Multichannel     bool     `json:"multichannel" url:"multichannel,omitempty" `
-	Numerals         bool     `json:"numerals" url:"numerals,omitempty" `
-	Profanity_filter bool     `json:"profanity_filter" url:"profanity_filter,omitempty" `
-	Punctuate        bool     `json:"punctuate" url:"punctuate,omitempty" `
-	Redact           []string `json:"redact" url:"redact,omitempty" `
-	Replace          string   `json:"replace" url:"replace,omitempty" `
-	Sample_rate      int      `json:"sample_rate" url:"sample_rate,omitempty" `
-	Search           []string `json:"search" url:"search,omitempty" `
-	Smart_format     bool     `json:"smart_format" url:"smart_format,omitempty" `
-	Tag              []string `json:"tag" url:"tag,omitempty" `
-	Tier             string   `json:"tier" url:"tier,omitempty" `
-	Version          string   `json:"version" url:"version,omitempty" `
-	FillerWords      string   `json:"filler_words" url:"filler_words,omitempty" `
+	Alternatives    int      `json:"alternatives,omitempty" url:"alternatives,omitempty"`
+	Callback        string   `json:"callback,omitempty" url:"callback,omitempty"`
+	Channels        int      `json:"channels,omitempty" url:"channels,omitempty"`
+	Diarize         bool     `json:"diarize,omitempty" url:"diarize,omitempty"`
+	DiarizeVersion  string   `json:"diarize_version,omitempty" url:"diarize_version,omitempty"`
+	Encoding        string   `json:"encoding,omitempty" url:"encoding,omitempty"`
+	Endpointing     string   `json:"endpointing,omitempty" url:"endpointing,omitempty"`
+	FillerWords     string   `json:"filler_words,omitempty" url:"filler_words,omitempty"`
+	InterimResults  bool     `json:"interim_results,omitempty" url:"interim_results,omitempty"`
+	Keywords        []string `json:"keywords,omitempty" url:"keywords,omitempty"`
+	Language        string   `json:"language,omitempty" url:"language,omitempty"`
+	Model           string   `json:"model,omitempty" url:"model,omitempty"`
+	Multichannel    bool     `json:"multichannel,omitempty" url:"multichannel,omitempty"`
+	Numerals        bool     `json:"numerals,omitempty" url:"numerals,omitempty"`
+	ProfanityFilter bool     `json:"profanity_filter,omitempty" url:"profanity_filter,omitempty"`
+	Punctuate       bool     `json:"punctuate,omitempty" url:"punctuate,omitempty"`
+	Redact          []string `json:"redact,omitempty" url:"redact,omitempty"`
+	Replace         []string `json:"replace,omitempty" url:"replace,omitempty"`
+	SampleRate      int      `json:"sample_rate,omitempty" url:"sample_rate,omitempty"`
+	Search          []string `json:"search,omitempty" url:"search,omitempty"`
+	SmartFormat     bool     `json:"smart_format,omitempty" url:"smart_format,omitempty"`
+	Tag             []string `json:"tag,omitempty" url:"tag,omitempty"`
+	Tier            string   `json:"tier,omitempty" url:"tier,omitempty"`
+	Version         string   `json:"version,omitempty" url:"version,omitempty"`
 }

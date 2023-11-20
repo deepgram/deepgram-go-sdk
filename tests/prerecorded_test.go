@@ -145,7 +145,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 			context.Background(),
 			MockAudioURL,
 			interfaces.PreRecordedTranscriptionOptions{
-				Summarize: true,
+				Summarize: "true",
 			})
 
 		if err != nil {
