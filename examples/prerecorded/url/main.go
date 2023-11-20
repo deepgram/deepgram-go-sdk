@@ -28,22 +28,21 @@ func main() {
 	// context
 	ctx := context.Background()
 
+	// options
+	options := interfaces.PreRecordedTranscriptionOptions{
+		Punctuate:  true,
+		Diarize:    true,
+		Language:   "en-US",
+		Utterances: true,
+		Redact:     []string{"pci", "ssn"},
+	}
+
 	//client
 	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
 
 	// send stream
-	res, err := dg.FromURL(
-		ctx,
-		url,
-		interfaces.PreRecordedTranscriptionOptions{
-			Punctuate:  true,
-			Diarize:    true,
-			Language:   "en-US",
-			Utterances: true,
-			Redact:     []string{"pci", "ssn"},
-		},
-	)
+	res, err := dg.FromURL(ctx, url, options)
 	if err != nil {
 		log.Printf("FromURL failed. Err: %v\n", err)
 		os.Exit(1)

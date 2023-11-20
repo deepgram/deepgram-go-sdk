@@ -54,18 +54,18 @@ func main() {
 	ctx := context.Background()
 
 	// options
-	transcriptOptions := interfaces.LiveTranscriptionOptions{
-		Language:    "en-US",
-		Punctuate:   true,
-		Encoding:    "linear16",
-		Channels:    1,
-		Sample_rate: 16000,
+	options := interfaces.LiveTranscriptionOptions{
+		Language:   "en-US",
+		Punctuate:  true,
+		Encoding:   "linear16",
+		Channels:   1,
+		SampleRate: 16000,
 	}
 
 	// callback
 	callback := MyCallback{}
 
-	dgClient, err := client.NewWithDefaults(ctx, transcriptOptions, callback)
+	dgClient, err := client.NewWithDefaults(ctx, options, callback)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
