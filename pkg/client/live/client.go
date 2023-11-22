@@ -415,6 +415,9 @@ func (c *Client) closeWs() {
 func (c *Client) ping() {
 	klog.V(6).Infof("live.ping() ENTER\n")
 
+	var counter uint64
+	counter = 0
+
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 	for {
@@ -424,7 +427,8 @@ func (c *Client) ping() {
 			klog.V(6).Infof("live.ping() LEAVE\n")
 			return
 		case <-ticker.C:
-			klog.V(4).Infof("Starting ping...")
+			klog.V(5).Infof("Starting ping...")
+			counter++
 
 			ws := c.Connect()
 			if ws == nil {
@@ -434,18 +438,27 @@ func (c *Client) ping() {
 
 			// doing a write, need to lock
 			c.mu.Lock()
-			klog.V(4).Infof("Sending ping... need reply in %d\n", (pingPeriod / 2))
+			klog.V(5).Infof("Sending ping... need reply in %d\n", (pingPeriod / 2))
 
-			// deepgram keepalive message
-			errDg := ws.WriteMessage(websocket.BinaryMessage, []byte("{ \"type\": \"KeepAlive\" }"))
-			if errDg != nil {
-				klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
+			var errDg error
+			if c.cOptions.EnableKeepAlive {
+				klog.V(5).Infof("Sending Deepgram KeepAlive message...\n")
+				// deepgram keepalive message
+				errDg = ws.WriteMessage(websocket.BinaryMessage, []byte("{ \"type\": \"KeepAlive\" }"))
+				if errDg != nil {
+					klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
+				}
 			}
 
-			// websocket protocol ping/pong
-			errProto := ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pingPeriod/2))
-			if errProto != nil {
-				klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
+			// websocket protocol ping/pong... this loop is every 5 seconds, so ping every 20 seconds
+			var errProto error
+			errProto = nil
+			if counter%4 == 0 {
+				klog.V(5).Infof("Sending Protocol KeepAlive message...\n")
+				errProto = ws.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(pingPeriod/2))
+				if errProto != nil {
+					klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
+				}
 			}
 			c.mu.Unlock()
 
@@ -453,7 +466,7 @@ func (c *Client) ping() {
 				klog.V(1).Infof("WebSocketClient::ping failed\n")
 				c.closeWs()
 			} else {
-				klog.V(2).Infof("Ping sent!")
+				klog.V(5).Infof("Ping sent!")
 			}
 		}
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	pingPeriod = 30 * time.Second
+	pingPeriod = 5 * time.Second
 
 	connectionRetryInfinite  int64 = 0
 	defaultConnectRetry      int64 = 3

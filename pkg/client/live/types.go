@@ -22,6 +22,7 @@ type ClientOptions struct {
 	Path            string // override for the endpoint path usually <version/listen>
 	RedirectService bool   // allows HTTP redirects to be followed
 	SkipServerAuth  bool   // keeps the client from authenticating with the server
+	EnableKeepAlive bool   // enables the keep alive feature
 }
 
 // Client is a struct representing the websocket client connection

@@ -37,6 +37,13 @@ func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 	log.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
 	return nil
 }
+func (c MyCallback) Error(er *api.ErrorResponse) error {
+	// handle the error
+	log.Printf("\nError.Type: %s\n", er.Type)
+	log.Printf("Error.Message: %s\n", er.Message)
+	log.Printf("Error.Description: %s\n\n", er.Description)
+	return nil
+}
 
 func main() {
 	// init library
