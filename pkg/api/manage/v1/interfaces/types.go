@@ -129,8 +129,8 @@ type Request struct {
 	Callback  interface{} `json:"callback,omitempty"`
 }
 
-// Models provides a list of models
-type Models struct {
+// Model provides a list of models
+type Model struct {
 	Name     string `json:"name,omitempty"`
 	Language string `json:"language,omitempty"`
 	Version  string `json:"version,omitempty"`
@@ -143,8 +143,8 @@ type Resolution struct {
 	Amount int    `json:"amount,omitempty"`
 }
 
-// Results provides a list of results
-type Results struct {
+// Result provides a list of results
+type Result struct {
 	Start      string  `json:"start,omitempty"`
 	End        string  `json:"end,omitempty"`
 	Hours      float64 `json:"hours,omitempty"`
@@ -162,7 +162,7 @@ type RequestList struct {
 // UsageField provides a usage field
 type UsageField struct {
 	Tags              []any    `json:"tags,omitempty"`
-	Models            []Models `json:"models,omitempty"`
+	Models            []Model  `json:"models,omitempty"`
 	ProcessingMethods []string `json:"processing_methods,omitempty"`
 	Features          []string `json:"features,omitempty"`
 }
@@ -172,7 +172,7 @@ type Usage struct {
 	Start      string     `json:"start,omitempty"`
 	End        string     `json:"end,omitempty"`
 	Resolution Resolution `json:"resolution,omitempty"`
-	Results    []Results  `json:"results,omitempty"`
+	Results    []Result   `json:"results,omitempty"`
 }
 
 /***********************************/

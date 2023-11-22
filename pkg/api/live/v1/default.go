@@ -16,10 +16,18 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
 )
 
+// DefaultCallbackHandler is a default callback handler for live transcription
+// Simply prints the transcript to stdout
 type DefaultCallbackHandler struct {
 	sb strings.Builder
 }
 
+// NewDefaultCallbackHandler creates a new DefaultCallbackHandler
+func NewDefaultCallbackHandler() DefaultCallbackHandler {
+	return DefaultCallbackHandler{}
+}
+
+// Message is the callback for a message
 func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -56,6 +64,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	return nil
 }
 
+// Metadata is the callback for a metadata
 func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -88,6 +97,34 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	return nil
 }
 
-func NewDefaultCallbackHandler() DefaultCallbackHandler {
-	return DefaultCallbackHandler{}
+func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		data, err := json.Marshal(er)
+		if err != nil {
+			klog.V(1).Infof("Error json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJson, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJson)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\nError.Type: %s\n", er.Type)
+	fmt.Printf("Error.Message: %s\n", er.Message)
+	fmt.Printf("Error.Description: %s\n\n", er.Description)
+
+	return nil
 }

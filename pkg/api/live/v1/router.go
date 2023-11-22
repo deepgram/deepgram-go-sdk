@@ -6,7 +6,6 @@ package live
 
 import (
 	"encoding/json"
-	"errors"
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
@@ -48,7 +47,7 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 
 	switch mt.Type {
 	case interfaces.TypeErrorResponse:
-		return r.HandleError(byMsg)
+		return r.ErrorResponse(byMsg)
 	case interfaces.TypeMessageResponse:
 		return r.MessageResponse(byMsg)
 	case interfaces.TypeMetadataResponse:
@@ -121,31 +120,35 @@ func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
 	return nil
 }
 
-// HandleError handles error messages
-func (r *MessageRouter) HandleError(byMsg []byte) error {
-	klog.V(6).Infof("router.HandleError ENTER\n")
+func (r *MessageRouter) ErrorResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.ErrorResponse ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages(1, "HandleError", byMsg)
+	r.printDebugMessages(5, "ErrorResponse", byMsg)
 
 	var er interfaces.ErrorResponse
 	err := json.Unmarshal(byMsg, &er)
 	if err != nil {
-		klog.V(1).Infof("HandleError json.Unmarshal failed. Err: %v\n", err)
-		klog.V(6).Infof("router.HandleError LEAVE\n")
+		klog.V(1).Infof("ErrorResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.ErrorResponse LEAVE\n")
 		return err
 	}
 
-	b, err := json.MarshalIndent(er, "", "    ")
-	if err != nil {
-		klog.V(1).Infof("HandleError MarshalIndent failed. Err: %v\n", err)
-		klog.V(6).Infof("router.HandleError LEAVE\n")
+	if r.callback != nil {
+		err := r.callback.Error(&er)
+		if err != nil {
+			klog.V(1).Infof("callback.ErrorResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.ErrorResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.ErrorResponse LEAVE\n")
 		return err
 	}
 
-	klog.V(1).Infof("\n\nError: %s\n\n", string(b))
-	klog.V(6).Infof("router.HandleError LEAVE\n")
-	return errors.New(string(b))
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.ErrorResponse ENTER\n")
+
+	return nil
 }
 
 // UnhandledMessage handles the UnhandledMessage message
