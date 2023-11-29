@@ -17,12 +17,18 @@ import (
 
 // Initialize inits the library
 func Initialize() {
-	portaudio.Initialize()
+	err := portaudio.Initialize()
+	if err != nil {
+		klog.V(1).Printf("portaudio.Initialize failed. Err: %v\n", err)
+	}
 }
 
 // Teardown cleans up the library
 func Teardown() {
-	portaudio.Terminate()
+	err := portaudio.Terminate()
+	if err != nil {
+		klog.V(1).Printf("portaudio.Terminate failed. Err: %v\n", err)
+	}
 }
 
 // New creates a new microphone using portaudio
@@ -99,8 +105,6 @@ func (m *Microphone) Stream(w io.Writer) error {
 			klog.V(7).Infof("io.Writer succeeded. Bytes written: %d\n", byteCount)
 		}
 	}
-
-	return nil
 }
 
 // Mute silences the mic

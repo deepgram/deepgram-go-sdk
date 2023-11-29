@@ -70,7 +70,10 @@ func (d *debugRoundTrip) debugRequest(req *http.Request) string {
 	// Capture headers
 	var wc io.WriteCloser = d.newFile("req.headers")
 	b, _ := httputil.DumpRequest(req, false)
-	wc.Write(b)
+	_, err := wc.Write(b)
+	if err != nil {
+		d.logf("Error writing request headers: %v", err)
+	}
 	wc.Close()
 
 	ext := d.ext(req.Header)
@@ -94,7 +97,10 @@ func (d *debugRoundTrip) debugResponse(res *http.Response, ext string) {
 	// Capture headers
 	var wc io.WriteCloser = d.newFile("res.headers")
 	b, _ := httputil.DumpResponse(res, false)
-	wc.Write(b)
+	_, err := wc.Write(b)
+	if err != nil {
+		d.logf("Error writing response headers: %v", err)
+	}
 	wc.Close()
 
 	// Capture body

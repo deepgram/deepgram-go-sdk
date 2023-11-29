@@ -106,8 +106,6 @@ func (c *Client) Stream(w io.Writer) error {
 			klog.V(7).Infof("io.Writer succeeded. Bytes written: %d\n", byteCount)
 		}
 	}
-
-	return nil
 }
 
 // Mute silences the replay device

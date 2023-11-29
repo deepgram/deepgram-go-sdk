@@ -239,7 +239,10 @@ func (c *Client) listen() {
 				}
 
 				if c.callback != nil {
-					c.router.Message(byMsg)
+					err := c.router.Message(byMsg)
+					if err != nil {
+						klog.V(1).Infof("WebSocketClient::listen: router.Message failed. Err: %v\n", err)
+					}
 				} else {
 					klog.V(7).Infof("WebSocketClient::listen: msg recv (type %d): %s\n", msgType, string(byMsg))
 				}
@@ -415,9 +418,7 @@ func (c *Client) closeWs() {
 func (c *Client) ping() {
 	klog.V(6).Infof("live.ping() ENTER\n")
 
-	var counter uint64
-	counter = 0
-
+	counter := 0
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 	for {

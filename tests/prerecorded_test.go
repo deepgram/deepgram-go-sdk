@@ -24,7 +24,6 @@ func TestPrerecordedFromURL(t *testing.T) {
 
 	const preRecordedEndPoint = "https://api.deepgram.com/v1/listen"
 	const betaEndPoint = "https://beta.api.deepgram.com/v1/listen"
-	const betaHost = "beta.api.deepgram.com"
 
 	// Specify query params that are acceptable. A nil means no check
 	var acceptParams = map[string][]string{
@@ -107,7 +106,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 		}
 
 		// Based on query parameters, send Mock responses
-		var resp = &http.Response{}
+		var resp *http.Response
 		if options.Get("summarize") == "v2" {
 			resp = httpmock.NewStringResponse(200, MockSummarizeV2Response)
 		} else if options.Get("summarize") == "true" {
