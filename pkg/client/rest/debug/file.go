@@ -21,7 +21,7 @@ type FileProvider struct {
 	files []*os.File
 }
 
-func (fp FileProvider) NewFile(p string) io.WriteCloser {
+func (fp *FileProvider) NewFile(p string) io.WriteCloser {
 	f, err := os.Create(path.Join(fp.Path, p))
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func (fp FileProvider) NewFile(p string) io.WriteCloser {
 	return NewFileWriterCloser(f, p)
 }
 
-func (fp FileProvider) Flush() {
+func (fp *FileProvider) Flush() {
 	fp.mu.Lock()
 	defer fp.mu.Unlock()
 	for _, f := range fp.files {

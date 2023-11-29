@@ -9,6 +9,7 @@ package common
 
 import (
 	"flag"
+	"fmt"
 	"strconv"
 
 	klog "k8s.io/klog/v2"
@@ -57,10 +58,19 @@ func Init(init InitLib) {
 	}
 
 	klog.InitFlags(nil)
-	flag.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
+	err := flag.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
+	if err != nil {
+		fmt.Printf("Error setting log level: %v", err)
+	}
 	if init.DebugFilePath != "" {
-		flag.Set("logtostderr", "false")
-		flag.Set("log_file", init.DebugFilePath)
+		err = flag.Set("logtostderr", "false")
+		if err != nil {
+			fmt.Printf("Error setting logtostderr: %v", err)
+		}
+		err = flag.Set("log_file", init.DebugFilePath)
+		if err != nil {
+			fmt.Printf("Error setting log_file: %v", err)
+		}
 	}
 	flag.Parse()
 }

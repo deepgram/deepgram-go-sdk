@@ -18,9 +18,7 @@ import (
 
 // DefaultCallbackHandler is a default callback handler for live transcription
 // Simply prints the transcript to stdout
-type DefaultCallbackHandler struct {
-	sb strings.Builder
-}
+type DefaultCallbackHandler struct{}
 
 // NewDefaultCallbackHandler creates a new DefaultCallbackHandler
 func NewDefaultCallbackHandler() DefaultCallbackHandler {
