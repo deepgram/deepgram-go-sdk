@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-Contains shared artifacts for the Deepgram Go SDK.
+This package contains the initialization code for the Deepgram Go SDK
 */
 package common
 
