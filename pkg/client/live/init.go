@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the initialization code for the Deepgram Go SDK
+This package provides the live/streaming client implementation for the Deepgram API
 */
 package live
 

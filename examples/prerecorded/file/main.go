@@ -62,4 +62,18 @@ func main() {
 		os.Exit(1)
 	}
 	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
+
+	vtt, err := res.ToWebVTT()
+	if err != nil {
+		log.Printf("ToWebVTT failed. Err: %v\n", err)
+		os.Exit(1)
+	}
+	log.Printf("\n\n\nVTT:\n%s\n\n\n", vtt)
+
+	srt, err := res.ToSRT()
+	if err != nil {
+		log.Printf("ToSRT failed. Err: %v\n", err)
+		os.Exit(1)
+	}
+	log.Printf("\n\n\nSRT:\n%s\n\n\n", srt)
 }

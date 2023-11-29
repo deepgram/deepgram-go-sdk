@@ -4,9 +4,9 @@
 
 package interfaces
 
-/*
-Shared defintions for the Deepgram API
-*/
+/***********************************/
+// shared/common structs
+/***********************************/
 // Word is a single word in a transcript
 type Word struct {
 	Confidence     float64 `json:"confidence,omitempty"`
@@ -42,9 +42,9 @@ type Metadata struct {
 	RequestID string    `json:"request_id,omitempty"`
 }
 
-/*
-Results from Live Transcription
-*/
+/***********************************/
+// Results from Live Transcription
+/***********************************/
 // MessageResponse is the response from a live transcription
 type MessageResponse struct {
 	Channel      Channel  `json:"channel,omitempty"`

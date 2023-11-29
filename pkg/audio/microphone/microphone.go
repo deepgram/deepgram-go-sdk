@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// Implementation microphones using portaudio
+// Implementation microphone using portaudio
 package microphone
 
 import (
@@ -19,7 +19,7 @@ import (
 func Initialize() {
 	err := portaudio.Initialize()
 	if err != nil {
-		klog.V(1).Printf("portaudio.Initialize failed. Err: %v\n", err)
+		klog.V(1).Infof("portaudio.Initialize failed. Err: %v\n", err)
 	}
 }
 
@@ -27,7 +27,7 @@ func Initialize() {
 func Teardown() {
 	err := portaudio.Terminate()
 	if err != nil {
-		klog.V(1).Printf("portaudio.Terminate failed. Err: %v\n", err)
+		klog.V(1).Infof("portaudio.Terminate failed. Err: %v\n", err)
 	}
 }
 
@@ -97,7 +97,6 @@ func (m *Microphone) Stream(w io.Writer) error {
 			}
 
 			byteCount, err := w.Write(m.int16ToLittleEndianByte(m.intBuf))
-			// byteCount, err := w.Write(m.int16ToLittleEndianByte(m.intBuf))
 			if err != nil {
 				klog.V(1).Infof("w.Write failed. Err: %v\n", err)
 				return err

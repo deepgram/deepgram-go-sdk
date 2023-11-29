@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the interface to manage the prerecorded interfaces for the Deepgram API
+This package contains the interface to manage the prerecorded and live/stream interfaces for the Deepgram API
 */
 package interfaces
 

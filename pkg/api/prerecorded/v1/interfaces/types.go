@@ -2,9 +2,14 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+/*
+This package provides the types for the Deepgram PreRecorded API.
+*/
 package interfaces
 
+/***********************************/
 // share/common structs
+/***********************************/
 type Metadata struct {
 	TransactionKey string   `json:"transaction_key,omitempty"`
 	RequestID      string   `json:"request_id,omitempty"`
@@ -134,7 +139,9 @@ type SummaryV2 struct {
 }
 type Summary SummaryV2 // internal reference to old name
 
-// Response
+/***********************************/
+// response/result structs
+/***********************************/
 type PreRecordedResponse struct {
 	RequestID string   `json:"request_id,omitempty"` // for ?callback=...
 	Metadata  Metadata `json:"metadata,omitempty"`
