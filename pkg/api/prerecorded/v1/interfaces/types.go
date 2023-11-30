@@ -18,7 +18,12 @@ type Metadata struct {
 	Duration       float64  `json:"duration,omitempty"`
 	Channels       int      `json:"channels,omitempty"`
 	Models         []string `json:"models,omitempty"`
-	ModelInfo      map[string]struct {
+	SummaryInfo    struct {
+		InputTokens  int    `json:"input_tokens,omitempty"`
+		OutputTokens int    `json:"output_tokens,omitempty"`
+		ModelUUID    string `json:"model_uuid,omitempty"`
+	} `json:"summary_info,omitempty"`
+	ModelInfo map[string]struct {
 		Name    string `json:"name,omitempty"`
 		Version string `json:"version,omitempty"`
 		Arch    string `json:"arch,omitempty"`
