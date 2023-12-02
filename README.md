@@ -157,7 +157,7 @@ These examples provide:
     - Scopes - [examples/manage/scopes](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/scopes/main.go)
     - Usage - [examples/manage/usage](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/usage/main.go)
 
-Running each example is pretty simple. Set the `DEEPGRAM_API_KEY` as an environment variable, then `cd` into each example folder and execute the example: `go run main.go`.
+To run each example set the `DEEPGRAM_API_KEY` as an environment variable, then `cd` into each example folder and execute the example: `go run main.go`.
 
 # Testing
 
