@@ -72,7 +72,7 @@ if err != nil {
 
 ## Live Audio Transcription Quickstart
 
-You can find a [quick walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio is straightfoward using the following sample code:
+You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
 
 ```go
 // options
