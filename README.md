@@ -41,7 +41,7 @@ go get github.com/deepgram/deepgram-go-sdk
 
 # Quickstarts
 
-This SDK aims to reduce complexity and abtract/hide some internal Deepgram details that clients shouldn't need to know about, but this doesn't mean that the knobs and dials to tweak options and settings aren't available. They most definitely are.
+This SDK aims to reduce complexity and abtract/hide some internal Deepgram details that clients shouldn't need to know about.  However you can still tweak options and settings if you need.
 
 ## PreRecorded Audio Transcription Quickstart
 
