@@ -1,4 +1,5 @@
 # Deepgram Go SDK
+
 [![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4)
 
 Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
@@ -7,62 +8,28 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 
 * [Deepgram Go SDK](#deepgram-go-sdk)
 * [Getting an API Key](#getting-an-api-key)
-* [Documentation](#documentation)
+* [API Documentation](#api-documentation)
 * [Installation](#installation)
 * [Requirements](#requirements)
-* [Configuration](#configuration)
+* [Quickstarts](#quickstarts)
+* [SDK Documentation](#sdk-documentation)
+* [Examples](#examples)
 * [Testing](#testing)
   * [Using Example Projects to test new features](#using-example-projects-to-test-new-features)
-* [Transcription](#transcription)
-  * [Remote Files](#remote-files)
-      * [UrlSource](#urlsource)
-  * [Local files](#local-files)
-      * [ReadStreamSource](#readstreamsource)
-      * [PrerecordedTranscriptionOptions](#prerecordedtranscriptionoptions)
-* [Generating Captions](#generating-captions)
-  * [Live Audio](#live-audio)
-      * [LiveTranscriptionOptions](#livetranscriptionoptions)
-* [Projects](#projects)
-  * [Get Projects](#get-projects)
-  * [Get Project](#get-project)
-  * [Update Project](#update-project)
-  * [Delete Project](#delete-project)
-* [Keys](#keys)
-  * [List Keys](#list-keys)
-  * [Get Key](#get-key)
-  * [Create Key](#create-key)
-  * [Delete Key](#delete-key)
-* [Members](#members)
-  * [Get Members](#get-members)
-  * [Remove Member](#remove-member)
-* [Scopes](#scopes)
-  * [Get Member Scopes](#get-member-scopes)
-  * [Update Scope](#update-scope)
-* [Invitations](#invitations)
-  * [List Invites](#list-invites)
-  * [Send Invite](#send-invite)
-  * [Delete Invite](#delete-invite)
-  * [Leave Project](#leave-project)
-* [Usage](#usage)
-  * [Get All Requests](#get-all-requests)
-      * [UsageRequestListOptions](#usagerequestlistoptions)
-  * [Get Request](#get-request)
-  * [Summarize Usage](#summarize-usage)
-      * [UsageOptions](#usageoptions)
-  * [Get Fields](#get-fields)
-      * [GetUsageFieldsOptions](#getusagefieldsoptions)
-  * [Development and Contributing](#development-and-contributing)
-  * [Getting Help](#getting-help)
+* [Development and Contributing](#development-and-contributing)
+* [Getting Help](#getting-help)
 
 # Getting an API Key
 
 🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
 
-# Documentation
+# API Documentation
 
-You can learn more about the full Deepgram API at [https://developers.deepgram.com](https://developers.deepgram.com).
+This SDK implementation the API documentation found at [https://developers.deepgram.com](https://developers.deepgram.com).
 
 # Installation
+
+To incorporate this SDK into your project's `go.mod` file, run the following command from your repo:
 
 ```bash
 go get github.com/deepgram/deepgram-go-sdk
@@ -72,514 +39,129 @@ go get github.com/deepgram/deepgram-go-sdk
 
 [Go](https://go.dev/doc/install) (version ^1.18)
 
-# Configuration
+# Quickstarts
+
+This SDK aims to reduce complexity and abtract/hide some internal Deepgram details that clients shouldn't need to know about.  However you can still tweak options and settings if you need.
+
+## PreRecorded Audio Transcription Quickstart
+
+You can find a [walkthrough](https://developers.deepgram.com/docs/pre-recorded-audio-transcription) on our documentation site. Transcribing Pre-Recorded Audio can be done using the following sample code:
 
 ```go
-dg := deepgram.NewClient(DEEPGRAM_API_KEY)
+// context
+ctx := context.Background()
+
+//client
+c := client.NewWithDefaults()
+dg := prerecorded.New(c)
+
+// transcription options
+options := PreRecordedTranscriptionOptions{
+	Punctuate:  true,
+	Diarize:    true,
+	Language:   "en-US",
+}	
+
+// send URL
+URL := "https://my-domain.com/files/my-conversation.mp3"
+res, err := dg.FromURL(ctx, URL, options)
+if err != nil {
+	log.Fatalf("FromURL failed. Err: %v\n", err)
+}
 ```
+
+## Live Audio Transcription Quickstart
+
+You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+
+```go
+// options
+transcriptOptions := interfaces.LiveTranscriptionOptions{
+	Language:    "en-US",
+	Punctuate:   true,
+	Encoding:    "linear16",
+	Channels:    1,
+	Sample_rate: 16000,
+}
+
+// create a callback for transcription messages
+// for example, you can take a look at this example project:
+// https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go
+
+// create the client
+dgClient, err := client.NewWithDefaults(ctx, transcriptOptions, callback)
+if err != nil {
+	log.Println("ERROR creating LiveTranscription connection:", err)
+	return
+}
+
+// call connect!
+wsconn := dgClient.Connect()
+if wsconn == nil {
+	log.Println("Client.Connect failed")
+	os.Exit(1)
+}
+```
+
+# SDK Documentation
+
+We are doing our best to transform the documentation to use native [GoDocs](https://go.dev/blog/godoc) which is done in code. This is ideal because:
+
+- The documentation is extracted directly from the code in this repository
+- This encourages the documentation in code to be updated and be correct
+- **Most importantly:** This provides a single source of truth. This should be the definative source of documentation for this SDK
+
+We encourage you to view our documentation using [https://go.dev](https://go.dev). The landing page for the SDK documentation can be found here:
+
+HERE: [Go SDK Documentation](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main)
+
+For documentation relating to PreRecorded Audio:
+- PreRecorded Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/prerecorded
+- PreRecorded API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1
+    - PreRecorded API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1/interfaces
+
+ For documentation relating to Live Audio Transcription:
+- Live Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/live
+- Live API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1
+    - Live API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1/interfaces
+
+For documentation relating to Manage API:
+- Management Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live
+- Manage API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1
+    - Manage API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live/v1/interfaces
+
+# Examples
+
+There are examples for **every** API call in this SDK. You can find all of these examples in the [examples folder](https://github.com/deepgram/deepgram-go-sdk/tree/main/examples) at the root of this repo.
+
+These examples provide:
+
+- PreRecorded Audio Transcription:
+
+    - From an Audio File - [examples/prerecorded/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/file/main.go)
+    - From an URL - [examples/prerecorded/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/url/main.go)
+    - From an Audio Stream - [examples/prerecorded/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/stream/main.go)
+
+- Live Audio Transcription:
+
+    - From a Microphone - [examples/streaming/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go)
+    - From an HTTP Endpoint - [examples/streaming/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/http/main.go)
+
+- Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for each API set:
+
+    - Balances - [examples/manage/balances](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/balances/main.go)
+    - Invitations - [examples/manage/invitations](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/invitations/main.go)
+    - Keys - [examples/manage/keys](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/keys/main.go)
+    - Members - [examples/manage/members](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/members/main.go)
+    - Projects - [examples/manage/projects](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/projects/main.go)
+    - Scopes - [examples/manage/scopes](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/scopes/main.go)
+    - Usage - [examples/manage/usage](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/usage/main.go)
+
+To run each example set the `DEEPGRAM_API_KEY` as an environment variable, then `cd` into each example folder and execute the example: `go run main.go`.
 
 # Testing
 
-## Using Example Projects to test new features
-
-Contributors to the SDK can test their changes locally by running the projects in the `examples` folder. This can be done when making changes without adding a unit test, but of course it is recommended that you add unit tests for any feature additions made to the SDK.
-
-Go to the folder `examples` and look for these two projects, which can be used to test out features in the Deepgram Go SDK:
-
-- prerecorded
-- streaming
-
-These are standalone projects, so you will need to follow the instructions in the README.md files for each project to get it running.
-
-# Transcription
-
-## Remote Files
-
-```go
-dg := prerecorded.NewClient("DEEPGRAM_API_KEY")
-prClient := api.New(dg)
-
-res, err := prClient.PreRecordedFromURL(deepgram.UrlSource{Url: "https://static.deepgram.com/examples/Bueller-Life-moves-pretty-fast.wav"},
-deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances: true})
-```
-
-[See our Pre-Recorded Quickstart for more info](https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio).
-
-#### UrlSource
-
-| Property | Value  |          Description          |
-| -------- | :----- | :---------------------------: |
-| Url      | string | Url of the file to transcribe |
-
-## Local files
-
-```go
-dg := prerecorded.NewClient("DEEPGRAM_API_KEY")
-prClient := api.New(dg)
-
-file, err := os.Open("PATH_TO_LOCAL_FILE")
-
-if err != nil {
-  log.Printf("error opening file %s\n", file.Name())
-  }
-
-source := api.ReadStreamSource{Stream: file, Mimetype: "MIMETYPE_OF_YOUR_FILE"}
-res, err := prClient.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true})
-if err != nil {
-  log.Printf("ERROR", err)
-  return
-  }
-```
-
-[See our Pre-Recorded Quickstart for more info](https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio).
-
-#### ReadStreamSource
-
-| Property | Value Type |      reason for      |
-| -------- | :--------- | :------------------: |
-| Stream   | io.Reader  | stream to transcribe |
-| MimeType | string     |  MIMETYPE of stream  |
-
-#### PrerecordedTranscriptionOptions
-
-| Property         | Value Type | Example                            |
-| ---------------- | ---------- | ---------------------------------- |
-| Model            | string     | `Model: "phonecall"`               |
-| Tier             | string     | `Tier: "nova"`                     |
-| Version          | string     | `Version: "latest"`                |
-| Language         | string     | `Language: "es"`                   |
-| DetectLanguage   | bool       | `DetectLanguage: true`             |
-| Punctuate        | bool       | `Punctuate: true`                  |
-| Profanity_filter | bool       | `Profanity_filter: true`           |
-| Redact           | bool       | `Redact: true`                     |
-| Diarize          | bool       | `Diarize: true`                    |
-| SmartFormat      | bool       | `SmartFormat: true`                |
-| Multichannel     | bool       | `Multichannel: true`               |
-| Alternatives     | int        | `Alternatives: 2`                  |
-| Numerals         | bool       | `Numerals: true`                   |
-| Search           | []string   | `Search: []string{"apple"}`        |
-| Replace          | []string   | `Replace:[]string{"apple:orange"}` |
-| Callback         | string     | `Callback: "https://example.com"`  |
-| Keywords         | []string   | `Keywords: []string{"Hannah"}`     |
-| Paragraphs       | bool       | `Paragraphs: true`                 |
-| Summarize        | bool       | `Summarize: true`                  |
-| DetectTopics     | bool       | `DetectTopics: true`               |
-| Utterances       | bool       | `Utterances: true`                 |
-| Utt_split        | int        | `Utt_split: 9`                     |
-
-# Generating Captions
-
-```go
-// The request can be from a local file stream or a URL
-// Turn on utterances with {Utterances: true} for captions to work
-res, err := prClient.PreRecordedFromStream(source, deepgram.PreRecordedTranscriptionOptions{Punctuate: true, Utterances:true})
-
-// Convert the results to WebVTT format
-vtt, err := res.ToWebVTT()
-
-// Convert the results to SRT format
-stt, err := res.ToSRT()
-```
-
-## Live Audio
-
-```go
-options := deepgram.LiveTranscriptionOptions{
-		Language:  "en-US",
-		Punctuate: true,
-	}
-dg, _, err := live.New(options, "DEEPGRAM_API_KEY")
-```
-
-#### LiveTranscriptionOptions
-
-See [API Reference](https://developers.deepgram.com/reference/streaming)
-
-# Projects
-
-> projectId and memberId are of type`string`
-
-## Get Projects
-
-Returns all projects accessible by the API key.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-res, err := mgClient.ListProjects()
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-projects).
-
-## Get Project
-
-Retrieves a specific project based on the provided projectId.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-res, err := mgClient.GetProject(projectId)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-project).
-
-## Update Project
-
-Update a project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-options := deepgram.ProjectUpdateOptions{
-	Name: "NAME_OF_PROJECT",
-	Company:"COMPANY",
-}
-
-res, err := mgClient.UpdateProject(projectID, options)
-```
-
-**Project Type**
-
-| Property Name | Type   |                       Description                        |
-| ------------- | :----- | :------------------------------------------------------: |
-| ProjectId     | string |        Unique identifier of the Deepgram project         |
-| Name          | string |                   Name of the project                    |
-| Company       | string | Name of the company associated with the Deepgram project |
-
-[See our API reference for more info](https://developers.deepgram.com/reference/update-project).
-
-## Delete Project
-
-Delete a project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-
-res, err := mgClient.DeleteProject(projectID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/delete-project).
-
-# Keys
-
-> projectId,keyId and comment are of type`string`
-
-## List Keys
-
-Retrieves all keys associated with the provided project_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-
-res, err := mgClient.ListKeys(projectID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/list-keys).
-
-## Get Key
-
-Retrieves a specific key associated with the provided project_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-keyID := "YOUR_KEY_ID"
-
-res, err := mgClient.GetKey(projectID, keyID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-key).
-
-## Create Key
-
-Creates an API key with the provided scopes.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-comment := "A comment"
-scopes := []string{"admin", "member"}
-options := deepgram.CreateKeyOptions{
-    ExpirationDate: time.Now().AddDate(1, 0, 0),
-		TimeToLive:     3600,
-		Tags:           []string{"tag1", "tag2"},
-}
-
-res, err := mgClient.CreateKey(projectID, comment, scopes, options)
-
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/create-key).
-
-## Delete Key
-
-Deletes a specific key associated with the provided project_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-keyID := "YOUR_KEY_ID"
-
-res, err := mgClient.DeleteKey(projectID, keyID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/delete-key).
-
-# Members
-
-> projectId and memberId are of type`string`
-
-## Get Members
-
-Retrieves account objects for all of the accounts in the specified project_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-
-res, err := mgClient.ListMembers(projectID)
-
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-members).
-
-## Remove Member
-
-Removes member account for specified member_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-memberID := "YOUR_MEMBER_ID"
-
-res, err := mgClient.RemoveMember(projectID, memberID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/remove-member).
-
-# Scopes
-
-> projectId and memberId are of type`string`
-
-## Get Member Scopes
-
-Retrieves scopes of the specified member in the specified project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-memberID := "YOUR_MEMBER_ID"
-
-res, err := mgClient.GetMemberScopes(projectID, memberID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-member-scopes).
-
-## Update Scope
-
-Updates the scope for the specified member in the specified project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-memberID := "THEIR_MEMBER_ID"
-scope := "SCOPE_TO_ASSIGN"
-
-res, err := mgClient.UpdateMemberScopes(projectID, memberID, scope)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/update-scope).
-
-# Invitations
-
-## List Invites
-
-Retrieves all invitations associated with the provided project_id.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-
-res, err := mgClient.ListInvitations(projectID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/list-invites).
-
-## Send Invite
-
-Sends an invitation to the provided email address.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-invitationOptions := deepgram.InvitationOptions{
-    Email: "",
-		Scope: "",
-}
-
-res, err := mgClient.SendInvitation(projectID, invitationOptions)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/send-invites).
-
-## Delete Invite
-
-Removes the specified invitation from the project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-email := ""
-
-res, err := mgClient.DeleteInvitation(projectID, email)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/delete-invite).
-
-## Leave Project
-
-Removes the authenticated user from the project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-
-res, err := mgClient.LeaveProject(projectID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/leave-project).
-
-# Usage
-
-> projectId and requestId type`string`
-
-## Get All Requests
-
-Retrieves all requests associated with the provided projectId based on the provided options.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-options := deepgram.UsageRequestListOptions{
-    Start: "2009-11-10",
-		End: "2029-11-10",
-		Page: 0,
-		Limit:0,
-		Status: "failed",
-}
-
-res, err := mgClient.ListRequests(projectID, options)
-```
-
-#### UsageRequestListOptions
-
-| Property | Type   |                                              Description                                              |
-| -------- | :----- | :---------------------------------------------------------------------------------------------------: |
-| Start    | string | Start date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM |
-| End      | string |  End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM  |
-| Page     | int    |                                           Pages to include                                            |
-| Limit    | int    |                                      number of results per page                                       |
-| Status   | string |                                     Status of requests to return                                      |
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-all-requests).
-
-## Get Request
-
-Retrieves a specific request associated with the provided projectId.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-requestID := "REQUEST_ID"
-res, err := mgClient.GetRequest(projectID, requestID)
-```
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-request).
-
-## Summarize Usage
-
-Retrieves usage associated with the provided project_id based on the provided options.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-options := deepgram.UsageOptions{
-	  Start: "2009-11-10",
-		End: "2029-11-10",
-}
-
-res, err := mgClient.GetUsage(projectID, options)
-```
-
-#### UsageOptions
-
-| Property | Value  | Description                                                                                           |
-| -------- | :----- | :---------------------------------------------------------------------------------------------------- |
-| Start    | string | Start date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM |
-| End      | string | End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM   |
-
-[See our API reference for more info](https://developers.deepgram.com/reference/summarize-usage).
-
-## Get Fields
-
-Lists the features, models, tags, languages, and processing method used for requests in the specified project.
-
-```go
-dg := manage.New("YOUR_API_KEY")
-mgClient := api.New(dg)
-
-projectID := "YOUR_PROJECT_ID"
-options := deepgram.UsageRequestListOptions{
-    Start: "2009-11-10",
-		End: "2029-11-10",
-}
-res, err := mgClient.GetFields(projectID, options)
-```
-
-#### GetUsageFieldsOptions
-
-| Property      | Value    | Description                                                                                           |
-| ------------- | :------- | :---------------------------------------------------------------------------------------------------- |
-| StartDateTime | DateTime | Start date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM |
-| EndDateTime   | DateTime | End date of the requested date range, YYYY-MM-DD, YYYY-MM-DDTHH:MM:SS, or YYYY-MM-DDTHH:MM:SS+HH:MM   |
-
-[See our API reference for more info](https://developers.deepgram.com/reference/get-fields).
+TBD
 
 ## Development and Contributing
 
