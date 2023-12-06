@@ -57,10 +57,10 @@ func main() {
 		LogLevel: client.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelTrace
 	})
 
-	// context
+	// Go context
 	ctx := context.Background()
 
-	// options
+	// set the Transcription options
 	options := interfaces.LiveTranscriptionOptions{
 		Language:   "en-US",
 		Punctuate:  true,
@@ -69,16 +69,17 @@ func main() {
 		SampleRate: 16000,
 	}
 
-	// callback
+	// implement your own callback
 	callback := MyCallback{}
 
+	// create a Deepgram client
 	dgClient, err := client.NewWithDefaults(ctx, options, callback)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
 
-	// call connect!
+	// connect the websocket to Deepgram
 	wsconn := dgClient.Connect()
 	if wsconn == nil {
 		log.Println("Client.Connect failed")

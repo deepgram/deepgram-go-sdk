@@ -30,11 +30,19 @@ func main() {
 	// context
 	ctx := context.Background()
 
+	// set the Transcription options
+	options := interfaces.PreRecordedTranscriptionOptions{
+		Punctuate:  true,
+		Diarize:    true,
+		Language:   "en-US",
+		Utterances: true,
+	}
+
 	//client
 	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
 
-	// send file stream
+	// open file sream
 	file, err := os.Open(filePath)
 	if err != nil {
 		log.Printf("os.Open(%s) failed. Err: %v\n", filePath, err)
@@ -42,16 +50,8 @@ func main() {
 	}
 	defer file.Close()
 
-	res, err := dg.FromStream(
-		ctx,
-		file,
-		interfaces.PreRecordedTranscriptionOptions{
-			Punctuate:  true,
-			Diarize:    true,
-			Language:   "en-US",
-			Utterances: true,
-		},
-	)
+	// send stream to Deepgram
+	res, err := dg.FromStream(ctx, file, options)
 	if err != nil {
 		log.Printf("FromStream failed. Err: %v\n", err)
 		os.Exit(1)
@@ -63,6 +63,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// make the JSON pretty
 	prettyJson, err := prettyjson.Format(data)
 	if err != nil {
 		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
