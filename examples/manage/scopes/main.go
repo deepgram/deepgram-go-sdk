@@ -44,7 +44,7 @@ func main() {
 		break
 	}
 
-	// list invitations
+	// list members
 	respGet, err := mgClient.ListMembers(ctx, projectId)
 	if err != nil {
 		log.Printf("ListMembers failed. Err: %v\n", err)
@@ -94,7 +94,7 @@ func main() {
 	}
 	log.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
 
-	// list invitations
+	// list members
 	respGet, err = mgClient.ListMembers(ctx, projectId)
 	if err != nil {
 		log.Printf("ListMembers failed. Err: %v\n", err)

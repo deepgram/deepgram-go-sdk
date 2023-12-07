@@ -27,24 +27,23 @@ func main() {
 		LogLevel: client.LogLevelTrace, // LogLevelStandard / LogLevelFull / LogLevelTrace
 	})
 
-	// context
+	// Go context
 	ctx := context.Background()
 
-	//client
+	// set the Transcription options
+	options := interfaces.PreRecordedTranscriptionOptions{
+		Punctuate:  true,
+		Diarize:    true,
+		Language:   "en-US",
+		Utterances: true,
+	}
+
+	// create a Deepgram client
 	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
 
-	// send file stream
-	res, err := dg.FromFile(
-		ctx,
-		filePath,
-		interfaces.PreRecordedTranscriptionOptions{
-			Punctuate:  true,
-			Diarize:    true,
-			Language:   "en-US",
-			Utterances: true,
-		},
-	)
+	// send/process file to Deepgram
+	res, err := dg.FromFile(ctx, filePath, options)
 	if err != nil {
 		log.Printf("FromStream failed. Err: %v\n", err)
 		os.Exit(1)
@@ -56,6 +55,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// make the JSON pretty
 	prettyJson, err := prettyjson.Format(data)
 	if err != nil {
 		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
@@ -63,6 +63,7 @@ func main() {
 	}
 	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
 
+	// dump example VTT
 	vtt, err := res.ToWebVTT()
 	if err != nil {
 		log.Printf("ToWebVTT failed. Err: %v\n", err)
@@ -70,6 +71,7 @@ func main() {
 	}
 	log.Printf("\n\n\nVTT:\n%s\n\n\n", vtt)
 
+	// dump example SRT
 	srt, err := res.ToSRT()
 	if err != nil {
 		log.Printf("ToSRT failed. Err: %v\n", err)

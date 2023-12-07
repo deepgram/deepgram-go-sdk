@@ -47,10 +47,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, item := range respGet.Invites {
-		id := item.Email
-		scope := item.Scope
-		log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+	if len(respGet.Invites) == 0 {
+		log.Printf("ListInvitations() - No invitations found\n")
+	} else {
+		for _, item := range respGet.Invites {
+			id := item.Email
+			scope := item.Scope
+			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+		}
 	}
 
 	// send invite
@@ -62,7 +66,7 @@ func main() {
 		log.Printf("SendInvitation failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("SendInvitation() - Name: %s\n", respMessage.Message)
+	log.Printf("SendInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
 	respGet, err = mgClient.ListInvitations(ctx, projectId)
@@ -71,10 +75,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, item := range respGet.Invites {
-		id := item.Email
-		scope := item.Scope
-		log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+	if len(respGet.Invites) == 0 {
+		log.Printf("ListInvitations() - No invitations found\n")
+	} else {
+		for _, item := range respGet.Invites {
+			id := item.Email
+			scope := item.Scope
+			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+		}
 	}
 
 	// delete project
@@ -83,7 +91,7 @@ func main() {
 		log.Printf("DeleteInvitation failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("DeleteInvitation() - Name: %s\n", respMessage.Message)
+	log.Printf("DeleteInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
 	respGet, err = mgClient.ListInvitations(ctx, projectId)
@@ -92,10 +100,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, item := range respGet.Invites {
-		id := item.Email
-		scope := item.Scope
-		log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+	if len(respGet.Invites) == 0 {
+		log.Printf("ListInvitations() - No invitations found\n")
+	} else {
+		for _, item := range respGet.Invites {
+			id := item.Email
+			scope := item.Scope
+			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+		}
 	}
 
 	// There isnt an API call to add a member to a project. So will leave this commented out as an example

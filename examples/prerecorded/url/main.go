@@ -28,7 +28,7 @@ func main() {
 	// context
 	ctx := context.Background()
 
-	// options
+	// send stream to Deepgram
 	options := interfaces.PreRecordedTranscriptionOptions{
 		Punctuate:  true,
 		Diarize:    true,
@@ -37,11 +37,11 @@ func main() {
 		Redact:     []string{"pci", "ssn"},
 	}
 
-	//client
+	// create a Deepgram client
 	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
 
-	// send stream
+	// send the URL to Deepgram
 	res, err := dg.FromURL(ctx, url, options)
 	if err != nil {
 		log.Printf("FromURL failed. Err: %v\n", err)
@@ -54,6 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	// make the JSON pretty
 	prettyJson, err := prettyjson.Format(data)
 	if err != nil {
 		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)

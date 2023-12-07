@@ -24,10 +24,10 @@ func main() {
 	// init library
 	client.InitWithDefault()
 
-	// context
+	// Go context
 	ctx := context.Background()
 
-	// options
+	// set the Transcription options
 	options := interfaces.LiveTranscriptionOptions{
 		Language:   "en-US",
 		Punctuate:  true,
@@ -36,13 +36,14 @@ func main() {
 		SampleRate: 8000,
 	}
 
+	// create a Deepgram client
 	dgClient, err := client.NewForDemo(ctx, options)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
 
-	// call connect!
+	// connect the websocket to Deepgram
 	wsconn := dgClient.Connect()
 	if wsconn == nil {
 		log.Println("Client.Connect failed")
