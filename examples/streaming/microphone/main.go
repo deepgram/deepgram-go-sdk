@@ -127,4 +127,8 @@ func main() {
 
 	// close DG client
 	dgClient.Stop()
+
+	log.Printf("Program exiting...\n")
+	// time.Sleep(120 * time.Second)
+
 }

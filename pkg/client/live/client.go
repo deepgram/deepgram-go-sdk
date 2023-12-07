@@ -379,6 +379,7 @@ func (c *Client) Write(p []byte) (int, error) {
 // Stop will send close message and shutdown websocket connection
 func (c *Client) Stop() {
 	klog.V(3).Infof("WebSocketClient::Stop Stopping...\n")
+	c.retry = false
 	c.ctxCancel()
 	c.closeWs()
 }

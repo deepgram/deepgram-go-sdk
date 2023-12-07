@@ -72,4 +72,6 @@ func main() {
 
 	// close client
 	dgClient.Stop()
+
+	log.Printf("Program exiting...\n")
 }
