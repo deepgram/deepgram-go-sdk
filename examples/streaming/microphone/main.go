@@ -107,7 +107,7 @@ func main() {
 	}
 
 	go func() {
-		// this is a blocking call
+		// feed the microphone stream to the Deepgram client (this is a blocking call)
 		mic.Stream(dgClient)
 	}()
 

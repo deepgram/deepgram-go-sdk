@@ -2,9 +2,6 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-/*
-This package provides the live/streaming client implementation for the Deepgram API
-*/
 package live
 
 import (
@@ -13,6 +10,7 @@ import (
 	// gabs "github.com/Jeffail/gabs/v2"
 )
 
+// internal constants for retry, waits, back-off, etc.
 const (
 	pingPeriod = 5 * time.Second
 
@@ -24,6 +22,7 @@ const (
 	TERMINATION_SLEEP = 100 * time.Millisecond
 )
 
+// errors
 var (
 	// ErrInvalidConnection connection is not valid
 	ErrInvalidConnection = errors.New("connection is not valid")

@@ -2,15 +2,13 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-/*
-This package provides the prerecorded client implementation for the Deepgram API
-*/
 package prerecorded
 
 import (
 	common "github.com/deepgram/deepgram-go-sdk/pkg/common"
 )
 
+// please see pkg/common/init.go for more information
 const (
 	LogLevelDefault   = common.LogLevelDefault
 	LogLevelErrorOnly = common.LogLevelErrorOnly

@@ -85,7 +85,7 @@ func main() {
 	}
 	log.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.APIKey.APIKeyID, respKey.APIKey.Comment)
 
-	// delete project
+	// delete key
 	respMessage, err := mgClient.DeleteKey(ctx, projectId, respKey.APIKey.APIKeyID)
 	if err != nil {
 		log.Printf("DeleteKey failed. Err: %v\n", err)
@@ -93,7 +93,7 @@ func main() {
 	}
 	log.Printf("DeleteKey() - Name: %s\n", respMessage.Message)
 
-	// list invitations
+	// list keys
 	respGet, err = mgClient.ListKeys(ctx, projectId)
 	if err != nil {
 		log.Printf("ListKeys failed. Err: %v\n", err)

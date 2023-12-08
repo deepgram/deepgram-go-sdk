@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Invitations APIs in the Deepgram Manage API
-
-Please see:
+Invitations API
 https://developers.deepgram.com/reference/list-invites
 https://developers.deepgram.com/reference/send-invites
 https://developers.deepgram.com/reference/delete-invite

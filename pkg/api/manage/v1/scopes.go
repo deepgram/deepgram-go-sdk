@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Scopes APIs in the Deepgram Manage API
-
-Please see:
+Scopes API:
 https://developers.deepgram.com/reference/get-member-scopes
 https://developers.deepgram.com/reference/update-scope
 */

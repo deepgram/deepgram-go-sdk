@@ -25,29 +25,30 @@ func main() {
 	// init library
 	client.InitWithDefault()
 
-	// context
+	// Go context
 	ctx := context.Background()
 
-	// options
+	// set the Transcription options
 	transcriptOptions := interfaces.LiveTranscriptionOptions{
 		Language:  "en-US",
 		Punctuate: true,
 	}
 
+	// create a Deepgram client
 	dgClient, err := client.NewForDemo(ctx, transcriptOptions)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
 
-	// call connect!
+	// connect the websocket to Deepgram
 	wsconn := dgClient.Connect()
 	if wsconn == nil {
 		log.Println("Client.Connect failed")
 		os.Exit(1)
 	}
 
-	// feed the stream to the websocket
+	// get the HTTP stream
 	httpClient := new(http.Client)
 
 	res, err := httpClient.Get(STREAM_URL)
@@ -58,8 +59,8 @@ func main() {
 
 	log.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
-	// this is a blocking call...
 	go func() {
+		// feed the HTTP stream to the Deepgram client (this is a blocking call)
 		dgClient.Stream(bufio.NewReader(res.Body))
 	}()
 

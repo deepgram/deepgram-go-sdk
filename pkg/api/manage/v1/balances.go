@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Balances APIs in the Deepgram Manage API
-
-Please see:
+Balances API:
 https://developers.deepgram.com/reference/get-all-balances
 https://developers.deepgram.com/reference/get-balance
 */

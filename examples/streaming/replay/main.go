@@ -69,7 +69,7 @@ func main() {
 	}
 
 	go func() {
-		// this is a blocking call
+		// feed the WAV stream to the Deepgram client (this is a blocking call)
 		play.Stream(dgClient)
 	}()
 

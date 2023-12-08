@@ -85,7 +85,7 @@ func main() {
 		}
 	}
 
-	// delete project
+	// delete invitation
 	respMessage, err = mgClient.DeleteInvitation(ctx, projectId, "spam@spam.com")
 	if err != nil {
 		log.Printf("DeleteInvitation failed. Err: %v\n", err)

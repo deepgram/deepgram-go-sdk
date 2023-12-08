@@ -112,7 +112,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
-		klog.V(1).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
+		klog.V(3).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
 		return nil
 	}
 
@@ -223,7 +223,7 @@ func (c *Client) listen() {
 			for {
 				ws := c.Connect()
 				if ws == nil {
-					klog.V(1).Infof("WebSocketClient::listen: Connection is not valid\n")
+					klog.V(3).Infof("WebSocketClient::listen: Connection is not valid\n")
 					break
 				}
 

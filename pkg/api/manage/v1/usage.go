@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Usage APIs in the Deepgram Manage API
-
-Please see:
+Usage API:
 https://developers.deepgram.com/reference/get-all-requests
 https://developers.deepgram.com/reference/get-request
 https://developers.deepgram.com/reference/summarize-usage

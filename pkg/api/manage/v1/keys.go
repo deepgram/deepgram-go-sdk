@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Keys APIs in the Deepgram Manage API
-
-Please see:
+Keys API:
 https://developers.deepgram.com/reference/list-keys
 https://developers.deepgram.com/reference/get-key
 https://developers.deepgram.com/reference/create-key

@@ -2,7 +2,6 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// Implementation for a replay device. In this case, replays an audio file to stream into a listener
 package replay
 
 import (
