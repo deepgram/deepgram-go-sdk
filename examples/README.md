@@ -20,16 +20,22 @@ go mod tidy
 
 ### Set your API Key as an Environment Variable named "DEEPGRAM_API_KEY"
 
-If using bash, this could be done in your `.bash_profile` or this could also be done by a simple export seen below.
+If using bash, this could be done in your `~/.bash_profile` like so:
 
 ```bash
 export DEEPGRAM_API_KEY = "YOUR_DEEPGRAM_API_KEY"
 ```
 
+or this could also be done by a simple export before executing your Go application:
+
+```bash
+DEEPGRAM_API_KEY="YOUR_DEEPGRAM_API_KEY" go run main.go
+```
+
 ### Run the project
 
-Make sure you're in the directory with the `main.go` file and run the project with the following command.
+If you chose to set an environment variable in your shell profile (ie `.bash_profile`) you can change directory into each example folder and run the example like so:
 
-```
+```bash
 go run main.go
 ```

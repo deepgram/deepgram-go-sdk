@@ -2,9 +2,6 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-/*
-This package contains the initialization code for the Deepgram Go SDK
-*/
 package common
 
 const (

@@ -8,6 +8,7 @@ import (
 	"errors"
 )
 
+// errors
 var (
 	// ErrInvalidInput required input was not found
 	ErrInvalidInput = errors.New("required input was not found")

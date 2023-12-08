@@ -22,11 +22,12 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/pkg/common"
 )
 
+// NewWithDefaults creates a REST client with default options
 func NewWithDefaults() *Client {
 	return New("", &ClientOptions{})
 }
 
-// New allocated a REST client
+// New REST client
 func New(apiKey string, options *ClientOptions) *Client {
 	if options.Host == "" {
 		options.Host = common.DefaultHost

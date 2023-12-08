@@ -2,14 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package prerecorded
-
-import (
-	"errors"
-)
-
-// errors
-var (
-	// ErrInvalidInput required input was not found
-	ErrInvalidInput = errors.New("required input was not found")
-)
+/*
+This package contains the interface to manage the prerecorded and live/stream interfaces for the Deepgram API
+*/
+package interfaces

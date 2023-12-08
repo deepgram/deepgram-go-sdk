@@ -4,6 +4,7 @@
 
 package interfaces
 
+// These are the message types that can be received from the live API
 const (
 	// message types
 	TypeMessageResponse  string = "Results"

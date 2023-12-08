@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// Implementation microphone using portaudio
+// Implementation of a microphone using portaudio
 package microphone
 
 import (
@@ -15,7 +15,7 @@ import (
 	klog "k8s.io/klog/v2"
 )
 
-// Initialize inits the library
+// Initialize inits the library. This handles OS level init of the library.
 func Initialize() {
 	err := portaudio.Initialize()
 	if err != nil {
@@ -23,7 +23,7 @@ func Initialize() {
 	}
 }
 
-// Teardown cleans up the library
+// Teardown cleans up the library. This handles OS level cleanup.
 func Teardown() {
 	err := portaudio.Terminate()
 	if err != nil {

@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Projects APIs in the Deepgram Manage API
-
-Please see:
+Projects API:
 https://developers.deepgram.com/reference/get-projects
 https://developers.deepgram.com/reference/get-project
 https://developers.deepgram.com/reference/update-project

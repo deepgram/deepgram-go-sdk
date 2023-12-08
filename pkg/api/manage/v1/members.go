@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package contains the code for the Members APIs in the Deepgram Manage API
-
-Please see:
+Members API:
 https://developers.deepgram.com/reference/get-members
 https://developers.deepgram.com/reference/remove-member
 */
