@@ -95,6 +95,11 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	return nil
 }
 
+func (dch DefaultCallbackHandler) UtteranceEnd() error {
+	fmt.Printf("\nUtteranceEnd \n")
+	return nil
+}
+
 func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
