@@ -95,7 +95,7 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	return nil
 }
 
-func (dch DefaultCallbackHandler) UtteranceEnd() error {
+func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
 	fmt.Printf("\nUtteranceEnd \n")
 	return nil
 }

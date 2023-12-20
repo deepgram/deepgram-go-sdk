@@ -9,7 +9,7 @@ package interfaces
 type LiveMessageCallback interface {
 	Message(mr *MessageResponse) error
 	Metadata(md *MetadataResponse) error
-	UtteranceEnd() error
+	UtteranceEnd(ur *UtteranceEndResponse) error
 	Error(er *ErrorResponse) error
 	// TODO: implement other conversation insights
 }

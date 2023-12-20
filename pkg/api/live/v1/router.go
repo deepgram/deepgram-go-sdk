@@ -124,8 +124,21 @@ func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
 }
 
 func (r *MessageRouter) UtteranceEndResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.UtteranceEnd ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "UtteranceEnd", byMsg)
+
+	var ur interfaces.UtteranceEndResponse
+	err := json.Unmarshal(byMsg, &ur)
+	if err != nil {
+		klog.V(1).Infof("UtteranceEnd json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.UtteranceEnd LEAVE\n")
+		return err
+	}
+
 	if r.callback != nil {
-		err := r.callback.UtteranceEnd()
+		err := r.callback.UtteranceEnd(&ur)
 		if err != nil {
 			klog.V(1).Infof("callback.UtteranceEnd failed. Err: %v\n", err)
 		} else {
