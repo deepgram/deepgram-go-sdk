@@ -53,6 +53,8 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		return r.MessageResponse(byMsg)
 	case interfaces.TypeMetadataResponse:
 		return r.MetadataResponse(byMsg)
+	case interfaces.TypeUtteranceEndResponse:
+		return r.UtteranceEndResponse(byMsg)
 	default:
 		return r.UnhandledMessage(byMsg)
 	}
@@ -117,6 +119,34 @@ func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
 
 	klog.V(1).Infof("User callback is undefined\n")
 	klog.V(6).Infof("router.MetadataResponse ENTER\n")
+
+	return nil
+}
+
+func (r *MessageRouter) UtteranceEndResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.UtteranceEnd ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "UtteranceEnd", byMsg)
+
+	var ur interfaces.UtteranceEndResponse
+	err := json.Unmarshal(byMsg, &ur)
+	if err != nil {
+		klog.V(1).Infof("UtteranceEnd json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.UtteranceEnd LEAVE\n")
+		return err
+	}
+
+	if r.callback != nil {
+		err := r.callback.UtteranceEnd(&ur)
+		if err != nil {
+			klog.V(1).Infof("callback.UtteranceEnd failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.UtteranceEnd succeeded\n")
+		}
+		klog.V(6).Infof("router.UtteranceEnd LEAVE\n")
+		return err
+	}
 
 	return nil
 }

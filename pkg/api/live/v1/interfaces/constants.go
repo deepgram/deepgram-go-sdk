@@ -7,8 +7,9 @@ package interfaces
 // These are the message types that can be received from the live API
 const (
 	// message types
-	TypeMessageResponse  string = "Results"
-	TypeMetadataResponse string = "Metadata"
+	TypeMessageResponse      string = "Results"
+	TypeMetadataResponse     string = "Metadata"
+	TypeUtteranceEndResponse string = "UtteranceEnd"
 
 	// Error type
 	TypeErrorResponse string = "Error"

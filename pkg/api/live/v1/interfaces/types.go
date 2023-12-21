@@ -70,6 +70,11 @@ type MetadataResponse struct {
 	Type           string               `json:"type,omitempty"`
 }
 
+// UtteranceEndResponse is the response from a live transcription
+type UtteranceEndResponse struct {
+	Type string `json:"type,omitempty"`
+}
+
 // ErrorResponse is the response from a live transcription
 type ErrorResponse struct {
 	Description string `json:"description"`
