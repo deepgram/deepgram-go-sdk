@@ -2,16 +2,18 @@
 
 [![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4)
 
-Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
+Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
 > This SDK only supports hosted usage of api.deepgram.com.
 
 * [Deepgram Go SDK](#deepgram-go-sdk)
-* [Getting an API Key](#getting-an-api-key)
 * [API Documentation](#api-documentation)
+* [Getting an API Key](#getting-an-api-key)
 * [Installation](#installation)
 * [Requirements](#requirements)
 * [Quickstarts](#quickstarts)
+  * [PreRecorded Audio Transcription Quickstart](#prerecorded-audio-transcription-quickstart)
+  * [Live Audio Transcription Quickstart](#live-audio-transcription-quickstart)
 * [SDK Documentation](#sdk-documentation)
 * [Examples](#examples)
 * [Testing](#testing)
@@ -19,13 +21,13 @@ Community Go SDK for [Deepgram](https://www.deepgram.com/). Start building with 
 * [Development and Contributing](#development-and-contributing)
 * [Getting Help](#getting-help)
 
-# Getting an API Key
-
-🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
-
 # API Documentation
 
 This SDK implementation the API documentation found at [https://developers.deepgram.com](https://developers.deepgram.com).
+
+# Getting an API Key
+
+🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
 
 # Installation
 
@@ -147,7 +149,7 @@ These examples provide:
     - From a Microphone - [examples/streaming/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go)
     - From an HTTP Endpoint - [examples/streaming/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/http/main.go)
 
-- Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for each API set:
+- Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for:
 
     - Balances - [examples/manage/balances](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/balances/main.go)
     - Invitations - [examples/manage/invitations](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/invitations/main.go)
@@ -179,5 +181,3 @@ project, let us know! You can either:
 - [Open an issue in this repository](https://github.com/deepgram/deepgram-dotnet-sdk/issues/new)
 - [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
 - [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)
-
-[license]: LICENSE.txt
