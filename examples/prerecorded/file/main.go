@@ -13,6 +13,7 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
 	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	cfginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
@@ -32,15 +33,25 @@ func main() {
 
 	// set the Transcription options
 	options := interfaces.PreRecordedTranscriptionOptions{
-		Punctuate:  true,
-		Diarize:    true,
-		Language:   "en-US",
-		Utterances: true,
+		Punctuate: true,
+		Diarize:   true,
+		Language:  "en-US",
+		// Utterances: true, // Commenting this out to demonstrate how to send a custom parameter
 	}
 
 	// create a Deepgram client
 	c := client.NewWithDefaults()
 	dg := prerecorded.New(c)
+
+	// example on how to send a custom header
+	headers := make(map[string][]string, 0)
+	headers["MY-CUSTOM-HEADER"] = []string{"CUSTOM"}
+	ctx = cfginterfaces.WithCustomHeaders(ctx, headers)
+
+	// example on how to send a custom parameter
+	params := make(map[string][]string, 0)
+	params["utterances"] = []string{"true"}
+	ctx = cfginterfaces.WithCustomParameters(ctx, params)
 
 	// send/process file to Deepgram
 	res, err := dg.FromFile(ctx, filePath, options)
