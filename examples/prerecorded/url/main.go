@@ -7,7 +7,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"os"
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
@@ -44,21 +44,21 @@ func main() {
 	// send the URL to Deepgram
 	res, err := dg.FromURL(ctx, url, options)
 	if err != nil {
-		log.Printf("FromURL failed. Err: %v\n", err)
+		fmt.Printf("FromURL failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	data, err := json.Marshal(res)
 	if err != nil {
-		log.Printf("json.Marshal failed. Err: %v\n", err)
+		fmt.Printf("json.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	// make the JSON pretty
 	prettyJson, err := prettyjson.Format(data)
 	if err != nil {
-		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
+		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
 }

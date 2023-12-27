@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
@@ -28,7 +28,7 @@ func main() {
 	// list projects
 	respList, err := mgClient.ListProjects(ctx)
 	if err != nil {
-		log.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("ListProjects failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -36,24 +36,24 @@ func main() {
 	for _, item := range respList.Projects {
 		projectId = item.ProjectID
 		name := item.Name
-		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
 	}
 
 	// list invitations
 	respGet, err := mgClient.ListInvitations(ctx, projectId)
 	if err != nil {
-		log.Printf("ListInvitations failed. Err: %v\n", err)
+		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	if len(respGet.Invites) == 0 {
-		log.Printf("ListInvitations() - No invitations found\n")
+		fmt.Printf("ListInvitations() - No invitations found\n")
 	} else {
 		for _, item := range respGet.Invites {
 			id := item.Email
 			scope := item.Scope
-			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+			fmt.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
 		}
 	}
 
@@ -63,50 +63,50 @@ func main() {
 		Scope: "member",
 	})
 	if err != nil {
-		log.Printf("SendInvitation failed. Err: %v\n", err)
+		fmt.Printf("SendInvitation failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("SendInvitation() - Result: %s\n", respMessage.Message)
+	fmt.Printf("SendInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
 	respGet, err = mgClient.ListInvitations(ctx, projectId)
 	if err != nil {
-		log.Printf("ListInvitations failed. Err: %v\n", err)
+		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	if len(respGet.Invites) == 0 {
-		log.Printf("ListInvitations() - No invitations found\n")
+		fmt.Printf("ListInvitations() - No invitations found\n")
 	} else {
 		for _, item := range respGet.Invites {
 			id := item.Email
 			scope := item.Scope
-			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+			fmt.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
 		}
 	}
 
 	// delete invitation
 	respMessage, err = mgClient.DeleteInvitation(ctx, projectId, "spam@spam.com")
 	if err != nil {
-		log.Printf("DeleteInvitation failed. Err: %v\n", err)
+		fmt.Printf("DeleteInvitation failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("DeleteInvitation() - Result: %s\n", respMessage.Message)
+	fmt.Printf("DeleteInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
 	respGet, err = mgClient.ListInvitations(ctx, projectId)
 	if err != nil {
-		log.Printf("ListInvitations failed. Err: %v\n", err)
+		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	if len(respGet.Invites) == 0 {
-		log.Printf("ListInvitations() - No invitations found\n")
+		fmt.Printf("ListInvitations() - No invitations found\n")
 	} else {
 		for _, item := range respGet.Invites {
 			id := item.Email
 			scope := item.Scope
-			log.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
+			fmt.Printf("ListInvitations() - ID: %s, Scope: %s\n", id, scope)
 		}
 	}
 
@@ -114,8 +114,8 @@ func main() {
 	// Leave Project
 	// respMessage, err = mgClient.LeaveProject(ctx, projectId)
 	// if err != nil {
-	// 	log.Printf("LeaveProject failed. Err: %v\n", err)
+	// 	fmt.Printf("LeaveProject failed. Err: %v\n", err)
 	// 	os.Exit(1)
 	// }
-	// log.Printf("LeaveProject() - Name: %s\n", respMessage.Message)
+	// fmt.Printf("LeaveProject() - Name: %s\n", respMessage.Message)
 }

@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
@@ -27,7 +27,7 @@ func main() {
 	// list projects
 	respProject, err := mgClient.ListProjects(ctx)
 	if err != nil {
-		log.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("ListProjects failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -35,14 +35,14 @@ func main() {
 	for _, item := range respProject.Projects {
 		projectId = item.ProjectID
 		name := item.Name
-		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
 	}
 
 	// list balances
 	respList, err := mgClient.ListBalances(ctx, projectId)
 	if err != nil {
-		log.Printf("ListBalances failed. Err: %v\n", err)
+		fmt.Printf("ListBalances failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -51,14 +51,14 @@ func main() {
 	for _, item := range respList.Balances {
 		id = item.BalanceID
 		amount = item.Amount
-		log.Printf("ListBalances() - ID: %s, Amount: %f\n", id, amount)
+		fmt.Printf("ListBalances() - ID: %s, Amount: %f\n", id, amount)
 	}
 
 	// get first balance
 	respGet, err := mgClient.GetBalance(ctx, projectId, id)
 	if err != nil {
-		log.Printf("GetBalance failed. Err: %v\n", err)
+		fmt.Printf("GetBalance failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetBalance() - ID: %s, Amount: %f\n", id, respGet.Amount)
+	fmt.Printf("GetBalance() - ID: %s, Amount: %f\n", id, respGet.Amount)
 }
