@@ -35,5 +35,6 @@ type LiveTranscriptionOptions struct {
 	SmartFormat     bool     `json:"smart_format,omitempty" url:"smart_format,omitempty"`
 	Tag             []string `json:"tag,omitempty" url:"tag,omitempty"`
 	Tier            string   `json:"tier,omitempty" url:"tier,omitempty"`
+	UtteranceEndMs  string   `json:"utterance_end_ms,omitempty" url:"utterance_end_ms,omitempty"`
 	Version         string   `json:"version,omitempty" url:"version,omitempty"`
 }

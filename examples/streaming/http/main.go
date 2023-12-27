@@ -8,7 +8,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
@@ -37,14 +36,14 @@ func main() {
 	// create a Deepgram client
 	dgClient, err := client.NewForDemo(ctx, transcriptOptions)
 	if err != nil {
-		log.Println("ERROR creating LiveTranscription connection:", err)
+		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return
 	}
 
 	// connect the websocket to Deepgram
 	wsconn := dgClient.Connect()
 	if wsconn == nil {
-		log.Println("Client.Connect failed")
+		fmt.Println("Client.Connect failed")
 		os.Exit(1)
 	}
 
@@ -53,11 +52,11 @@ func main() {
 
 	res, err := httpClient.Get(STREAM_URL)
 	if err != nil {
-		log.Printf("httpClient.Get failed. Err: %v\n", err)
+		fmt.Printf("httpClient.Get failed. Err: %v\n", err)
 		return
 	}
 
-	log.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
+	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
 	go func() {
 		// feed the HTTP stream to the Deepgram client (this is a blocking call)
@@ -74,5 +73,5 @@ func main() {
 	// close client
 	dgClient.Stop()
 
-	log.Printf("Program exiting...\n")
+	fmt.Printf("Program exiting...\n")
 }
