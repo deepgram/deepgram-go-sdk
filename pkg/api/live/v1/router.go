@@ -7,6 +7,8 @@ package live
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
@@ -16,7 +18,8 @@ import (
 
 // MessageRouter is helper struct that routes events
 type MessageRouter struct {
-	callback interfaces.LiveMessageCallback
+	callback       interfaces.LiveMessageCallback
+	debugWebsocket bool
 }
 
 // NewWithDefault creates a default MessageRouter
@@ -26,14 +29,25 @@ func NewWithDefault() *MessageRouter {
 
 // New creates a MessageRouter with user defined callback
 func New(callback interfaces.LiveMessageCallback) *MessageRouter {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG_WEBSOCKET"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG_WEBSOCKET found")
+		debugStr = v
+	}
+
 	return &MessageRouter{
-		callback: callback,
+		callback:       callback,
+		debugWebsocket: (strings.EqualFold(strings.ToLower(debugStr), "true")),
 	}
 }
 
 // Message handles platform messages
 func (r *MessageRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
+
+	if r.debugWebsocket {
+		klog.V(5).Infof("Raw Message:\n%s\n", string(byMsg))
+	}
 
 	// what is the high level message here?
 	var mt MessageType
@@ -44,28 +58,34 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		return err
 	}
 
-	klog.V(6).Infof("router.Message LEAVE\n")
+	klog.V(6).Infof("MessageType(%s) before\n", mt.Type)
 
 	switch mt.Type {
-	case interfaces.TypeErrorResponse:
-		return r.ErrorResponse(byMsg)
 	case interfaces.TypeMessageResponse:
-		return r.MessageResponse(byMsg)
+		err = r.MessageResponse(byMsg)
 	case interfaces.TypeMetadataResponse:
-		return r.MetadataResponse(byMsg)
+		err = r.MetadataResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
-		return r.UtteranceEndResponse(byMsg)
+		err = r.UtteranceEndResponse(byMsg)
+	case interfaces.TypeErrorResponse:
+		err = r.ErrorResponse(byMsg)
 	default:
-		return r.UnhandledMessage(byMsg)
+		err = r.UnhandledMessage(byMsg)
 	}
+
+	if err == nil {
+		klog.V(6).Infof("MessageType(%s) after - Result: succeeded\n", mt.Type)
+	} else {
+		klog.V(5).Infof("MessageType(%s) after - Result: %v\n", mt.Type, err)
+	}
+	klog.V(6).Infof("router.Message LEAVE\n")
+
+	return err
 }
 
 // MessageResponse handles the MessageResponse message
 func (r *MessageRouter) MessageResponse(byMsg []byte) error {
 	klog.V(6).Infof("router.MessageResponse ENTER\n")
-
-	// trace debugging
-	r.printDebugMessages(5, "MessageResponse", byMsg)
 
 	var mr interfaces.MessageResponse
 	err := json.Unmarshal(byMsg, &mr)
@@ -73,6 +93,13 @@ func (r *MessageRouter) MessageResponse(byMsg []byte) error {
 		klog.V(1).Infof("MessageResponse json.Unmarshal failed. Err: %v\n", err)
 		klog.V(6).Infof("router.MessageResponse LEAVE\n")
 		return err
+	}
+
+	// this is too chatty is sentence is " " reduce the frequency of the log
+	if len(mr.Channel.Alternatives) > 0 && len(strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)) == 0 {
+		r.printDebugMessages(7, "MessageResponse", byMsg)
+	} else {
+		r.printDebugMessages(5, "MessageResponse", byMsg)
 	}
 
 	if r.callback != nil {
@@ -124,29 +151,32 @@ func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
 }
 
 func (r *MessageRouter) UtteranceEndResponse(byMsg []byte) error {
-	klog.V(6).Infof("router.UtteranceEnd ENTER\n")
+	klog.V(6).Infof("router.UtteranceEndResponse ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages(5, "UtteranceEnd", byMsg)
+	r.printDebugMessages(5, "UtteranceEndResponse", byMsg)
 
 	var ur interfaces.UtteranceEndResponse
 	err := json.Unmarshal(byMsg, &ur)
 	if err != nil {
-		klog.V(1).Infof("UtteranceEnd json.Unmarshal failed. Err: %v\n", err)
-		klog.V(6).Infof("router.UtteranceEnd LEAVE\n")
+		klog.V(1).Infof("UtteranceEndResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.UtteranceEndResponse LEAVE\n")
 		return err
 	}
 
 	if r.callback != nil {
 		err := r.callback.UtteranceEnd(&ur)
 		if err != nil {
-			klog.V(1).Infof("callback.UtteranceEnd failed. Err: %v\n", err)
+			klog.V(1).Infof("callback.UtteranceEndResponse failed. Err: %v\n", err)
 		} else {
-			klog.V(5).Infof("callback.UtteranceEnd succeeded\n")
+			klog.V(5).Infof("callback.UtteranceEndResponse succeeded\n")
 		}
-		klog.V(6).Infof("router.UtteranceEnd LEAVE\n")
+		klog.V(6).Infof("router.UtteranceEndResponse LEAVE\n")
 		return err
 	}
+
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.UtteranceEndResponse ENTER\n")
 
 	return nil
 }

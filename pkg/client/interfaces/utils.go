@@ -15,7 +15,7 @@ import (
 
 // constants
 const (
-	sdkVersion string = "v1.0.0"
+	sdkVersion string = "v1.0.2"
 )
 
 // connection agent
