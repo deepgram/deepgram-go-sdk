@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
@@ -28,7 +28,7 @@ func main() {
 	// list projects
 	respList, err := mgClient.ListProjects(ctx)
 	if err != nil {
-		log.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("ListProjects failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -36,21 +36,21 @@ func main() {
 	for _, item := range respList.Projects {
 		projectId = item.ProjectID
 		name := item.Name
-		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
 	}
 
 	// list keys
 	respGet, err := mgClient.ListKeys(ctx, projectId)
 	if err != nil {
-		log.Printf("ListKeys failed. Err: %v\n", err)
+		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.APIKeys {
 		id := item.APIKey.APIKeyID
 		comment := item.APIKey.Comment
-		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
+		fmt.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
 	}
 
 	// create key
@@ -59,50 +59,50 @@ func main() {
 		Scopes:  []string{"onprem:products"},
 	})
 	if err != nil {
-		log.Printf("CreateKey failed. Err: %v\n", err)
+		fmt.Printf("CreateKey failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("CreateKey() - Name: %s\n", respCreate.Comment)
+	fmt.Printf("CreateKey() - Name: %s\n", respCreate.Comment)
 
 	// list keys
 	respGet, err = mgClient.ListKeys(ctx, projectId)
 	if err != nil {
-		log.Printf("ListKeys failed. Err: %v\n", err)
+		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.APIKeys {
 		id := item.APIKey.APIKeyID
 		comment := item.APIKey.Comment
-		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
+		fmt.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
 	}
 
 	// get key
 	respKey, err := mgClient.GetKey(ctx, projectId, respCreate.APIKeyID)
 	if err != nil {
-		log.Printf("GetKey failed. Err: %v\n", err)
+		fmt.Printf("GetKey failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.APIKey.APIKeyID, respKey.APIKey.Comment)
+	fmt.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.APIKey.APIKeyID, respKey.APIKey.Comment)
 
 	// delete key
 	respMessage, err := mgClient.DeleteKey(ctx, projectId, respKey.APIKey.APIKeyID)
 	if err != nil {
-		log.Printf("DeleteKey failed. Err: %v\n", err)
+		fmt.Printf("DeleteKey failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("DeleteKey() - Name: %s\n", respMessage.Message)
+	fmt.Printf("DeleteKey() - Name: %s\n", respMessage.Message)
 
 	// list keys
 	respGet, err = mgClient.ListKeys(ctx, projectId)
 	if err != nil {
-		log.Printf("ListKeys failed. Err: %v\n", err)
+		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.APIKeys {
 		id := item.APIKey.APIKeyID
 		comment := item.APIKey.Comment
-		log.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
+		fmt.Printf("ListKeys() - ID: %s, Comment: %s\n", id, comment)
 	}
 }

@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
@@ -28,7 +28,7 @@ func main() {
 	// list projects
 	respList, err := mgClient.ListProjects(ctx)
 	if err != nil {
-		log.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("ListProjects failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -37,66 +37,66 @@ func main() {
 	for _, item := range respList.Projects {
 		id = item.ProjectID
 		name = item.Name
-		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, id)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, id)
 		break
 	}
 
 	// if deleteId == "" {
-	// 	log.Printf("This example requires a project who already exists where \"DELETE-ME\" is in the name.\n")
-	// 	log.Printf("This is required to exercise the UpdateProject and DeleteProject function.\n")
-	// 	log.Printf("In the absence of this, this example will exit early.\n")
+	// 	fmt.Printf("This example requires a project who already exists where \"DELETE-ME\" is in the name.\n")
+	// 	fmt.Printf("This is required to exercise the UpdateProject and DeleteProject function.\n")
+	// 	fmt.Printf("In the absence of this, this example will exit early.\n")
 	// 	os.Exit(0)
 	// }
 
 	// get first project
 	respGet, err := mgClient.GetProject(ctx, id)
 	if err != nil {
-		log.Printf("GetProject failed. Err: %v\n", err)
+		fmt.Printf("GetProject failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetProject() - Name: %s\n", respGet.Name)
+	fmt.Printf("GetProject() - Name: %s\n", respGet.Name)
 
 	// update project
 	respMessage, err := mgClient.UpdateProject(ctx, id, &interfaces.ProjectUpdateRequest{
 		Name: "My TEST RENAME Example",
 	})
 	if err != nil {
-		log.Printf("UpdateProject failed. Err: %v\n", err)
+		fmt.Printf("UpdateProject failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("UpdateProject() - Name: %s\n", respMessage.Message)
+	fmt.Printf("UpdateProject() - Name: %s\n", respMessage.Message)
 
 	// get project
 	respGet, err = mgClient.GetProject(ctx, id)
 	if err != nil {
-		log.Printf("GetProject failed. Err: %v\n", err)
+		fmt.Printf("GetProject failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetProject() - Name: %s\n", respGet.Name)
+	fmt.Printf("GetProject() - Name: %s\n", respGet.Name)
 
 	// update project
 	respMessage, err = mgClient.UpdateProject(ctx, id, &interfaces.ProjectUpdateRequest{
 		Name: name,
 	})
 	if err != nil {
-		log.Printf("UpdateProject failed. Err: %v\n", err)
+		fmt.Printf("UpdateProject failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("UpdateProject() - Name: %s\n", respMessage.Message)
+	fmt.Printf("UpdateProject() - Name: %s\n", respMessage.Message)
 
 	// get project
 	respGet, err = mgClient.GetProject(ctx, id)
 	if err != nil {
-		log.Printf("GetProject failed. Err: %v\n", err)
+		fmt.Printf("GetProject failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("GetProject() - Name: %s\n", respGet.Name)
+	fmt.Printf("GetProject() - Name: %s\n", respGet.Name)
 
 	// delete project
 	// respMessage, err = mgClient.DeleteProject(ctx, deleteId)
 	// if err != nil {
-	// 	log.Printf("DeleteProject failed. Err: %v\n", err)
+	// 	fmt.Printf("DeleteProject failed. Err: %v\n", err)
 	// 	os.Exit(1)
 	// }
-	// log.Printf("DeleteProject() - Name: %s\n", respMessage.Message)
+	// fmt.Printf("DeleteProject() - Name: %s\n", respMessage.Message)
 }

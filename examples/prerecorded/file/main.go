@@ -7,13 +7,12 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"os"
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
 	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
-	cfginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
@@ -33,10 +32,10 @@ func main() {
 
 	// set the Transcription options
 	options := interfaces.PreRecordedTranscriptionOptions{
-		Punctuate: true,
-		Diarize:   true,
-		Language:  "en-US",
-		// Utterances: true, // Commenting this out to demonstrate how to send a custom parameter
+		Punctuate:  true,
+		Diarize:    true,
+		Language:   "en-US",
+		Utterances: true, // Commenting this out to demonstrate how to send a custom parameter
 	}
 
 	// create a Deepgram client
@@ -44,49 +43,53 @@ func main() {
 	dg := prerecorded.New(c)
 
 	// example on how to send a custom header
-	headers := make(map[string][]string, 0)
-	headers["MY-CUSTOM-HEADER"] = []string{"CUSTOM"}
-	ctx = cfginterfaces.WithCustomHeaders(ctx, headers)
-
+	// need to import (
+	//	 "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	// )
+	//
+	// headers := make(map[string][]string, 0)
+	// headers["MY-CUSTOM-HEADER"] = []string{"CUSTOM"}
+	// ctx = cfginterfaces.WithCustomHeaders(ctx, headers)
+	//
 	// example on how to send a custom parameter
-	params := make(map[string][]string, 0)
-	params["utterances"] = []string{"true"}
-	ctx = cfginterfaces.WithCustomParameters(ctx, params)
+	// params := make(map[string][]string, 0)
+	// params["utterances"] = []string{"true"}
+	// ctx = cfginterfaces.WithCustomParameters(ctx, params)
 
 	// send/process file to Deepgram
 	res, err := dg.FromFile(ctx, filePath, options)
 	if err != nil {
-		log.Printf("FromStream failed. Err: %v\n", err)
+		fmt.Printf("FromStream failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	data, err := json.Marshal(res)
 	if err != nil {
-		log.Printf("json.Marshal failed. Err: %v\n", err)
+		fmt.Printf("json.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	// make the JSON pretty
 	prettyJson, err := prettyjson.Format(data)
 	if err != nil {
-		log.Printf("prettyjson.Marshal failed. Err: %v\n", err)
+		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
 
 	// dump example VTT
 	vtt, err := res.ToWebVTT()
 	if err != nil {
-		log.Printf("ToWebVTT failed. Err: %v\n", err)
+		fmt.Printf("ToWebVTT failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("\n\n\nVTT:\n%s\n\n\n", vtt)
+	fmt.Printf("\n\n\nVTT:\n%s\n\n\n", vtt)
 
 	// dump example SRT
 	srt, err := res.ToSRT()
 	if err != nil {
-		log.Printf("ToSRT failed. Err: %v\n", err)
+		fmt.Printf("ToSRT failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("\n\n\nSRT:\n%s\n\n\n", srt)
+	fmt.Printf("\n\n\nSRT:\n%s\n\n\n", srt)
 }

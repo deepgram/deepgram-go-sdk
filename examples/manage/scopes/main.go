@@ -6,7 +6,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
@@ -32,7 +32,7 @@ func main() {
 	// list projects
 	respList, err := mgClient.ListProjects(ctx)
 	if err != nil {
-		log.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("ListProjects failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -40,14 +40,14 @@ func main() {
 	for _, item := range respList.Projects {
 		projectId = item.ProjectID
 		name := item.Name
-		log.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
 		break
 	}
 
 	// list members
 	respGet, err := mgClient.ListMembers(ctx, projectId)
 	if err != nil {
-		log.Printf("ListMembers failed. Err: %v\n", err)
+		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -55,9 +55,9 @@ func main() {
 	for _, item := range respGet.Members {
 		memberId := item.MemberID
 		email := item.Email
-		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {
-			log.Printf("Scope: %s\n", scope)
+			fmt.Printf("Scope: %s\n", scope)
 		}
 
 		if email == TestAccountName {
@@ -66,22 +66,22 @@ func main() {
 	}
 
 	if updateID == "" {
-		log.Printf("This example requires a member who already email is %s.\n", TestAccountName)
-		log.Printf("This is required to exercise the RemoveMember function.\n")
-		log.Printf("In the absence of this, this example will exit early.\n")
+		fmt.Printf("This example requires a member who already email is %s.\n", TestAccountName)
+		fmt.Printf("This is required to exercise the RemoveMember function.\n")
+		fmt.Printf("In the absence of this, this example will exit early.\n")
 		os.Exit(0)
 	}
 
 	// get scope
 	respScope, err := mgClient.GetMemberScopes(ctx, projectId, updateID)
 	if err != nil {
-		log.Printf("GetMemberScopes failed. Err: %v\n", err)
+		fmt.Printf("GetMemberScopes failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	scope := respScope.Scopes
 	for _, item := range scope {
-		log.Printf("GetMemberScopes() - Scope: %s\n", item)
+		fmt.Printf("GetMemberScopes() - Scope: %s\n", item)
 	}
 
 	// update scope
@@ -89,24 +89,24 @@ func main() {
 		Scope: "admin",
 	})
 	if err != nil {
-		log.Printf("UpdateMemberScopes failed. Err: %v\n", err)
+		fmt.Printf("UpdateMemberScopes failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
+	fmt.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
 
 	// list members
 	respGet, err = mgClient.ListMembers(ctx, projectId)
 	if err != nil {
-		log.Printf("ListMembers failed. Err: %v\n", err)
+		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.Members {
 		memberId := item.MemberID
 		email := item.Email
-		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {
-			log.Printf("Scope: %s\n", scope)
+			fmt.Printf("Scope: %s\n", scope)
 		}
 	}
 
@@ -115,24 +115,24 @@ func main() {
 		Scope: "member",
 	})
 	if err != nil {
-		log.Printf("UpdateMemberScopes failed. Err: %v\n", err)
+		fmt.Printf("UpdateMemberScopes failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	log.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
+	fmt.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
 
 	// list members
 	respGet, err = mgClient.ListMembers(ctx, projectId)
 	if err != nil {
-		log.Printf("ListMembers failed. Err: %v\n", err)
+		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.Members {
 		memberId := item.MemberID
 		email := item.Email
-		log.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
 		for _, scope := range item.Scopes {
-			log.Printf("Scope: %s\n", scope)
+			fmt.Printf("Scope: %s\n", scope)
 		}
 	}
 }
