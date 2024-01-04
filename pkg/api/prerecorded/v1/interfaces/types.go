@@ -54,17 +54,22 @@ type Word struct {
 	Speaker           int     `json:"speaker,omitempty"`
 	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
 	PunctuatedWord    string  `json:"punctuated_word,omitempty"`
-	Sentiment         string  `json:"sentiment,omitempty"`
+}
+
+type Translation struct {
+	Language    string `json:"language,omitempty"`
+	Translation string `json:"translation,omitempty"`
 }
 
 type Alternative struct {
-	Transcript string      `json:"transcript,omitempty"`
-	Confidence float64     `json:"confidence,omitempty"`
-	Words      []Word      `json:"words,omitempty"`
-	Paragraphs Paragraph   `json:"paragraphs,omitempty"`
-	Entities   []Entity    `json:"entities,omitempty"`
-	Summaries  []SummaryV1 `json:"summaries,omitempty"`
-	Topics     []Topics    `json:"topics,omitempty"`
+	Transcript  string      `json:"transcript,omitempty"`
+	Confidence  float64     `json:"confidence,omitempty"`
+	Words       []Word      `json:"words,omitempty"`
+	Paragraphs  Paragraph   `json:"paragraphs,omitempty"`
+	Entities    []Entity    `json:"entities,omitempty"`
+	Summaries   []SummaryV1 `json:"summaries,omitempty"`
+	Translation Translation `json:"translation,omitempty"`
+	Topics      []Topics    `json:"topics,omitempty"`
 }
 
 type Paragraphs struct {
@@ -106,9 +111,10 @@ type Topic struct {
 }
 
 type Channel struct {
-	Search           []Search      `json:"search,omitempty"`
-	Alternatives     []Alternative `json:"alternatives,omitempty"`
-	DetectedLanguage string        `json:"detected_language,omitempty"`
+	Search             []Search      `json:"search,omitempty"`
+	Alternatives       []Alternative `json:"alternatives,omitempty"`
+	DetectedLanguage   string        `json:"detected_language,omitempty"`
+	LanguageConfidence float64       `json:"language_confidence,omitempty"`
 }
 
 type Utterance struct {
