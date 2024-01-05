@@ -45,6 +45,7 @@ func (o *ClientOptions) Parse() error {
 	}
 
 	// prerecorded
+	// currently nothing
 
 	// websocket
 	if v := os.Getenv("DEEPGRAM_WEBSOCKET_REDIRECT"); v != "" {
@@ -55,6 +56,20 @@ func (o *ClientOptions) Parse() error {
 		klog.V(3).Infof("DEEPGRAM_WEBSOCKET_KEEP_ALIVE found")
 		o.EnableKeepAlive = strings.EqualFold(strings.ToLower(v), "true")
 	}
+
+	return nil
+}
+
+func (o *PreRecordedTranscriptionOptions) Check() error {
+	// checks
+	// currently no op
+
+	return nil
+}
+
+func (o *LiveTranscriptionOptions) Check() error {
+	// checks
+	// currently no op
 
 	return nil
 }

@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -33,12 +33,15 @@ func (c *PrerecordedClient) FromFile(ctx context.Context, file string, options i
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	err := options.Check()
+	if err != nil {
+		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
+		return nil, err
+	}
 
 	// send the file!
 	var resp api.PreRecordedResponse
-
-	err := c.Client.DoFile(ctx, file, options, &resp)
-
+	err = c.Client.DoFile(ctx, file, options, &resp)
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
@@ -65,12 +68,15 @@ func (c *PrerecordedClient) FromStream(ctx context.Context, src io.Reader, optio
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	err := options.Check()
+	if err != nil {
+		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
+		return nil, err
+	}
 
 	// send the file!
 	var resp api.PreRecordedResponse
-
-	err := c.Client.DoStream(ctx, src, options, &resp)
-
+	err = c.Client.DoStream(ctx, src, options, &resp)
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
@@ -97,12 +103,15 @@ func (c *PrerecordedClient) FromURL(ctx context.Context, url string, options int
 	if ctx == nil {
 		ctx = context.Background()
 	}
+	err := options.Check()
+	if err != nil {
+		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
+		return nil, err
+	}
 
 	// send the file!
 	var resp api.PreRecordedResponse
-
-	err := c.Client.DoURL(ctx, url, options, &resp)
-
+	err = c.Client.DoURL(ctx, url, options, &resp)
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
 			if e.Resp.StatusCode != http.StatusOK {
