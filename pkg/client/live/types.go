@@ -15,20 +15,9 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-// ClientOptions defines any options for the client
-type ClientOptions struct {
-	Host            string // override for the host endpoint
-	ApiVersion      string // override for the version used
-	Path            string // override for the endpoint path usually <version/listen>
-	RedirectService bool   // allows HTTP redirects to be followed
-	SkipServerAuth  bool   // keeps the client from authenticating with the server
-	EnableKeepAlive bool   // enables the keep alive feature
-}
-
 // Client is a struct representing the websocket client connection
 type Client struct {
-	cOptions *ClientOptions
-	apiKey   string
+	cOptions *interfaces.ClientOptions
 	tOptions interfaces.LiveTranscriptionOptions
 
 	sendBuf   chan []byte

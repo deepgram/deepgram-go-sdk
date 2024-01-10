@@ -34,7 +34,7 @@ func (c *ManageClient) ListInvitations(ctx context.Context, projectId string) (*
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.InvitationsURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListInvitations() LEAVE\n")
@@ -82,7 +82,7 @@ func (c *ManageClient) SendInvitation(ctx context.Context, projectId string, inv
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.InvitationsURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.SendInvitation() ENTER\n")
@@ -137,7 +137,7 @@ func (c *ManageClient) DeleteInvitation(ctx context.Context, projectId string, e
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsByIdURI, nil, projectId, email)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.InvitationsByIdURI, nil, projectId, email)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.DeleteInvitation() LEAVE\n")
@@ -185,7 +185,7 @@ func (c *ManageClient) LeaveProject(ctx context.Context, projectId string) (*api
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.InvitationsLeaveURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.InvitationsLeaveURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.LeaveProject() LEAVE\n")

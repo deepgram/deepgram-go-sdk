@@ -14,38 +14,28 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 
 	klog "k8s.io/klog/v2"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	common "github.com/deepgram/deepgram-go-sdk/pkg/common"
 )
 
 // NewWithDefaults creates a REST client with default options
 func NewWithDefaults() *Client {
-	return New("", &ClientOptions{})
+	return New(&interfaces.ClientOptions{})
 }
 
 // New REST client
-func New(apiKey string, options *ClientOptions) *Client {
-	if options.Host == "" {
-		options.Host = common.DefaultHost
-	}
-	if apiKey == "" {
-		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-			klog.V(3).Infof("DEEPGRAM_API_KEY found")
-			apiKey = v
-		} else {
-			klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-			return nil
-		}
+func New(options *interfaces.ClientOptions) *Client {
+	err := options.Parse()
+	if err != nil {
+		klog.V(1).Infof("options.Parse failed. Err: %v\n", err)
+		return nil
 	}
 
 	c := Client{
-		HttpClient: NewHTTPClient(),
+		HttpClient: NewHTTPClient(options),
 		Options:    options,
-		apiKey:     apiKey,
 	}
 	return &c
 }
@@ -65,7 +55,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	req.Header.Set("Host", c.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.apiKey)
+	req.Header.Set("Authorization", "token "+c.Options.ApiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {

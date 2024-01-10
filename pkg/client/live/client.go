@@ -11,11 +11,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/dvonthenen/websocket"
@@ -34,7 +31,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewForDemo(ctx context.Context, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, "", &ClientOptions{}, options, nil)
+	return New(ctx, "", &interfaces.ClientOptions{}, options, nil)
 }
 
 /*
@@ -45,7 +42,7 @@ Notes:
   - The callback handler is set to the default handler which just prints all messages to the console
 */
 func NewWithDefaults(ctx context.Context, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	return New(ctx, "", &ClientOptions{}, options, callback)
+	return New(ctx, "", &interfaces.ClientOptions{}, options, callback)
 }
 
 /*
@@ -58,18 +55,18 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
 */
-func New(ctx context.Context, apiKey string, cOptions *ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	klog.V(6).Infof("live.New() ENTER\n")
 
-	if apiKey == "" {
-		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-			klog.V(3).Infof("DEEPGRAM_API_KEY found")
-			apiKey = v
-		} else {
-			klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-			return nil, errors.New("DEEPGRAM_API_KEY not found")
-		}
+	if apiKey != "" {
+		cOptions.ApiKey = apiKey
 	}
+	err := cOptions.Parse()
+	if err != nil {
+		klog.V(1).Infof("options.Parse() failed. Err: %v\n", err)
+		return nil, err
+	}
+
 	if callback == nil {
 		klog.V(2).Infof("Using DefaultCallbackHandler.\n")
 		callback = live.NewDefaultCallbackHandler()
@@ -77,7 +74,6 @@ func New(ctx context.Context, apiKey string, cOptions *ClientOptions, tOptions i
 
 	// init
 	conn := Client{
-		apiKey:   apiKey,
 		cOptions: cOptions,
 		tOptions: tOptions,
 		sendBuf:  make(chan []byte, 1),
@@ -130,13 +126,9 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		}
 	}
 
-	bDisable := true
-	if v := os.Getenv("DEEPGRAM_SSL_HOST_VERIFICATION"); v != "" {
-		bDisable = strings.EqualFold(strings.ToLower(v), "false")
-	}
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
-		TLSClientConfig:  &tls.Config{InsecureSkipVerify: bDisable},
+		TLSClientConfig:  &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
 		RedirectService:  c.cOptions.RedirectService,
 		SkipServerAuth:   c.cOptions.SkipServerAuth,
 	}
@@ -156,7 +148,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 
 	// sets the API key
 	myHeader.Set("Host", c.cOptions.Host)
-	myHeader.Set("Authorization", "token "+c.apiKey)
+	myHeader.Set("Authorization", "token "+c.cOptions.ApiKey)
 	myHeader.Set("User-Agent", interfaces.DgAgent)
 
 	// attempt to establish connection
@@ -176,7 +168,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		i++
 
 		// create new connection
-		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.ApiVersion, version.LivePath, c.tOptions)
+		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, c.tOptions)
 		if err != nil {
 			klog.V(1).Infof("version.GetLiveAPI failed. Err: %v\n", err)
 			klog.V(7).Infof("live.ConnectWithRetry() LEAVE\n")

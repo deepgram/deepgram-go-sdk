@@ -30,7 +30,7 @@ func (c *ManageClient) ListMembers(ctx context.Context, projectId string) (*api.
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListMembers() LEAVE\n")
@@ -78,7 +78,7 @@ func (c *ManageClient) RemoveMember(ctx context.Context, projectId string, membe
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersByIdURI, nil, projectId, memberId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersByIdURI, nil, projectId, memberId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.RemoveMember() LEAVE\n")

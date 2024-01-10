@@ -15,33 +15,6 @@ import (
 	klog "k8s.io/klog/v2"
 )
 
-// LogLevel expressed as an int64
-type LogLevel int64
-
-// The verbosity of the logging to the console or logfile.
-// Default is LogLevelStandard
-// LogLevelFull contains INFO related messages that could be helpful in debugging (recommended and default)
-// LogLevelTrace is very detailed function enter, highly verbose statements, function exit
-// LogLevelVerbose contains data movement on top of LogLevelTrace. This is extremely chatty.
-const (
-	LogLevelDefault   LogLevel = iota
-	LogLevelErrorOnly          = 1
-	LogLevelStandard           = 2
-	LogLevelElevated           = 3
-	LogLevelFull               = 4
-	LogLevelDebug              = 5
-	LogLevelTrace              = 6
-	LogLevelVerbose            = 7
-)
-
-/*
-Initialization options for this SDK.
-*/
-type InitLib struct {
-	LogLevel      LogLevel
-	DebugFilePath string
-}
-
 // InitWithDefault is the SDK Init function for this library using default values.
 func InitWithDefault() {
 	Init(InitLib{

@@ -36,7 +36,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewWithDefaults() *Client {
-	return New("", &ClientOptions{})
+	return New("", &interfaces.ClientOptions{})
 }
 
 /*
@@ -47,23 +47,19 @@ Input parameters:
 - apiKey: string containing the Deepgram API key
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
-func New(apiKey string, options *ClientOptions) *Client {
-	if apiKey == "" {
-		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-			klog.V(3).Infof("DEEPGRAM_API_KEY found")
-			apiKey = v
-		} else {
-			klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-			return nil
-		}
+func New(apiKey string, options *interfaces.ClientOptions) *Client {
+	if apiKey != "" {
+		options.ApiKey = apiKey
+	}
+	err := options.Parse()
+	if err != nil {
+		klog.V(1).Infof("options.Parse() failed. Err: %v\n", err)
+		return nil
 	}
 
 	c := Client{
-		Client: rest.New(apiKey, &rest.ClientOptions{
-			Host:    options.Host,
-			Version: options.Version,
-		}),
-		apiKey: apiKey,
+		Client:   rest.New(options),
+		cOptions: options,
 	}
 	return &c
 }
@@ -122,7 +118,7 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 	klog.V(6).Infof("rest.DoStream() ENTER\n")
 
 	// obtain URL for the REST API call
-	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
+	URI, err := version.GetPrerecordedAPI(ctx, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, options)
 	if err != nil {
 		klog.V(1).Infof("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		klog.V(6).Infof("rest.DoStream() LEAVE\n")
@@ -146,9 +142,9 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		}
 	}
 
-	req.Header.Set("Host", c.Client.Options.Host)
+	req.Header.Set("Host", c.cOptions.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.apiKey)
+	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	err = c.HttpClient.Do(ctx, req, func(res *http.Response) error {
@@ -234,7 +230,7 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 	}
 
 	// obtain URL
-	URI, err := version.GetPrerecordedAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.PrerecordedPath, options)
+	URI, err := version.GetPrerecordedAPI(ctx, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, options)
 	if err != nil {
 		klog.V(1).Infof("version.GetPrerecordedAPI failed. Err: %v\n", err)
 		klog.V(6).Infof("rest.DoURL() LEAVE\n")
@@ -266,9 +262,9 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 		}
 	}
 
-	req.Header.Set("Host", c.Client.Options.Host)
+	req.Header.Set("Host", c.cOptions.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.apiKey)
+	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
@@ -352,9 +348,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 		}
 	}
 
-	req.Header.Set("Host", c.Client.Options.Host)
+	req.Header.Set("Host", c.cOptions.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.apiKey)
+	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
