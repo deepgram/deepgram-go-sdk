@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -63,7 +63,12 @@ func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions,
 	}
 	err := cOptions.Parse()
 	if err != nil {
-		klog.V(1).Infof("options.Parse() failed. Err: %v\n", err)
+		klog.V(1).Infof("ClientOptions.Parse() failed. Err: %v\n", err)
+		return nil, err
+	}
+	err = tOptions.Check()
+	if err != nil {
+		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
 		return nil, err
 	}
 
