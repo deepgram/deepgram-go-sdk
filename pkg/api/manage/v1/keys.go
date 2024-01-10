@@ -35,7 +35,7 @@ func (c *ManageClient) ListKeys(ctx context.Context, projectId string) (*api.Key
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.KeysURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListKeys() LEAVE\n")
@@ -83,7 +83,7 @@ func (c *ManageClient) GetKey(ctx context.Context, projectId string, keyId strin
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysByIdURI, nil, projectId, keyId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.KeysByIdURI, nil, projectId, keyId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetKey() LEAVE\n")
@@ -136,7 +136,7 @@ func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.KeysURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.CreateKey() LEAVE\n")
@@ -206,7 +206,7 @@ func (c *ManageClient) DeleteKey(ctx context.Context, projectId string, keyId st
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.KeysByIdURI, nil, projectId, keyId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.KeysByIdURI, nil, projectId, keyId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.DeleteKey() LEAVE\n")

@@ -6,13 +6,9 @@ package rest
 
 import (
 	"net/http"
-)
 
-// ClientOptions defines any options for the client
-type ClientOptions struct {
-	Host    string
-	Version string
-}
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+)
 
 // HttpClient which extends HTTP client
 type HttpClient struct {
@@ -20,12 +16,13 @@ type HttpClient struct {
 
 	d         *debugContainer
 	UserAgent string
+
+	options *interfaces.ClientOptions
 }
 
 // Client which extends HttpClient to support REST
 type Client struct {
 	*HttpClient
 
-	Options *ClientOptions
-	apiKey  string
+	Options *interfaces.ClientOptions
 }

@@ -9,21 +9,15 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
 // New allocated a Simple HTTP client
-func NewHTTPClient() *HttpClient {
-	bDisable := true
-	if v := os.Getenv("DEEPGRAM_SSL_HOST_VERIFICATION"); v != "" {
-		bDisable = strings.EqualFold(strings.ToLower(v), "false")
-	}
+func NewHTTPClient(options *interfaces.ClientOptions) *HttpClient {
 	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: bDisable},
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.SkipServerAuth},
 	}
 
 	c := HttpClient{
@@ -32,6 +26,7 @@ func NewHTTPClient() *HttpClient {
 		},
 		d:         newDebug(),
 		UserAgent: interfaces.DgAgent,
+		options:   options,
 	}
 	return &c
 }

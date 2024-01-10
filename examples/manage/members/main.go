@@ -10,7 +10,7 @@ import (
 	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/rest"
 )
 
 const (

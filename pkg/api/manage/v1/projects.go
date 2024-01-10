@@ -34,7 +34,7 @@ func (c *ManageClient) ListProjects(ctx context.Context) (*api.ProjectsResult, e
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsURI, nil)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.ProjectsURI, nil)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListProjects() LEAVE\n")
@@ -82,7 +82,7 @@ func (c *ManageClient) GetProject(ctx context.Context, projectId string) (*api.P
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.ProjectsByIdURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetProject() LEAVE\n")
@@ -130,7 +130,7 @@ func (c *ManageClient) UpdateProject(ctx context.Context, projectId string, proj
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.ProjectsByIdURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.UpdateProject() LEAVE\n")
@@ -185,7 +185,7 @@ func (c *ManageClient) DeleteProject(ctx context.Context, projectId string) (*ap
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.ProjectsByIdURI, nil, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.ProjectsByIdURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.DeleteProject() LEAVE\n")

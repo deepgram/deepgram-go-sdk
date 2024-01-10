@@ -32,7 +32,7 @@ func (c *ManageClient) ListRequests(ctx context.Context, projectId string, use *
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageRequestURI, use, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.UsageRequestURI, use, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListRequests() LEAVE\n")
@@ -80,7 +80,7 @@ func (c *ManageClient) GetRequest(ctx context.Context, projectId string, request
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageRequestByIdURI, nil, projectId, requestId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.UsageRequestByIdURI, nil, projectId, requestId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetRequest() LEAVE\n")
@@ -128,7 +128,7 @@ func (c *ManageClient) GetFields(ctx context.Context, projectId string, use *api
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageFieldsURI, use, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.UsageFieldsURI, use, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetFields() LEAVE\n")
@@ -176,7 +176,7 @@ func (c *ManageClient) GetUsage(ctx context.Context, projectId string, use *api.
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.UsageURI, use, projectId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.UsageURI, use, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetUsage() LEAVE\n")

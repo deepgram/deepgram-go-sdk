@@ -5,18 +5,13 @@
 package prerecorded
 
 import (
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest"
 )
-
-// ClientOptions defines any options for the client
-type ClientOptions struct {
-	Host    string
-	Version string
-}
 
 // Client implements helper functionality for Prerecorded API
 type Client struct {
 	*rest.Client
 
-	apiKey string
+	cOptions *interfaces.ClientOptions
 }

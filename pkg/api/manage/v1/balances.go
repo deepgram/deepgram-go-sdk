@@ -30,7 +30,8 @@ func (c *ManageClient) ListBalances(ctx context.Context, projectId string) (*api
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.BalancesURI, nil, projectId)
+
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.BalancesURI, nil, projectId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.ListBalances() LEAVE\n")
@@ -78,7 +79,7 @@ func (c *ManageClient) GetBalance(ctx context.Context, projectId string, balance
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.BalancesByIdURI, nil, projectId, balanceId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.BalancesByIdURI, nil, projectId, balanceId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetBalance() LEAVE\n")

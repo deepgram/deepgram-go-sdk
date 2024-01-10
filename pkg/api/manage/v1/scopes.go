@@ -32,7 +32,7 @@ func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, me
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
@@ -80,7 +80,7 @@ func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string,
 	}
 
 	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.Version, version.MembersScopeByIdURI, nil, projectId, memberId)
+	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersScopeByIdURI, nil, projectId, memberId)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")

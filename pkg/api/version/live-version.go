@@ -39,7 +39,7 @@ The return value is the complete URL endpoint to be used for the live transcript
 */
 func GetLiveAPI(ctx context.Context, host, version, path string, options interfaces.LiveTranscriptionOptions, args ...interface{}) (string, error) {
 	if path == "" {
-		return "", ErrInvalidPath
+		path = LivePath
 	}
 
 	if host == "" {
