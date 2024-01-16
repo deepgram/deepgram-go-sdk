@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
@@ -100,7 +101,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return err
 		default:
-			d := json.NewDecoder(res.Body)
+			resultStr, errRead := io.ReadAll(res.Body)
+			if errRead != nil {
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", errRead)
+				klog.V(6).Infof("rest.Do() LEAVE\n")
+				return errRead
+			}
+			klog.V(5).Infof("json.NewDecoder Raw:\n\n%s\n\n", resultStr)
+			d := json.NewDecoder(strings.NewReader(string(resultStr)))
 			klog.V(3).Infof("json.NewDecoder\n")
 			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return d.Decode(resBody)

@@ -86,6 +86,20 @@ type ProjectList struct {
 	Projects []Project `json:"projects,omitempty"`
 }
 
+// Token provides a token
+type Token struct {
+	In  int `json:"in,omitempty"`
+	Out int `json:"out,omitempty"`
+}
+
+// TokenDetails provides token details
+type TokenDetails struct {
+	Feature string `json:"feature,omitempty"`
+	Input   int    `json:"input,omitempty"`
+	Output  int    `json:"output,omitempty"`
+	Model   string `json:"model,omitempty"`
+}
+
 // Config provides a config
 type Config struct {
 	Diarize        bool   `json:"diarize,omitempty"`
@@ -94,6 +108,7 @@ type Config struct {
 	Punctuate      bool   `json:"punctuate,omitempty"`
 	Utterances     bool   `json:"utterances,omitempty"`
 	InterimResults bool   `json:"interim_results,omitempty"`
+	SmartFormat    bool   `json:"smart_format,omitempty"`
 }
 
 // Details provides details
@@ -113,20 +128,28 @@ type Details struct {
 
 // Response provides a response
 type Response struct {
-	Details   Details `json:"details,omitempty"`
-	Code      int     `json:"code,omitempty"`
-	Completed string  `json:"completed,omitempty"`
+	Details      Details        `json:"details,omitempty"`
+	Code         int            `json:"code,omitempty"`
+	Completed    string         `json:"completed,omitempty"`
+	TokenDetails []TokenDetails `json:"token_details,omitempty"`
+}
+
+type Callback struct {
+	Attempts  int    `json:"attempts,omitempty"`
+	Code      int    `json:"code,omitempty"`
+	Completed string `json:"completed,omitempty"`
 }
 
 // Request provides a request
 type Request struct {
-	RequestID string      `json:"request_id,omitempty"`
-	Created   string      `json:"created,omitempty"`
-	Path      string      `json:"path,omitempty"`
-	Accessor  string      `json:"accessor" url:"accessor,omitempty"`
-	APIKeyID  string      `json:"api_key_id,omitempty"`
-	Response  Response    `json:"response,omitempty"`
-	Callback  interface{} `json:"callback,omitempty"`
+	RequestID   string   `json:"request_id,omitempty"`
+	ProjectUUID string   `json:"project_uuid,omitempty"`
+	Created     string   `json:"created,omitempty"`
+	Path        string   `json:"path,omitempty"`
+	Accessor    string   `json:"accessor,omitempty"`
+	APIKeyID    string   `json:"api_key_id,omitempty"`
+	Response    Response `json:"response,omitempty"`
+	Callback    Callback `json:"callback,omitempty"`
 }
 
 // Model provides a list of models
@@ -150,6 +173,7 @@ type Result struct {
 	Hours      float64 `json:"hours,omitempty"`
 	TotalHours float64 `json:"total_hours,omitempty"`
 	Requests   int     `json:"requests,omitempty"`
+	Tokens     Token   `json:"tokens,omitempty"`
 }
 
 // RequestList provides a list of requests
@@ -161,10 +185,11 @@ type RequestList struct {
 
 // UsageField provides a usage field
 type UsageField struct {
-	Tags              []any    `json:"tags,omitempty"`
+	Tags              []string `json:"tags,omitempty"`
 	Models            []Model  `json:"models,omitempty"`
 	ProcessingMethods []string `json:"processing_methods,omitempty"`
 	Features          []string `json:"features,omitempty"`
+	Languages         []string `json:"languages,omitempty"`
 }
 
 // Usage provides a usage
@@ -180,72 +205,72 @@ type Usage struct {
 /***********************************/
 // ProjectUpdateRequest provides a project update
 type ProjectUpdateRequest struct {
-	Name    string `json:"name,omitempty"`
-	Company string `json:"company,omitempty"`
+	Name    string `json:"name,omitempty" url:"name,omitempty"`
+	Company string `json:"company,omitempty" url:"company,omitempty"`
 }
 
 // InvitationRequest provides an invitation request
 type InvitationRequest struct {
-	Email string `json:"email"`
-	Scope string `json:"scope"`
+	Email string `json:"email,omitempty" url:"email,omitempty"`
+	Scope string `json:"scope,omitempty" url:"scope,omitempty"`
 }
 
 // KeyCreateRequest provides a key create request
 type KeyCreateRequest struct {
-	Comment        string    `json:"comment"`
-	Scopes         []string  `json:"scopes"`
-	ExpirationDate time.Time `json:"expiration_date"`
-	TimeToLive     int       `json:"time_to_live,omitempty"`
-	Tags           []string  `json:"tags"`
+	Comment        string    `json:"comment,omitempty" url:"comment,omitempty"`
+	Scopes         []string  `json:"scopes,omitempty" url:"scopes,omitempty"`
+	ExpirationDate time.Time `json:"expiration_date,omitempty" url:"expiration_date,omitempty"`
+	TimeToLive     int       `json:"time_to_live,omitempty" url:"time_to_live,omitempty"`
+	Tags           []string  `json:"tags,omitempty" url:"tags,omitempty"`
 }
 
 // ScopeUpdateRequest provides a scope update request
 type ScopeUpdateRequest struct {
-	Scope string `json:"scope"`
+	Scope string `json:"scope,omitempty" url:"scope,omitempty"`
 }
 
 // UsageListRequest provides a usage request
 type UsageListRequest struct {
-	Start  string `json:"start" url:"start,omitempty"`
-	End    string `json:"end" url:"end,omitempty"`
-	Page   int    `json:"page" url:"page,omitempty"`
-	Limit  int    `json:"limit" url:"limit,omitempty"`
-	Status string `json:"status" url:"status,omitempty"`
+	Start  string `json:"start,omitempty" url:"start,omitempty"`
+	End    string `json:"end,omitempty" url:"end,omitempty"`
+	Page   int    `json:"page,omitempty" url:"page,omitempty"`
+	Limit  int    `json:"limit,omitempty" url:"limit,omitempty"`
+	Status string `json:"status,omitempty" url:"status,omitempty"`
 }
 
 // UsageRequest provides a usage request
 type UsageRequest struct {
-	Accessor           string   `json:"accessor" url:"accessor,omitempty"`
-	Alternatives       bool     `json:"alternatives" url:"alternatives,omitempty"`
-	AnalyzeSentiment   bool     `json:"analyze_sentiment" url:"analyze_sentiment,omitempty"`
-	DetectEntities     bool     `json:"detect_entities" url:"detect_entities,omitempty"`
-	DetectLanguage     bool     `json:"detect_language" url:"detect_language,omitempty"`
-	DetectTopics       bool     `json:"detect_topics" url:"detect_topics,omitempty"`
-	Diarize            bool     `json:"diarize" url:"diarize,omitempty"`
-	End                string   `json:"end" url:"end,omitempty"`
-	InterimResults     bool     `json:"interim_results" url:"interim_results,omitempty"`
-	Keywords           bool     `json:"keywords" url:"keywords,omitempty"`
-	Method             string   `json:"method" url:"method,omitempty"` // Must be one of "sync" | "async" | "streaming"
-	Model              string   `json:"model" url:"model,omitempty"`
-	Multichannel       bool     `json:"multichannel" url:"multichannel,omitempty"`
-	Ner                bool     `json:"ner" url:"ner,omitempty"`
-	Numbers            bool     `json:"numbers" url:"numbers,omitempty"`
-	Numerals           bool     `json:"numerals" url:"numerals,omitempty"`
-	Paragraphs         bool     `json:"paragraphs" url:"paragraphs,omitempty"`
-	ProfanityFilter    bool     `json:"profanity_filter" url:"profanity_filter,omitempty"`
-	Punctuate          bool     `json:"punctuate" url:"punctuate,omitempty"`
-	Redact             bool     `json:"redact" url:"redact,omitempty"`
-	Replace            bool     `json:"replace" url:"replace,omitempty"`
-	Search             bool     `json:"search" url:"search,omitempty"`
-	Sentiment          bool     `json:"sentiment" url:"sentiment,omitempty"`
-	SentimentThreshold float64  `json:"sentiment_threshold" url:"sentiment_threshold,omitempty"`
-	SmartFormat        bool     `json:"smart_format" url:"smart_format,omitempty"`
-	Start              string   `json:"start" url:"start,omitempty"`
-	Summarize          bool     `json:"summarize" url:"summarize,omitempty"`
-	Tag                []string `json:"tag" url:"tag,omitempty"`
-	Translate          bool     `json:"translate" url:"translate,omitempty"`
-	Utterances         bool     `json:"utterances" url:"utterances,omitempty"`
-	UttSplit           bool     `json:"utt_split" url:"utt_split,omitempty"`
+	Accessor           string   `json:"accessor,omitempty" url:"accessor,omitempty"`
+	Alternatives       bool     `json:"alternatives,omitempty" url:"alternatives,omitempty"`
+	AnalyzeSentiment   bool     `json:"analyze_sentiment,omitempty" url:"analyze_sentiment,omitempty"`
+	DetectEntities     bool     `json:"detect_entities,omitempty" url:"detect_entities,omitempty"`
+	DetectLanguage     bool     `json:"detect_language,omitempty" url:"detect_language,omitempty"`
+	DetectTopics       bool     `json:"detect_topics,omitempty" url:"detect_topics,omitempty"`
+	Diarize            bool     `json:"diarize,omitempty" url:"diarize,omitempty"`
+	End                string   `json:"end,omitempty" url:"end,omitempty"`
+	InterimResults     bool     `json:"interim_results,omitempty" url:"interim_results,omitempty"`
+	Keywords           bool     `json:"keywords,omitempty" url:"keywords,omitempty"`
+	Method             string   `json:"method,omitempty" url:"method,omitempty"` // Must be one of "sync" | "async" | "streaming"
+	Model              string   `json:"model,omitempty" url:"model,omitempty"`
+	Multichannel       bool     `json:"multichannel,omitempty" url:"multichannel,omitempty"`
+	Ner                bool     `json:"ner,omitempty" url:"ner,omitempty"`
+	Numbers            bool     `json:"numbers,omitempty" url:"numbers,omitempty"`
+	Numerals           bool     `json:"numerals,omitempty" url:"numerals,omitempty"`
+	Paragraphs         bool     `json:"paragraphs,omitempty" url:"paragraphs,omitempty"`
+	ProfanityFilter    bool     `json:"profanity_filter,omitempty" url:"profanity_filter,omitempty"`
+	Punctuate          bool     `json:"punctuate,omitempty" url:"punctuate,omitempty"`
+	Redact             bool     `json:"redact,omitempty" url:"redact,omitempty"`
+	Replace            bool     `json:"replace,omitempty" url:"replace,omitempty"`
+	Search             bool     `json:"search,omitempty" url:"search,omitempty"`
+	Sentiment          bool     `json:"sentiment,omitempty" url:"sentiment,omitempty"`
+	SentimentThreshold float64  `json:"sentiment_threshold,omitempty" url:"sentiment_threshold,omitempty"`
+	SmartFormat        bool     `json:"smart_format,omitempty" url:"smart_format,omitempty"`
+	Start              string   `json:"start,omitempty" url:"start,omitempty"`
+	Summarize          bool     `json:"summarize,omitempty" url:"summarize,omitempty"`
+	Tag                []string `json:"tag,omitempty" url:"tag,omitempty"`
+	Translate          bool     `json:"translate,omitempty" url:"translate,omitempty"`
+	Utterances         bool     `json:"utterances,omitempty" url:"utterances,omitempty"`
+	UttSplit           bool     `json:"utt_split,omitempty" url:"utt_split,omitempty"`
 }
 
 /***********************************/
