@@ -73,3 +73,10 @@ func (o *LiveTranscriptionOptions) Check() error {
 
 	return nil
 }
+
+func (o *AnalyzeOptions) Check() error {
+	// checks
+	// currently no op
+
+	return nil
+}
