@@ -78,6 +78,12 @@ type UtteranceEndResponse struct {
 	LastWordEnd float64 `json:"last_word_end,omitempty"`
 }
 
+type SpeechStartedResponse struct {
+	Type      string  `json:"type,omitempty"`
+	Channel   []int   `json:"channel,omitempty"`
+	Timestamp float64 `json:"timestamp,omitempty"`
+}
+
 // ErrorResponse is the response from a live transcription
 type ErrorResponse struct {
 	Description string `json:"description"`

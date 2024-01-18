@@ -65,6 +65,8 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		err = r.MessageResponse(byMsg)
 	case interfaces.TypeMetadataResponse:
 		err = r.MetadataResponse(byMsg)
+	case interfaces.TypeSpeechStartedResponse:
+		err = r.SpeechStartedResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
 		err = r.UtteranceEndResponse(byMsg)
 	case interfaces.TypeErrorResponse:
@@ -146,6 +148,37 @@ func (r *MessageRouter) MetadataResponse(byMsg []byte) error {
 
 	klog.V(1).Infof("User callback is undefined\n")
 	klog.V(6).Infof("router.MetadataResponse ENTER\n")
+
+	return nil
+}
+
+func (r *MessageRouter) SpeechStartedResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.SpeechStartedResponse ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "SpeechStartedResponse", byMsg)
+
+	var ssr interfaces.SpeechStartedResponse
+	err := json.Unmarshal(byMsg, &ssr)
+	if err != nil {
+		klog.V(1).Infof("SpeechStartedResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.SpeechStartedResponse LEAVE\n")
+		return err
+	}
+
+	if r.callback != nil {
+		err := r.callback.SpeechStarted(&ssr)
+		if err != nil {
+			klog.V(1).Infof("callback.SpeechStartedResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.SpeechStartedResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.SpeechStartedResponse LEAVE\n")
+		return err
+	}
+
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.SpeechStartedResponse ENTER\n")
 
 	return nil
 }

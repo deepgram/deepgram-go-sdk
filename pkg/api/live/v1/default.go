@@ -95,6 +95,41 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	return nil
 }
 
+func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		data, err := json.Marshal(ssr)
+		if err != nil {
+			klog.V(1).Infof("SpeechStarted json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJson, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nSpeechStarted Object:\n%s\n\n", prettyJson)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
+	fmt.Printf("SpeechStarted.Channels:\n")
+	for _, val := range ssr.Channel {
+		fmt.Printf("\tChannel: %d\n", val)
+	}
+	fmt.Printf("\n")
+
+	return nil
+}
+
 func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
 	fmt.Printf("\nUtteranceEnd\n")
 	return nil
