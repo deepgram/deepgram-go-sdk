@@ -53,6 +53,17 @@ const (
 	UsageFieldsURI      string = "projects/%s/usage/fields"
 )
 
+/*
+GetManageAPI is a function which controls the versioning of the manage API and provides
+mechanism for:
+
+- overriding the host endpoint
+- overriding the version used
+- overriding the endpoint path
+- additional arguments to the query string/parameters
+
+The return value is the complete URL endpoint to be used for manage
+*/
 func GetManageAPI(ctx context.Context, host, version, path string, vals interface{}, args ...interface{}) (string, error) {
 	if path == "" {
 		return "", ErrInvalidPath

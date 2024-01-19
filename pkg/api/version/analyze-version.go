@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -19,15 +19,15 @@ import (
 )
 
 const (
-	// PrerecordedAPIVersion current supported version
-	PrerecordedAPIVersion string = "v1"
+	// ReadAPIVersion current supported version
+	ReadAPIVersion string = "v1"
 
-	// PrerecordedPath is the current path for prerecorded transcription
-	PrerecordedPath string = "listen"
+	// ReadPath is the current path for prerecorded transcription
+	ReadPath string = "read"
 )
 
 /*
-GetPrerecordedAPI is a function which controls the versioning of the live transcription API and provides
+GetAnalyzeAPI is a function which controls the versioning of the live transcription API and provides
 mechanism for:
 
 - overriding the host endpoint
@@ -37,16 +37,16 @@ mechanism for:
 
 The return value is the complete URL endpoint to be used for the live transcription
 */
-func GetPrerecordedAPI(ctx context.Context, host, version, path string, options interfaces.PreRecordedTranscriptionOptions, args ...interface{}) (string, error) {
+func GetAnalyzeAPI(ctx context.Context, host, version, path string, options interfaces.AnalyzeOptions, args ...interface{}) (string, error) {
 	if path == "" {
-		path = PrerecordedPath
+		path = ReadPath
 	}
 
 	if host == "" {
 		host = common.DefaultHost
 	}
 	if version == "" {
-		version = PrerecordedAPIVersion
+		version = ReadAPIVersion
 	}
 
 	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
