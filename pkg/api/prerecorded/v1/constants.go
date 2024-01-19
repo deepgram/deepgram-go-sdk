@@ -12,7 +12,4 @@ import (
 var (
 	// ErrInvalidInput required input was not found
 	ErrInvalidInput = errors.New("required input was not found")
-
-	// ErrInvalidURIExtension couldn't find a period to indicate a file extension
-	ErrInvalidURIExtension = errors.New("couldn't find a period to indicate a file extension")
 )
