@@ -73,7 +73,9 @@ type MetadataResponse struct {
 
 // UtteranceEndResponse is the response from a live transcription
 type UtteranceEndResponse struct {
-	Type string `json:"type,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	Channel     []int   `json:"channel,omitempty"`
+	LastWordEnd float64 `json:"last_word_end,omitempty"`
 }
 
 // ErrorResponse is the response from a live transcription
