@@ -262,8 +262,12 @@ func (c *Client) Stream(r io.Reader) error {
 			return nil
 		default:
 			bytesRead, err := r.Read(chunk)
-			if err != nil {
-				klog.V(1).Infof("r.Read failed. Err: %v\n", err)
+			if err == io.EOF && !c.retry {
+				klog.V(3).Infof("stream object EOF\n")
+				klog.V(6).Infof("live.Stream() LEAVE\n")
+				return nil
+			} else if err != nil {
+				klog.V(1).Infof("r.Read encountered EOF. Err: %v\n", err)
 				klog.V(6).Infof("live.Stream() LEAVE\n")
 				return err
 			}
