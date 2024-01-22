@@ -169,9 +169,7 @@ TBD
 
 Interested in contributing? We ❤️ pull requests!
 
-To make sure our community is safe for all, be sure to review and agree to our
-[Code of Conduct](./.github/CODE_OF_CONDUCT.md). Then see the
-[Contribution](./.github/CONTRIBUTING.md) guidelines for more information.
+To make sure our community is safe for all, be sure to review and agree to our [Code of Conduct](https://github.com/deepgram/deepgram-go-sdk/blob/main/.github/CODE_OF_CONDUCT.md). Then see the [Contribution](https://github.com/deepgram/deepgram-go-sdk/blob/main/.github/CONTRIBUTING.md) guidelines for more information.
 
 ## Getting Help
 
