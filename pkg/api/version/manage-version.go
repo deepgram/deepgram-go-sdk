@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
@@ -69,20 +70,48 @@ func GetManageAPI(ctx context.Context, host, version, path string, vals interfac
 		return "", ErrInvalidPath
 	}
 
+	// handle protocol and host
+	protocol := APIProtocol
 	if host == "" {
 		host = common.DefaultHost
 	}
-	if version == "" {
-		version = ManageAPIVersion
-	}
 
-	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
+	r, err := regexp.Compile("^(https|http)://(.+)$")
 	if err != nil {
 		klog.V(1).Infof("regexp.Compile err: %v\n", err)
 		return "", err
 	}
 
-	match := r.MatchString(path)
+	match := r.MatchString(host)
+	klog.V(3).Infof("host decompose... match: %t\n", match)
+	if match {
+		matches := r.FindStringSubmatch(host)
+		for _, match := range matches {
+			klog.V(5).Infof("match: %s\n", match)
+		}
+		protocol = matches[1]
+		host = matches[2]
+
+		slash := strings.Index(host, "/")
+		if slash > 0 {
+			host = host[:slash]
+		}
+	}
+	klog.V(3).Infof("protocol: %s\n", protocol)
+	klog.V(3).Infof("host: %s\n", host)
+
+	// handle version and path
+	if version == "" {
+		version = ManageAPIVersion
+	}
+
+	r, err = regexp.Compile("^(v[0-9]+|%%s)/")
+	if err != nil {
+		klog.V(1).Infof("regexp.Compile err: %v\n", err)
+		return "", err
+	}
+
+	match = r.MatchString(path)
 	klog.V(3).Infof("match: %t\n", match)
 
 	if match {
@@ -114,9 +143,9 @@ func GetManageAPI(ctx context.Context, host, version, path string, vals interfac
 
 	var u url.URL
 	if q != nil {
-		u = url.URL{Scheme: "https", Host: host, Path: completeFullpath, RawQuery: q.Encode()}
+		u = url.URL{Scheme: protocol, Host: host, Path: completeFullpath, RawQuery: q.Encode()}
 	} else {
-		u = url.URL{Scheme: "https", Host: host, Path: completeFullpath}
+		u = url.URL{Scheme: protocol, Host: host, Path: completeFullpath}
 	}
 
 	return u.String(), nil
