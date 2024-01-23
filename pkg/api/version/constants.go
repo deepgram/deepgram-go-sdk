@@ -6,6 +6,14 @@ package version
 
 import "errors"
 
+const (
+	// APIProtocol default protocol
+	APIProtocol string = "https"
+
+	// WSProtocol default protocol
+	WSProtocol string = "wss"
+)
+
 var (
 	// ErrInvalidPath invalid path
 	ErrInvalidPath = errors.New("invalid path")

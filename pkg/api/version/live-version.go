@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/google/go-querystring/query"
 	klog "k8s.io/klog/v2"
@@ -42,22 +43,49 @@ func GetLiveAPI(ctx context.Context, host, version, path string, options interfa
 		path = LivePath
 	}
 
+	// handle protocol and host
+	protocol := WSProtocol
 	if host == "" {
 		host = common.DefaultHost
 	}
-	if version == "" {
-		version = LiveAPIVersion
-	}
 
-	r, err := regexp.Compile("^(v[0-9]+|%%s)/")
+	r, err := regexp.Compile("^(wss|ws)://(.+)$")
 	if err != nil {
 		klog.V(1).Infof("regexp.Compile err: %v\n", err)
 		return "", err
 	}
 
-	match := r.MatchString(path)
-	klog.V(3).Infof("match: %t\n", match)
+	match := r.MatchString(host)
+	klog.V(3).Infof("host decompose... match: %t\n", match)
+	if match {
+		matches := r.FindStringSubmatch(host)
+		for _, match := range matches {
+			klog.V(5).Infof("match: %s\n", match)
+		}
+		protocol = matches[1]
+		host = matches[2]
 
+		slash := strings.Index(host, "/")
+		if slash > 0 {
+			host = host[:slash]
+		}
+	}
+	klog.V(3).Infof("protocol: %s\n", protocol)
+	klog.V(3).Infof("host: %s\n", host)
+
+	// handle version and path
+	if version == "" {
+		version = LiveAPIVersion
+	}
+
+	r, err = regexp.Compile("^(v[0-9]+|%%s)/")
+	if err != nil {
+		klog.V(1).Infof("regexp.Compile err: %v\n", err)
+		return "", err
+	}
+
+	match = r.MatchString(path)
+	klog.V(3).Infof("path decompose - match: %t\n", match)
 	if match {
 		// version = r.FindStringSubmatch(path)[0]
 		path = r.ReplaceAllString(path, "")
@@ -78,7 +106,7 @@ func GetLiveAPI(ctx context.Context, host, version, path string, options interfa
 
 	fullpath := fmt.Sprintf("%%s/%s", path)
 	completeFullpath := fmt.Sprintf(fullpath, append([]interface{}{version}, args...)...)
-	u := url.URL{Scheme: "wss", Host: host, Path: completeFullpath, RawQuery: q.Encode()}
+	u := url.URL{Scheme: protocol, Host: host, Path: completeFullpath, RawQuery: q.Encode()}
 
 	return u.String(), nil
 }

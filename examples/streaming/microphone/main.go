@@ -64,7 +64,7 @@ func main() {
 	*/
 	// init library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelDebug, // LogLevelDefault, LogLevelFull, LogLevelDebug, LogLevelTrace
+		LogLevel: client.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelDebug, LogLevelTrace
 	})
 
 	// Go context
@@ -72,16 +72,22 @@ func main() {
 
 	// set the Transcription options
 	options := interfaces.LiveTranscriptionOptions{
-		Model:      "nova-2",
-		Language:   "en-US",
-		Punctuate:  true,
-		Encoding:   "linear16",
-		Channels:   1,
-		SampleRate: 16000,
+		Model:       "nova-2",
+		Language:    "en-US",
+		Punctuate:   true,
+		Encoding:    "linear16",
+		Channels:    1,
+		SampleRate:  16000,
+		SmartFormat: true,
 		// To get UtteranceEnd, the following must be set:
 		// InterimResults: true,
 		// UtteranceEndMs: "1000",
 	}
+
+	// example on how to send a custom parameter
+	// params := make(map[string][]string, 0)
+	// params["dictation"] = []string{"true"}
+	// ctx = interfaces.WithCustomParameters(ctx, params)
 
 	// implement your own callback
 	callback := MyCallback{}
