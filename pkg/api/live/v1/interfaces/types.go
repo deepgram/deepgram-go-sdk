@@ -69,6 +69,7 @@ type MetadataResponse struct {
 	Sha256         string               `json:"sha256,omitempty"`
 	TransactionKey string               `json:"transaction_key,omitempty"`
 	Type           string               `json:"type,omitempty"`
+	Extra          map[string]string    `json:"extra,omitempty"`
 }
 
 // UtteranceEndResponse is the response from a live transcription
