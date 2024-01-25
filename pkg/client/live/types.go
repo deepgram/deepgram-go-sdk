@@ -17,7 +17,7 @@ import (
 
 // Client is a struct representing the websocket client connection
 type Client struct {
-	cOptions *interfaces.ClientOptions
+	cOptions interfaces.ClientOptions
 	tOptions interfaces.LiveTranscriptionOptions
 
 	sendBuf   chan []byte

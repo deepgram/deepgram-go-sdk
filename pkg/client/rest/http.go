@@ -15,7 +15,7 @@ import (
 )
 
 // New allocated a Simple HTTP client
-func NewHTTPClient(options *interfaces.ClientOptions) *HttpClient {
+func NewHTTPClient(options interfaces.ClientOptions) *HttpClient {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.SkipServerAuth},
 	}

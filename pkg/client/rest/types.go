@@ -17,12 +17,12 @@ type HttpClient struct {
 	d         *debugContainer
 	UserAgent string
 
-	options *interfaces.ClientOptions
+	options interfaces.ClientOptions
 }
 
 // Client which extends HttpClient to support REST
 type Client struct {
 	*HttpClient
 
-	Options *interfaces.ClientOptions
+	Options interfaces.ClientOptions
 }

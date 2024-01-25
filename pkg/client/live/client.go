@@ -31,7 +31,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewForDemo(ctx context.Context, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, "", &interfaces.ClientOptions{}, options, nil)
+	return New(ctx, "", interfaces.ClientOptions{}, options, nil)
 }
 
 /*
@@ -42,7 +42,7 @@ Notes:
   - The callback handler is set to the default handler which just prints all messages to the console
 */
 func NewWithDefaults(ctx context.Context, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	return New(ctx, "", &interfaces.ClientOptions{}, options, callback)
+	return New(ctx, "", interfaces.ClientOptions{}, options, callback)
 }
 
 /*
@@ -55,7 +55,7 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
 */
-func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func New(ctx context.Context, apiKey string, cOptions interfaces.ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	klog.V(6).Infof("live.New() ENTER\n")
 
 	if apiKey != "" {

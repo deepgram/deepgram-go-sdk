@@ -70,8 +70,13 @@ func main() {
 	// Go context
 	ctx := context.Background()
 
+	// client options
+	cOptions := interfaces.ClientOptions{
+		EnableKeepAlive: true,
+	}
+
 	// set the Transcription options
-	options := interfaces.LiveTranscriptionOptions{
+	tOptions := interfaces.LiveTranscriptionOptions{
 		Model:       "nova-2",
 		Language:    "en-US",
 		Punctuate:   true,
@@ -93,7 +98,7 @@ func main() {
 	callback := MyCallback{}
 
 	// create a Deepgram client
-	dgClient, err := client.NewWithDefaults(ctx, options, callback)
+	dgClient, err := client.New(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

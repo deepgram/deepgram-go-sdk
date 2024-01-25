@@ -49,7 +49,7 @@ func GetPrerecordedAPI(ctx context.Context, host, version, path string, options 
 		host = common.DefaultHost
 	}
 
-	r, err := regexp.Compile("^(wss|ws)://(.+)$")
+	r, err := regexp.Compile("^(https|http)://(.+)$")
 	if err != nil {
 		klog.V(1).Infof("regexp.Compile err: %v\n", err)
 		return "", err

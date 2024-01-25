@@ -39,7 +39,9 @@ func main() {
 	}
 
 	// create a Deepgram client
-	c := client.NewWithDefaults()
+	c := client.New("", interfaces.ClientOptions{
+		Host: "https://api.deepgram.com",
+	})
 	dg := prerecorded.New(c)
 
 	// example on how to send a custom header

@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
@@ -36,7 +37,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewWithDefaults() *Client {
-	return New("", &interfaces.ClientOptions{})
+	return New("", interfaces.ClientOptions{})
 }
 
 /*
@@ -47,7 +48,7 @@ Input parameters:
 - apiKey: string containing the Deepgram API key
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
-func New(apiKey string, options *interfaces.ClientOptions) *Client {
+func New(apiKey string, options interfaces.ClientOptions) *Client {
 	if apiKey != "" {
 		options.ApiKey = apiKey
 	}
@@ -183,7 +184,14 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			d := json.NewDecoder(res.Body)
+			resultStr, errRead := io.ReadAll(res.Body)
+			if errRead != nil {
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", errRead)
+				klog.V(6).Infof("prerecorded.DoStream() LEAVE\n")
+				return errRead
+			}
+			klog.V(5).Infof("json.NewDecoder Raw:\n\n%s\n\n", resultStr)
+			d := json.NewDecoder(strings.NewReader(string(resultStr)))
 			klog.V(3).Infof("json.NewDecoder\n")
 			klog.V(6).Infof("prerecorded.DoStream() LEAVE\n")
 			return d.Decode(resBody)
@@ -309,7 +317,14 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.PreRe
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			d := json.NewDecoder(res.Body)
+			resultStr, errRead := io.ReadAll(res.Body)
+			if errRead != nil {
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", errRead)
+				klog.V(6).Infof("prerecorded.DoURL() LEAVE\n")
+				return errRead
+			}
+			klog.V(5).Infof("json.NewDecoder Raw:\n\n%s\n\n", resultStr)
+			d := json.NewDecoder(strings.NewReader(string(resultStr)))
 			klog.V(3).Infof("json.NewDecoder\n")
 			klog.V(6).Infof("prerecorded.DoURL() LEAVE\n")
 			return d.Decode(resBody)
@@ -395,7 +410,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 			_, err := io.Copy(b, res.Body)
 			return err
 		default:
-			d := json.NewDecoder(res.Body)
+			resultStr, errRead := io.ReadAll(res.Body)
+			if errRead != nil {
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", errRead)
+				klog.V(6).Infof("prerecorded.Do() LEAVE\n")
+				return errRead
+			}
+			klog.V(5).Infof("json.NewDecoder Raw:\n\n%s\n\n", resultStr)
+			d := json.NewDecoder(strings.NewReader(string(resultStr)))
 			klog.V(3).Infof("json.NewDecoder\n")
 			klog.V(6).Infof("prerecorded.Do() LEAVE\n")
 			return d.Decode(resBody)
