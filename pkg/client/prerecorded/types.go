@@ -13,5 +13,5 @@ import (
 type Client struct {
 	*rest.Client
 
-	cOptions *interfaces.ClientOptions
+	cOptions interfaces.ClientOptions
 }

@@ -23,11 +23,11 @@ import (
 
 // NewWithDefaults creates a REST client with default options
 func NewWithDefaults() *Client {
-	return New(&interfaces.ClientOptions{})
+	return New(interfaces.ClientOptions{})
 }
 
 // New REST client
-func New(options *interfaces.ClientOptions) *Client {
+func New(options interfaces.ClientOptions) *Client {
 	err := options.Parse()
 	if err != nil {
 		klog.V(1).Infof("options.Parse failed. Err: %v\n", err)
