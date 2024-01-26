@@ -28,7 +28,7 @@ func (c MyCallback) Message(mr *api.MessageResponse) error {
 	if len(mr.Channel.Alternatives) == 0 || len(sentence) == 0 {
 		return nil
 	}
-	fmt.Printf("\n%s\n", sentence)
+	fmt.Printf("\nspeaker: %s\n", sentence)
 	return nil
 }
 
@@ -38,6 +38,11 @@ func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 	fmt.Printf("Metadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
 	fmt.Printf("Metadata.Channels: %d\n", md.Channels)
 	fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
+	return nil
+}
+
+func (c MyCallback) SpeechStarted(ssr *api.SpeechStartedResponse) error {
+	fmt.Printf("\n[SpeechStarted] Received\n")
 	return nil
 }
 
@@ -85,8 +90,9 @@ func main() {
 		SampleRate:  16000,
 		SmartFormat: true,
 		// To get UtteranceEnd, the following must be set:
-		// InterimResults: true,
-		// UtteranceEndMs: "1000",
+		InterimResults: true,
+		UtteranceEndMs: "1000",
+		VadEvents:      true,
 	}
 
 	// example on how to send a custom parameter
