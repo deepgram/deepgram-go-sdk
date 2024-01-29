@@ -51,6 +51,7 @@ type Metadata struct {
 	IntentsInfo    IntentsInfo          `json:"intents_info,omitempty"`
 	SentimentInfo  SentimentInfo        `json:"sentiment_info,omitempty"`
 	TopicsInfo     TopicsInfo           `json:"topics_info,omitempty"`
+	Extra          map[string]string    `json:"extra,omitempty"`
 }
 
 type Warning struct {
