@@ -38,9 +38,10 @@ type ModelInfo struct {
 
 // Metadata is the metadata for a transcript
 type Metadata struct {
-	ModelInfo ModelInfo `json:"model_info,omitempty"`
-	ModelUUID string    `json:"model_uuid,omitempty"`
-	RequestID string    `json:"request_id,omitempty"`
+	Extra     map[string]string `json:"extra,omitempty"`
+	ModelInfo ModelInfo         `json:"model_info,omitempty"`
+	ModelUUID string            `json:"model_uuid,omitempty"`
+	RequestID string            `json:"request_id,omitempty"`
 }
 
 /***********************************/

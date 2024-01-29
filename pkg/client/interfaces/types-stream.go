@@ -20,7 +20,7 @@ type LiveTranscriptionOptions struct {
 	DiarizeVersion  string   `json:"diarize_version,omitempty" url:"diarize_version,omitempty"`
 	Encoding        string   `json:"encoding,omitempty" url:"encoding,omitempty"`
 	Endpointing     string   `json:"endpointing,omitempty" url:"endpointing,omitempty"`
-	Extra           string   `json:"extra,omitempty" url:"extra,omitempty"`
+	Extra           []string `json:"extra,omitempty" url:"extra,omitempty"`
 	FillerWords     bool     `json:"filler_words,omitempty" url:"filler_words,omitempty"`
 	InterimResults  bool     `json:"interim_results,omitempty" url:"interim_results,omitempty"`
 	Keywords        []string `json:"keywords,omitempty" url:"keywords,omitempty"`
