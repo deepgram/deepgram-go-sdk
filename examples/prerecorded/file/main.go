@@ -35,7 +35,7 @@ func main() {
 		Punctuate:  true,
 		Diarize:    true,
 		Language:   "en-US",
-		Utterances: true, // Commenting this out to demonstrate how to send a custom parameter
+		Utterances: true,
 	}
 
 	// create a Deepgram client

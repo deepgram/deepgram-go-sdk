@@ -260,7 +260,7 @@ func (r *MessageRouter) UnhandledMessage(byMsg []byte) error {
 func (r *MessageRouter) printDebugMessages(level klog.Level, function string, byMsg []byte) {
 	prettyJson, err := prettyjson.Format(byMsg)
 	if err != nil {
-		klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+		klog.V(1).Infof("prettyjson.Format failed. Err: %v\n", err)
 	}
 
 	klog.V(level).Infof("\n\n-----------------------------------------------\n")

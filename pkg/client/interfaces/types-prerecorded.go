@@ -26,7 +26,7 @@ type PreRecordedTranscriptionOptions struct {
 	Diarize          bool     `json:"diarize,omitempty" url:"diarize,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" url:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" url:"dictation,omitempty"`
-	Extra            string   `json:"extra,omitempty" url:"extra,omitempty"`
+	Extra            []string `json:"extra,omitempty" url:"extra,omitempty"`
 	FillerWords      bool     `json:"filler_words,omitempty" url:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" url:"intents,omitempty"`
 	Keywords         []string `json:"keywords,omitempty" url:"keywords,omitempty"`
