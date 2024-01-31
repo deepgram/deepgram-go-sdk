@@ -58,7 +58,7 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	}
 
 	c := Client{
-		Client:   rest.New(options),
+		Client:   rest.New(*options),
 		cOptions: options,
 	}
 	return &c
