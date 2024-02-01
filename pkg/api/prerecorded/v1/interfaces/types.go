@@ -46,11 +46,11 @@ type Metadata struct {
 	Channels       int                  `json:"channels,omitempty"`
 	Models         []string             `json:"models,omitempty"`
 	ModelInfo      map[string]ModelInfo `json:"model_info,omitempty"`
-	Warnings       []Warning            `json:"warnings,omitempty"`
-	SummaryInfo    SummaryInfo          `json:"summary_info,omitempty"`
-	IntentsInfo    IntentsInfo          `json:"intents_info,omitempty"`
-	SentimentInfo  SentimentInfo        `json:"sentiment_info,omitempty"`
-	TopicsInfo     TopicsInfo           `json:"topics_info,omitempty"`
+	Warnings       *[]Warning           `json:"warnings,omitempty"`
+	SummaryInfo    *SummaryInfo         `json:"summary_info,omitempty"`
+	IntentsInfo    *IntentsInfo         `json:"intents_info,omitempty"`
+	SentimentInfo  *SentimentInfo       `json:"sentiment_info,omitempty"`
+	TopicsInfo     *TopicsInfo          `json:"topics_info,omitempty"`
 	Extra          map[string]string    `json:"extra,omitempty"`
 }
 
@@ -73,15 +73,15 @@ type Search struct {
 }
 
 type Word struct {
-	Word              string  `json:"word,omitempty"`
-	Start             float64 `json:"start,omitempty"`
-	End               float64 `json:"end,omitempty"`
-	Confidence        float64 `json:"confidence,omitempty"`
-	Speaker           int     `json:"speaker,omitempty"`
-	SpeakerConfidence float64 `json:"speaker_confidence,omitempty"`
-	PunctuatedWord    string  `json:"punctuated_word,omitempty"`
-	Sentiment         string  `json:"sentiment,omitempty"`
-	SentimentScore    float64 `json:"sentiment_score,omitempty"`
+	Word              string   `json:"word,omitempty"`
+	Start             float64  `json:"start,omitempty"`
+	End               float64  `json:"end,omitempty"`
+	Confidence        float64  `json:"confidence,omitempty"`
+	Speaker           *int     `json:"speaker,omitempty"`
+	SpeakerConfidence *float64 `json:"speaker_confidence,omitempty"`
+	PunctuatedWord    string   `json:"punctuated_word,omitempty"`
+	Sentiment         *string  `json:"sentiment,omitempty"`
+	SentimentScore    *float64 `json:"sentiment_score,omitempty"`
 }
 
 type Translation struct {
@@ -90,13 +90,13 @@ type Translation struct {
 }
 
 type Alternative struct {
-	Transcript  string      `json:"transcript,omitempty"`
-	Confidence  float64     `json:"confidence,omitempty"`
-	Words       []Word      `json:"words,omitempty"`
-	Paragraphs  Paragraph   `json:"paragraphs,omitempty"`
-	Entities    []Entity    `json:"entities,omitempty"`
-	Summaries   []SummaryV1 `json:"summaries,omitempty"`
-	Translation Translation `json:"translation,omitempty"`
+	Transcript  string       `json:"transcript,omitempty"`
+	Confidence  float64      `json:"confidence,omitempty"`
+	Words       []Word       `json:"words,omitempty"`
+	Paragraphs  *Paragraphs  `json:"paragraphs,omitempty"`
+	Entities    *[]Entity    `json:"entities,omitempty"`
+	Summaries   *[]SummaryV1 `json:"summaries,omitempty"`
+	Translation *Translation `json:"translation,omitempty"`
 }
 
 type Paragraphs struct {
@@ -109,16 +109,16 @@ type Paragraph struct {
 	NumWords       int        `json:"num_words,omitempty"`
 	Start          float64    `json:"start,omitempty"`
 	End            float64    `json:"end,omitempty"`
-	Sentiment      string     `json:"sentiment,omitempty"`
-	SentimentScore float64    `json:"sentiment_score,omitempty"`
+	Sentiment      *string    `json:"sentiment,omitempty"`
+	SentimentScore *float64   `json:"sentiment_score,omitempty"`
 }
 
 type Sentence struct {
-	Text           string  `json:"text,omitempty"`
-	Start          float64 `json:"start,omitempty"`
-	End            float64 `json:"end,omitempty"`
-	Sentiment      string  `json:"sentiment,omitempty"`
-	SentimentScore float64 `json:"sentiment_score,omitempty"`
+	Text           string   `json:"text,omitempty"`
+	Start          float64  `json:"start,omitempty"`
+	End            float64  `json:"end,omitempty"`
+	Sentiment      *string  `json:"sentiment,omitempty"`
+	SentimentScore *float64 `json:"sentiment_score,omitempty"`
 }
 
 type Entity struct {
@@ -130,23 +130,23 @@ type Entity struct {
 }
 
 type Channel struct {
-	Search             []Search      `json:"search,omitempty"`
+	Search             *[]Search     `json:"search,omitempty"`
 	Alternatives       []Alternative `json:"alternatives,omitempty"`
 	DetectedLanguage   string        `json:"detected_language,omitempty"`
 	LanguageConfidence float64       `json:"language_confidence,omitempty"`
 }
 
 type Utterance struct {
-	Start          float64 `json:"start,omitempty"`
-	End            float64 `json:"end,omitempty"`
-	Confidence     float64 `json:"confidence,omitempty"`
-	Channel        int     `json:"channel,omitempty"`
-	Transcript     string  `json:"transcript,omitempty"`
-	Words          []Word  `json:"words,omitempty"`
-	Speaker        int     `json:"speaker,omitempty"`
-	Sentiment      string  `json:"sentiment,omitempty"`
-	SentimentScore float64 `json:"sentiment_score,omitempty"`
-	ID             string  `json:"id,omitempty"`
+	Start          float64  `json:"start,omitempty"`
+	End            float64  `json:"end,omitempty"`
+	Confidence     float64  `json:"confidence,omitempty"`
+	Channel        int      `json:"channel,omitempty"`
+	Transcript     string   `json:"transcript,omitempty"`
+	Words          []Word   `json:"words,omitempty"`
+	Speaker        *int     `json:"speaker,omitempty"`
+	Sentiment      *string  `json:"sentiment,omitempty"`
+	SentimentScore *float64 `json:"sentiment_score,omitempty"`
+	ID             string   `json:"id,omitempty"`
 }
 
 type Intent struct {
@@ -165,13 +165,13 @@ type Topic struct {
 }
 
 type Segment struct {
-	Text           string   `json:"text,omitempty"`
-	StartWord      int      `json:"start_word,omitempty"`
-	EndWord        int      `json:"end_word,omitempty"`
-	Sentiment      string   `json:"sentiment,omitempty"`
-	SentimentScore float64  `json:"sentiment_score,omitempty"`
-	Topics         []Topic  `json:"topics,omitempty"`
-	Intents        []Intent `json:"intents,omitempty"`
+	Text           string    `json:"text,omitempty"`
+	StartWord      int       `json:"start_word,omitempty"`
+	EndWord        int       `json:"end_word,omitempty"`
+	Sentiment      *string   `json:"sentiment,omitempty"`
+	SentimentScore *float64  `json:"sentiment_score,omitempty"`
+	Topics         *[]Topic  `json:"topics,omitempty"`
+	Intents        *[]Intent `json:"intents,omitempty"`
 }
 
 type Sentiments struct {
@@ -203,17 +203,17 @@ type Summary SummaryV2 // internal reference to old name
 type Result struct {
 	Channels   []Channel   `json:"channels,omitempty"`
 	Utterances []Utterance `json:"utterances,omitempty"`
-	Summary    SummaryV2   `json:"summary,omitempty"`
-	Sentiments Sentiments  `json:"sentiments,omitempty"`
-	Topics     Topics      `json:"topics,omitempty"`
-	Intents    Intents     `json:"intents,omitempty"`
+	Summary    *SummaryV2  `json:"summary,omitempty"`
+	Sentiments *Sentiments `json:"sentiments,omitempty"`
+	Topics     *Topics     `json:"topics,omitempty"`
+	Intents    *Intents    `json:"intents,omitempty"`
 }
 
 /***********************************/
 // response/result structs
 /***********************************/
 type PreRecordedResponse struct {
-	RequestID string   `json:"request_id,omitempty"` // for ?callback=...
-	Metadata  Metadata `json:"metadata,omitempty"`
-	Results   Result   `json:"results,omitempty"`
+	RequestID string    `json:"request_id,omitempty"` // for ?callback=...
+	Metadata  *Metadata `json:"metadata,omitempty"`
+	Results   *Result   `json:"results,omitempty"`
 }

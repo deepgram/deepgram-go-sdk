@@ -32,13 +32,13 @@ type TopicsInfo struct {
 }
 
 type Metadata struct {
-	RequestID     string        `json:"request_id,omitempty"`
-	Created       string        `json:"created,omitempty"`
-	Language      string        `json:"language,omitempty"`
-	IntentsInfo   IntentsInfo   `json:"intents_info,omitempty"`
-	SentimentInfo SentimentInfo `json:"sentiment_info,omitempty"`
-	SummaryInfo   SummaryInfo   `json:"summary_info,omitempty"`
-	TopicsInfo    TopicsInfo    `json:"topics_info,omitempty"`
+	RequestID     string         `json:"request_id,omitempty"`
+	Created       string         `json:"created,omitempty"`
+	Language      string         `json:"language,omitempty"`
+	IntentsInfo   *IntentsInfo   `json:"intents_info,omitempty"`
+	SentimentInfo *SentimentInfo `json:"sentiment_info,omitempty"`
+	SummaryInfo   *SummaryInfo   `json:"summary_info,omitempty"`
+	TopicsInfo    *TopicsInfo    `json:"topics_info,omitempty"`
 }
 
 type Average struct {
@@ -61,13 +61,13 @@ type Intent struct {
 }
 
 type Segment struct {
-	Text           string   `json:"text,omitempty"`
-	StartWord      int      `json:"start_word,omitempty"`
-	EndWord        int      `json:"end_word,omitempty"`
-	Sentiment      string   `json:"sentiment,omitempty"`
-	SentimentScore float64  `json:"sentiment_score,omitempty"`
-	Topics         []Topic  `json:"topics,omitempty"`
-	Intents        []Intent `json:"intents,omitempty"`
+	Text           string    `json:"text,omitempty"`
+	StartWord      int       `json:"start_word,omitempty"`
+	EndWord        int       `json:"end_word,omitempty"`
+	Sentiment      *string   `json:"sentiment,omitempty"`
+	SentimentScore *float64  `json:"sentiment_score,omitempty"`
+	Topics         *[]Topic  `json:"topics,omitempty"`
+	Intents        *[]Intent `json:"intents,omitempty"`
 }
 
 type Sentiments struct {
@@ -84,10 +84,10 @@ type Intents struct {
 }
 
 type Results struct {
-	Sentiments Sentiments `json:"sentiments,omitempty"`
-	Summary    Summary    `json:"summary,omitempty"`
-	Topics     Topics     `json:"topics,omitempty"`
-	Intents    Intents    `json:"intents,omitempty"`
+	Sentiments *Sentiments `json:"sentiments,omitempty"`
+	Summary    *Summary    `json:"summary,omitempty"`
+	Topics     *Topics     `json:"topics,omitempty"`
+	Intents    *Intents    `json:"intents,omitempty"`
 }
 
 /***********************************/
