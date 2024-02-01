@@ -14,7 +14,7 @@ type Word struct {
 	PunctuatedWord string  `json:"punctuated_word,omitempty"`
 	Start          float64 `json:"start,omitempty"`
 	Word           string  `json:"word,omitempty"`
-	Speaker        int     `json:"speaker,omitempty"`
+	Speaker        *int    `json:"speaker,omitempty"`
 }
 
 // Alternative is a single alternative in a transcript
