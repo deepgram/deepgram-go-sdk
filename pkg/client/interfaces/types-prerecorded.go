@@ -16,7 +16,7 @@ type PreRecordedTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives,omitempty" url:"alternatives,omitempty"`
 	Callback         string   `json:"callback,omitempty" url:"callback,omitempty"`
 	CallbackMethod   string   `json:"callback_method,omitempty" url:"callback_method,omitempty"`
-	CustomIntent     string   `json:"custom_intent,omitempty" url:"custom_intent,omitempty"`
+	CustomIntent     []string `json:"custom_intent,omitempty" url:"custom_intent,omitempty"`
 	CustomIntentMode string   `json:"custom_intent_mode,omitempty" url:"custom_intent_mode,omitempty"`
 	CustomTopic      []string `json:"custom_topic,omitempty" url:"custom_topic,omitempty"`
 	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" url:"custom_topic_mode,omitempty"`
