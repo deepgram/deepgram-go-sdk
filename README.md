@@ -4,8 +4,6 @@
 
 Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
-> This SDK only supports hosted usage of api.deepgram.com.
-
 * [Deepgram Go SDK](#deepgram-go-sdk)
 * [API Documentation](#api-documentation)
 * [Getting an API Key](#getting-an-api-key)
