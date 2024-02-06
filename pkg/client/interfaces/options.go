@@ -17,10 +17,6 @@ func (o *ClientOptions) Parse() error {
 		klog.V(3).Infof("DEEPGRAM_API_KEY found")
 		o.ApiKey = v
 	}
-	if !o.OnPrem && o.ApiKey == "" {
-		klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-		return ErrNoApiKey
-	}
 	if v := os.Getenv("DEEPGRAM_HOST"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_HOST found")
 		o.Host = v
@@ -36,6 +32,12 @@ func (o *ClientOptions) Parse() error {
 	if v := os.Getenv("DEEPGRAM_ON_PREM"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_ON_PREM found")
 		o.OnPrem = strings.EqualFold(strings.ToLower(v), "true")
+	}
+
+	// checks
+	if !o.OnPrem && o.ApiKey == "" {
+		klog.V(1).Infof("DEEPGRAM_API_KEY not set")
+		return ErrNoApiKey
 	}
 
 	// shared
