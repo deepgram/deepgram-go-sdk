@@ -335,7 +335,7 @@ func (c *Client) WriteJSON(payload interface{}) error {
 		return ErrInvalidConnection
 	}
 
-	dataStruct, err := json.Marshal(payload)
+	byData, err := json.Marshal(payload)
 	if err != nil {
 		klog.V(1).Infof("WebSocketClient::WriteJSON json.Marshal failed. Err: %v\n", err)
 		klog.V(7).Infof("live.WriteJSON() LEAVE\n")
@@ -344,14 +344,14 @@ func (c *Client) WriteJSON(payload interface{}) error {
 
 	if err := ws.WriteMessage(
 		websocket.TextMessage,
-		dataStruct,
+		byData,
 	); err != nil {
 		klog.V(1).Infof("WebSocketClient::WriteJSON WriteMessage failed. Err: %v\n", err)
 		klog.V(7).Infof("live.WriteJSON() LEAVE\n")
 		return err
 	}
 
-	klog.V(7).Infof("WriteJSON payload:\nData: %s\n", string(dataStruct))
+	klog.V(7).Infof("WriteJSON payload:\nData: %s\n", string(byData))
 	klog.V(7).Infof("live.Write() LEAVE\n")
 
 	return nil
@@ -447,7 +447,7 @@ func (c *Client) ping() {
 			if c.cOptions.EnableKeepAlive {
 				klog.V(5).Infof("Sending Deepgram KeepAlive message...\n")
 				// deepgram keepalive message
-				errDg = ws.WriteMessage(websocket.BinaryMessage, []byte("{ \"type\": \"KeepAlive\" }"))
+				errDg = ws.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"KeepAlive\" }"))
 				if errDg != nil {
 					klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
 				}
