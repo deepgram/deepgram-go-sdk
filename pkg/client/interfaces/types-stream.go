@@ -27,6 +27,7 @@ type LiveTranscriptionOptions struct {
 	Language        string   `json:"language,omitempty" url:"language,omitempty"`
 	Model           string   `json:"model,omitempty" url:"model,omitempty"`
 	Multichannel    bool     `json:"multichannel,omitempty" url:"multichannel,omitempty"`
+	Numerals        bool     `json:"numerals,omitempty" url:"numerals,omitempty"`
 	ProfanityFilter bool     `json:"profanity_filter,omitempty" url:"profanity_filter,omitempty"`
 	Punctuate       bool     `json:"punctuate,omitempty" url:"punctuate,omitempty"`
 	Redact          []string `json:"redact,omitempty" url:"redact,omitempty"`
