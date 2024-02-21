@@ -4,6 +4,10 @@
 
 package interfaces
 
+import (
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+)
+
 /***********************************/
 // shared/common structs
 /***********************************/
@@ -43,6 +47,11 @@ type Metadata struct {
 	ModelUUID string            `json:"model_uuid,omitempty"`
 	RequestID string            `json:"request_id,omitempty"`
 }
+
+/***********************************/
+// Request/Input structs
+/***********************************/
+type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
 
 /***********************************/
 // Results from Live Transcription

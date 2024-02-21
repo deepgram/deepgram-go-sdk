@@ -8,7 +8,7 @@ package interfaces
 LiveTranscriptionOptions contain all of the knobs and dials to control the live transcription
 from the Deepgram API
 
-Please see the documentation for live/streaming for more details:
+Please see the live/streaming documentation for more details:
 https://developers.deepgram.com/reference/streaming
 */
 type LiveTranscriptionOptions struct {

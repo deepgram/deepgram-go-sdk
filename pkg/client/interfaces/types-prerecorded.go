@@ -8,15 +8,14 @@ package interfaces
 PreRecordedTranscriptionOptions contain all of the knobs and dials to control a Prerecorded transcription
 from the Deepgram API
 
-Please see the documentation for live/streaming for more details:
+Please see the prerecorded audio documentation for more details:
 https://developers.deepgram.com/reference/pre-recorded
 */
-
 type PreRecordedTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives,omitempty" url:"alternatives,omitempty"`
 	Callback         string   `json:"callback,omitempty" url:"callback,omitempty"`
 	CallbackMethod   string   `json:"callback_method,omitempty" url:"callback_method,omitempty"`
-    Channels         int      `json:"channels,omitempty" url:"channels,omitempty"`
+	Channels         int      `json:"channels,omitempty" url:"channels,omitempty"`
 	CustomIntent     []string `json:"custom_intent,omitempty" url:"custom_intent,omitempty"`
 	CustomIntentMode string   `json:"custom_intent_mode,omitempty" url:"custom_intent_mode,omitempty"`
 	CustomTopic      []string `json:"custom_topic,omitempty" url:"custom_topic,omitempty"`
@@ -27,7 +26,7 @@ type PreRecordedTranscriptionOptions struct {
 	Diarize          bool     `json:"diarize,omitempty" url:"diarize,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" url:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" url:"dictation,omitempty"`
-    Encoding         string   `json:"encoding,omitempty" url:"encoding,omitempty"`
+	Encoding         string   `json:"encoding,omitempty" url:"encoding,omitempty"`
 	Extra            []string `json:"extra,omitempty" url:"extra,omitempty"`
 	FillerWords      bool     `json:"filler_words,omitempty" url:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" url:"intents,omitempty"`

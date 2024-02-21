@@ -2,6 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+// This package handles the versioning in the API for the various clients (prerecorded, live, etc.)
 package version
 
 import "errors"

@@ -92,6 +92,12 @@ type Token struct {
 	Out int `json:"out,omitempty"`
 }
 
+// TTS provides a TTS
+type TTS struct {
+	Characters int `json:"characters,omitempty"`
+	Requests   int `json:"requests,omitempty"`
+}
+
 // TokenDetails provides token details
 type TokenDetails struct {
 	Feature string `json:"feature,omitempty"`
@@ -100,15 +106,33 @@ type TokenDetails struct {
 	Model   string `json:"model,omitempty"`
 }
 
+// SpeechSegment provides a speech segment
+type SpeechSegment struct {
+	Characters int    `json:"characters,omitempty"`
+	Model      string `json:"model,omitempty"`
+	Tier       string `json:"tier,omitempty"`
+}
+
+// TTSDetails provides token details
+type TTSDetails struct {
+	Duration       float64         `json:"duration,omitempty"`
+	SpeechSegments []SpeechSegment `json:"speech_segments,omitempty"`
+	// TODO: audio_metadata
+}
+
 // Config provides a config
 type Config struct {
-	Diarize        bool   `json:"diarize,omitempty"`
-	Language       string `json:"language,omitempty"`
-	Model          string `json:"model,omitempty"`
-	Punctuate      bool   `json:"punctuate,omitempty"`
-	Utterances     bool   `json:"utterances,omitempty"`
-	InterimResults bool   `json:"interim_results,omitempty"`
-	SmartFormat    bool   `json:"smart_format,omitempty"`
+	Language       string  `json:"language,omitempty"`
+	Model          string  `json:"model,omitempty"`
+	Punctuate      *bool   `json:"punctuate,omitempty"`
+	Utterances     *bool   `json:"utterances,omitempty"`
+	Diarize        *bool   `json:"diarize,omitempty"`
+	SmartFormat    *bool   `json:"smart_format,omitempty"`
+	InterimResults *bool   `json:"interim_results,omitempty"`
+	Topics         *string `json:"topics,omitempty"`
+	Intents        *string `json:"intents,omitempty"`
+	Sentiment      *bool   `json:"sentiment,omitempty"`
+	Summarize      *string `json:"summarize,omitempty"`
 }
 
 // Details provides details
@@ -131,6 +155,7 @@ type Response struct {
 	Details      Details        `json:"details,omitempty"`
 	Code         int            `json:"code,omitempty"`
 	Completed    string         `json:"completed,omitempty"`
+	TTSDetails   *TTSDetails    `json:"tts_details,omitempty"`
 	TokenDetails []TokenDetails `json:"token_details,omitempty"`
 }
 
@@ -174,6 +199,7 @@ type Result struct {
 	TotalHours float64 `json:"total_hours,omitempty"`
 	Requests   int     `json:"requests,omitempty"`
 	Tokens     Token   `json:"tokens,omitempty"`
+	TTS        TTS     `json:"tts,omitempty"`
 }
 
 // RequestList provides a list of requests
