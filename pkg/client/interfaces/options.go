@@ -13,9 +13,11 @@ import (
 
 func (o *ClientOptions) Parse() error {
 	// general
-	if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
-		klog.V(3).Infof("DEEPGRAM_API_KEY found")
-		o.ApiKey = v
+	if o.ApiKey == "" {
+		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
+			klog.V(3).Infof("DEEPGRAM_API_KEY found")
+			o.ApiKey = v
+		}
 	}
 	if v := os.Getenv("DEEPGRAM_HOST"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_HOST found")
