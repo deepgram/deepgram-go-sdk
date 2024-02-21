@@ -65,6 +65,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 		req.Header.Set("Content-Type", "application/json")
 	}
 
+	klog.V(4).Infof("%s %s\n", req.Method, req.URL.String())
+
 	err := c.HttpClient.Do(ctx, req, func(res *http.Response) error {
 		switch res.StatusCode {
 		case http.StatusOK:

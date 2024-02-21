@@ -4,6 +4,10 @@
 
 package interfaces
 
+import (
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+)
+
 /***********************************/
 // share/common structs
 /***********************************/
@@ -209,6 +213,11 @@ type Result struct {
 	Topics     *Topics     `json:"topics,omitempty"`
 	Intents    *Intents    `json:"intents,omitempty"`
 }
+
+/***********************************/
+// Request/Input structs
+/***********************************/
+type PreRecordedTranscriptionOptions interfaces.PreRecordedTranscriptionOptions
 
 /***********************************/
 // response/result structs

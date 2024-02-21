@@ -19,9 +19,7 @@ import (
 
 func main() {
 	// init library
-	client.Init(client.InitLib{
-		LogLevel: client.LogLevelStandard, // LogLevelStandard / LogLevelFull / LogLevelTrace
-	})
+	client.InitWithDefault()
 
 	// context
 	ctx := context.Background()
