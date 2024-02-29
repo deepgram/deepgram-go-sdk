@@ -109,6 +109,7 @@ type Paragraph struct {
 	NumWords       int        `json:"num_words,omitempty"`
 	Start          float64    `json:"start,omitempty"`
 	End            float64    `json:"end,omitempty"`
+	Speaker        *int       `json:"speaker,omitempty"`
 	Sentiment      *string    `json:"sentiment,omitempty"`
 	SentimentScore *float64   `json:"sentiment_score,omitempty"`
 }
