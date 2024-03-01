@@ -16,6 +16,7 @@ type PreRecordedTranscriptionOptions struct {
 	Alternatives     int      `json:"alternatives,omitempty" url:"alternatives,omitempty"`
 	Callback         string   `json:"callback,omitempty" url:"callback,omitempty"`
 	CallbackMethod   string   `json:"callback_method,omitempty" url:"callback_method,omitempty"`
+    Channels         int      `json:"channels,omitempty" url:"channels,omitempty"`
 	CustomIntent     []string `json:"custom_intent,omitempty" url:"custom_intent,omitempty"`
 	CustomIntentMode string   `json:"custom_intent_mode,omitempty" url:"custom_intent_mode,omitempty"`
 	CustomTopic      []string `json:"custom_topic,omitempty" url:"custom_topic,omitempty"`
@@ -26,6 +27,7 @@ type PreRecordedTranscriptionOptions struct {
 	Diarize          bool     `json:"diarize,omitempty" url:"diarize,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" url:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" url:"dictation,omitempty"`
+    Encoding         string   `json:"encoding,omitempty" url:"encoding,omitempty"`
 	Extra            []string `json:"extra,omitempty" url:"extra,omitempty"`
 	FillerWords      bool     `json:"filler_words,omitempty" url:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" url:"intents,omitempty"`
@@ -40,6 +42,7 @@ type PreRecordedTranscriptionOptions struct {
 	Punctuate        bool     `json:"punctuate,omitempty" url:"punctuate,omitempty"`
 	Redact           []string `json:"redact,omitempty" url:"redact,omitempty"`
 	Replace          []string `json:"replace,omitempty" url:"replace,omitempty"`
+	SampleRate       int      `json:"sample_rate,omitempty" url:"sample_rate,omitempty"`
 	Search           []string `json:"search,omitempty" url:"search,omitempty"`
 	Sentiment        bool     `json:"sentiment,omitempty" url:"sentiment,omitempty"`
 	SmartFormat      bool     `json:"smart_format,omitempty" url:"smart_format,omitempty"`
