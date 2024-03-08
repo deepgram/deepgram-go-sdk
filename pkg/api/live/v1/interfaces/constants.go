@@ -7,10 +7,12 @@ package interfaces
 // These are the message types that can be received from the live API
 const (
 	// message types
+	TypeOpenResponse          string = "Open"
 	TypeMessageResponse       string = "Results"
 	TypeMetadataResponse      string = "Metadata"
 	TypeUtteranceEndResponse  string = "UtteranceEnd"
 	TypeSpeechStartedResponse string = "SpeechStarted"
+	TypeCloseResponse         string = "Close"
 
 	// Error type
 	TypeErrorResponse string = "Error"

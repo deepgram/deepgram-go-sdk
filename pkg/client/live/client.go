@@ -196,6 +196,14 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		go c.listen()
 		go c.ping()
 
+		// fire off open connection
+		err = c.router.OpenHelper(&msginterfaces.OpenResponse{
+			Type: msginterfaces.TypeOpenResponse,
+		})
+		if err != nil {
+			klog.V(1).Infof("router.OpenHelper failed. Err: %v\n", err)
+		}
+
 		klog.V(3).Infof("WebSocket Connection Successful!")
 		klog.V(7).Infof("live.ConnectWithRetry() LEAVE\n")
 
@@ -401,6 +409,14 @@ func (c *Client) closeWs() {
 			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
 		}
 		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure
+
+		// fire off close connection
+		err := c.router.CloseHelper(&msginterfaces.CloseResponse{
+			Type: msginterfaces.TypeCloseResponse,
+		})
+		if err != nil {
+			klog.V(1).Infof("router.CloseHelper failed. Err: %v\n", err)
+		}
 
 		// websocket protocol message
 		errProto := c.wsconn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
