@@ -27,6 +27,9 @@ func main() {
 	// Go context
 	ctx := context.Background()
 
+	// print instructions
+	fmt.Print("\n\nPress ENTER to exit!\n\n")
+
 	// set the Transcription options
 	transcriptOptions := interfaces.LiveTranscriptionOptions{
 		Language:  "en-US",
@@ -40,13 +43,6 @@ func main() {
 		return
 	}
 
-	// connect the websocket to Deepgram
-	wsconn := dgClient.Connect()
-	if wsconn == nil {
-		fmt.Println("Client.Connect failed")
-		os.Exit(1)
-	}
-
 	// get the HTTP stream
 	httpClient := new(http.Client)
 
@@ -58,12 +54,19 @@ func main() {
 
 	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
+	// connect the websocket to Deepgram
+	wsconn := dgClient.Connect()
+	if wsconn == nil {
+		fmt.Println("Client.Connect failed")
+		os.Exit(1)
+	}
+
 	go func() {
 		// feed the HTTP stream to the Deepgram client (this is a blocking call)
 		dgClient.Stream(bufio.NewReader(res.Body))
 	}()
 
-	fmt.Print("Press ENTER to exit!\n\n")
+	// wait for user input to exit
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
 

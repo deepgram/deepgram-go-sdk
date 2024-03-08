@@ -25,7 +25,38 @@ func NewDefaultCallbackHandler() DefaultCallbackHandler {
 	return DefaultCallbackHandler{}
 }
 
-// Message is the callback for a message
+// Open is the callback for when the connection opens
+func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		data, err := json.Marshal(or)
+		if err != nil {
+			klog.V(1).Infof("Open json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJson, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nOpen Object:\n%s\n\n", prettyJson)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\n\nOpenResponse\n\n")
+
+	return nil
+}
+
+// Message is the callback for a transcription message
 func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -62,7 +93,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	return nil
 }
 
-// Metadata is the callback for a metadata
+// Metadata is the callback for information about the connection
 func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -88,13 +119,14 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 	}
 
 	// handle the message
-	fmt.Printf("\nMetadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
+	fmt.Printf("\n\nMetadata.RequestID: %s\n", strings.TrimSpace(md.RequestID))
 	fmt.Printf("Metadata.Channels: %d\n", md.Channels)
 	fmt.Printf("Metadata.Created: %s\n\n", strings.TrimSpace(md.Created))
 
 	return nil
 }
 
+// SpeechStarted is when VAD detects noise
 func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -120,7 +152,7 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 	}
 
 	// handle the message
-	fmt.Printf("\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
+	fmt.Printf("\n\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
 	fmt.Printf("SpeechStarted.Channels:\n")
 	for _, val := range ssr.Channel {
 		fmt.Printf("\tChannel: %d\n", val)
@@ -130,11 +162,45 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 	return nil
 }
 
+// UtteranceEnd is the callback for when a channel goes silent
 func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
-	fmt.Printf("\nUtteranceEnd\n")
+	fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
+	fmt.Printf("UtteranceEnd.Channel: %d\n\n", ur.Channel)
 	return nil
 }
 
+// Close is the callback for when the connection closes
+func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		data, err := json.Marshal(or)
+		if err != nil {
+			klog.V(1).Infof("Close json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJson, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nClose Object:\n%s\n\n", prettyJson)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\n\nCloseResponse\n\n")
+
+	return nil
+}
+
+// Error is the callback for a error messages
 func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -163,6 +229,31 @@ func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 	fmt.Printf("\nError.Type: %s\n", er.Type)
 	fmt.Printf("Error.Message: %s\n", er.Message)
 	fmt.Printf("Error.Description: %s\n\n", er.Description)
+
+	return nil
+}
+
+// UnhandledEvent is the callback for unknown messages
+func (dch DefaultCallbackHandler) UnhandledEvent(byData []byte) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+		prettyJson, err := prettyjson.Format(byData)
+		if err != nil {
+			klog.V(2).Infof("\n\nRaw Data:\n%s\n\n", string(byData))
+		} else {
+			klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJson)
+		}
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\n\nUnhandledEvent\n%s\n\n", string(byData))
 
 	return nil
 }

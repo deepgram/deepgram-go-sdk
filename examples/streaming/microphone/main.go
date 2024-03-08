@@ -32,6 +32,12 @@ func (c MyCallback) Message(mr *api.MessageResponse) error {
 	return nil
 }
 
+func (c MyCallback) Open(ocr *api.OpenResponse) error {
+	// handle the open
+	fmt.Printf("\n[Open] Received\n")
+	return nil
+}
+
 func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 	// handle the metadata
 	fmt.Printf("\n[Metadata] Received\n")
@@ -43,11 +49,28 @@ func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 
 func (c MyCallback) SpeechStarted(ssr *api.SpeechStartedResponse) error {
 	fmt.Printf("\n[SpeechStarted] Received\n")
+	fmt.Printf("SpeechStarted.Timestamp: %f\n", ssr.Timestamp)
+	fmt.Printf("SpeechStarted.Channels:\n")
+	for _, val := range ssr.Channel {
+		fmt.Printf("\tChannel: %d\n", val)
+	}
+	fmt.Printf("\n")
 	return nil
 }
 
 func (c MyCallback) UtteranceEnd(ur *api.UtteranceEndResponse) error {
 	fmt.Printf("\n[UtteranceEnd] Received\n")
+	fmt.Printf("UtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
+	for _, val := range ur.Channel {
+		fmt.Printf("UtteranceEnd.Channel: %d\n", val)
+	}
+	fmt.Printf("\n")
+	return nil
+}
+
+func (c MyCallback) Close(ocr *api.CloseResponse) error {
+	// handle the close
+	fmt.Printf("\n[Close] Received\n")
 	return nil
 }
 
@@ -60,9 +83,19 @@ func (c MyCallback) Error(er *api.ErrorResponse) error {
 	return nil
 }
 
+func (c MyCallback) UnhandledEvent(byData []byte) error {
+	// handle the unhandled event
+	fmt.Printf("\n[UnhandledEvent] Received\n")
+	fmt.Printf("UnhandledEvent: %s\n\n", string(byData))
+	return nil
+}
+
 func main() {
 	// init library
 	microphone.Initialize()
+
+	// print instructions
+	fmt.Print("\n\nPress ENTER to exit!\n\n")
 
 	/*
 		DG Streaming API
@@ -142,7 +175,7 @@ func main() {
 		mic.Stream(dgClient)
 	}()
 
-	fmt.Print("Press ENTER to exit!\n\n")
+	// wait for user input to exit
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
 

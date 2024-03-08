@@ -41,6 +41,49 @@ func New(callback interfaces.LiveMessageCallback) *MessageRouter {
 	}
 }
 
+// OpenResponse handles the OpenResponse message
+func (r *MessageRouter) OpenHelper(or *interfaces.OpenResponse) error {
+	obj, err := json.Marshal(or)
+	if err != nil {
+		klog.V(1).Infof("Open json.Marshal failed. Err: %v\n", err)
+		return err
+	}
+
+	return r.OpenResponse(obj)
+}
+
+// OpenResponse handles the OpenResponse message
+func (r *MessageRouter) OpenResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.OpenResponse ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "OpenResponse", byMsg)
+
+	var or interfaces.OpenResponse
+	err := json.Unmarshal(byMsg, &or)
+	if err != nil {
+		klog.V(1).Infof("OpenResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.OpenResponse LEAVE\n")
+		return err
+	}
+
+	if r.callback != nil {
+		err := r.callback.Open(&or)
+		if err != nil {
+			klog.V(1).Infof("callback.OpenResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.OpenResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.OpenResponse LEAVE\n")
+		return err
+	}
+
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.OpenResponse LEAVE\n")
+
+	return nil
+}
+
 // Message handles platform messages
 func (r *MessageRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -214,6 +257,49 @@ func (r *MessageRouter) UtteranceEndResponse(byMsg []byte) error {
 	return nil
 }
 
+// CloseHelper handles the CloseResponse message
+func (r *MessageRouter) CloseHelper(cr *interfaces.CloseResponse) error {
+	obj, err := json.Marshal(cr)
+	if err != nil {
+		klog.V(1).Infof("close json.Marshal failed. Err: %v\n", err)
+		return err
+	}
+
+	return r.CloseResponse(obj)
+}
+
+// CloseResponse handles the CloseResponse message
+func (r *MessageRouter) CloseResponse(byMsg []byte) error {
+	klog.V(6).Infof("router.CloseResponse ENTER\n")
+
+	// trace debugging
+	r.printDebugMessages(5, "CloseResponse", byMsg)
+
+	var cr interfaces.CloseResponse
+	err := json.Unmarshal(byMsg, &cr)
+	if err != nil {
+		klog.V(1).Infof("CloseResponse json.Unmarshal failed. Err: %v\n", err)
+		klog.V(6).Infof("router.CloseResponse LEAVE\n")
+		return err
+	}
+
+	if r.callback != nil {
+		err := r.callback.Close(&cr)
+		if err != nil {
+			klog.V(1).Infof("callback.CloseResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.CloseResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.CloseResponse LEAVE\n")
+		return err
+	}
+
+	klog.V(1).Infof("User callback is undefined\n")
+	klog.V(6).Infof("router.CloseResponse ENTER\n")
+
+	return nil
+}
+
 func (r *MessageRouter) ErrorResponse(byMsg []byte) error {
 	klog.V(6).Infof("router.ErrorResponse ENTER\n")
 
@@ -250,9 +336,20 @@ func (r *MessageRouter) UnhandledMessage(byMsg []byte) error {
 	klog.V(6).Infof("router.UnhandledMessage ENTER\n")
 
 	// trace debugging
-	r.printDebugMessages(2, "UnhandledMessage", byMsg)
+	r.printDebugMessages(3, "UnhandledMessage", byMsg)
 
-	klog.V(1).Infof("User callback is undefined\n")
+	if r.callback != nil {
+		err := r.callback.UnhandledEvent(byMsg)
+		if err != nil {
+			klog.V(1).Infof("callback.ErrorResponse failed. Err: %v\n", err)
+		} else {
+			klog.V(5).Infof("callback.ErrorResponse succeeded\n")
+		}
+		klog.V(6).Infof("router.ErrorResponse LEAVE\n")
+		return err
+	}
+
+	klog.V(1).Infof("Unknown Event was received\n")
 	klog.V(6).Infof("router.UnhandledMessage LEAVE\n")
 	return ErrInvalidMessageType
 }

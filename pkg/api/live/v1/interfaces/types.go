@@ -47,6 +47,12 @@ type Metadata struct {
 /***********************************/
 // Results from Live Transcription
 /***********************************/
+
+// OpenResponse is the response from the connection starting
+type OpenResponse struct {
+	Type string `json:"type,omitempty"`
+}
+
 // MessageResponse is the response from a live transcription
 type MessageResponse struct {
 	Channel      Channel  `json:"channel,omitempty"`
@@ -84,6 +90,11 @@ type SpeechStartedResponse struct {
 	Type      string  `json:"type,omitempty"`
 	Channel   []int   `json:"channel,omitempty"`
 	Timestamp float64 `json:"timestamp,omitempty"`
+}
+
+// CloseResponse is the response from the connection closing
+type CloseResponse struct {
+	Type string `json:"type,omitempty"`
 }
 
 // ErrorResponse is the response from a live transcription
