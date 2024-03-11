@@ -20,7 +20,7 @@ import (
 func main() {
 	// init library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelStandard, // LogLevelStandard / LogLevelFull / LogLevelTrace
+		LogLevel: client.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelDebug, LogLevelTrace
 	})
 
 	// context

@@ -136,16 +136,22 @@ There are examples for **every** API call in this SDK. You can find all of these
 
 These examples provide:
 
-- PreRecorded Audio Transcription:
+- Speech-to-Text: PreRecorded Audio:
 
     - From an Audio File - [examples/prerecorded/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/file/main.go)
     - From an URL - [examples/prerecorded/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/url/main.go)
     - From an Audio Stream - [examples/prerecorded/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/stream/main.go)
 
-- Live Audio Transcription:
+- Speech-to-Text: Live Audio:
 
     - From a Microphone - [examples/streaming/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go)
     - From an HTTP Endpoint - [examples/streaming/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/http/main.go)
+
+- Text-to-Speech
+
+    - Save audio to a Path - [examples/speak/save](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/save/main.go)
+    - Save audio to a user-defined Writer - [examples/speak/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/file/main.go)
+    - Save audio to a Buffer - [examples/speak/buffer](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/buffer/main.go)
 
 - Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for:
 

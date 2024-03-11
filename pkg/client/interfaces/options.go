@@ -84,3 +84,10 @@ func (o *AnalyzeOptions) Check() error {
 
 	return nil
 }
+
+func (o *SpeakOptions) Check() error {
+	// checks
+	// currently no op
+
+	return nil
+}

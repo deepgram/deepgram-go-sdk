@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 /*
-This package provides the prerecorded client implementation for the Deepgram API
+This package provides the analyze/read client implementation for the Deepgram API
 */
 package analyze
 
@@ -30,24 +30,24 @@ type urlSource struct {
 }
 
 /*
-NewWithDefaults creates a new websocket connection with all default options
+NewWithDefaults creates a new analyze/read client with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewWithDefaults() *Client {
-	return New("", &interfaces.ClientOptions{})
+	return New("", interfaces.ClientOptions{})
 }
 
 /*
-New creates a new websocket connection with the specified options
+New creates a new analyze/read client with the specified options
 
 Input parameters:
 - ctx: context.Context object
 - apiKey: string containing the Deepgram API key
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
-func New(apiKey string, options *interfaces.ClientOptions) *Client {
+func New(apiKey string, options interfaces.ClientOptions) *Client {
 	if apiKey != "" {
 		options.ApiKey = apiKey
 	}
@@ -58,7 +58,7 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	}
 
 	c := Client{
-		Client:   rest.New(*options),
+		Client:   rest.New(options),
 		cOptions: options,
 	}
 	return &c
@@ -126,7 +126,6 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		klog.V(6).Infof("analyze.DoStream() LEAVE\n")
 		return err
 	}
-	klog.V(4).Infof("Connecting to %s\n", URI)
 
 	req, err := http.NewRequestWithContext(ctx, "POST", URI, src)
 	if err != nil {
@@ -134,6 +133,7 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces
 		klog.V(6).Infof("analyze.DoStream() LEAVE\n")
 		return err
 	}
+	klog.V(4).Infof("%s %s\n", req.Method, URI)
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
@@ -239,7 +239,6 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.Analy
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return err
 	}
-	klog.V(4).Infof("Connecting to %s\n", URI)
 
 	var buf bytes.Buffer
 	err = json.NewEncoder(&buf).Encode(urlSource{Url: url})
@@ -255,6 +254,7 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.Analy
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return err
 	}
+	klog.V(4).Infof("%s %s\n", req.Method, URI)
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
@@ -327,92 +327,5 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.Analy
 
 	klog.V(3).Infof("analyze.DoURL() Succeeded\n")
 	klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-	return nil
-}
-
-/*
-Do is a generic REST API call to the platform
-
-Input parameters:
-- ctx: context.Context object
-- req: http.Request object
-
-Output parameters:
-- resBody: interface{} which will be populated with the response from the server
-*/
-func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
-	klog.V(6).Infof("analyze.Do() ENTER\n")
-
-	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
-		for k, v := range headers {
-			for _, v := range v {
-				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
-				req.Header.Add(k, v)
-			}
-		}
-	}
-
-	req.Header.Set("Host", c.cOptions.Host)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
-	req.Header.Set("User-Agent", interfaces.DgAgent)
-
-	switch req.Method {
-	case http.MethodPost, http.MethodPatch, http.MethodPut:
-		klog.V(3).Infof("Content-Type = application/json\n")
-		req.Header.Set("Content-Type", "application/json")
-	}
-
-	err := c.HttpClient.Do(ctx, req, func(res *http.Response) error {
-		switch res.StatusCode {
-		case http.StatusOK:
-		case http.StatusCreated:
-		case http.StatusNoContent:
-		case http.StatusBadRequest:
-			klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			detail, errBody := io.ReadAll(res.Body)
-			if errBody != nil {
-				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				klog.V(6).Infof("analyze.Do() LEAVE\n")
-				return &interfaces.StatusError{res}
-			}
-			klog.V(6).Infof("analyze.Do() LEAVE\n")
-			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
-		default:
-			return &interfaces.StatusError{res}
-		}
-
-		if resBody == nil {
-			klog.V(1).Infof("resBody == nil\n")
-			klog.V(6).Infof("analyze.Do() LEAVE\n")
-			return nil
-		}
-
-		switch b := resBody.(type) {
-		case *interfaces.RawResponse:
-			klog.V(3).Infof("RawResponse\n")
-			klog.V(6).Infof("analyze.Do() LEAVE\n")
-			return res.Write(b)
-		case io.Writer:
-			klog.V(3).Infof("io.Writer\n")
-			klog.V(6).Infof("analyze.Do() LEAVE\n")
-			_, err := io.Copy(b, res.Body)
-			return err
-		default:
-			d := json.NewDecoder(res.Body)
-			klog.V(3).Infof("json.NewDecoder\n")
-			klog.V(6).Infof("analyze.Do() LEAVE\n")
-			return d.Decode(resBody)
-		}
-	})
-
-	if err != nil {
-		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		klog.V(6).Infof("analyze.Do() LEAVE\n")
-		return err
-	}
-
-	klog.V(3).Infof("analyze.Do() Succeeded\n")
-	klog.V(6).Infof("analyze.Do() LEAVE\n")
 	return nil
 }

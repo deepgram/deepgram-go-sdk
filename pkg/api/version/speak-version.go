@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -19,15 +19,15 @@ import (
 )
 
 const (
-	// PrerecordedAPIVersion current supported version
-	PrerecordedAPIVersion string = "v1"
+	// SpeakAPIVersion current supported version
+	SpeakAPIVersion string = "v1"
 
-	// PrerecordedPath is the current path for prerecorded transcription
-	PrerecordedPath string = "listen"
+	// SpeakPath is the current path for prerecorded transcription
+	SpeakPath string = "speak"
 )
 
 /*
-GetPrerecordedAPI is a function which controls the versioning of the live transcription API and provides
+GetSpeakAPI is a function which controls the versioning of the live transcription API and provides
 mechanism for:
 
 - overriding the host endpoint
@@ -37,9 +37,9 @@ mechanism for:
 
 The return value is the complete URL endpoint to be used for the live transcription
 */
-func GetPrerecordedAPI(ctx context.Context, host, version, path string, options interfaces.PreRecordedTranscriptionOptions, args ...interface{}) (string, error) {
+func GetSpeakAPI(ctx context.Context, host, version, path string, options interfaces.SpeakOptions, args ...interface{}) (string, error) {
 	if path == "" {
-		path = PrerecordedPath
+		path = SpeakPath
 	}
 
 	// handle protocol and host
@@ -74,7 +74,7 @@ func GetPrerecordedAPI(ctx context.Context, host, version, path string, options 
 
 	// handle version and path
 	if version == "" {
-		version = PrerecordedAPIVersion
+		version = SpeakAPIVersion
 	}
 
 	r, err = regexp.Compile("^(v[0-9]+|%%s)/")
