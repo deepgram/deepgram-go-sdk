@@ -173,7 +173,8 @@ func (c *Client) DoText(ctx context.Context, text string, options interfaces.Spe
 		case *interfaces.RawResponse:
 			klog.V(3).Infof("RawResponse\n")
 			klog.V(6).Infof("speak.DoText() LEAVE\n")
-			return res.Write(b)
+			_, err := io.Copy(b, res.Body)
+			return err
 		case io.Writer:
 			klog.V(3).Infof("io.Writer\n")
 			klog.V(6).Infof("speak.DoText() LEAVE\n")
