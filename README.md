@@ -151,7 +151,7 @@ These examples provide:
 
     - Save audio to a Path - [examples/speak/save](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/save/main.go)
     - Save audio to a user-defined Writer - [examples/speak/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/file/main.go)
-    - Save audio to a Buffer - [examples/speak/buffer](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/buffer/main.go)
+    - Save audio to a Stream/Buffer - [examples/speak/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/stream/main.go)
 
 - Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for:
 
