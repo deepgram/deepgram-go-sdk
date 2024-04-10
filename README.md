@@ -5,23 +5,49 @@
 Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
 * [Deepgram Go SDK](#deepgram-go-sdk)
-* [API Documentation](#api-documentation)
+* [SDK Documentation](#sdk-documentation)
 * [Getting an API Key](#getting-an-api-key)
 * [Installation](#installation)
 * [Requirements](#requirements)
 * [Quickstarts](#quickstarts)
   * [PreRecorded Audio Transcription Quickstart](#prerecorded-audio-transcription-quickstart)
   * [Live Audio Transcription Quickstart](#live-audio-transcription-quickstart)
-* [SDK Documentation](#sdk-documentation)
 * [Examples](#examples)
+- [Logging](#logging)
 * [Testing](#testing)
-  * [Using Example Projects to test new features](#using-example-projects-to-test-new-features)
 * [Development and Contributing](#development-and-contributing)
 * [Getting Help](#getting-help)
 
-# API Documentation
+# SDK Documentation
 
-This SDK implementation the API documentation found at [https://developers.deepgram.com](https://developers.deepgram.com).
+This SDK implements the Deepgram API found at [https://developers.deepgram.com](https://developers.deepgram.com).
+
+Documentation for specifics about the structs, interfaces, and functions of this SDK can be found here: [Go SDK Documentation](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main)
+
+For documentation relating to Live Audio Transcription:
+- Live Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/live
+- Live API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1
+    - Live API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1/interfaces
+
+For documentation relating to PreRecorded Audio Transcription and Intelligence:
+- PreRecorded Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/prerecorded
+- PreRecorded API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1
+    - PreRecorded API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1/interfaces
+
+For documentation relating to Text-to-Speech:
+- Speak Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak
+- Speak API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1
+    - Speak API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/interfaces
+
+For documentation relating to Text Intelligence:
+- Analyze Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze
+- Analyze API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1
+    - Analyze API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1/interfaces
+
+For documentation relating to Manage API:
+- Management Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live
+- Manage API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1
+    - Manage API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live/v1/interfaces
 
 # Getting an API Key
 
@@ -103,33 +129,6 @@ if wsconn == nil {
 }
 ```
 
-# SDK Documentation
-
-We are doing our best to transform the documentation to use native [GoDocs](https://go.dev/blog/godoc) which is done in code. This is ideal because:
-
-- The documentation is extracted directly from the code in this repository
-- This encourages the documentation in code to be updated and be correct
-- **Most importantly:** This provides a single source of truth. This should be the definative source of documentation for this SDK
-
-We encourage you to view our documentation using [https://go.dev](https://go.dev). The landing page for the SDK documentation can be found here:
-
-HERE: [Go SDK Documentation](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main)
-
-For documentation relating to PreRecorded Audio:
-- PreRecorded Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/prerecorded
-- PreRecorded API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1
-    - PreRecorded API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1/interfaces
-
- For documentation relating to Live Audio Transcription:
-- Live Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/live
-- Live API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1
-    - Live API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1/interfaces
-
-For documentation relating to Manage API:
-- Management Client - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live
-- Manage API - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1
-    - Manage API Interfaces - https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live/v1/interfaces
-
 # Examples
 
 There are examples for **every** API call in this SDK. You can find all of these examples in the [examples folder](https://github.com/deepgram/deepgram-go-sdk/tree/main/examples) at the root of this repo.
@@ -164,6 +163,23 @@ These examples provide:
     - Usage - [examples/manage/usage](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/usage/main.go)
 
 To run each example set the `DEEPGRAM_API_KEY` as an environment variable, then `cd` into each example folder and execute the example: `go run main.go`.
+
+# Logging
+
+This SDK provides logging as a means to troubleshoot and debug issues encountered. By default, this SDK will enable `Information` level messages and higher (ie `Warning`, `Error`, etc) when you initialize the library as follows:
+
+```go
+client.InitWithDefault();
+```
+
+To increase the logging output/verbosity for debug or troubleshooting purposes, you can set the `TRACE` level but using this code:
+
+```go
+// init library
+client.Init(client.InitLib{
+    LogLevel: client.LogLevelTrace,
+})
+```
 
 # Testing
 
