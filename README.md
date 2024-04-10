@@ -13,8 +13,9 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with o
   * [PreRecorded Audio Transcription Quickstart](#prerecorded-audio-transcription-quickstart)
   * [Live Audio Transcription Quickstart](#live-audio-transcription-quickstart)
 * [Examples](#examples)
-- [Logging](#logging)
+* [Logging](#logging)
 * [Testing](#testing)
+* [Backwards Compatability](#backwards-compatibility)
 * [Development and Contributing](#development-and-contributing)
 * [Getting Help](#getting-help)
 
@@ -86,7 +87,7 @@ options := PreRecordedTranscriptionOptions{
 	Punctuate:  true,
 	Diarize:    true,
 	Language:   "en-US",
-}	
+}
 
 // send URL
 URL := "https://my-domain.com/files/my-conversation.mp3"
@@ -184,6 +185,10 @@ client.Init(client.InitLib{
 # Testing
 
 TBD
+
+# Backwards Compatibility
+
+Older SDK versions will receive Priority 1 (P1) bug support only. Security issues, both in our code and dependencies, are promptly addressed. Significant bugs without clear workarounds are also given priority attention.
 
 ## Development and Contributing
 
