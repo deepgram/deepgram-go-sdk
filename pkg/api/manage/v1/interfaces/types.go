@@ -45,6 +45,7 @@ type APIKeyPermission struct {
 // Key provides a key
 type APIKey struct {
 	APIKeyID string   `json:"api_key_id,omitempty"`
+	Key      string   `json:"key,omitempty"`
 	Comment  string   `json:"comment,omitempty"`
 	Scopes   []string `json:"scopes,omitempty"`
 	Created  string   `json:"created,omitempty"`
