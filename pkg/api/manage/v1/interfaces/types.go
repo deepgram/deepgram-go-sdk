@@ -247,7 +247,7 @@ type KeyCreateRequest struct {
 	Comment        string    `json:"comment,omitempty" url:"comment,omitempty"`
 	Scopes         []string  `json:"scopes,omitempty" url:"scopes,omitempty"`
 	ExpirationDate time.Time `json:"expiration_date,omitempty" url:"expiration_date,omitempty"`
-	TimeToLive     int       `json:"time_to_live,omitempty" url:"time_to_live,omitempty"`
+	TimeToLive     int       `json:"time_to_live_in_seconds,omitempty" url:"time_to_live_in_seconds,omitempty"`
 	Tags           []string  `json:"tags,omitempty" url:"tags,omitempty"`
 }
 
