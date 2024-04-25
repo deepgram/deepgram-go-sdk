@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -12,13 +12,13 @@ import (
 )
 
 // ReplayOpts defines options for this device
-type ReplayOptions struct {
+type Options struct {
 	FullFilename string
 }
 
 // Client is a replay device. In this case, an audio stream.
 type Client struct {
-	options ReplayOptions
+	options Options
 
 	// wav
 	file    *os.File

@@ -13,15 +13,15 @@ https://developers.deepgram.com/reference/text-intelligence-apis
 */
 
 type AnalyzeOptions struct {
-	Callback         string   `json:"callback,omitempty" url:"callback,omitempty"`
-	CallbackMethod   string   `json:"callback_method,omitempty" url:"callback_method,omitempty"`
-	CustomIntent     []string `json:"custom_intent,omitempty" url:"custom_intent,omitempty"`
-	CustomIntentMode string   `json:"custom_intent_mode,omitempty" url:"custom_intent_mode,omitempty"`
-	CustomTopic      []string `json:"custom_topic,omitempty" url:"custom_topic,omitempty"`
-	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" url:"custom_topic_mode,omitempty"`
-	Intents          bool     `json:"intents,omitempty" url:"intents,omitempty"`
-	Language         string   `json:"language,omitempty" url:"language,omitempty"`
-	Summarize        bool     `json:"summarize,omitempty" url:"summarize,omitempty"`
-	Sentiment        bool     `json:"sentiment,omitempty" url:"sentiment,omitempty"`
-	Topics           bool     `json:"topics,omitempty" url:"topics,omitempty"`
+	Callback         string   `json:"callback,omitempty" schema:"callback,omitempty"`
+	CallbackMethod   string   `json:"callback_method,omitempty" schema:"callback_method,omitempty"`
+	CustomIntent     []string `json:"custom_intent,omitempty" schema:"custom_intent,omitempty"`
+	CustomIntentMode string   `json:"custom_intent_mode,omitempty" schema:"custom_intent_mode,omitempty"`
+	CustomTopic      []string `json:"custom_topic,omitempty" schema:"custom_topic,omitempty"`
+	CustomTopicMode  string   `json:"custom_topic_mode,omitempty" schema:"custom_topic_mode,omitempty"`
+	Intents          bool     `json:"intents,omitempty" schema:"intents,omitempty"`
+	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
+	Summarize        bool     `json:"summarize,omitempty" schema:"summarize,omitempty"`
+	Sentiment        bool     `json:"sentiment,omitempty" schema:"sentiment,omitempty"`
+	Topics           bool     `json:"topics,omitempty" schema:"topics,omitempty"`
 }

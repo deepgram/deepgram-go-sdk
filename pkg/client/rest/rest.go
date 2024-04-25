@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -23,11 +23,11 @@ import (
 
 // NewWithDefaults creates a REST client with default options
 func NewWithDefaults() *Client {
-	return New(interfaces.ClientOptions{})
+	return New(&interfaces.ClientOptions{})
 }
 
 // New REST client
-func New(options interfaces.ClientOptions) *Client {
+func New(options *interfaces.ClientOptions) *Client {
 	err := options.Parse()
 	if err != nil {
 		klog.V(1).Infof("options.Parse failed. Err: %v\n", err)
@@ -35,7 +35,7 @@ func New(options interfaces.ClientOptions) *Client {
 	}
 
 	c := Client{
-		HttpClient: NewHTTPClient(options),
+		HTTPClient: NewHTTPClient(options),
 		Options:    options,
 	}
 	return &c
@@ -56,7 +56,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	req.Header.Set("Host", c.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.Options.ApiKey)
+	req.Header.Set("Authorization", "token "+c.Options.APIKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
@@ -67,7 +67,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	klog.V(4).Infof("%s %s\n", req.Method, req.URL.String())
 
-	err := c.HttpClient.Do(ctx, req, func(res *http.Response) error {
+	err := c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
 		switch res.StatusCode {
 		case http.StatusOK:
 		case http.StatusCreated:
@@ -78,12 +78,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 			if errBody != nil {
 				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
 				klog.V(6).Infof("rest.Do() LEAVE\n")
-				return &interfaces.StatusError{res}
+				return &interfaces.StatusError{Resp: res}
 			}
 			klog.V(6).Infof("rest.Do() LEAVE\n")
 			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
 		default:
-			return &interfaces.StatusError{res}
+			return &interfaces.StatusError{Resp: res}
 		}
 
 		if resBody == nil {

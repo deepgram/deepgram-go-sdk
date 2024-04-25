@@ -1,11 +1,11 @@
 module github.com/deepgram/deepgram-go-sdk
 
-go 1.18
+go 1.19
 
 require (
 	github.com/dvonthenen/websocket v1.5.1-dyv.2
-	github.com/google/go-querystring v1.1.0
 	github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5
+	github.com/gorilla/schema v1.3.0
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f
 	github.com/youpy/go-wav v0.3.2
 	k8s.io/klog/v2 v2.110.1

@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -36,16 +36,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list members
-	respGet, err := mgClient.ListMembers(ctx, projectId)
+	respGet, err := mgClient.ListMembers(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
@@ -53,15 +53,15 @@ func main() {
 
 	var updateID string
 	for _, item := range respGet.Members {
-		memberId := item.MemberID
+		memberID := item.MemberID
 		email := item.Email
-		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberID, email)
 		for _, scope := range item.Scopes {
 			fmt.Printf("Scope: %s\n", scope)
 		}
 
 		if email == TestAccountName {
-			updateID = memberId
+			updateID = memberID
 		}
 	}
 
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	// get scope
-	respScope, err := mgClient.GetMemberScopes(ctx, projectId, updateID)
+	respScope, err := mgClient.GetMemberScopes(ctx, projectID, updateID)
 	if err != nil {
 		fmt.Printf("GetMemberScopes failed. Err: %v\n", err)
 		os.Exit(1)
@@ -85,7 +85,7 @@ func main() {
 	}
 
 	// update scope
-	respMessage, err := mgClient.UpdateMemberScopes(ctx, projectId, updateID, &interfaces.ScopeUpdateRequest{
+	respMessage, err := mgClient.UpdateMemberScopes(ctx, projectID, updateID, &interfaces.ScopeUpdateRequest{
 		Scope: "admin",
 	})
 	if err != nil {
@@ -95,23 +95,23 @@ func main() {
 	fmt.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
 
 	// list members
-	respGet, err = mgClient.ListMembers(ctx, projectId)
+	respGet, err = mgClient.ListMembers(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.Members {
-		memberId := item.MemberID
+		memberID := item.MemberID
 		email := item.Email
-		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberID, email)
 		for _, scope := range item.Scopes {
 			fmt.Printf("Scope: %s\n", scope)
 		}
 	}
 
 	// update scope
-	respMessage, err = mgClient.UpdateMemberScopes(ctx, projectId, updateID, &interfaces.ScopeUpdateRequest{
+	respMessage, err = mgClient.UpdateMemberScopes(ctx, projectID, updateID, &interfaces.ScopeUpdateRequest{
 		Scope: "member",
 	})
 	if err != nil {
@@ -121,16 +121,16 @@ func main() {
 	fmt.Printf("UpdateMemberScopes() - Name: %s\n", respMessage.Message)
 
 	// list members
-	respGet, err = mgClient.ListMembers(ctx, projectId)
+	respGet, err = mgClient.ListMembers(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.Members {
-		memberId := item.MemberID
+		memberID := item.MemberID
 		email := item.Email
-		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberID, email)
 		for _, scope := range item.Scopes {
 			fmt.Printf("Scope: %s\n", scope)
 		}

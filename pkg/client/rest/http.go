@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -15,12 +15,13 @@ import (
 )
 
 // New allocated a Simple HTTP client
-func NewHTTPClient(options interfaces.ClientOptions) *HttpClient {
+func NewHTTPClient(options *interfaces.ClientOptions) *HTTPClient {
+	/* #nosec G402 */
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.SkipServerAuth},
 	}
 
-	c := HttpClient{
+	c := HTTPClient{
 		Client: http.Client{
 			Transport: tr,
 		},
@@ -32,12 +33,7 @@ func NewHTTPClient(options interfaces.ClientOptions) *HttpClient {
 }
 
 // Do performs a simple HTTP-style call
-func (c *HttpClient) Do(ctx context.Context, req *http.Request, f func(*http.Response) error) error {
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
+func (c *HTTPClient) Do(ctx context.Context, req *http.Request, f func(*http.Response) error) error {
 	// Create debugging context for this round trip
 	d := c.d.newRoundTrip()
 	if d.enabled() {

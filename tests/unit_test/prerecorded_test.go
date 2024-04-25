@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -6,29 +6,55 @@ package deepgram_test
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path"
+	"runtime"
+	"strings"
 	"testing"
 
+	"github.com/gorilla/schema"
 	"github.com/jarcoal/httpmock"
 
 	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
+
+	utils "github.com/deepgram/deepgram-go-sdk/tests/utils"
 )
 
-func TestPrerecordedFromURL(t *testing.T) {
+const (
+	model string = "2-general-nova"
+)
+
+const (
+	FromURLSmartFormat = "Yep. I said it before and I'll say it again. Life moves pretty fast. You don't stop and look around once in a while, you could miss it."
+	FromURLSummarize   = "Yep. I said it before, and I'll say it again. Life moves pretty fast. You don't stop and look around once in a while, you could miss it."
+)
+
+func init() {
+	_, filename, _, _ := runtime.Caller(0)
+	dir := path.Join(path.Dir(filename), "../..") // change to suit test file location
+	err := os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Test_PrerecordedFromURL(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	const preRecordedEndPoint = "https://api.deepgram.com/v1/listen"
-	const betaEndPoint = "https://beta.api.deepgram.com/v1/listen"
+	// const betaEndPoint = "https://beta.api.deepgram.com/v1/listen"
 
 	// Specify query params that are acceptable. A nil means no check
 	var acceptParams = map[string][]string{
 		"model":   nil,
-		"tier":    {"nova", "enhanced", "base"},
+		"tier":    {"2-general-nova", "nova-2", "nova", "enhanced", "base"},
 		"version": nil,
 		"language": {"da", "en", "en-AU", "en-GB", "en-IN", "en-NZ",
 			"en-US", "es", "es-419", "fr", "fr-CA", "hi", "hi-Latn", "id",
@@ -68,7 +94,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 			return httpmock.NewJsonResponse(401, map[string]any{
 				"err_code":   "INVALID_AUTH",
 				"err_msg":    "Invalid credentials.",
-				"request_id": MockRequestId})
+				"request_id": MockRequestID})
 		}
 
 		// Content checking
@@ -78,7 +104,7 @@ func TestPrerecordedFromURL(t *testing.T) {
 			return httpmock.NewJsonResponse(400, map[string]any{
 				"err_code":   "Bad Request",
 				"err_msg":    "Content-type was application/json, but we could not process the JSON payload.",
-				"request_id": MockRequestId})
+				"request_id": MockRequestID})
 		}
 
 		// Param checking
@@ -106,65 +132,93 @@ func TestPrerecordedFromURL(t *testing.T) {
 		}
 
 		// Based on query parameters, send Mock responses
-		var resp *http.Response
-		if options.Get("summarize") == "v2" {
-			resp = httpmock.NewStringResponse(200, MockSummarizeV2Response)
-		} else if options.Get("summarize") == "true" {
-			resp = httpmock.NewStringResponse(200, MockSummarizeV1Response)
-		} else {
-			resp = httpmock.NewStringResponse(200, MockBasicPreRecordedResponse)
+		var optionStruct interfaces.PreRecordedTranscriptionOptions
+
+		decoder := schema.NewDecoder()
+		err = decoder.Decode(&optionStruct, r.URL.Query())
+		if err != nil {
+			t.Errorf("error decoding options: %s", err)
 		}
 
-		return resp, nil
+		// save the options
+		data, err := json.Marshal(optionStruct)
+		if err != nil {
+			t.Errorf("json.Marshal Err: %v", err)
+		}
+
+		sha256sum := fmt.Sprintf("%x", sha256.Sum256(data))
+		filename := fmt.Sprintf("tests/response_data/%s-response.json", sha256sum)
+
+		// Check if the file exists
+		if _, err := os.Stat(filename); !os.IsNotExist(err) {
+			result, err := utils.ReadMetadataString(filename)
+			if err == nil {
+				resp := httpmock.NewStringResponse(200, result)
+				return resp, nil
+			} else {
+				t.Errorf("error reading response file: %s", err)
+			}
+		}
+
+		return httpmock.NewStringResponse(404, ""), nil
 	}
 
 	// Register Handlers to endpoints
 	httpmock.RegisterResponder("POST", preRecordedEndPoint, preRecordedFromURLHandler)
-	httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
+	// httpmock.RegisterResponder("POST", betaEndPoint, preRecordedFromURLHandler)
 
 	t.Run("Test Basic PreRecordedFromURL", func(t *testing.T) {
-		c := client.New(MockAPIKey, interfaces.ClientOptions{})
-		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		c := client.New(MockAPIKey, &interfaces.ClientOptions{})
+		httpmock.ActivateNonDefault(&c.Client.HTTPClient.Client)
 		dg := prerecorded.New(c)
-		_, err := dg.FromURL(
+
+		res, err := dg.FromURL(
 			context.Background(),
 			MockAudioURL,
-			interfaces.PreRecordedTranscriptionOptions{})
-
+			&interfaces.PreRecordedTranscriptionOptions{
+				Model:       "nova-2",
+				SmartFormat: true,
+			})
 		if err != nil {
 			t.Errorf("should succeed, but got %s", err)
 		}
-	})
 
-	t.Run("Test PreRecordedFromURL with summarize v1", func(t *testing.T) {
-		c := client.New(MockAPIKey, interfaces.ClientOptions{})
-		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
-		dg := prerecorded.New(c)
-		_, err := dg.FromURL(
-			context.Background(),
-			MockAudioURL,
-			interfaces.PreRecordedTranscriptionOptions{
-				Summarize: "true",
-			})
-
-		if err != nil {
-			t.Errorf("Summarize v1 should succeed, but got %s", err)
+		// check the response
+		for _, value := range res.Metadata.ModelInfo {
+			if strings.Compare(model, value.Name) != 0 {
+				t.Errorf("%s: %s != %s", t.Name(), model, value.Name)
+			}
+		}
+		transcript := res.Results.Channels[0].Alternatives[0].Transcript
+		if strings.Compare(FromURLSmartFormat, transcript) != 0 {
+			t.Errorf("%s: %s != %s", t.Name(), FromURLSmartFormat, transcript)
 		}
 	})
 
 	t.Run("Test PreRecordedFromURL with summarize v2", func(t *testing.T) {
-		c := client.New(MockAPIKey, interfaces.ClientOptions{})
-		httpmock.ActivateNonDefault(&c.Client.HttpClient.Client)
+		c := client.New(MockAPIKey, &interfaces.ClientOptions{})
+		httpmock.ActivateNonDefault(&c.Client.HTTPClient.Client)
 		dg := prerecorded.New(c)
-		_, err := dg.FromURL(
+		res, err := dg.FromURL(
 			context.Background(),
 			MockAudioURL,
-			interfaces.PreRecordedTranscriptionOptions{
+			&interfaces.PreRecordedTranscriptionOptions{
+				Model:     "nova-2",
 				Summarize: "v2",
 			})
-
 		if err != nil {
 			t.Errorf("Summarize v2 should succeed, but got %s", err)
+		}
+
+		// check the response
+		for _, value := range res.Metadata.ModelInfo {
+			if strings.Compare(model, value.Name) != 0 {
+				t.Errorf("%s: %s != %s", t.Name(), model, value.Name)
+			}
+		}
+		summary := res.Results.Summary.Short
+		if strings.Compare(FromURLSummarize, summary) != 0 {
+			t.Errorf("%s: %s != %s", t.Name(), FromURLSummarize, summary)
 		}
 	})
 }

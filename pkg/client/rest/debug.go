@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -68,7 +68,7 @@ func (d *debugRoundTrip) debugRequest(req *http.Request) string {
 	}
 
 	// Capture headers
-	var wc io.WriteCloser = d.newFile("req.headers")
+	wc := d.newFile("req.headers")
 	b, _ := httputil.DumpRequest(req, false)
 	_, err := wc.Write(b)
 	if err != nil {
@@ -95,7 +95,7 @@ func (d *debugRoundTrip) debugResponse(res *http.Response, ext string) {
 	}
 
 	// Capture headers
-	var wc io.WriteCloser = d.newFile("res.headers")
+	wc := d.newFile("res.headers")
 	b, _ := httputil.DumpResponse(res, false)
 	_, err := wc.Write(b)
 	if err != nil {

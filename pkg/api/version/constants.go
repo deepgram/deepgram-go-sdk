@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -9,13 +9,33 @@ import "errors"
 
 const (
 	// APIProtocol default protocol
-	APIProtocol string = "https"
+	HTTPProtocol string = "https"
 
 	// WSProtocol default protocol
 	WSProtocol string = "wss"
+
+	// APIPathListen
+	APIPathListen string = "listen"
+
+	// APITypeLive
+	APITypeLive string = "live"
+)
+
+const (
+	// DefaultAPIVersion is the current supported default version for APIs
+	DefaultAPIVersion string = "v1"
 )
 
 var (
 	// ErrInvalidPath invalid path
 	ErrInvalidPath = errors.New("invalid path")
+
+	// APIPathMap maps the API types to their default paths
+	APIPathMap = map[string]string{
+		"analyze":     "read",
+		"prerecorded": APIPathListen,
+		"speak":       "speak",
+		"manage":      "",
+		"live":        APIPathListen,
+	}
 )

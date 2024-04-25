@@ -8,126 +8,82 @@ package prerecorded
 import (
 	"context"
 	"io"
-	"net/http"
 
 	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
+	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
 )
 
-type PrerecordedClient struct {
-	*client.Client
+type Client struct {
+	*prerecorded.Client
 }
 
-func New(client *client.Client) *PrerecordedClient {
-	return &PrerecordedClient{client}
+// New creates a new Client
+func New(client *prerecorded.Client) *Client {
+	return &Client{client}
 }
 
-func (c *PrerecordedClient) FromFile(ctx context.Context, file string, options interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
-	klog.V(6).Infof("FromFile ENTER\n")
-	klog.V(3).Infof("filePath: %s\n", file)
+// FromFile transcribes a prerecorded audio file from a file
+func (c *Client) FromFile(ctx context.Context, file string, options *interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
+	return c.sendAudio(ctx, func(ctx context.Context, opts *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+		return c.sendFile(ctx, file, opts, resp)
+	}, options)
+}
 
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
+// FromStream transcribes a prerecorded audio file from a stream
+func (c *Client) FromStream(ctx context.Context, src io.Reader, options *interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
+	return c.sendAudio(ctx, func(ctx context.Context, opts *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+		return c.sendStream(ctx, src, opts, resp)
+	}, options)
+}
+
+// FromURL transcribes a prerecorded audio file from a URL
+func (c *Client) FromURL(ctx context.Context, url string, options *interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
+	return c.sendAudio(ctx, func(ctx context.Context, opts *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+		return c.sendURL(ctx, url, opts, resp)
+	}, options)
+}
+
+// private functions
+type sendFunc func(ctx context.Context, options *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error
+
+func (c *Client) sendFile(ctx context.Context, filePath string, options *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+	return c.Client.DoFile(ctx, filePath, options, resp)
+}
+
+func (c *Client) sendStream(ctx context.Context, src io.Reader, options *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+	return c.Client.DoStream(ctx, src, options, resp)
+}
+
+func (c *Client) sendURL(ctx context.Context, url string, options *interfaces.PreRecordedTranscriptionOptions, resp interface{}) error {
+	return c.Client.DoURL(ctx, url, options, resp)
+}
+
+func (c *Client) sendAudio(ctx context.Context, sender sendFunc, options *interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
+	klog.V(6).Infof("analyze.sendAudio ENTER\n")
+
 	err := options.Check()
 	if err != nil {
-		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
+		klog.V(1).Infof("PreRecordedTranscriptionOptions.Check() failed. Err: %v\n", err)
+		klog.V(6).Infof("prerecorded.sendAudio LEAVE\n")
 		return nil, err
 	}
 
-	// send the file!
 	var resp api.PreRecordedResponse
-	err = c.Client.DoFile(ctx, file, options, &resp)
+
+	err = sender(ctx, options, &resp)
 	if err != nil {
 		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("prerecorded.FromFile ENTER\n")
-				return nil, err
-			}
+			klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
 		}
-
 		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		klog.V(6).Infof("prerecorded.FromFile ENTER\n")
+		klog.V(6).Infof("prerecorded.sendAudio LEAVE\n")
 		return nil, err
 	}
 
-	klog.V(3).Infof("FromFile Succeeded\n")
-	klog.V(6).Infof("prerecorded.FromFile ENTER\n")
-	return &resp, nil
-}
-
-func (c *PrerecordedClient) FromStream(ctx context.Context, src io.Reader, options interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
-	klog.V(6).Infof("prerecorded.FromStream ENTER\n")
-
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	err := options.Check()
-	if err != nil {
-		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
-		return nil, err
-	}
-
-	// send the file!
-	var resp api.PreRecordedResponse
-	err = c.Client.DoStream(ctx, src, options, &resp)
-	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("prerecorded.FromStream LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		klog.V(6).Infof("prerecorded.FromStream LEAVE\n")
-		return nil, err
-	}
-
-	klog.V(3).Infof("FromStream Succeeded\n")
-	klog.V(6).Infof("prerecorded.FromStream LEAVE\n")
-	return &resp, nil
-}
-
-func (c *PrerecordedClient) FromURL(ctx context.Context, url string, options interfaces.PreRecordedTranscriptionOptions) (*api.PreRecordedResponse, error) {
-	klog.V(6).Infof("prerecorded.FromURL ENTER\n")
-
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	err := options.Check()
-	if err != nil {
-		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
-		return nil, err
-	}
-
-	// send the file!
-	var resp api.PreRecordedResponse
-	err = c.Client.DoURL(ctx, url, options, &resp)
-	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("prerecorded.FromURL LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		klog.V(6).Infof("prerecorded.FromURL LEAVE\n")
-		return nil, err
-	}
-
-	klog.V(3).Infof("FromURL Succeeded\n")
-	klog.V(6).Infof("prerecorded.FromURL LEAVE\n")
-
+	klog.V(3).Infof("sendAudio Succeeded\n")
+	klog.V(6).Infof("prerecorded.sendAudio LEAVE\n")
 	return &resp, nil
 }

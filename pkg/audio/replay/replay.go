@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -14,7 +14,7 @@ import (
 )
 
 // New creates an audio replay device
-func New(opts ReplayOptions) (*Client, error) {
+func New(opts Options) (*Client, error) {
 	klog.V(6).Infof("Replay.New ENTER\n")
 
 	client := &Client{

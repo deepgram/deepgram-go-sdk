@@ -13,10 +13,10 @@ import (
 
 func (o *ClientOptions) Parse() error {
 	// general
-	if o.ApiKey == "" {
+	if o.APIKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			klog.V(3).Infof("DEEPGRAM_API_KEY found")
-			o.ApiKey = v
+			o.APIKey = v
 		}
 	}
 	if v := os.Getenv("DEEPGRAM_HOST"); v != "" {
@@ -25,7 +25,7 @@ func (o *ClientOptions) Parse() error {
 	}
 	if v := os.Getenv("DEEPGRAM_API_VERSION"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_API_VERSION found")
-		o.ApiVersion = v
+		o.APIVersion = v
 	}
 	if v := os.Getenv("DEEPGRAM_API_PATH"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_API_PATH found")
@@ -37,9 +37,9 @@ func (o *ClientOptions) Parse() error {
 	}
 
 	// checks
-	if !o.OnPrem && o.ApiKey == "" {
+	if !o.OnPrem && o.APIKey == "" {
 		klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-		return ErrNoApiKey
+		return ErrNoAPIKey
 	}
 
 	// shared

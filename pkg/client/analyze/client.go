@@ -12,21 +12,24 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
 	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
+	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest"
 )
 
+type textSource struct {
+	Text string `json:"text"`
+}
 type urlSource struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }
 
 /*
@@ -36,7 +39,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewWithDefaults() *Client {
-	return New("", interfaces.ClientOptions{})
+	return New("", &interfaces.ClientOptions{})
 }
 
 /*
@@ -47,9 +50,9 @@ Input parameters:
 - apiKey: string containing the Deepgram API key
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
-func New(apiKey string, options interfaces.ClientOptions) *Client {
+func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	if apiKey != "" {
-		options.ApiKey = apiKey
+		options.APIKey = apiKey
 	}
 	err := options.Parse()
 	if err != nil {
@@ -58,8 +61,7 @@ func New(apiKey string, options interfaces.ClientOptions) *Client {
 	}
 
 	c := Client{
-		Client:   rest.New(options),
-		cOptions: options,
+		common.New(apiKey, options),
 	}
 	return &c
 }
@@ -75,7 +77,7 @@ Input parameters:
 Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
-func (c *Client) DoFile(ctx context.Context, filePath string, req interfaces.AnalyzeOptions, resBody interface{}) error {
+func (c *Client) DoFile(ctx context.Context, filePath string, req *interfaces.AnalyzeOptions, resBody interface{}) error {
 	klog.V(6).Infof("analyze.DoFile() ENTER\n")
 
 	// file?
@@ -116,95 +118,64 @@ Input parameters:
 Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
-func (c *Client) DoStream(ctx context.Context, src io.Reader, options interfaces.AnalyzeOptions, resBody interface{}) error {
+func (c *Client) DoStream(ctx context.Context, src io.Reader, options *interfaces.AnalyzeOptions, resBody interface{}) error {
 	klog.V(6).Infof("analyze.DoStream() ENTER\n")
 
-	// obtain URL for the REST API call
-	URI, err := version.GetAnalyzeAPI(ctx, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, options)
+	byFile := new(strings.Builder)
+	_, err := io.Copy(byFile, src)
 	if err != nil {
-		klog.V(1).Infof("version.GetAnalyzeAPI failed. Err: %v\n", err)
+		klog.V(1).Infof("io.Copy() failed. Err: %v\n", err)
 		klog.V(6).Infof("analyze.DoStream() LEAVE\n")
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", URI, src)
+	klog.V(6).Infof("analyze.DoStream() LEAVE\n")
+
+	return c.DoText(ctx, byFile.String(), options, resBody)
+}
+
+func (c *Client) DoText(ctx context.Context, text string, options *interfaces.AnalyzeOptions, resBody interface{}) error {
+	klog.V(6).Infof("analyze.DoText() LEAVE\n")
+
+	uri, err := version.GetAnalyzeAPI(ctx, c.Options.Host, c.Options.APIVersion, c.Options.Path, options)
 	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		klog.V(6).Infof("analyze.DoStream() LEAVE\n")
+		klog.V(1).Infof("GetAnalyzeAPI failed. Err: %v\n", err)
+		klog.V(6).Infof("analyze.DoText() LEAVE\n")
 		return err
 	}
-	klog.V(4).Infof("%s %s\n", req.Method, URI)
 
-	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
-		for k, v := range headers {
-			for _, v := range v {
-				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
-				req.Header.Add(k, v)
-			}
-		}
+	var buf bytes.Buffer
+	err = json.NewEncoder(&buf).Encode(textSource{Text: text})
+	if err != nil {
+		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.DoText() LEAVE\n")
+		return err
 	}
 
-	req.Header.Set("Host", c.cOptions.Host)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
-	req.Header.Set("User-Agent", interfaces.DgAgent)
+	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
+	if err != nil {
+		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
+		klog.V(6).Infof("analyze.DoText() LEAVE\n")
+		return err
+	}
 
-	err = c.HttpClient.Do(ctx, req, func(res *http.Response) error {
-		switch res.StatusCode {
-		case http.StatusOK:
-		case http.StatusCreated:
-		case http.StatusNoContent:
-		case http.StatusBadRequest:
-			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			detail, errBody := io.ReadAll(res.Body)
-			if err != nil {
-				klog.V(4).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-				return &interfaces.StatusError{res}
-			}
-			klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
-		default:
-			return &interfaces.StatusError{res}
-		}
-
-		if resBody == nil {
-			klog.V(1).Infof("resBody == nil\n")
-			klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-			return nil
-		}
-
-		switch b := resBody.(type) {
-		case *interfaces.RawResponse:
-			klog.V(3).Infof("RawResponse\n")
-			klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-			return res.Write(b)
-		case io.Writer:
-			klog.V(3).Infof("io.Writer\n")
-			klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-			_, err := io.Copy(b, res.Body)
-			return err
-		default:
-			d := json.NewDecoder(res.Body)
-			klog.V(3).Infof("json.NewDecoder\n")
-			klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-			return d.Decode(resBody)
-		}
+	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
+		_, err := c.HandleResponse(res, nil, resBody)
+		return err
 	})
 
 	if err != nil {
-		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-		return err
+		klog.V(1).Infof("HTTPClient.Do() failed. Err: %v\n", err)
+	} else {
+		klog.V(4).Infof("DoText successful\n")
 	}
+	klog.V(6).Infof("analyze.DoText() LEAVE\n")
 
-	klog.V(3).Infof("analyze.DoStream() Succeeded\n")
-	klog.V(6).Infof("analyze.DoStream() LEAVE\n")
-	return nil
+	return err
 }
 
-// IsUrl returns true if a string is of a URL format
-func IsUrl(str string) bool {
+// IsURL returns true if a string is of a URL format
+func IsURL(str string) bool {
 	u, err := url.Parse(str)
 	return err == nil && u.Scheme != "" && u.Host != ""
 }
@@ -220,55 +191,35 @@ Input parameters:
 Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
-func (c *Client) DoURL(ctx context.Context, url string, options interfaces.AnalyzeOptions, resBody interface{}) error {
+func (c *Client) DoURL(ctx context.Context, uri string, options *interfaces.AnalyzeOptions, resBody interface{}) error {
 	klog.V(6).Infof("analyze.DoURL() ENTER\n")
-	klog.V(4).Infof("apiURI: %s\n", url)
 
-	// checks
-	validURL := IsUrl(url)
-	if !validURL {
-		klog.V(1).Infof("Invalid URL: %s\n", url)
+	if !IsURL(uri) {
+		klog.V(1).Infof("Invalid URL: %s\n", uri)
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return ErrInvalidInput
 	}
 
-	// obtain URL
-	URI, err := version.GetAnalyzeAPI(ctx, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, options)
+	uri, err := version.GetAnalyzeAPI(ctx, c.Options.Host, c.Options.APIVersion, c.Options.Path, options)
 	if err != nil {
-		klog.V(1).Infof("version.GetAnalyzeAPI failed. Err: %v\n", err)
+		klog.V(1).Infof("GetAnalyzeAPI failed. Err: %v\n", err)
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return err
 	}
 
 	var buf bytes.Buffer
-	err = json.NewEncoder(&buf).Encode(urlSource{Url: url})
-	if err != nil {
+	if err := json.NewEncoder(&buf).Encode(urlSource{URL: uri}); err != nil {
 		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", URI, &buf)
+	req, err := c.SetupRequest(ctx, "POST", uri, &buf)
 	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
 		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
 		return err
 	}
-	klog.V(4).Infof("%s %s\n", req.Method, URI)
-
-	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
-		for k, v := range headers {
-			for _, v := range v {
-				klog.V(3).Infof("Custom Header: %s = %s\n", k, v)
-				req.Header.Add(k, v)
-			}
-		}
-	}
-
-	req.Header.Set("Host", c.cOptions.Host)
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.cOptions.ApiKey)
-	req.Header.Set("User-Agent", interfaces.DgAgent)
 
 	switch req.Method {
 	case http.MethodPost, http.MethodPatch, http.MethodPut:
@@ -276,56 +227,17 @@ func (c *Client) DoURL(ctx context.Context, url string, options interfaces.Analy
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	err = c.HttpClient.Do(ctx, req, func(res *http.Response) error {
-		switch res.StatusCode {
-		case http.StatusOK:
-		case http.StatusCreated:
-		case http.StatusNoContent:
-		case http.StatusBadRequest:
-			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			detail, errBody := io.ReadAll(res.Body)
-			if err != nil {
-				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-				return &interfaces.StatusError{res}
-			}
-			klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
-		default:
-			return &interfaces.StatusError{res}
-		}
-
-		if resBody == nil {
-			klog.V(1).Infof("resBody == nil\n")
-			klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-			return nil
-		}
-
-		switch b := resBody.(type) {
-		case *interfaces.RawResponse:
-			klog.V(3).Infof("RawResponse\n")
-			klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-			return res.Write(b)
-		case io.Writer:
-			klog.V(3).Infof("io.Writer\n")
-			klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-			_, err := io.Copy(b, res.Body)
-			return err
-		default:
-			d := json.NewDecoder(res.Body)
-			klog.V(3).Infof("json.NewDecoder\n")
-			klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-			return d.Decode(resBody)
-		}
+	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
+		_, err := c.HandleResponse(res, nil, resBody)
+		return err
 	})
 
 	if err != nil {
-		klog.V(1).Infof("err = c.Client.Do failed. Err: %v\n", err)
-		klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-		return err
+		klog.V(1).Infof("HTTPClient.Do() failed. Err: %v\n", err)
+	} else {
+		klog.V(4).Infof("DoURL successful\n")
 	}
-
-	klog.V(3).Infof("analyze.DoURL() Succeeded\n")
 	klog.V(6).Infof("analyze.DoURL() LEAVE\n")
-	return nil
+
+	return err
 }

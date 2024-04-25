@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -37,16 +37,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list requests
-	respRequestGet, err := mgClient.ListRequests(ctx, projectId, &interfaces.UsageListRequest{})
+	respRequestGet, err := mgClient.ListRequests(ctx, projectID, &interfaces.UsageListRequest{})
 	if err != nil {
 		fmt.Printf("ListRequests failed. Err: %v\n", err)
 		os.Exit(1)
@@ -60,21 +60,21 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err := prettyjson.Format(data)
+	prettyJSON, err := prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 
-	var requestId string
+	var requestID string
 	for _, item := range respRequestGet.Requests {
-		requestId = item.RequestID
+		requestID = item.RequestID
 		break
 	}
 
 	// get request
-	respRequest, err := mgClient.GetRequest(ctx, projectId, requestId)
+	respRequest, err := mgClient.GetRequest(ctx, projectID, requestID)
 	if err != nil {
 		fmt.Printf("GetRequest failed. Err: %v\n", err)
 		os.Exit(1)
@@ -88,15 +88,15 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err = prettyjson.Format(data)
+	prettyJSON, err = prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 
 	// get fields
-	respFieldsGet, err := mgClient.GetFields(ctx, projectId, &interfaces.UsageListRequest{})
+	respFieldsGet, err := mgClient.GetFields(ctx, projectID, &interfaces.UsageListRequest{})
 	if err != nil {
 		fmt.Printf("GetFields failed. Err: %v\n", err)
 		os.Exit(1)
@@ -110,15 +110,15 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err = prettyjson.Format(data)
+	prettyJSON, err = prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 
 	// get usage
-	respUsageGet, err := mgClient.GetUsage(ctx, projectId, &interfaces.UsageRequest{})
+	respUsageGet, err := mgClient.GetUsage(ctx, projectID, &interfaces.UsageRequest{})
 	if err != nil {
 		fmt.Printf("GetUsage failed. Err: %v\n", err)
 		os.Exit(1)
@@ -132,10 +132,10 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err = prettyjson.Format(data)
+	prettyJSON, err = prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 }

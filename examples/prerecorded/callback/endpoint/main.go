@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -66,13 +66,13 @@ func (p *SampleProxy) postPrerecorded(c *gin.Context) {
 		return
 	}
 
-	prettyJson, err := prettyjson.Format(data)
+	prettyJSON, err := prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		return
 	}
 
-	fmt.Printf("Response:\n%s\n\n", string(prettyJson))
+	fmt.Printf("Response:\n%s\n\n", string(prettyJSON))
 
 	c.IndentedJSON(http.StatusOK, "")
 }

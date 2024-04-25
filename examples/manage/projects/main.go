@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -41,7 +41,7 @@ func main() {
 		break
 	}
 
-	// if deleteId == "" {
+	// if deleteID == "" {
 	// 	fmt.Printf("This example requires a project who already exists where \"DELETE-ME\" is in the name.\n")
 	// 	fmt.Printf("This is required to exercise the UpdateProject and DeleteProject function.\n")
 	// 	fmt.Printf("In the absence of this, this example will exit early.\n")
@@ -93,7 +93,7 @@ func main() {
 	fmt.Printf("GetProject() - Name: %s\n", respGet.Name)
 
 	// delete project
-	// respMessage, err = mgClient.DeleteProject(ctx, deleteId)
+	// respMessage, err = mgClient.DeleteProject(ctx, deleteID)
 	// if err != nil {
 	// 	fmt.Printf("DeleteProject failed. Err: %v\n", err)
 	// 	os.Exit(1)

@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -33,16 +33,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respProject.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list balances
-	respList, err := mgClient.ListBalances(ctx, projectId)
+	respList, err := mgClient.ListBalances(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListBalances failed. Err: %v\n", err)
 		os.Exit(1)
@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// get first balance
-	respGet, err := mgClient.GetBalance(ctx, projectId, id)
+	respGet, err := mgClient.GetBalance(ctx, projectID, id)
 	if err != nil {
 		fmt.Printf("GetBalance failed. Err: %v\n", err)
 		os.Exit(1)
