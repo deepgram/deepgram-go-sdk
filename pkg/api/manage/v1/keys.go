@@ -148,7 +148,7 @@ func (c *ManageClient) CreateKey(ctx context.Context, projectId string, key *api
 		Comment        string   `json:"comment"`
 		Scopes         []string `json:"scopes"`
 		ExpirationDate string   `json:"expiration_date,omitempty"`
-		TimeToLive     int      `json:"time_to_live,omitempty"`
+		TimeToLive     int      `json:"time_to_live_in_seconds,omitempty"`
 		// Tags           []string `json:"tags"`
 	}
 	internalKey := InternalKeyCreateRequest{
