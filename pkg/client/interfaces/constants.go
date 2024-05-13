@@ -10,6 +10,6 @@ import (
 
 // errors
 var (
-	// ErrNoApiKey no api key found
-	ErrNoApiKey = errors.New("no api key found")
+	// ErrNoAPIKey no api key found
+	ErrNoAPIKey = errors.New("no api key found")
 )

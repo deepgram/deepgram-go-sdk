@@ -12,9 +12,9 @@ Please see the text-to-speech documentation for more details:
 https://developers.deepgram.com/reference/text-to-speech-preview-api
 */
 type SpeakOptions struct {
-	Model      string `json:"model,omitempty" url:"model,omitempty"`
-	Encoding   string `json:"encoding,omitempty" url:"encoding,omitempty"`
-	Container  string `json:"container,omitempty" url:"container,omitempty"`
-	SampleRate int    `json:"sample_rate,omitempty" url:"sample_rate,omitempty"`
-	BitRate    int    `json:"bit_rate,omitempty" url:"bit_rate,omitempty"`
+	Model      string `json:"model,omitempty" schema:"model,omitempty"`
+	Encoding   string `json:"encoding,omitempty" schema:"encoding,omitempty"`
+	Container  string `json:"container,omitempty" schema:"container,omitempty"`
+	SampleRate int    `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
+	BitRate    int    `json:"bit_rate,omitempty" schema:"bit_rate,omitempty"`
 }

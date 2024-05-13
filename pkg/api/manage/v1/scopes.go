@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -13,114 +13,47 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"net/http"
 
 	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
 // GetMemberScopes gets the scopes for a member
-func (c *ManageClient) GetMemberScopes(ctx context.Context, projectId string, memberId string) (*api.ScopeResult, error) {
+func (c *Client) GetMemberScopes(ctx context.Context, projectID, memberID string) (*api.ScopeResult, error) {
 	klog.V(6).Infof("manage.GetMemberScopes() ENTER\n")
 
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersScopeByIdURI, nil, projectId, memberId)
-	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
-		return nil, err
-	}
-	klog.V(4).Infof("Calling %s\n", URI)
-
-	req, err := http.NewRequestWithContext(ctx, "GET", URI, nil)
-	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
-		return nil, err
-	}
-
-	// Do it!
 	var resp api.ScopeResult
-	err = c.Client.Do(ctx, req, &resp)
-
+	err := c.apiRequest(ctx, "GET", version.MembersScopeByIDURI, nil, &resp, projectID, memberID)
 	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
-		return nil, err
+		klog.V(1).Infof("GetMemberScopes failed. Err: %v\n", err)
+	} else {
+		klog.V(3).Infof("GetMemberScopes Succeeded\n")
 	}
 
-	klog.V(3).Infof("GetMemberScopes Succeeded\n")
 	klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
 	return &resp, nil
 }
 
 // UpdateMemberScopes updates the scopes for a member
-func (c *ManageClient) UpdateMemberScopes(ctx context.Context, projectId string, memberId string, scope *api.ScopeUpdateRequest) (*api.MessageResult, error) {
+func (c *Client) UpdateMemberScopes(ctx context.Context, projectID, memberID string, scope *api.ScopeUpdateRequest) (*api.MessageResult, error) {
 	klog.V(6).Infof("manage.UpdateMemberScopes() ENTER\n")
-
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	// request
-	URI, err := version.GetManageAPI(ctx, c.Client.Options.Host, c.Client.Options.ApiVersion, version.MembersScopeByIdURI, nil, projectId, memberId)
-	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
-		return nil, err
-	}
-	klog.V(4).Infof("Calling %s\n", URI)
 
 	jsonStr, err := json.Marshal(scope)
 	if err != nil {
 		klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
-		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "PUT", URI, bytes.NewBuffer(jsonStr))
-	if err != nil {
-		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
-		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
-		return nil, err
-	}
-
-	// Do it!
 	var resp api.MessageResult
-	err = c.Client.Do(ctx, req, &resp)
-
+	err = c.apiRequest(ctx, "PUT", version.MembersScopeByIDURI, bytes.NewBuffer(jsonStr), &resp, projectID, memberID)
 	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
-		return nil, err
+		klog.V(1).Infof("UpdateMemberScopes failed. Err: %v\n", err)
+	} else {
+		klog.V(3).Infof("UpdateMemberScopes Succeeded\n")
 	}
 
-	klog.V(3).Infof("UpdateMemberScopes Succeeded\n")
 	klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
 	return &resp, nil
 }

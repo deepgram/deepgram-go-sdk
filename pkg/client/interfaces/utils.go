@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -18,7 +18,7 @@ const (
 	sdkVersion string = "v1.2.0"
 )
 
-// connection agent
+// DgAgent is the user agent string for the SDK
 var DgAgent string = "@deepgram/sdk/" + sdkVersion + " go/" + goVersion()
 
 func goVersion() string {

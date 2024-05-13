@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -30,7 +30,7 @@ func main() {
 	ctx := context.Background()
 
 	// set the Transcription options
-	options := interfaces.SpeakOptions{
+	options := &interfaces.SpeakOptions{
 		Model: "aura-asteria-en",
 	}
 
@@ -39,7 +39,7 @@ func main() {
 	dg := speak.New(c)
 
 	// create file
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
 	if err != nil {
 		fmt.Printf("os.Create failed. Err: %v\n", err)
 		os.Exit(1)
@@ -70,10 +70,10 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err := prettyjson.Format(data)
+	prettyJSON, err := prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 }

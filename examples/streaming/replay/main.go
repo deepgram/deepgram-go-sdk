@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -28,7 +28,7 @@ func main() {
 	ctx := context.Background()
 
 	// set the Transcription options
-	options := interfaces.LiveTranscriptionOptions{
+	options := &interfaces.LiveTranscriptionOptions{
 		Language:   "en-US",
 		Punctuate:  true,
 		Encoding:   "mulaw",
@@ -53,7 +53,7 @@ func main() {
 	/*
 		Replay wav into Live stream
 	*/
-	play, err := replay.New(replay.ReplayOptions{
+	play, err := replay.New(replay.Options{
 		FullFilename: "testing.wav",
 	})
 	if err != nil {

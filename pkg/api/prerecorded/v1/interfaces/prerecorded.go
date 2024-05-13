@@ -1,6 +1,6 @@
-// // Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
-// // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
-// // SPDX-License-Identifier: MIT
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
+// Use of this source code is governed by a MIT license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 /*
 This package provides the types for the Deepgram PreRecorded API.
@@ -8,10 +8,8 @@ This package provides the types for the Deepgram PreRecorded API.
 package interfaces
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"strings"
 )
 
@@ -47,7 +45,6 @@ func (resp *PreRecordedResponse) ToSRT() (string, error) {
 		end := SecondsToTimestamp(utterance.End)
 		end = strings.ReplaceAll(end, ".", ",")
 		srt += fmt.Sprintf("%d\n%s --> %s\n%s\n\n", i+1, start, end, utterance.Transcript)
-
 	}
 	return srt, nil
 }
@@ -57,10 +54,4 @@ func SecondsToTimestamp(seconds float64) string {
 	minutes := int((seconds - float64(hours*3600)) / 60)
 	seconds = seconds - float64(hours*3600) - float64(minutes*60)
 	return fmt.Sprintf("%02d:%02d:%02.3f", hours, minutes, seconds)
-}
-
-func GetJson(resp *http.Response, target interface{}) error {
-	defer resp.Body.Close()
-
-	return json.NewDecoder(resp.Body).Decode(target)
 }

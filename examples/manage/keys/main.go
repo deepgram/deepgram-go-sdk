@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -32,16 +32,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list keys
-	respGet, err := mgClient.ListKeys(ctx, projectId)
+	respGet, err := mgClient.ListKeys(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	// create key
-	respCreate, err := mgClient.CreateKey(ctx, projectId, &interfaces.KeyCreateRequest{
+	respCreate, err := mgClient.CreateKey(ctx, projectID, &interfaces.KeyCreateRequest{
 		Comment: "My Test",
 		Scopes:  []string{"onprem:products"},
 	})
@@ -65,7 +65,7 @@ func main() {
 	fmt.Printf("CreateKey() - Name: %s\n", respCreate.Comment)
 
 	// list keys
-	respGet, err = mgClient.ListKeys(ctx, projectId)
+	respGet, err = mgClient.ListKeys(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)
@@ -78,7 +78,7 @@ func main() {
 	}
 
 	// get key
-	respKey, err := mgClient.GetKey(ctx, projectId, respCreate.APIKeyID)
+	respKey, err := mgClient.GetKey(ctx, projectID, respCreate.APIKeyID)
 	if err != nil {
 		fmt.Printf("GetKey failed. Err: %v\n", err)
 		os.Exit(1)
@@ -86,7 +86,7 @@ func main() {
 	fmt.Printf("GetKey() - ID: %s, Comment: %s\n", respKey.APIKey.APIKeyID, respKey.APIKey.Comment)
 
 	// delete key
-	respMessage, err := mgClient.DeleteKey(ctx, projectId, respKey.APIKey.APIKeyID)
+	respMessage, err := mgClient.DeleteKey(ctx, projectID, respKey.APIKey.APIKeyID)
 	if err != nil {
 		fmt.Printf("DeleteKey failed. Err: %v\n", err)
 		os.Exit(1)
@@ -94,7 +94,7 @@ func main() {
 	fmt.Printf("DeleteKey() - Name: %s\n", respMessage.Message)
 
 	// list keys
-	respGet, err = mgClient.ListKeys(ctx, projectId)
+	respGet, err = mgClient.ListKeys(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListKeys failed. Err: %v\n", err)
 		os.Exit(1)

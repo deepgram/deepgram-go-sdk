@@ -30,8 +30,8 @@ NewForDemo creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewForDemo(ctx context.Context, options interfaces.LiveTranscriptionOptions) (*Client, error) {
-	return New(ctx, "", interfaces.ClientOptions{}, options, nil)
+func NewForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*Client, error) {
+	return New(ctx, "", &interfaces.ClientOptions{}, options, nil)
 }
 
 /*
@@ -41,8 +41,8 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
 */
-func NewWithDefaults(ctx context.Context, options interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	return New(ctx, "", interfaces.ClientOptions{}, options, callback)
+func NewWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+	return New(ctx, "", &interfaces.ClientOptions{}, options, callback)
 }
 
 /*
@@ -55,11 +55,11 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
 */
-func New(ctx context.Context, apiKey string, cOptions interfaces.ClientOptions, tOptions interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	klog.V(6).Infof("live.New() ENTER\n")
 
 	if apiKey != "" {
-		cOptions.ApiKey = apiKey
+		cOptions.APIKey = apiKey
 	}
 	err := cOptions.Parse()
 	if err != nil {
@@ -133,9 +133,10 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
-		TLSClientConfig:  &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
-		RedirectService:  c.cOptions.RedirectService,
-		SkipServerAuth:   c.cOptions.SkipServerAuth,
+		/* #nosec G402 */
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
+		RedirectService: c.cOptions.RedirectService,
+		SkipServerAuth:  c.cOptions.SkipServerAuth,
 	}
 
 	// set websocket headers
@@ -153,7 +154,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 
 	// sets the API key
 	myHeader.Set("Host", c.cOptions.Host)
-	myHeader.Set("Authorization", "token "+c.cOptions.ApiKey)
+	myHeader.Set("Authorization", "token "+c.cOptions.APIKey)
 	myHeader.Set("User-Agent", interfaces.DgAgent)
 
 	// attempt to establish connection
@@ -173,7 +174,7 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		i++
 
 		// create new connection
-		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.ApiVersion, c.cOptions.Path, c.tOptions)
+		url, err := version.GetLiveAPI(c.org, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.tOptions)
 		if err != nil {
 			klog.V(1).Infof("version.GetLiveAPI failed. Err: %v\n", err)
 			klog.V(7).Infof("live.ConnectWithRetry() LEAVE\n")
@@ -182,7 +183,11 @@ func (c *Client) ConnectWithRetry(retries int64) *websocket.Conn {
 		klog.V(5).Infof("Connecting to %s\n", url)
 
 		// perform the websocket connection
-		ws, _, err := dialer.DialContext(c.ctx, url, myHeader)
+		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
+		if res != nil {
+			klog.V(3).Infof("HTTP Response: %s\n", res.Status)
+			res.Body.Close()
+		}
 		if err != nil {
 			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.Host)
 			continue
@@ -260,7 +265,7 @@ func (c *Client) listen() {
 func (c *Client) Stream(r io.Reader) error {
 	klog.V(6).Infof("live.Stream() ENTER\n")
 
-	chunk := make([]byte, CHUNK_SIZE)
+	chunk := make([]byte, ChunkSize)
 
 	for {
 		select {
@@ -408,7 +413,7 @@ func (c *Client) closeWs() {
 		} else if errDg != nil {
 			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
 		}
-		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure
+		time.Sleep(TerminationSleep) // allow time for server to register closure
 
 		// fire off close connection
 		err := c.router.CloseHelper(&msginterfaces.CloseResponse{
@@ -425,7 +430,7 @@ func (c *Client) closeWs() {
 		} else if errProto != nil {
 			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
 		}
-		time.Sleep(TERMINATION_SLEEP) // allow time for server to register closure
+		time.Sleep(TerminationSleep) // allow time for server to register closure
 		c.wsconn.Close()
 	}
 

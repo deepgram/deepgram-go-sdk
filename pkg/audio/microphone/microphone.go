@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -51,7 +51,7 @@ func New(cfg AudioConfig) (*Microphone, error) {
 	// housekeeping
 	m.stream = stream
 
-	klog.V(3).Infof("OpenDefaultStream succeded\n")
+	klog.V(3).Infof("OpenDefaultStream succeeded\n")
 	klog.V(6).Infof("Microphone.New LEAVE\n")
 
 	return m, nil
@@ -65,7 +65,7 @@ func (m *Microphone) Start() error {
 		return err
 	}
 
-	klog.V(3).Infof("Start() succeded\n")
+	klog.V(3).Infof("Start() succeeded\n")
 	return nil
 }
 

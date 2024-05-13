@@ -18,8 +18,8 @@ type SpeakOptions interfaces.SpeakOptions
 /***********************************/
 type SpeakResponse struct {
 	ContextType      string `json:"content_type,omitempty"`
-	RequestId        string `json:"request_id,omitempty"`
-	ModelUuid        string `json:"model_uuid,omitempty"`
+	RequestID        string `json:"request_id,omitempty"`
+	ModelUUID        string `json:"model_uuid,omitempty"`
 	Characters       int    `json:"characters,omitempty"`
 	ModelName        string `json:"model_name,omitempty"`
 	TransferEncoding string `json:"transfer_encoding,omitempty"`

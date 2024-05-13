@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -31,7 +31,7 @@ func main() {
 	ctx := context.Background()
 
 	// set the Transcription options
-	options := interfaces.PreRecordedTranscriptionOptions{
+	options := &interfaces.PreRecordedTranscriptionOptions{
 		Punctuate:  true,
 		Diarize:    true,
 		Language:   "en-US",
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	c := client.New("", interfaces.ClientOptions{
+	c := client.New("", &interfaces.ClientOptions{
 		Host: "https://api.deepgram.com",
 	})
 	dg := prerecorded.New(c)
@@ -72,12 +72,12 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err := prettyjson.Format(data)
+	prettyJSON, err := prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 
 	// dump example VTT
 	vtt, err := res.ToWebVTT()

@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -33,19 +33,19 @@ func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(or)
 		if err != nil {
 			klog.V(1).Infof("Open json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nOpen Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nOpen Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -64,19 +64,19 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(mr)
 		if err != nil {
 			klog.V(1).Infof("Message json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nMessage Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nMessage Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -84,7 +84,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	// handle the message
 	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
 
-	if len(mr.Channel.Alternatives) == 0 || len(sentence) == 0 {
+	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
 		klog.V(7).Infof("DEEPGRAM - no transcript")
 		return nil
 	}
@@ -101,19 +101,19 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(md)
 		if err != nil {
 			klog.V(1).Infof("Metadata json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nMetadata Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nMetadata Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -134,19 +134,19 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(ssr)
 		if err != nil {
 			klog.V(1).Infof("SpeechStarted json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nSpeechStarted Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nSpeechStarted Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -177,19 +177,19 @@ func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(or)
 		if err != nil {
 			klog.V(1).Infof("Close json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nClose Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nClose Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -208,19 +208,19 @@ func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
+	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(er)
 		if err != nil {
 			klog.V(1).Infof("Error json.Marshal failed. Err: %v\n", err)
 			return err
 		}
 
-		prettyJson, err := prettyjson.Format(data)
+		prettyJSON, err := prettyjson.Format(data)
 		if err != nil {
 			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
 			return err
 		}
-		klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJson)
+		klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJSON)
 
 		return nil
 	}
@@ -241,12 +241,12 @@ func (dch DefaultCallbackHandler) UnhandledEvent(byData []byte) error {
 		debugStr = v
 	}
 
-	if strings.Compare(strings.ToLower(debugStr), "true") == 0 {
-		prettyJson, err := prettyjson.Format(byData)
+	if strings.EqualFold(debugStr, "true") {
+		prettyJSON, err := prettyjson.Format(byData)
 		if err != nil {
 			klog.V(2).Infof("\n\nRaw Data:\n%s\n\n", string(byData))
 		} else {
-			klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJson)
+			klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJSON)
 		}
 
 		return nil

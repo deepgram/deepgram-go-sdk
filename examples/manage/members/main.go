@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -35,33 +35,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list members
-	respGet, err := mgClient.ListMembers(ctx, projectId)
+	respGet, err := mgClient.ListMembers(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
-	var delMemberId string
+	var delmemberID string
 	for _, item := range respGet.Members {
-		memberId := item.MemberID
+		memberID := item.MemberID
 		email := item.Email
-		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberID, email)
 
 		if email == TestAccountName {
-			delMemberId = memberId
+			delmemberID = memberID
 		}
 	}
 
-	if delMemberId == "" {
+	if delmemberID == "" {
 		fmt.Printf("This example requires a member who already email is %s.\n", TestAccountName)
 		fmt.Printf("This is required to exercise the RemoveMember function.\n")
 		fmt.Printf("In the absence of this, this example will exit early.\n")
@@ -69,7 +69,7 @@ func main() {
 	}
 
 	// remove member
-	respMessage, err := mgClient.RemoveMember(ctx, projectId, delMemberId)
+	respMessage, err := mgClient.RemoveMember(ctx, projectID, delmemberID)
 	if err != nil {
 		fmt.Printf("RemoveMember failed. Err: %v\n", err)
 		os.Exit(1)
@@ -77,15 +77,15 @@ func main() {
 	fmt.Printf("RemoveMember() - Name: %s\n", respMessage.Message)
 
 	// list members
-	respGet, err = mgClient.ListMembers(ctx, projectId)
+	respGet, err = mgClient.ListMembers(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListMembers failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
 	for _, item := range respGet.Members {
-		memberId := item.MemberID
+		memberID := item.MemberID
 		email := item.Email
-		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberId, email)
+		fmt.Printf("ListMembers() - ID: %s, Scope: %s\n", memberID, email)
 	}
 }

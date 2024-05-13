@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -32,16 +32,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	var projectId string
+	var projectID string
 	for _, item := range respList.Projects {
-		projectId = item.ProjectID
+		projectID = item.ProjectID
 		name := item.Name
-		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectId)
+		fmt.Printf("ListProjects() - Name: %s, ID: %s\n", name, projectID)
 		break
 	}
 
 	// list invitations
-	respGet, err := mgClient.ListInvitations(ctx, projectId)
+	respGet, err := mgClient.ListInvitations(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// send invite
-	respMessage, err := mgClient.SendInvitation(ctx, projectId, &interfaces.InvitationRequest{
+	respMessage, err := mgClient.SendInvitation(ctx, projectID, &interfaces.InvitationRequest{
 		Email: "spam@spam.com",
 		Scope: "member",
 	})
@@ -69,7 +69,7 @@ func main() {
 	fmt.Printf("SendInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
-	respGet, err = mgClient.ListInvitations(ctx, projectId)
+	respGet, err = mgClient.ListInvitations(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
@@ -86,7 +86,7 @@ func main() {
 	}
 
 	// delete invitation
-	respMessage, err = mgClient.DeleteInvitation(ctx, projectId, "spam@spam.com")
+	respMessage, err = mgClient.DeleteInvitation(ctx, projectID, "spam@spam.com")
 	if err != nil {
 		fmt.Printf("DeleteInvitation failed. Err: %v\n", err)
 		os.Exit(1)
@@ -94,7 +94,7 @@ func main() {
 	fmt.Printf("DeleteInvitation() - Result: %s\n", respMessage.Message)
 
 	// list invitations
-	respGet, err = mgClient.ListInvitations(ctx, projectId)
+	respGet, err = mgClient.ListInvitations(ctx, projectID)
 	if err != nil {
 		fmt.Printf("ListInvitations failed. Err: %v\n", err)
 		os.Exit(1)
@@ -112,7 +112,7 @@ func main() {
 
 	// There isnt an API call to add a member to a project. So will leave this commented out as an example
 	// Leave Project
-	// respMessage, err = mgClient.LeaveProject(ctx, projectId)
+	// respMessage, err = mgClient.LeaveProject(ctx, projectID)
 	// if err != nil {
 	// 	fmt.Printf("LeaveProject failed. Err: %v\n", err)
 	// 	os.Exit(1)

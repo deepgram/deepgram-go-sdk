@@ -7,8 +7,8 @@ package speak
 
 import (
 	"context"
+	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"strconv"
 
@@ -16,143 +16,80 @@ import (
 
 	api "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/speak"
+	speak "github.com/deepgram/deepgram-go-sdk/pkg/client/speak"
 )
 
-type SpeakClient struct {
-	*client.Client
+type Client struct {
+	*speak.Client
 }
 
-func New(client *client.Client) *SpeakClient {
-	return &SpeakClient{client}
+func New(client *speak.Client) *Client {
+	return &Client{client}
 }
 
-func (c *SpeakClient) ToStream(ctx context.Context, text string, options interfaces.SpeakOptions, buf *interfaces.RawResponse) (*api.SpeakResponse, error) {
+// ToStream TTS streamed to a buffer
+func (c *Client) ToStream(ctx context.Context, text string, options *interfaces.SpeakOptions, buf *interfaces.RawResponse) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speak.ToStream ENTER\n")
 
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	keys := initializeKeys()
+
 	err := options.Check()
 	if err != nil {
 		klog.V(1).Infof("SpeakOptions.Check() failed. Err: %v\n", err)
-		return nil, err
-	}
-
-	// send the file!
-	retVal := make(map[string]string)
-	retVal["content-type"] = ""
-	retVal["request-id"] = ""
-	retVal["model-uuid"] = ""
-	retVal["model-name"] = ""
-	retVal["char-count"] = ""
-	retVal["transfer-encoding"] = ""
-	retVal["date"] = ""
-
-	err = c.Client.DoText(ctx, text, options, &retVal, buf)
-	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("speak.ToStream LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
 		klog.V(6).Infof("speak.ToStream LEAVE\n")
 		return nil, err
 	}
 
-	charCnt, err := strconv.Atoi(retVal["char-count"])
-	if err != nil {
-		klog.V(1).Infof("strconv.Atoi failed. Err: %v\n", err)
-		klog.V(6).Infof("speak.ToStream LEAVE\n")
-		return nil, err
+	action := func() (map[string]string, error) {
+		return c.Client.DoText(ctx, text, options, keys, buf)
 	}
 
-	var result api.SpeakResponse
-	result.ContextType = retVal["content-type"]
-	result.RequestId = retVal["request-id"]
-	result.ModelUuid = retVal["model-uuid"]
-	result.ModelName = retVal["model-name"]
-	result.Characters = charCnt
-	result.TransferEncoding = retVal["transfer-encoding"]
-	result.Date = retVal["date"]
-
-	klog.V(3).Infof("ToStream Succeeded\n")
+	result, err := c.performAction(action)
+	if err != nil {
+		klog.V(1).Infof("performAction failed. Err: %v\n", err)
+	} else {
+		klog.V(3).Infof("Transcription successful\n")
+	}
 	klog.V(6).Infof("speak.ToStream LEAVE\n")
 
-	return &result, nil
+	return result, err
 }
 
-func (c *SpeakClient) ToFile(ctx context.Context, text string, options interfaces.SpeakOptions, w io.Writer) (*api.SpeakResponse, error) {
+// ToFile TTS saved to a file
+func (c *Client) ToFile(ctx context.Context, text string, options *interfaces.SpeakOptions, w io.Writer) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speak.ToFile ENTER\n")
 
-	// checks
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	keys := initializeKeys()
+
 	err := options.Check()
 	if err != nil {
 		klog.V(1).Infof("SpeakOptions.Check() failed. Err: %v\n", err)
-		return nil, err
-	}
-
-	// send the file!
-	retVal := make(map[string]string)
-	retVal["content-type"] = ""
-	retVal["request-id"] = ""
-	retVal["model-uuid"] = ""
-	retVal["model-name"] = ""
-	retVal["char-count"] = ""
-	retVal["transfer-encoding"] = ""
-	retVal["date"] = ""
-
-	err = c.Client.DoText(ctx, text, options, &retVal, w)
-	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			if e.Resp.StatusCode != http.StatusOK {
-				klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-				klog.V(6).Infof("speak.ToFile LEAVE\n")
-				return nil, err
-			}
-		}
-
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
 		klog.V(6).Infof("speak.ToFile LEAVE\n")
 		return nil, err
 	}
 
-	charCnt, err := strconv.Atoi(retVal["char-count"])
-	if err != nil {
-		klog.V(1).Infof("strconv.Atoi failed. Err: %v\n", err)
-		klog.V(6).Infof("speak.ToFile LEAVE\n")
-		return nil, err
+	action := func() (map[string]string, error) {
+		return c.Client.DoText(ctx, text, options, keys, w)
 	}
 
-	var result api.SpeakResponse
-	result.ContextType = retVal["content-type"]
-	result.RequestId = retVal["request-id"]
-	result.ModelUuid = retVal["model-uuid"]
-	result.ModelName = retVal["model-name"]
-	result.Characters = charCnt
-	result.TransferEncoding = retVal["transfer-encoding"]
-	result.Date = retVal["date"]
-
-	klog.V(3).Infof("ToFile Succeeded\n")
+	result, err := c.performAction(action)
+	if err != nil {
+		klog.V(1).Infof("performAction failed. Err: %v\n", err)
+	} else {
+		klog.V(3).Infof("Transcription successful\n")
+	}
 	klog.V(6).Infof("speak.ToFile LEAVE\n")
 
-	return &result, nil
+	return result, err
 }
 
-func (c *SpeakClient) ToSave(ctx context.Context, filename string, text string, options interfaces.SpeakOptions) (*api.SpeakResponse, error) {
+// ToSave TTS saved to a file
+func (c *Client) ToSave(ctx context.Context, filename, text string, options *interfaces.SpeakOptions) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speak.ToSave ENTER\n")
 
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
 	if err != nil {
-		klog.V(1).Infof("os.Create failed. Err: %v\n", err)
+		klog.V(1).Infof("os.OpenFile failed. Err: %v\n", err)
 		klog.V(6).Infof("speak.ToSave LEAVE\n")
 		return nil, err
 	}
@@ -167,8 +104,52 @@ func (c *SpeakClient) ToSave(ctx context.Context, filename string, text string, 
 
 	result.Filename = filename
 
-	klog.V(3).Infof("ToSave Succeeded\n")
+	klog.V(3).Infof("Saved to file: %v\n", filename)
 	klog.V(6).Infof("speak.ToSave LEAVE\n")
 
 	return result, nil
+}
+
+// helper function
+func initializeKeys() []string {
+	return []string{
+		"content-type",
+		"request-id",
+		"model-uuid",
+		"model-name",
+		"char-count",
+		"transfer-encoding",
+		"date",
+	}
+}
+
+// performAction performs the common actions of sending text to the Deepgram API and handling the response.
+func (c *Client) performAction(action func() (map[string]string, error)) (*api.SpeakResponse, error) {
+	var resp api.SpeakResponse
+	retVal, err := action()
+	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
+			return nil, err
+		}
+		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
+		return nil, err
+	}
+	fmt.Printf("retVal: %v\n", retVal)
+
+	charCnt, err := strconv.Atoi(retVal["char-count"])
+	if err != nil {
+		klog.V(1).Infof("strconv.Atoi failed. Err: %v\n", err)
+		return nil, err
+	}
+
+	resp.ContextType = retVal["content-type"]
+	resp.RequestID = retVal["request-id"]
+	resp.ModelUUID = retVal["model-uuid"]
+	resp.ModelName = retVal["model-name"]
+	resp.Characters = charCnt
+	resp.TransferEncoding = retVal["transfer-encoding"]
+	resp.Date = retVal["date"]
+
+	return &resp, nil
 }

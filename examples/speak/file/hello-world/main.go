@@ -1,4 +1,4 @@
-// Copyright 2023 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -24,13 +24,15 @@ const (
 
 func main() {
 	// init library
-	client.InitWithDefault()
+	client.Init(client.InitLib{
+		LogLevel: client.LogLevelTrace, // LogLevelDefault, LogLevelFull, LogLevelDebug, LogLevelTrace
+	})
 
 	// Go context
 	ctx := context.Background()
 
 	// set the Transcription options
-	options := interfaces.SpeakOptions{
+	options := &interfaces.SpeakOptions{
 		Model: "aura-asteria-en",
 	}
 
@@ -52,10 +54,10 @@ func main() {
 	}
 
 	// make the JSON pretty
-	prettyJson, err := prettyjson.Format(data)
+	prettyJSON, err := prettyjson.Format(data)
 	if err != nil {
 		fmt.Printf("prettyjson.Marshal failed. Err: %v\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf("\n\nResult:\n%s\n\n", prettyJson)
+	fmt.Printf("\n\nResult:\n%s\n\n", prettyJSON)
 }
