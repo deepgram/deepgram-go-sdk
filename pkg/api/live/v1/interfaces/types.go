@@ -68,6 +68,7 @@ type MessageResponse struct {
 	ChannelIndex []int    `json:"channel_index,omitempty"`
 	Duration     float64  `json:"duration,omitempty"`
 	IsFinal      bool     `json:"is_final,omitempty"`
+	FromFinalize bool     `json:"from_finalize,omitempty"`
 	Metadata     Metadata `json:"metadata,omitempty"`
 	SpeechFinal  bool     `json:"speech_final,omitempty"`
 	Start        float64  `json:"start,omitempty"`

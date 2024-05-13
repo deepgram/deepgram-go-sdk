@@ -12,6 +12,8 @@ const (
 	TypeMetadataResponse      string = "Metadata"
 	TypeUtteranceEndResponse  string = "UtteranceEnd"
 	TypeSpeechStartedResponse string = "SpeechStarted"
+	TypeFinalizeResponse      string = "Finalize"
+	TypeCloseStreamResponse   string = "CloseStream"
 	TypeCloseResponse         string = "Close"
 
 	// Error type

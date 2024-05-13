@@ -364,7 +364,7 @@ func (c *Client) WriteJSON(payload interface{}) error {
 		return err
 	}
 
-	klog.V(7).Infof("WriteJSON payload:\nData: %s\n", string(byData))
+	klog.V(4).Infof("WriteJSON payload:\nData: %s\n", string(byData))
 	klog.V(7).Infof("live.Write() LEAVE\n")
 
 	return nil
@@ -388,6 +388,26 @@ func (c *Client) Write(p []byte) (int, error) {
 	klog.V(7).Infof("live.Write() Succeeded\n")
 	klog.V(7).Infof("live.Write() LEAVE\n")
 	return byteLen, nil
+}
+
+func (c *Client) Finalize() error {
+	klog.V(7).Infof("live.Finalize() ENTER\n")
+
+	if c.wsconn == nil {
+		err := ErrInvalidConnection
+
+		klog.V(4).Infof("Finalize Failed. Err: %v\n", err)
+		klog.V(7).Infof("live.Finalize() LEAVE\n")
+
+		return err
+	}
+
+	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Finalize\" }"))
+
+	klog.V(4).Infof("Finalize Succeeded\n")
+	klog.V(7).Infof("live.Finalize() LEAVE\n")
+
+	return err
 }
 
 // Stop will send close message and shutdown websocket connection
