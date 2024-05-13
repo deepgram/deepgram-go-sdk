@@ -222,8 +222,12 @@ type PreRecordedTranscriptionOptions interfaces.PreRecordedTranscriptionOptions
 /***********************************/
 // response/result structs
 /***********************************/
+// PreRecordedResponse is the PreRecorded Transcription
 type PreRecordedResponse struct {
 	RequestID string    `json:"request_id,omitempty"` // for ?callback=...
 	Metadata  *Metadata `json:"metadata,omitempty"`
 	Results   *Result   `json:"results,omitempty"`
 }
+
+// ErrorResponse is the Deepgram specific response error
+type ErrorResponse interfaces.DeepgramError

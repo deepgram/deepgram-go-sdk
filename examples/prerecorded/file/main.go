@@ -61,6 +61,9 @@ func main() {
 	// send/process file to Deepgram
 	res, err := dg.FromFile(ctx, filePath, options)
 	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			fmt.Printf("DEEPGRAM ERROR:\n%s:\n%s\n", e.DeepgramError.ErrCode, e.DeepgramError.ErrMsg)
+		}
 		fmt.Printf("FromStream failed. Err: %v\n", err)
 		os.Exit(1)
 	}

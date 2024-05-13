@@ -7,7 +7,11 @@ This package provides the types for the Deepgram Manage API.
 */
 package interfaces
 
-import "time"
+import (
+	"time"
+
+	"github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+)
 
 /***********************************/
 // shared/common structs
@@ -371,3 +375,6 @@ type UsageFieldResult struct {
 type UsageResult struct {
 	Usage
 }
+
+// ErrorResponse is the Deepgram specific response error
+type ErrorResponse interfaces.DeepgramError
