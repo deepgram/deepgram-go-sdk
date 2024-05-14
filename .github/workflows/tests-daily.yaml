@@ -1,4 +1,4 @@
-name: Build - Daily Official Build
+name: Tests - Daily
 
 on:
   workflow_dispatch:

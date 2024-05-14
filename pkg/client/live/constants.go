@@ -22,6 +22,14 @@ const (
 	TerminationSleep = 100 * time.Millisecond
 )
 
+const (
+	// MessageTypeFinalize flushes the transcription from the server
+	MessageTypeFinalize string = "Finalize"
+
+	// MessageTypeCloseStream closes the stream
+	MessageTypeCloseStream string = "CloseStream"
+)
+
 // errors
 var (
 	// ErrInvalidConnection connection is not valid
