@@ -26,3 +26,6 @@ type SpeakResponse struct {
 	Date             string `json:"date,omitempty"`
 	Filename         string `json:"filename,omitempty"`
 }
+
+// ErrorResponse is the Deepgram specific response error
+type ErrorResponse interfaces.DeepgramError

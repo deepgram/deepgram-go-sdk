@@ -44,6 +44,9 @@ func main() {
 	// send the URL to Deepgram
 	res, err := dg.FromURL(ctx, url, options)
 	if err != nil {
+		if e, ok := err.(*interfaces.StatusError); ok {
+			fmt.Printf("DEEPGRAM ERROR:\n%s:\n%s\n", e.DeepgramError.ErrCode, e.DeepgramError.ErrMsg)
+		}
 		fmt.Printf("FromURL failed. Err: %v\n", err)
 		os.Exit(1)
 	}

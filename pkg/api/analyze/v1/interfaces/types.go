@@ -107,3 +107,6 @@ type AnalyzeResponse struct {
 	Metadata  Metadata `json:"metadata,omitempty"`
 	Results   Results  `json:"results,omitempty"`
 }
+
+// ErrorResponse is the Deepgram specific response error
+type ErrorResponse interfaces.DeepgramError

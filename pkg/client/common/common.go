@@ -91,7 +91,21 @@ func (c *Client) HandleResponse(res *http.Response, keys []string, resBody inter
 			klog.V(4).Infof("io.ReadAll failed. Err: %v\n", err)
 			return nil, &interfaces.StatusError{Resp: res}
 		}
-		return nil, fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
+
+		// attempt to parse out Deepgram error
+		var e interfaces.DeepgramError
+		if err := json.Unmarshal(detail, &e); err == nil {
+			klog.V(6).Infof("Parsed Deepgram Specific Error\n")
+			return nil, &interfaces.StatusError{
+				Resp:          res,
+				DeepgramError: &e,
+			}
+		}
+
+		// give standard generic error
+		byDetails := bytes.TrimSpace(detail)
+		klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
+		return nil, fmt.Errorf("%s: %s", res.Status, byDetails)
 	default:
 		return nil, &interfaces.StatusError{Resp: res}
 	}
@@ -99,14 +113,11 @@ func (c *Client) HandleResponse(res *http.Response, keys []string, resBody inter
 
 // decodeResponseBody decodes the HTTP response body into the provided resBody based on its type.
 func decodeResponseBody(res *http.Response, keys []string, resBody interface{}) (map[string]string, error) {
-	fmt.Printf("keys: %s\v", keys)
-
 	retValues := make(map[string]string)
 
 	// return values in header
 	if len(keys) > 0 {
 		for _, k := range keys {
-			fmt.Printf("key: %s\n", k)
 			value := res.Header.Get(k)
 			if len(value) > 0 {
 				klog.V(4).Infof("RetValue Header: %s = %s\n", k, value)
