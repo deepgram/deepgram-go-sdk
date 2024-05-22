@@ -31,13 +31,13 @@ func (o *ClientOptions) Parse() error {
 		klog.V(3).Infof("DEEPGRAM_API_PATH found")
 		o.Path = v
 	}
-	if v := os.Getenv("DEEPGRAM_ON_PREM"); v != "" {
-		klog.V(3).Infof("DEEPGRAM_ON_PREM found")
-		o.OnPrem = strings.EqualFold(strings.ToLower(v), "true")
+	if v := os.Getenv("DEEPGRAM_SELF_HOSTED"); v != "" {
+		klog.V(3).Infof("DEEPGRAM_SELF_HOSTED found")
+		o.SelfHosted = strings.EqualFold(strings.ToLower(v), "true")
 	}
 
 	// checks
-	if !o.OnPrem && o.APIKey == "" {
+	if !o.SelfHosted && o.APIKey == "" {
 		klog.V(1).Infof("DEEPGRAM_API_KEY not set")
 		return ErrNoAPIKey
 	}

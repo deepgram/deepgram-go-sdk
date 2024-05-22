@@ -10,7 +10,7 @@ type ClientOptions struct {
 	Host       string // override for the host endpoint
 	APIVersion string // override for the version used
 	Path       string // override for the endpoint path usually <version/listen> or <version/projects>
-	OnPrem     bool   // set to true if using on-prem
+	SelfHosted bool   // set to true if using on-prem
 
 	// live client options
 	SkipServerAuth  bool // keeps the client from authenticating with the server

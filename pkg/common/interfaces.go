@@ -13,7 +13,7 @@ type Config interface {
 	GetAPIKey() string
 	GetAPIVersion() string
 	GetPath() string
-	GetOnPrem() bool
+	GetSelfHosted() bool
 
 	// prerecorded/manage client options
 	GetSkipServerAuth() bool
