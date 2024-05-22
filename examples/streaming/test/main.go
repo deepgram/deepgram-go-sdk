@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	microphone "github.com/deepgram/deepgram-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
@@ -40,6 +41,11 @@ func main() {
 		Channels:    1,
 		SampleRate:  16000,
 		SmartFormat: true,
+		VadEvents:   true,
+		// To get UtteranceEnd, the following must be set:
+		InterimResults: true,
+		UtteranceEndMs: "1000",
+		// End of UtteranceEnd settings
 	}
 
 	// create a Deepgram client
@@ -49,6 +55,9 @@ func main() {
 		return
 	}
 
+	// instructions
+	fmt.Print("\n\nPress ENTER to exit!\n\n")
+
 	// connect the websocket to Deepgram
 	wsconn := dgClient.Connect()
 	if wsconn == nil {
@@ -56,41 +65,46 @@ func main() {
 		os.Exit(1)
 	}
 
-	/*
-		Microphone package
-	*/
-	// mic stuf
-	mic, err := microphone.New(microphone.AudioConfig{
-		InputChannels: 1,
-		SamplingRate:  16000,
-	})
-	if err != nil {
-		fmt.Printf("Initialize failed. Err: %v\n", err)
-		os.Exit(1)
-	}
-
-	// start the mic
-	err = mic.Start()
-	if err != nil {
-		fmt.Printf("mic.Start failed. Err: %v\n", err)
-		os.Exit(1)
-	}
-
 	go func() {
 		// feed the microphone stream to the Deepgram client (this is a blocking call)
-		mic.Stream(dgClient)
+		for {
+			/*
+				Microphone package
+			*/
+			// mic stuf
+			mic, err := microphone.New(microphone.AudioConfig{
+				InputChannels: 1,
+				SamplingRate:  16000,
+			})
+			if err != nil {
+				fmt.Printf("Initialize failed. Err: %v\n", err)
+				os.Exit(1)
+			}
+
+			// start the mic
+			err = mic.Start()
+			if err != nil {
+				fmt.Printf("mic.Start failed. Err: %v\n", err)
+				os.Exit(1)
+			}
+			err = mic.Stream(dgClient)
+			if err != nil {
+				fmt.Printf("mic.Stream failed. Err: %v\n", err)
+				time.Sleep(2 * time.Second)
+			}
+
+			// close mic stream
+			mic.Stop()
+
+			if err == nil {
+				break
+			}
+		}
 	}()
 
-	fmt.Print("Press ENTER to exit!\n\n")
+	// wait for user input to exit
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
-
-	// close mic stream
-	err = mic.Stop()
-	if err != nil {
-		fmt.Printf("mic.Stop failed. Err: %v\n", err)
-		os.Exit(1)
-	}
 
 	// teardown library
 	microphone.Teardown()

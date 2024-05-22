@@ -44,6 +44,11 @@ func (r *MessageRouter) CloseHelper(or *interfaces.CloseResponse) error {
 	return r.callback.Close(or)
 }
 
+// ErrorResponse handles the OpenResponse message
+func (r *MessageRouter) ErrorHelper(er *interfaces.ErrorResponse) error {
+	return r.callback.Error(er)
+}
+
 // processMessage generalizes the handling of all message types
 func (r *MessageRouter) processGeneric(msgType string, byMsg []byte, action func(data *interface{}) error, data interface{}) error {
 	klog.V(6).Infof("router.%s ENTER\n", msgType)

@@ -161,11 +161,11 @@ Input parameters:
 Output parameters:
 - resBody: interface{} which will be populated with the response from the server
 */
-func (c *Client) DoURL(ctx context.Context, audioUrl string, options *interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
+func (c *Client) DoURL(ctx context.Context, audioURL string, options *interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	klog.V(6).Infof("prerecorded.DoURL() ENTER\n")
 
-	if !IsURL(audioUrl) {
-		klog.V(1).Infof("Invalid URL: %s\n", audioUrl)
+	if !IsURL(audioURL) {
+		klog.V(1).Infof("Invalid URL: %s\n", audioURL)
 		klog.V(6).Infof("prerecorded.DoURL() LEAVE\n")
 		return ErrInvalidInput
 	}
@@ -178,7 +178,7 @@ func (c *Client) DoURL(ctx context.Context, audioUrl string, options *interfaces
 	}
 
 	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(urlSource{URL: audioUrl}); err != nil {
+	if err := json.NewEncoder(&buf).Encode(urlSource{URL: audioURL}); err != nil {
 		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
 		klog.V(6).Infof("prerecorded.DoURL() LEAVE\n")
 		return err

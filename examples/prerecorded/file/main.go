@@ -32,10 +32,11 @@ func main() {
 
 	// set the Transcription options
 	options := &interfaces.PreRecordedTranscriptionOptions{
-		Punctuate:  true,
-		Diarize:    true,
-		Language:   "en-US",
-		Utterances: true,
+		Model:       "nova-2",
+		Punctuate:   true,
+		Paragraphs:  true,
+		SmartFormat: true,
+		Language:    "en-US",
 	}
 
 	// create a Deepgram client

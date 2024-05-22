@@ -12,8 +12,10 @@ type ClientOptions struct {
 	Path       string // override for the endpoint path usually <version/listen> or <version/projects>
 	OnPrem     bool   // set to true if using on-prem
 
+	// shared client options
+	SkipServerAuth bool // keeps the client from authenticating with the server
+
 	// live client options
-	SkipServerAuth  bool // keeps the client from authenticating with the server
 	RedirectService bool // allows HTTP redirects to be followed
 	EnableKeepAlive bool // enables the keep alive feature
 }
