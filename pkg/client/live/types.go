@@ -21,13 +21,13 @@ type Client struct {
 	tOptions *interfaces.LiveTranscriptionOptions
 
 	sendBuf   chan []byte
-	org       context.Context
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	mu     sync.RWMutex
-	wsconn *websocket.Conn
-	retry  bool
+	mu       sync.RWMutex
+	wsconn   *websocket.Conn
+	retry    bool
+	retryCnt int64
 
 	callback msginterface.LiveMessageCallback
 	router   *live.MessageRouter

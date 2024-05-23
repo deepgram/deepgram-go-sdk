@@ -51,7 +51,7 @@ func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
 	}
 
 	// handle the message
-	fmt.Printf("\n\nOpenResponse\n\n")
+	fmt.Printf("\n\n[OpenResponse]\n\n")
 
 	return nil
 }
@@ -88,7 +88,12 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 		klog.V(7).Infof("DEEPGRAM - no transcript")
 		return nil
 	}
-	fmt.Printf("\n%s\n", sentence)
+
+	if mr.IsFinal {
+		fmt.Printf("\n[MessageResponse] (Final) %s\n", sentence)
+	} else {
+		fmt.Printf("\n[MessageResponse] (Interim) %s\n", sentence)
+	}
 
 	return nil
 }
@@ -133,6 +138,11 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
 		debugStr = v
 	}
+	var debugExtStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG_VERBOSE"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG_VERBOSE found")
+		debugExtStr = v
+	}
 
 	if strings.EqualFold(debugStr, "true") {
 		data, err := json.Marshal(ssr)
@@ -152,20 +162,32 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 	}
 
 	// handle the message
-	fmt.Printf("\n\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
-	fmt.Printf("SpeechStarted.Channels:\n")
-	for _, val := range ssr.Channel {
-		fmt.Printf("\tChannel: %d\n", val)
+	fmt.Printf("\n[SpeechStarted]\n")
+	if strings.EqualFold(debugExtStr, "true") {
+		fmt.Printf("\n\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
+		fmt.Printf("SpeechStarted.Channels:\n")
+		for _, val := range ssr.Channel {
+			fmt.Printf("\tChannel: %d\n", val)
+		}
+		fmt.Printf("\n")
 	}
-	fmt.Printf("\n")
 
 	return nil
 }
 
 // UtteranceEnd is the callback for when a channel goes silent
 func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
-	fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
-	fmt.Printf("UtteranceEnd.Channel: %d\n\n", ur.Channel)
+	var debugExtStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG_VERBOSE"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG_VERBOSE found")
+		debugExtStr = v
+	}
+
+	fmt.Printf("\n[UtteranceEnd]\n")
+	if strings.EqualFold(debugExtStr, "true") {
+		fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
+		fmt.Printf("UtteranceEnd.Channel: %d\n\n", ur.Channel)
+	}
 	return nil
 }
 
@@ -195,7 +217,7 @@ func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 	}
 
 	// handle the message
-	fmt.Printf("\n\nCloseResponse\n\n")
+	fmt.Printf("\n\n[CloseResponse]\n\n")
 
 	return nil
 }
@@ -226,9 +248,11 @@ func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 	}
 
 	// handle the message
+	fmt.Printf("\n[ErrorResponse]\n")
 	fmt.Printf("\nError.Type: %s\n", er.Type)
 	fmt.Printf("Error.Message: %s\n", er.Message)
 	fmt.Printf("Error.Description: %s\n\n", er.Description)
+	fmt.Printf("Error.Variant: %s\n\n", er.Variant)
 
 	return nil
 }
@@ -253,7 +277,8 @@ func (dch DefaultCallbackHandler) UnhandledEvent(byData []byte) error {
 	}
 
 	// handle the message
-	fmt.Printf("\n\nUnhandledEvent\n%s\n\n", string(byData))
+	fmt.Printf("\n[UnhandledEvent]")
+	fmt.Printf("Dump:\n%s\n\n", string(byData))
 
 	return nil
 }

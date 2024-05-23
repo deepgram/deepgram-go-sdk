@@ -14,12 +14,19 @@ import (
 const (
 	pingPeriod = 5 * time.Second
 
-	connectionRetryInfinite  int64 = 0
 	defaultConnectRetry      int64 = 3
 	defaultDelayBetweenRetry int64 = 2
 
 	ChunkSize        = 1024 * 2
 	TerminationSleep = 100 * time.Millisecond
+
+	// socket errors
+	FatalReadSocketErr  string = "read: can't assign requested address"
+	FatalWriteSocketErr string = "write: broken pipe"
+	UnknownDeepgramErr  string = "unknown deepgram error"
+
+	// socket successful close error
+	SuccessfulSocketErr string = "close 1000"
 )
 
 const (

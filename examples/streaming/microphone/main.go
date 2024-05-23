@@ -19,7 +19,9 @@ import (
 )
 
 // Implement your own callback
-type MyCallback struct{}
+type MyCallback struct {
+	sb *strings.Builder
+}
 
 func (c MyCallback) Message(mr *api.MessageResponse) error {
 	// handle the message
@@ -28,7 +30,19 @@ func (c MyCallback) Message(mr *api.MessageResponse) error {
 	if len(mr.Channel.Alternatives) == 0 || len(sentence) == 0 {
 		return nil
 	}
-	fmt.Printf("\nspeaker: %s\n", sentence)
+
+	if mr.IsFinal {
+		c.sb.WriteString(sentence)
+		c.sb.WriteString(" ")
+
+		if mr.SpeechFinal {
+			fmt.Printf("[------- Is Final]: %s\n", c.sb.String())
+			c.sb.Reset()
+		}
+	} else {
+		fmt.Printf("[Interm Result]: %s\n", sentence)
+	}
+
 	return nil
 }
 
@@ -49,22 +63,18 @@ func (c MyCallback) Metadata(md *api.MetadataResponse) error {
 
 func (c MyCallback) SpeechStarted(ssr *api.SpeechStartedResponse) error {
 	fmt.Printf("\n[SpeechStarted] Received\n")
-	fmt.Printf("SpeechStarted.Timestamp: %f\n", ssr.Timestamp)
-	fmt.Printf("SpeechStarted.Channels:\n")
-	for _, val := range ssr.Channel {
-		fmt.Printf("\tChannel: %d\n", val)
-	}
-	fmt.Printf("\n")
 	return nil
 }
 
 func (c MyCallback) UtteranceEnd(ur *api.UtteranceEndResponse) error {
-	fmt.Printf("\n[UtteranceEnd] Received\n")
-	fmt.Printf("UtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
-	for _, val := range ur.Channel {
-		fmt.Printf("UtteranceEnd.Channel: %d\n", val)
+	utterance := strings.TrimSpace(c.sb.String())
+	if len(utterance) > 0 {
+		fmt.Printf("[------- UtteranceEnd]: %s\n", utterance)
+		c.sb.Reset()
+	} else {
+		fmt.Printf("\n[UtteranceEnd] Received\n")
 	}
-	fmt.Printf("\n")
+
 	return nil
 }
 
@@ -122,10 +132,11 @@ func main() {
 		Channels:    1,
 		SampleRate:  16000,
 		SmartFormat: true,
+		VadEvents:   true,
 		// To get UtteranceEnd, the following must be set:
 		InterimResults: true,
 		UtteranceEndMs: "1000",
-		VadEvents:      true,
+		// End of UtteranceEnd settings
 	}
 
 	// example on how to send a custom parameter
@@ -134,7 +145,9 @@ func main() {
 	// ctx = interfaces.WithCustomParameters(ctx, params)
 
 	// implement your own callback
-	callback := MyCallback{}
+	callback := MyCallback{
+		sb: &strings.Builder{},
+	}
 
 	// create a Deepgram client
 	dgClient, err := client.New(ctx, "", cOptions, tOptions, callback)
@@ -192,7 +205,6 @@ func main() {
 	// close DG client
 	dgClient.Stop()
 
-	fmt.Printf("Program exiting...\n")
+	fmt.Printf("\n\nProgram exiting...\n")
 	// time.Sleep(120 * time.Second)
-
 }
