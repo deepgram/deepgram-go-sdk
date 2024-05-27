@@ -353,6 +353,8 @@ func (c *Client) Stream(r io.Reader) error {
 		default:
 			bytesRead, err := r.Read(chunk)
 			switch {
+			case err == nil:
+				// do nothing
 			case strings.Contains(err.Error(), FatalReadSocketErr):
 				klog.V(1).Infof("Fatal socket error: %v\n", err)
 				klog.V(6).Infof("live.listen() LEAVE\n")
