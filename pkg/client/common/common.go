@@ -80,7 +80,6 @@ func (c *Client) ProcessRequest(ctx context.Context, req *http.Request, result i
 // HandleResponse processes the HTTP response for both streaming and URL-based API requests.
 func (c *Client) HandleResponse(res *http.Response, keys []string, resBody interface{}) (map[string]string, error) {
 	klog.V(6).Infof("Handle HTTP response\n")
-	fmt.Printf("keys: %s\v", keys)
 	switch res.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 		return decodeResponseBody(res, keys, resBody)
