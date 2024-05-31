@@ -114,22 +114,33 @@ func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey str
 	return &conn, nil
 }
 
-// Connect performs a websocket connection with "defaultConnectRetry" number of retries.
+// Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
 func (c *Client) Connect() *websocket.Conn {
-	return c.ConnectWithRetry(int(defaultConnectRetry))
+	return c.ConnectWithRetry(c.ctx, c.ctxCancel, int(DefaultConnectRetry))
 }
 
 // AttemptReconnect performs a reconnect after failing retries
-func (c *Client) AttemptReconnect(retries int64) *websocket.Conn {
+func (c *Client) AttemptReconnect(ctx context.Context, retries int64) *websocket.Conn {
 	c.retry = true
-	return c.ConnectWithRetry(int(retries))
+	c.ctx, c.ctxCancel = context.WithCancel(ctx)
+	return c.ConnectWithRetry(c.ctx, c.ctxCancel, int(retries))
+}
+
+// AttemptReconnect performs a reconnect after failing retries
+func (c *Client) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) *websocket.Conn {
+	c.retry = true
+	return c.ConnectWithRetry(ctx, ctxCancel, int(retries))
 }
 
 // ConnectWithRetry allows for connecting with specified retry attempts
 //
 //nolint:funlen // this is a complex function. keep as is
-func (c *Client) ConnectWithRetry(retryCnt int) *websocket.Conn {
+func (c *Client) ConnectWithRetry(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) *websocket.Conn {
 	klog.V(7).Infof("live.Connect() ENTER\n")
+
+	// set the context
+	c.ctx = ctx
+	c.ctxCancel = ctxCancel
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
@@ -140,7 +151,7 @@ func (c *Client) ConnectWithRetry(retryCnt int) *websocket.Conn {
 
 	// set the retry count
 	if retryCnt <= 0 {
-		c.retryCnt = defaultConnectRetry
+		c.retryCnt = DefaultConnectRetry
 	} else {
 		c.retryCnt = int64(retryCnt)
 	}
@@ -222,6 +233,7 @@ func (c *Client) ConnectWithRetry(retryCnt int) *websocket.Conn {
 		}
 		if err != nil {
 			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.Host)
+			klog.V(1).Infof("Dialer failed. Err: %v\n", err)
 			c.mu.Unlock()
 			continue
 		}
@@ -268,7 +280,7 @@ func (c *Client) listen() {
 	for {
 		select {
 		case <-c.ctx.Done():
-			c.Stop()
+			c.closeWs(false)
 			klog.V(6).Infof("live.listen() Done\n")
 			klog.V(6).Infof("live.listen() LEAVE\n")
 			return
@@ -513,8 +525,10 @@ func (c *Client) Finalize() error {
 
 // Stop will send close message and shutdown websocket connection
 func (c *Client) Stop() {
-	klog.V(3).Infof("Stop Stopping...\n")
+	klog.V(3).Infof("Stopping...\n")
 	c.retry = false
+
+	// exit gracefully
 	c.ctxCancel()
 	c.closeWs(false)
 }
