@@ -14,8 +14,12 @@ import (
 const (
 	pingPeriod = 5 * time.Second
 
-	defaultConnectRetry      int64 = 3
 	defaultDelayBetweenRetry int64 = 2
+)
+
+// external constants
+const (
+	DefaultConnectRetry int64 = 3
 
 	ChunkSize        = 1024 * 2
 	TerminationSleep = 100 * time.Millisecond
