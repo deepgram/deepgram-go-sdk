@@ -154,8 +154,8 @@ func main() {
 		}
 
 		// connect the websocket to Deepgram
-		wsconn := dgClient.AttemptReconnect(context.Background(), 3)
-		if wsconn == nil {
+		bConnected := dgClient.AttemptReconnect(context.Background(), 3)
+		if !bConnected {
 			fmt.Println("Client.AttemptReconnect failed")
 			os.Exit(1)
 		}

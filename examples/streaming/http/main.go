@@ -55,8 +55,8 @@ func main() {
 	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
 	// connect the websocket to Deepgram
-	wsconn := dgClient.Connect()
-	if wsconn == nil {
+	bConnected := dgClient.Connect()
+	if !bConnected {
 		fmt.Println("Client.Connect failed")
 		os.Exit(1)
 	}

@@ -39,8 +39,8 @@ func main() {
 	fmt.Printf("\n\nYou will first see an OpenResponse message followed by CloseResponse in 12 seconds.\n")
 
 	// connect the websocket to Deepgram
-	wsconn := dgClient.Connect()
-	if wsconn == nil {
+	bConnected := dgClient.Connect()
+	if !bConnected {
 		fmt.Println("Client.Connect failed")
 		os.Exit(1)
 	}
