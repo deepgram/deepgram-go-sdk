@@ -37,6 +37,7 @@ type LiveTranscriptionOptions struct {
 	Search          []string `json:"search,omitempty" schema:"search,omitempty"`
 	SmartFormat     bool     `json:"smart_format,omitempty" schema:"smart_format,omitempty"`
 	Tag             []string `json:"tag,omitempty" schema:"tag,omitempty"`
+	Tier            string   `json:"tier,omitempty" schema:"tier,omitempty"`
 	UtteranceEndMs  string   `json:"utterance_end_ms,omitempty" schema:"utterance_end_ms,omitempty"`
 	VadEvents       bool     `json:"vad_events,omitempty" schema:"vad_events,omitempty"`
 	Version         string   `json:"version,omitempty" schema:"version,omitempty"`
