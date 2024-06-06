@@ -59,8 +59,8 @@ func main() {
 	fmt.Print("\n\nPress ENTER to exit!\n\n")
 
 	// connect the websocket to Deepgram
-	wsconn := dgClient.Connect()
-	if wsconn == nil {
+	bConnected := dgClient.Connect()
+	if !bConnected {
 		fmt.Println("Client.Connect failed")
 		os.Exit(1)
 	}

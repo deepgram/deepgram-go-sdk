@@ -115,45 +115,51 @@ func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey str
 }
 
 // Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
-func (c *Client) Connect() *websocket.Conn {
-	return c.ConnectWithRetry(c.ctx, c.ctxCancel, int(DefaultConnectRetry))
+func (c *Client) Connect() bool {
+	// set the retry count
+	if c.retryCnt == 0 {
+		c.retryCnt = DefaultConnectRetry
+	}
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt)) != nil
+}
+
+// ConnectWithCancel performs a websocket connection with specified number of retries and providing a
+// cancel function to stop the connection
+func (c *Client) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
+	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries
-func (c *Client) AttemptReconnect(ctx context.Context, retries int64) *websocket.Conn {
+func (c *Client) AttemptReconnect(ctx context.Context, retries int64) bool {
 	c.retry = true
 	c.ctx, c.ctxCancel = context.WithCancel(ctx)
-	return c.ConnectWithRetry(c.ctx, c.ctxCancel, int(retries))
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries)) != nil
 }
 
-// AttemptReconnect performs a reconnect after failing retries
-func (c *Client) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) *websocket.Conn {
+// AttemptReconnect performs a reconnect after failing retries and providing a cancel function
+func (c *Client) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
 	c.retry = true
-	return c.ConnectWithRetry(ctx, ctxCancel, int(retries))
+	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries)) != nil
 }
 
-// ConnectWithRetry allows for connecting with specified retry attempts
-//
+func (c *Client) internalConnect() *websocket.Conn {
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt))
+}
+
 //nolint:funlen // this is a complex function. keep as is
-func (c *Client) ConnectWithRetry(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) *websocket.Conn {
+func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) *websocket.Conn {
 	klog.V(7).Infof("live.Connect() ENTER\n")
 
 	// set the context
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
+	c.retryCnt = int64(retryCnt)
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
 		klog.V(7).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
 		klog.V(7).Infof("live.Connect() LEAVE\n")
 		return nil
-	}
-
-	// set the retry count
-	if retryCnt <= 0 {
-		c.retryCnt = DefaultConnectRetry
-	} else {
-		c.retryCnt = int64(retryCnt)
 	}
 
 	// if the connection is good, return it otherwise, attempt reconnect
@@ -285,7 +291,7 @@ func (c *Client) listen() {
 			klog.V(6).Infof("live.listen() LEAVE\n")
 			return
 		case <-ticker.C:
-			ws := c.Connect()
+			ws := c.internalConnect()
 			if ws == nil {
 				klog.V(3).Infof("listen: Connection is not valid\n")
 				klog.V(6).Infof("live.listen() LEAVE\n")
@@ -348,8 +354,19 @@ func (c *Client) listen() {
 					return
 				default:
 					klog.V(1).Infof("listen: Cannot read websocket message. Err: %v\n", err)
+
+					// send error on callback
+					sendErr := c.sendError(err)
+					if sendErr != nil {
+						klog.V(1).Infof("listen: EOF error. Err: %v\n", sendErr)
+					}
+
+					// close the connection
+					c.closeWs(true)
+
+					klog.V(6).Infof("live.listen() LEAVE\n")
+					return
 				}
-				continue
 			}
 
 			if len(byMsg) == 0 {
@@ -393,13 +410,13 @@ func (c *Client) Stream(r io.Reader) error {
 				case strings.Contains(errStr, FatalReadSocketErr):
 					klog.V(1).Infof("Fatal socket error: %v\n", err)
 					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return nil
+					return err
 				case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
 					klog.V(3).Infof("stream object EOF\n")
 					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return nil
-				case err != nil:
-					klog.V(1).Infof("r.Read encountered EOF. Err: %v\n", err)
+					return err
+				default:
+					klog.V(1).Infof("r.Read error. Err: %v\n", err)
 					klog.V(6).Infof("live.Stream() LEAVE\n")
 					return err
 				}
@@ -426,7 +443,7 @@ func (c *Client) WriteBinary(byData []byte) error {
 	klog.V(7).Infof("live.WriteBinary() ENTER\n")
 
 	// doing a write, need to lock
-	ws := c.Connect()
+	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.Connect() is nil. Err: %v\n", err)
@@ -463,7 +480,7 @@ func (c *Client) WriteJSON(payload interface{}) error {
 	klog.V(7).Infof("live.WriteJSON() ENTER\n")
 
 	// doing a write, need to lock
-	ws := c.Connect()
+	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.Connect() is nil. Err: %v\n", err)
@@ -522,7 +539,7 @@ func (c *Client) Finalize() error {
 	klog.V(7).Infof("live.Finalize() ENTER\n")
 
 	// doing a write, need to lock
-	ws := c.Connect()
+	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.Connect() is nil. Err: %v\n", err)
@@ -620,7 +637,7 @@ func (c *Client) ping() {
 			klog.V(5).Infof("Starting ping...")
 			counter++
 
-			ws := c.Connect()
+			ws := c.internalConnect()
 			if ws == nil {
 				klog.V(1).Infof("ping Connection is not valid\n")
 				klog.V(6).Infof("live.ping() LEAVE\n")
