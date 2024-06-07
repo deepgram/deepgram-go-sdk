@@ -139,7 +139,7 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		klog.V(5).Infof("Raw Message:\n%s\n", string(byMsg))
 	}
 
-	var mt MessageType
+	var mt interfaces.MessageType
 	if err := json.Unmarshal(byMsg, &mt); err != nil {
 		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
 		klog.V(6).Infof("router.Message LEAVE\n")

@@ -229,7 +229,8 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		klog.V(5).Infof("Connecting to %s\n", url)
 
 		// a single connection attempt
-		c.mu.Lock()
+		// Note: not using defer here because we arent leaving the scope of the function
+		c.muConn.Lock()
 
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
@@ -240,7 +241,7 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		if err != nil {
 			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.Host)
 			klog.V(1).Infof("Dialer failed. Err: %v\n", err)
-			c.mu.Unlock()
+			c.muConn.Unlock()
 			continue
 		}
 
@@ -249,12 +250,15 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		c.retry = true
 
 		// unlock the connection
-		c.mu.Unlock()
+		c.muConn.Unlock()
 
 		// kick off threads to listen for messages and ping/keepalive
 		go c.listen()
 		if c.cOptions.EnableKeepAlive {
 			go c.ping()
+		}
+		if c.cOptions.AutoFlushReplyDelta != 0 {
+			go c.flush()
 		}
 
 		// fire off open connection
@@ -374,6 +378,15 @@ func (c *Client) listen() {
 				continue
 			}
 
+			// inspect the message
+			if c.cOptions.InspectMessage() {
+				err := c.inspect(byMsg)
+				if err != nil {
+					klog.V(1).Infof("listen: inspect failed. Err: %v\n", err)
+				}
+			}
+
+			// callback!
 			if c.callback != nil {
 				err := c.router.Message(byMsg)
 				if err != nil {
@@ -453,8 +466,8 @@ func (c *Client) WriteBinary(byData []byte) error {
 	}
 
 	// doing a write, need to lock
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
 
 	if err := ws.WriteMessage(
 		websocket.BinaryMessage,
@@ -497,8 +510,8 @@ func (c *Client) WriteJSON(payload interface{}) error {
 	}
 
 	// doing a write, need to lock
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
 
 	if err := ws.WriteMessage(
 		websocket.TextMessage,
@@ -549,8 +562,8 @@ func (c *Client) Finalize() error {
 	}
 
 	// doing a write, need to lock
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
 
 	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Finalize\" }"))
 
@@ -574,8 +587,8 @@ func (c *Client) closeWs(fatal bool) {
 	klog.V(6).Infof("live.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
 
 	if c.wsconn != nil && !fatal {
 		// deepgram requires a close message to be sent
@@ -644,8 +657,9 @@ func (c *Client) ping() {
 				return
 			}
 
-			// doing a write, need to lock
-			c.mu.Lock()
+			// doing a write, need to lock.
+			// Note: not using defer here because we arent leaving the scope of the function
+			c.muConn.Lock()
 
 			// deepgram keepalive message
 			klog.V(5).Infof("Sending Deepgram KeepAlive message...\n")
@@ -657,7 +671,66 @@ func (c *Client) ping() {
 			}
 
 			// release
-			c.mu.Unlock()
+			c.muConn.Unlock()
+		}
+	}
+}
+
+func (c *Client) flush() {
+	klog.V(6).Infof("live.flush() ENTER\n")
+
+	ticker := time.NewTicker(flushPeriod)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.ctx.Done():
+			klog.V(3).Infof("live.flush() Exiting\n")
+
+			// exit gracefully
+			c.closeWs(false)
+
+			klog.V(6).Infof("live.flush() LEAVE\n")
+			return
+		case <-ticker.C:
+			ws := c.internalConnect()
+			if ws == nil {
+				klog.V(1).Infof("flush Connection is not valid\n")
+				klog.V(6).Infof("live.flush() LEAVE\n")
+				return
+			}
+
+			// doing a read, need to lock.
+			c.muFinal.Lock()
+
+			// have we received anything? no, then skip
+			if c.lastDatagram == nil {
+				klog.V(7).Infof("No datagram received. Skipping...\n")
+				c.muFinal.Unlock()
+				continue
+			}
+
+			// we have received something, but is it recent?
+			trigger := c.lastDatagram.Add(time.Millisecond * time.Duration(c.cOptions.AutoFlushReplyDelta))
+			now := time.Now()
+			klog.V(7).Infof("Time (Last): %s\n", trigger.String())
+			klog.V(7).Infof("Time (Now ): %s\n", now.String())
+			bNeedFlush := trigger.Before(now)
+			if bNeedFlush {
+				c.lastDatagram = nil
+			}
+
+			// release
+			c.muFinal.Unlock()
+
+			if bNeedFlush {
+				klog.V(5).Infof("Sending Finalize message...\n")
+				err := c.Finalize()
+				if err == nil {
+					klog.V(5).Infof("Finalize sent!")
+				} else {
+					klog.V(1).Infof("Failed to send Finalize. Err: %v\n", err)
+				}
+			}
 		}
 	}
 }
@@ -699,4 +772,76 @@ func (c *Client) errorToResponse(err error) *msginterfaces.ErrorResponse {
 		Variant:     errorNum,
 	}
 	return response
+}
+
+// inspectMessage inspects the message and determines the type to
+// see if we should do anything with those types of messages
+func (c *Client) inspect(byMsg []byte) error {
+	klog.V(7).Infof("client.inspect() ENTER\n")
+
+	var mt msginterfaces.MessageType
+	if err := json.Unmarshal(byMsg, &mt); err != nil {
+		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
+		klog.V(7).Infof("client.inspect() LEAVE\n")
+		return err
+	}
+
+	switch mt.Type {
+	case msginterfaces.TypeMessageResponse:
+		klog.V(7).Infof("TypeMessageResponse\n")
+
+		// convert to MessageResponse
+		var mr msginterfaces.MessageResponse
+		if err := json.Unmarshal(byMsg, &mr); err != nil {
+			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
+			klog.V(7).Infof("client.inspect() LEAVE\n")
+			return err
+		}
+
+		// inspect the message
+		err := c.inspectMessage(&mr)
+		if err != nil {
+			klog.V(1).Infof("inspectMessage() failed. Err: %v\n", err)
+			klog.V(7).Infof("client.inspect() LEAVE\n")
+			return err
+		}
+	default:
+		klog.V(7).Infof("MessageType: %s\n", mt.Type)
+	}
+
+	klog.V(7).Info("inspect() succeeded\n")
+	klog.V(7).Infof("client.inspect() LEAVE\n")
+	return nil
+}
+
+func (c *Client) inspectMessage(mr *msginterfaces.MessageResponse) error {
+	klog.V(7).Infof("client.inspectMessage() ENTER\n")
+
+	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+	if len(mr.Channel.Alternatives) == 0 || len(sentence) == 0 {
+		klog.V(7).Info("inspectMessage is empty\n")
+		klog.V(7).Infof("client.inspectMessage() LEAVE\n")
+		return nil
+	}
+
+	if mr.IsFinal {
+		klog.V(7).Infof("IsFinal received: %s\n", time.Now().String())
+
+		// doing a write, need to lock
+		c.muFinal.Lock()
+		c.lastDatagram = nil
+		c.muFinal.Unlock()
+	} else {
+		klog.V(7).Infof("Interim received: %s\n", time.Now().String())
+
+		// last datagram received
+		c.muFinal.Lock()
+		now := time.Now()
+		c.lastDatagram = &now
+		c.muFinal.Unlock()
+	}
+
+	klog.V(7).Info("inspectMessage() succeeded\n")
+	klog.V(7).Infof("client.inspectMessage() LEAVE\n")
+	return nil
 }

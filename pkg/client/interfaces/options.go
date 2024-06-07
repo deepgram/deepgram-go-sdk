@@ -6,6 +6,7 @@ package interfaces
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	klog "k8s.io/klog/v2"
@@ -61,7 +62,21 @@ func (o *ClientOptions) Parse() error {
 		o.EnableKeepAlive = strings.EqualFold(strings.ToLower(v), "true")
 	}
 
+	// these require inspecting messages, therefore you must update the InspectMessage() method
+	if v := os.Getenv("DEEPGRAM_WEBSOCKET_AUTO_FLUSH"); v != "" {
+		klog.V(3).Infof("DEEPGRAM_WEBSOCKET_AUTO_FLUSH found")
+		i, err := strconv.ParseInt(v, 10, 64)
+		if err == nil {
+			klog.V(3).Infof("DEEPGRAM_WEBSOCKET_AUTO_FLUSH set to %d", i)
+			o.AutoFlushReplyDelta = i
+		}
+	}
+
 	return nil
+}
+
+func (c *ClientOptions) InspectMessage() bool {
+	return c.AutoFlushReplyDelta != 0
 }
 
 func (o *PreRecordedTranscriptionOptions) Check() error {
