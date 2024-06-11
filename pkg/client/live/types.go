@@ -7,6 +7,7 @@ package live
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/dvonthenen/websocket"
 
@@ -24,11 +25,15 @@ type Client struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	mu       sync.RWMutex
+	muConn   sync.RWMutex
 	wsconn   *websocket.Conn
 	retry    bool
 	retryCnt int64
 
 	callback msginterface.LiveMessageCallback
 	router   *live.MessageRouter
+
+	// internal constants for retry, waits, back-off, etc.
+	lastDatagram *time.Time
+	muFinal      sync.RWMutex
 }

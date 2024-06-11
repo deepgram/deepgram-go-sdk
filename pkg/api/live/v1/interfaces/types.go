@@ -9,6 +9,22 @@ import (
 )
 
 /***********************************/
+// MessageType is the header to bootstrap you way unmarshalling other messages
+/***********************************/
+/*
+	Example:
+	{
+		"type": "message",
+		"message": {
+			...
+		}
+	}
+*/
+type MessageType struct {
+	Type string `json:"type"`
+}
+
+/***********************************/
 // shared/common structs
 /***********************************/
 // Word is a single word in a transcript

@@ -15,7 +15,12 @@ type ClientOptions struct {
 	// shared client options
 	SkipServerAuth bool // keeps the client from authenticating with the server
 
+	// prerecorded client options
+
 	// live client options
 	RedirectService bool // allows HTTP redirects to be followed
 	EnableKeepAlive bool // enables the keep alive feature
+
+	// these require inspecting messages, therefore you must update the InspectMessage() method
+	AutoFlushReplyDelta int64 // enables the auto flush feature
 }

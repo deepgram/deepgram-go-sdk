@@ -12,6 +12,9 @@ import (
 
 // internal constants for retry, waits, back-off, etc.
 const (
+	flushPeriod       = 500 * time.Millisecond
+	flashInitialDelay = 3 * time.Second
+
 	pingPeriod = 5 * time.Second
 
 	defaultDelayBetweenRetry int64 = 2
