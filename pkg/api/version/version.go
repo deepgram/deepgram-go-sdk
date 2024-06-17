@@ -28,7 +28,7 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 
 	// set the protocol
 	protocol := HTTPProtocol
-	if apiType == APITypeLive {
+	if apiType == APITypeLive || apiType == APITypeSpeakStream {
 		protocol = WSProtocol
 	}
 	if host == "" {

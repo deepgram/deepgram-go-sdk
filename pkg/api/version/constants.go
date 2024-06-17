@@ -19,6 +19,9 @@ const (
 
 	// APITypeLive
 	APITypeLive string = "live"
+
+	// APITypeSpeakStream
+	APITypeSpeakStream string = "speak-stream"
 )
 
 const (
@@ -32,10 +35,11 @@ var (
 
 	// APIPathMap maps the API types to their default paths
 	APIPathMap = map[string]string{
-		"analyze":     "read",
-		"prerecorded": APIPathListen,
-		"speak":       "speak",
-		"manage":      "",
-		"live":        APIPathListen,
+		"analyze":      "read",
+		"prerecorded":  APIPathListen,
+		"speak":        "speak",
+		"speak-stream": "speak",
+		"manage":       "",
+		"live":         APIPathListen,
 	}
 )

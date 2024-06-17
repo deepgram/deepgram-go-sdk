@@ -29,7 +29,7 @@ func main() {
 	// Go context
 	ctx := context.Background()
 
-	// set the Transcription options
+	// set the TTS options
 	options := &interfaces.SpeakOptions{
 		Model: "aura-asteria-en",
 	}
