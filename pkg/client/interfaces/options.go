@@ -75,8 +75,8 @@ func (o *ClientOptions) Parse() error {
 	return nil
 }
 
-func (c *ClientOptions) InspectMessage() bool {
-	return c.AutoFlushReplyDelta != 0
+func (o *ClientOptions) InspectMessage() bool {
+	return o.AutoFlushReplyDelta != 0
 }
 
 func (o *PreRecordedTranscriptionOptions) Check() error {
