@@ -12,8 +12,7 @@ import (
 
 // internal constants for retry, waits, back-off, etc.
 const (
-	flushPeriod       = 500 * time.Millisecond
-	flashInitialDelay = 3 * time.Second
+	flushPeriod = 500 * time.Millisecond
 
 	pingPeriod = 5 * time.Second
 
@@ -30,6 +29,7 @@ const (
 	// socket errors
 	FatalReadSocketErr  string = "read: can't assign requested address"
 	FatalWriteSocketErr string = "write: broken pipe"
+	UseOfClosedSocket   string = "use of closed network connection"
 	UnknownDeepgramErr  string = "unknown deepgram error"
 
 	// socket successful close error
