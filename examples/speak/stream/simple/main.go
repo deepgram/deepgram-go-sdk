@@ -4,11 +4,11 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak-stream/v1/interfaces" // Add this import
 	"github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
@@ -33,7 +33,7 @@ func (c MyCallback) Metadata(md *msginterfaces.MetadataResponse) error {
 func (c MyCallback) Binary(byMsg []byte) error {
 	fmt.Printf("\n[Binary] Received\n")
 
-	file, err := os.OpenFile(AUDIO_FILE, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
+	file, err := os.OpenFile(AUDIO_FILE, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o666)
 	if err != nil {
 		fmt.Printf("Error creating file %s: %v\n", AUDIO_FILE, err)
 		return err
@@ -79,9 +79,6 @@ func main() {
 	// Go context
 	ctx := context.Background()
 
-	// print instructions
-	fmt.Print("\n\nPress ENTER to exit!\n\n")
-
 	// set the TTS options
 	ttsOptions := &interfaces.SpeakOptions{
 		Model: "aura-asteria-en",
@@ -117,41 +114,15 @@ func main() {
 		return
 	}
 
-	// Simulate user input to reset the buffer, flush, send new text, or just exit
-	fmt.Print("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n")
-	input := bufio.NewScanner(os.Stdin)
-	for input.Scan() {
-		switch input.Text() {
-		case "r":
-			err = dgClient.Reset()
-			if err != nil {
-				fmt.Printf("Error resetting buffer: %v\n", err)
-			} else {
-				fmt.Println("Buffer reset successfully.")
-			}
-		case "f":
-			err = dgClient.Flush()
-			if err != nil {
-				fmt.Printf("Error flushing buffer: %v\n", err)
-			} else {
-				fmt.Println("Buffer flushed successfully.")
-			}
-		case "":
-			goto EXIT
-		default:
-			err = dgClient.WriteJSON(map[string]interface{}{
-				"type": "Speak",
-				"text": input.Text(),
-			})
-			if err != nil {
-				fmt.Printf("Error sending text input: %v\n", err)
-			} else {
-				fmt.Println("Text sent successfully.")
-			}
-		}
+	// Flush the text input
+	err = dgClient.Flush()
+	if err != nil {
+		fmt.Printf("Error sending text input: %v\n", err)
+		return
 	}
 
-EXIT:
+	// wait for user input to exit
+	time.Sleep(3 * time.Second)
 
 	// close the connection
 	dgClient.Stop()
