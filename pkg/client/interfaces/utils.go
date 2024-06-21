@@ -71,9 +71,12 @@ type RawResponse struct {
 
 // DeepgramError is the Deepgram specific response error
 type DeepgramError struct {
-	ErrCode   string `json:"err_code"`
-	ErrMsg    string `json:"err_msg"`
-	RequestID string `json:"request_id"`
+	Type        string
+	ErrCode     string `json:"err_code,omitempty"`
+	ErrMsg      string `json:"err_msg,omitempty"`
+	Description string `json:"description,omitempty"`
+	RequestID   string `json:"request_id,omitempty"`
+	Variant     string `json:"variant,omitempty"`
 }
 
 // StatusError captures a REST error in the library
