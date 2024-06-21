@@ -7,7 +7,6 @@ package live
 import (
 	"errors"
 	"time"
-	// gabs "github.com/Jeffail/gabs/v2"
 )
 
 // internal constants for retry, waits, back-off, etc.
@@ -37,15 +36,18 @@ const (
 )
 
 const (
+	// MessageTypeKeepAlive keep the connection alive
+	MessageTypeKeepAlive string = "KeepAlive"
+
 	// MessageTypeFinalize flushes the transcription from the server
 	MessageTypeFinalize string = "Finalize"
-
-	// MessageTypeCloseStream closes the stream
-	MessageTypeCloseStream string = "CloseStream"
 )
 
 // errors
 var (
+	// ErrInvalidInput required input was not found
+	ErrInvalidInput = errors.New("required input was not found")
+
 	// ErrInvalidConnection connection is not valid
 	ErrInvalidConnection = errors.New("connection is not valid")
 )

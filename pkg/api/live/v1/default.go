@@ -249,8 +249,8 @@ func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 
 	// handle the message
 	fmt.Printf("\n[ErrorResponse]\n")
-	fmt.Printf("\nError.Type: %s\n", er.Type)
-	fmt.Printf("Error.Message: %s\n", er.Message)
+	fmt.Printf("\nError.Type: %s\n", er.ErrCode)
+	fmt.Printf("Error.Message: %s\n", er.ErrMsg)
 	fmt.Printf("Error.Description: %s\n\n", er.Description)
 	fmt.Printf("Error.Variant: %s\n\n", er.Variant)
 

@@ -29,15 +29,6 @@ type MessageType struct {
 	Type string `json:"type"`
 }
 
-// SpeakStreamResponse is the response from the text-to-speech request
-type SpeakStreamResponse struct {
-	ContentType string `json:"content_type,omitempty"`
-	RequestID   string `json:"request_id,omitempty"`
-	ModelUUID   string `json:"model_uuid,omitempty"`
-	ModelName   string `json:"model_name,omitempty"`
-	Date        string `json:"date,omitempty"`
-}
-
 // MetadataResponse is the response from the text-to-speech request which contains metadata about the request
 type MetadataResponse struct {
 	Type      string `json:"type,omitempty"`

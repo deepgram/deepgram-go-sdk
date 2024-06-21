@@ -211,7 +211,7 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 	if headers, ok := c.ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				klog.V(3).Infof("Connect() RESTORE Header: %s = %s\n", k, v)
+				klog.V(3).Infof("internalConnectWithCancel RESTORE Header: %s = %s\n", k, v)
 				myHeader.Add(k, v)
 			}
 		}
@@ -326,7 +326,7 @@ func (c *Client) listen() {
 				// release the lock
 				c.muConn.Unlock()
 
-				// read the message
+				// msgType can be binary or text
 				msgType, byMsg, err := ws.ReadMessage()
 
 				if err != nil {
@@ -414,7 +414,7 @@ func (c *Client) listen() {
 				}
 
 				if len(byMsg) == 0 {
-					klog.V(7).Infof("listen: message empty")
+					klog.V(7).Infof("listen(): message empty")
 					continue
 				}
 
@@ -428,12 +428,17 @@ func (c *Client) listen() {
 
 				// callback!
 				if c.callback != nil {
-					err := c.router.Message(byMsg)
-					if err != nil {
-						klog.V(1).Infof("listen: router.Message failed. Err: %v\n", err)
+					if msgType == websocket.TextMessage {
+						err := c.router.Message(byMsg)
+						if err != nil {
+							klog.V(1).Infof("live.listen(): router.Message failed. Err: %v\n", err)
+						}
+					} else {
+						// this shouldn't happen, but let's log it
+						klog.V(7).Infof("live.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
 					}
 				} else {
-					klog.V(7).Infof("listen: msg recv (type %d): %s\n", msgType, string(byMsg))
+					klog.V(7).Infof("callback is nil: msg recv: type %d, len: %d\n", msgType, len(byMsg))
 				}
 			}
 		}
@@ -535,7 +540,7 @@ func (c *Client) WriteJSON(payload interface{}) error {
 
 	byData, err := json.Marshal(payload)
 	if err != nil {
-		klog.V(1).Infof("WriteJSON json.Marshal failed. Err: %v\n", err)
+		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
 		klog.V(7).Infof("live.WriteJSON() LEAVE\n")
 		return err
 	}
@@ -592,9 +597,9 @@ func (c *Client) Write(p []byte) (int, error) {
 func (c *Client) KeepAlive() error {
 	klog.V(7).Infof("live.KeepAlive() ENTER\n")
 
-	err := c.WriteJSON(controlMessage{Type: "KeepAlive"})
+	err := c.WriteJSON(controlMessage{Type: MessageTypeKeepAlive})
 	if err != nil {
-		klog.V(1).Infof("Finalize failed. Err: %v\n", err)
+		klog.V(1).Infof("KeepAlive failed. Err: %v\n", err)
 		klog.V(7).Infof("live.KeepAlive() LEAVE\n")
 
 		return err
@@ -609,7 +614,7 @@ func (c *Client) KeepAlive() error {
 func (c *Client) Finalize() error {
 	klog.V(7).Infof("live.KeepAlive() ENTER\n")
 
-	err := c.WriteJSON(controlMessage{Type: "Finalize"})
+	err := c.WriteJSON(controlMessage{Type: MessageTypeFinalize})
 	if err != nil {
 		klog.V(1).Infof("Finalize failed. Err: %v\n", err)
 		klog.V(7).Infof("live.Finalize() LEAVE\n")
@@ -842,7 +847,7 @@ func (c *Client) errorToResponse(err error) *msginterfaces.ErrorResponse {
 
 	response := &msginterfaces.ErrorResponse{
 		Type:        msginterfaces.TypeErrorResponse,
-		Message:     strings.TrimSpace(fmt.Sprintf("%s %s", errorCode, errorNum)),
+		ErrMsg:      strings.TrimSpace(fmt.Sprintf("%s %s", errorCode, errorNum)),
 		Description: strings.TrimSpace(errorDesc),
 		Variant:     errorNum,
 	}

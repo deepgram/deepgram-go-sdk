@@ -9,6 +9,11 @@ import (
 )
 
 /***********************************/
+// Request/Input structs
+/***********************************/
+type LiveOptions interfaces.LiveTranscriptionOptions
+
+/***********************************/
 // MessageType is the header to bootstrap you way unmarshalling other messages
 /***********************************/
 /*
@@ -123,10 +128,5 @@ type CloseResponse struct {
 	Type string `json:"type,omitempty"`
 }
 
-// ErrorResponse is the response from a live transcription
-type ErrorResponse struct {
-	Description string `json:"description"`
-	Message     string `json:"message"`
-	Type        string `json:"type"`
-	Variant     string `json:"variant"`
-}
+// ErrorResponse is the Deepgram specific response error
+type ErrorResponse interfaces.DeepgramError
