@@ -9,15 +9,6 @@ import (
 	"time"
 )
 
-// internal constants for retry, waits, back-off, etc.
-const (
-	flushPeriod = 500 * time.Millisecond
-
-	pingPeriod = 5 * time.Second
-
-	defaultDelayBetweenRetry int64 = 2
-)
-
 // external constants
 const (
 	DefaultConnectRetry int64 = 3
@@ -50,4 +41,12 @@ var (
 
 	// ErrInvalidConnection connection is not valid
 	ErrInvalidConnection = errors.New("connection is not valid")
+)
+
+// internal constants for retry, waits, back-off, etc.
+const (
+	flushPeriod = 500 * time.Millisecond
+	pingPeriod  = 5 * time.Second
+
+	defaultDelayBetweenRetry int64 = 2
 )
