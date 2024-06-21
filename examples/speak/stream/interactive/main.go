@@ -18,7 +18,6 @@ import (
 const (
 	API_KEY    = ""
 	TTS_TEXT   = "Hello, this is a text to speech example using Deepgram."
-	AUDIO_DIR  = "tts_outputs"
 	AUDIO_FILE = "output.mp3"
 )
 
@@ -31,26 +30,8 @@ func (c MyCallback) Metadata(md *msginterfaces.MetadataResponse) error {
 	return nil
 }
 
-func (c MyCallback) SpeakStream(ss *msginterfaces.SpeakStreamResponse) error {
-	fmt.Printf("\n[SpeakStream] Received\n")
-	fmt.Printf("SpeakStream.ContentType: %s\n", strings.TrimSpace(ss.ContentType))
-	fmt.Printf("SpeakStream.Date: %s\n", strings.TrimSpace(ss.Date))
-	fmt.Printf("SpeakStream.ModelName: %s\n", strings.TrimSpace(ss.ModelName))
-	fmt.Printf("SpeakStream.ModelUUID: %s\n", strings.TrimSpace(ss.ModelUUID))
-	fmt.Printf("SpeakStream.RequestID: %s\n", strings.TrimSpace(ss.RequestID))
-	return nil
-}
-
 func (c MyCallback) Binary(byMsg []byte) error {
-	if _, err := os.Stat(AUDIO_DIR); os.IsNotExist(err) {
-		err := os.Mkdir(AUDIO_DIR, 0755)
-		if err != nil {
-			fmt.Printf("Error creating directory %s: %v\n", AUDIO_DIR, err)
-			return err
-		}
-	}
-
-	filePath := fmt.Sprintf("%s/%s", AUDIO_DIR, AUDIO_FILE)
+	filePath := fmt.Sprintf("%s", AUDIO_FILE)
 	file, err := os.Create(filePath)
 	if err != nil {
 		fmt.Printf("Error creating file %s: %v\n", filePath, err)

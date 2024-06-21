@@ -88,7 +88,7 @@ func (c MyCallback) Error(er *api.ErrorResponse) error {
 	// handle the error
 	fmt.Printf("\n[Error] Received\n")
 	fmt.Printf("Error.Type: %s\n", er.Type)
-	fmt.Printf("Error.Message: %s\n", er.Message)
+	fmt.Printf("Error.ErrCode: %s\n", er.ErrCode)
 	fmt.Printf("Error.Description: %s\n\n", er.Description)
 	return nil
 }

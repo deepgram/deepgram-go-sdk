@@ -75,7 +75,6 @@ type DeepgramError struct {
 	ErrCode     string `json:"err_code,omitempty"`
 	ErrMsg      string `json:"err_msg,omitempty"`
 	Description string `json:"description,omitempty"`
-	RequestID   string `json:"request_id,omitempty"`
 	Variant     string `json:"variant,omitempty"`
 }
 

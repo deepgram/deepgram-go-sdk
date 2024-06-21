@@ -27,6 +27,10 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
+type controlMessage struct {
+	Type string `json:"type"`
+}
+
 /*
 NewStreamForDemo creates a new websocket connection with all default options
 
@@ -120,35 +124,35 @@ func (c *StreamClient) Connect() bool {
 	if c.retryCnt == 0 {
 		c.retryCnt = DefaultConnectRetry
 	}
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt)) != nil
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), true) != nil
 }
 
 // ConnectWithCancel performs a websocket connection with specified number of retries and providing a
 // cancel function to stop the connection
 func (c *StreamClient) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
-	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt, true) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries
 func (c *StreamClient) AttemptReconnect(ctx context.Context, retries int64) bool {
 	c.retry = true
 	c.ctx, c.ctxCancel = context.WithCancel(ctx)
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries)) != nil
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries), true) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
 func (c *StreamClient) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
 	c.retry = true
-	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries)) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true) != nil
 }
 
 func (c *StreamClient) internalConnect() *websocket.Conn {
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt))
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false)
 }
 
 //nolint:funlen // this is a complex function. keep as is
-func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) *websocket.Conn {
-	klog.V(7).Infof("StreamClient.Connect() ENTER\n")
+func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
+	klog.V(7).Infof("StreamClient.internalConnectWithCancel() ENTER\n")
 
 	// set the context
 	c.ctx = ctx
@@ -158,8 +162,15 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
 		klog.V(7).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
-		klog.V(7).Infof("StreamClient.Connect() LEAVE\n")
+		klog.V(7).Infof("StreamClient.internalConnectWithCancel() LEAVE\n")
 		return nil
+	}
+
+	// lock conn access
+	if lock {
+		klog.V(3).Infof("Locking connection mutex\n")
+		c.muConn.Lock()
+		defer c.muConn.Unlock()
 	}
 
 	// if the connection is good, return it otherwise, attempt reconnect
@@ -167,12 +178,21 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Connection is not valid\n")
-			klog.V(7).Infof("StreamClient.ConnectWithRetry() LEAVE\n")
+			klog.V(7).Infof("StreamClient.internalConnectWithCancel() LEAVE\n")
 			return nil
 		default:
 			klog.V(7).Infof("Connection is good. Return object.")
-			klog.V(7).Infof("StreamClient.ConnectWithRetry() LEAVE\n")
+			klog.V(7).Infof("StreamClient.internalConnectWithCancel() LEAVE\n")
 			return c.wsconn
+		}
+	} else {
+		select {
+		case <-c.ctx.Done():
+			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
+			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			return nil
+		default:
+			klog.V(3).Infof("Context is still valid. Retry...\n")
 		}
 	}
 
@@ -191,7 +211,7 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 	if headers, ok := c.ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
-				klog.V(3).Infof("Connect() RESTORE Header: %s = %s\n", k, v)
+				klog.V(3).Infof("internalConnectWithCancel RESTORE Header: %s = %s\n", k, v)
 				myHeader.Add(k, v)
 			}
 		}
@@ -223,14 +243,10 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 		url, err := version.GetSpeakStreamAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.sOptions)
 		if err != nil {
 			klog.V(1).Infof("version.GetSpeakAPI failed. Err: %v\n", err)
-			klog.V(7).Infof("StreamClient.ConnectWithRetry() LEAVE\n")
+			klog.V(7).Infof("StreamClient.internalConnectWithCancel() LEAVE\n")
 			return nil // no point in retrying because this is going to fail on every retry
 		}
 		klog.V(5).Infof("Connecting to %s\n", url)
-
-		// a single connection attempt
-		// Note: not using defer here because we aren't leaving the scope of the function
-		c.muConn.Lock()
 
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
@@ -241,16 +257,12 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 		if err != nil {
 			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.Host)
 			klog.V(1).Infof("Dialer failed. Err: %v\n", err)
-			c.muConn.Unlock()
 			continue
 		}
 
 		// set the object to allow threads to function
 		c.wsconn = ws
 		c.retry = true
-
-		// unlock the connection
-		c.muConn.Unlock()
 
 		// kick off threads to listen for messages
 		go c.listen()
@@ -264,7 +276,7 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
-		klog.V(7).Infof("StreamClient.ConnectWithRetry() LEAVE\n")
+		klog.V(7).Infof("StreamClient.internalConnectWithCancel() LEAVE\n")
 
 		return c.wsconn
 	}
@@ -276,10 +288,11 @@ func (c *StreamClient) internalConnectWithCancel(ctx context.Context, ctxCancel 
 	return nil
 }
 
+//nolint:funlen,gocyclo // this is a complex function. keep as is
 func (c *StreamClient) listen() {
 	klog.V(6).Infof("StreamClient.listen() ENTER\n")
 
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(250 * time.Millisecond)
 	defer ticker.Stop()
 	for {
 		select {
@@ -289,115 +302,144 @@ func (c *StreamClient) listen() {
 			klog.V(6).Infof("StreamClient.listen() LEAVE\n")
 			return
 		case <-ticker.C:
-			ws := c.internalConnect()
-			if ws == nil {
-				klog.V(3).Infof("StreamClient.listen(): Connection is not valid\n")
-				klog.V(6).Infof("StreamClient.listen() LEAVE\n")
-				return
-			}
+			for {
+				// doing a read, need to lock
+				c.muConn.Lock()
 
-			// msgType can be binary or text
-			msgType, byMsg, err := ws.ReadMessage()
-			if err != nil {
-				errStr := err.Error()
-				switch {
-				case strings.Contains(errStr, SuccessfulSocketErr):
-					klog.V(3).Infof("Graceful websocket close\n")
+				// get the connection
+				ws := c.internalConnect()
+				if ws == nil {
+					// release
+					c.muConn.Unlock()
 
-					// graceful close
-					c.closeWs(false)
-
-					klog.V(6).Infof("StreamClient.listen() LEAVE\n")
-					return
-				case strings.Contains(errStr, FatalReadSocketErr):
-					klog.V(1).Infof("Fatal socket error: %v\n", err)
-
-					// send error on callback
-					sendErr := c.sendError(err)
-					if sendErr != nil {
-						klog.V(1).Infof("StreamClient.listen(): Fatal socket error. Err: %v\n", sendErr)
-					}
-
-					// fatal close
-					c.closeWs(true)
-
-					klog.V(6).Infof("StreamClient.listen() LEAVE\n")
-					return
-				case strings.Contains(errStr, "Deepgram"):
-					klog.V(1).Infof("StreamClient.listen(): Deepgram error. Err: %v\n", err)
-
-					// send error on callback
-					sendErr := c.sendError(err)
-					if sendErr != nil {
-						klog.V(1).Infof("StreamClient.listen(): Deepgram ErrorMsg. Err: %v\n", sendErr)
-					}
-
-					// close the connection
-					c.closeWs(false)
-
-					klog.V(6).Infof("StreamClient.listen() LEAVE\n")
-					return
-				case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
-					klog.V(3).Infof("StreamClient object EOF\n")
-
-					// send error on callback
-					sendErr := c.sendError(err)
-					if sendErr != nil {
-						klog.V(1).Infof("StreamClient.listen(): EOF error. Err: %v\n", sendErr)
-					}
-
-					// close the connection
-					c.closeWs(true)
-
-					klog.V(6).Infof("StreamClient.listen() LEAVE\n")
-					return
-				default:
-					klog.V(1).Infof("StreamClient.listen(): Cannot read websocket message. Err: %v\n", err)
-
-					// send error on callback
-					sendErr := c.sendError(err)
-					if sendErr != nil {
-						klog.V(1).Infof("StreamClient.listen(): EOF error. Err: %v\n", sendErr)
-					}
-
-					// close the connection
-					c.closeWs(true)
-
-					klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+					klog.V(3).Infof("listen: Connection is not valid\n")
+					klog.V(6).Infof("live.listen() LEAVE\n")
 					return
 				}
-			}
 
-			if len(byMsg) == 0 {
-				klog.V(7).Infof("StreamClient.listen(): message empty")
-				continue
-			}
+				// release the lock
+				c.muConn.Unlock()
 
-			// inspect the message
-			// if c.cOptions.InspectMessage() {
-			// 	err := c.inspect(byMsg)
-			// 	if err != nil {
-			// 		klog.V(1).Infof("StreamClient.listen(): inspect failed. Err: %v\n", err)
-			// 	}
-			// }
+				// msgType can be binary or text
+				msgType, byMsg, err := ws.ReadMessage()
 
-			if c.callback != nil {
-				if msgType == websocket.TextMessage {
-					err := c.router.Message(byMsg)
-					if err != nil {
-						klog.V(1).Infof("StreamClient.listen(): router.Message failed. Err: %v\n", err)
+				if err != nil {
+					errStr := err.Error()
+					switch {
+					case strings.Contains(errStr, SuccessfulSocketErr):
+						klog.V(3).Infof("Graceful websocket close\n")
+
+						// graceful close
+						c.closeWs(false)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
+					case strings.Contains(errStr, UseOfClosedSocket):
+						klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
+
+						// send error on callback
+						sendErr := c.sendError(err)
+						if sendErr != nil {
+							klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+						}
+
+						// fatal close
+						c.closeWs(false)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
+					case strings.Contains(errStr, FatalReadSocketErr):
+						klog.V(1).Infof("Fatal socket error: %v\n", err)
+
+						// send error on callback
+						sendErr := c.sendError(err)
+						if sendErr != nil {
+							klog.V(1).Infof("StreamClient.listen(): Fatal socket error. Err: %v\n", sendErr)
+						}
+
+						// fatal close
+						c.closeWs(true)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
+					case strings.Contains(errStr, "Deepgram"):
+						klog.V(1).Infof("StreamClient.listen(): Deepgram error. Err: %v\n", err)
+
+						// send error on callback
+						sendErr := c.sendError(err)
+						if sendErr != nil {
+							klog.V(1).Infof("StreamClient.listen(): Deepgram ErrorMsg. Err: %v\n", sendErr)
+						}
+
+						// close the connection
+						c.closeWs(false)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
+					case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
+						klog.V(3).Infof("StreamClient object EOF\n")
+
+						// send error on callback
+						sendErr := c.sendError(err)
+						if sendErr != nil {
+							klog.V(1).Infof("StreamClient.listen(): EOF error. Err: %v\n", sendErr)
+						}
+
+						// close the connection
+						c.closeWs(true)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
+					default:
+						klog.V(1).Infof("StreamClient.listen(): Cannot read websocket message. Err: %v\n", err)
+
+						// send error on callback
+						sendErr := c.sendError(err)
+						if sendErr != nil {
+							klog.V(1).Infof("StreamClient.listen(): EOF error. Err: %v\n", sendErr)
+						}
+
+						// close the connection
+						c.closeWs(true)
+
+						klog.V(6).Infof("StreamClient.listen() LEAVE\n")
+						return
 					}
+				}
 
-				} else if msgType == websocket.BinaryMessage {
-					err := c.router.Binary(byMsg)
-					if err != nil {
-						klog.V(1).Infof("StreamClient.listen(): router.Message failed. Err: %v\n", err)
+				if len(byMsg) == 0 {
+					klog.V(7).Infof("listen(): message empty")
+					continue
+				}
+
+				// inspect the message
+				// if c.cOptions.InspectMessage() {
+				// 	err := c.inspect(byMsg)
+				// 	if err != nil {
+				// 		klog.V(1).Infof("StreamClient.listen(): inspect failed. Err: %v\n", err)
+				// 	}
+				// }
+
+				if c.callback != nil {
+					if msgType == websocket.TextMessage {
+						switch msgType {
+						case websocket.TextMessage:
+							err := c.router.Message(byMsg)
+							if err != nil {
+								klog.V(1).Infof("StreamClient.listen(): router.Message failed. Err: %v\n", err)
+							}
+						case websocket.BinaryMessage:
+							err := c.router.Binary(byMsg)
+							if err != nil {
+								klog.V(1).Infof("StreamClient.listen(): router.Message failed. Err: %v\n", err)
+							}
+						default:
+							klog.V(7).Infof("StreamClient.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
+						}
 					}
 				} else {
-					klog.V(7).Infof("StreamClient.listen(): msg recv (type %d): %s\n", msgType, string(byMsg))
+					klog.V(7).Infof("callback is nil: msg recv: type %d, len: %d\n", msgType, len(byMsg))
 				}
-			} else {
-				klog.V(7).Infof("StreamClient.listen(): msg recv (type %d): %s\n", msgType, string(byMsg))
 			}
 		}
 	}
@@ -408,6 +450,10 @@ func (c *StreamClient) WriteBinary(byData []byte) error {
 	klog.V(7).Infof("StreamClient.WriteBinary() ENTER\n")
 
 	// doing a write, need to lock
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
+
+	// get the connection
 	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
@@ -416,10 +462,6 @@ func (c *StreamClient) WriteBinary(byData []byte) error {
 
 		return err
 	}
-
-	// doing a write, need to lock
-	c.muConn.Lock()
-	defer c.muConn.Unlock()
 
 	if err := ws.WriteMessage(
 		websocket.BinaryMessage,
@@ -444,16 +486,6 @@ managing the text-to-speech session on the Deepgram server.
 func (c *StreamClient) WriteJSON(payload interface{}) error {
 	klog.V(7).Infof("StreamClient.WriteJSON() ENTER\n")
 
-	// doing a write, need to lock
-	ws := c.internalConnect()
-	if ws == nil {
-		err := ErrInvalidConnection
-		klog.V(4).Infof("c.Connect() is nil. Err: %v\n", err)
-		klog.V(7).Infof("StreamClient.WriteJSON() LEAVE\n")
-
-		return err
-	}
-
 	byData, err := json.Marshal(payload)
 	if err != nil {
 		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
@@ -465,6 +497,15 @@ func (c *StreamClient) WriteJSON(payload interface{}) error {
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
+	// doing a write, need to lock
+	ws := c.internalConnect()
+	if ws == nil {
+		err := ErrInvalidConnection
+		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
+		klog.V(7).Infof("StreamClient.WriteJSON() LEAVE\n")
+
+		return err
+	}
 	if err := ws.WriteMessage(
 		websocket.TextMessage,
 		byData,
@@ -503,21 +544,13 @@ func (c *StreamClient) Write(p []byte) (int, error) {
 func (c *StreamClient) Flush() error {
 	klog.V(7).Infof("StreamClient.Flush() ENTER\n")
 
-	// doing a write, need to lock
-	ws := c.internalConnect()
-	if ws == nil {
-		err := ErrInvalidConnection
-		klog.V(4).Infof("c.Connect() is nil. Err: %v\n", err)
+	err := c.WriteJSON(controlMessage{Type: MessageTypeFlush})
+	if err != nil {
+		klog.V(1).Infof("Flush failed. Err: %v\n", err)
 		klog.V(7).Infof("StreamClient.Flush() LEAVE\n")
 
 		return err
 	}
-
-	// doing a write, need to lock
-	c.muConn.Lock()
-	defer c.muConn.Unlock()
-
-	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Flush\" }"))
 
 	klog.V(4).Infof("Flush Succeeded\n")
 	klog.V(7).Infof("StreamClient.Flush() LEAVE\n")
@@ -529,27 +562,73 @@ func (c *StreamClient) Flush() error {
 func (c *StreamClient) Reset() error {
 	klog.V(6).Infof("StreamClient.Reset() ENTER\n")
 
-	resetMessage := map[string]string{
-		"type": "Reset",
-	}
-
-	msg, err := json.Marshal(resetMessage)
+	err := c.WriteJSON(controlMessage{Type: MessageTypeReset})
 	if err != nil {
-		klog.V(1).Infof("json.Marshal failed. Err: %v\n", err)
-		klog.V(6).Infof("StreamClient.Reset() LEAVE\n")
-		return err
-	}
+		klog.V(1).Infof("Reset failed. Err: %v\n", err)
+		klog.V(7).Infof("StreamClient.Reset() LEAVE\n")
 
-	err = c.WriteJSON(msg)
-	if err != nil {
-		klog.V(1).Infof("WriteJSON failed. Err: %v\n", err)
-		klog.V(6).Infof("StreamClient.Reset() LEAVE\n")
 		return err
 	}
 
 	klog.V(4).Infof("Reset Succeeded\n")
 	klog.V(6).Infof("StreamClient.Reset() LEAVE\n")
 	return nil
+}
+
+func (c *StreamClient) closeStream(lock bool) error {
+	klog.V(7).Infof("StreamClient.closeStream() ENTER\n")
+
+	// doing a write, need to lock
+	if lock {
+		c.muConn.Lock()
+		defer c.muConn.Unlock()
+	}
+
+	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Close\" }"))
+	if err != nil {
+		klog.V(1).Infof("WriteMessage failed. Err: %v\n", err)
+		klog.V(7).Infof("StreamClient.closeStream() LEAVE\n")
+
+		return err
+	}
+
+	klog.V(4).Infof("closeStream Succeeded\n")
+	klog.V(7).Infof("StreamClient.closeStream() LEAVE\n")
+
+	return err
+}
+
+func (c *StreamClient) normalClosure(lock bool) error {
+	klog.V(7).Infof("StreamClient.normalClosure() ENTER\n")
+
+	// doing a write, need to lock
+	if lock {
+		c.muConn.Lock()
+		defer c.muConn.Unlock()
+	}
+
+	ws := c.internalConnect()
+	if ws == nil {
+		err := ErrInvalidConnection
+		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
+		klog.V(7).Infof("StreamClient.normalClosure() LEAVE\n")
+
+		return err
+	}
+
+	err := c.wsconn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	switch err {
+	case websocket.ErrCloseSent:
+		klog.V(3).Infof("ErrCloseSent was sent. Err: %v\n", err)
+	case nil:
+		klog.V(4).Infof("normalClosure Succeeded\n")
+	default:
+		klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", err)
+	}
+
+	klog.V(7).Infof("StreamClient.normalClosure() LEAVE\n")
+
+	return err
 }
 
 // Stop will send close message and shutdown websocket connection
@@ -571,21 +650,11 @@ func (c *StreamClient) closeWs(fatal bool) {
 
 	if c.wsconn != nil && !fatal {
 		// deepgram requires a close message to be sent
-		errDg := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Close\" }"))
-		if errDg == websocket.ErrCloseSent {
-			klog.V(3).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
-		} else if errDg != nil {
-			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errDg)
-		}
+		_ = c.closeStream(false)
 		time.Sleep(TerminationSleep) // allow time for server to register closure
 
 		// websocket protocol message
-		errProto := c.wsconn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-		if errProto == websocket.ErrCloseSent {
-			klog.V(3).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
-		} else if errProto != nil {
-			klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", errProto)
-		}
+		_ = c.normalClosure(false)
 		time.Sleep(TerminationSleep) // allow time for server to register closure
 	}
 
@@ -636,7 +705,7 @@ func (c *StreamClient) errorToResponse(err error) *msginterfaces.ErrorResponse {
 	} else {
 		errorCode = UnknownDeepgramErr
 		errorNum = UnknownDeepgramErr
-		errorDesc = UnknownDeepgramErr
+		errorDesc = err.Error()
 	}
 
 	response := &msginterfaces.ErrorResponse{

@@ -37,6 +37,7 @@ func main() {
 		Paragraphs:  true,
 		SmartFormat: true,
 		Language:    "en-US",
+		Utterances:  true,
 	}
 
 	// create a Deepgram client
