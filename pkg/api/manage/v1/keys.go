@@ -28,7 +28,7 @@ func (c *Client) ListKeys(ctx context.Context, projectID string) (*api.KeysResul
 	klog.V(6).Infof("manage.ListKeys() ENTER\n")
 
 	var resp api.KeysResult
-	err := c.apiRequest(ctx, "GET", version.KeysURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "GET", version.KeysURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("ListKeys failed. Err: %v\n", err)
 	} else {
@@ -44,7 +44,7 @@ func (c *Client) GetKey(ctx context.Context, projectID, keyID string) (*api.KeyR
 	klog.V(6).Infof("manage.GetKey() ENTER\n")
 
 	var resp api.KeyResult
-	err := c.apiRequest(ctx, "GET", version.KeysByIDURI, nil, &resp, projectID, keyID)
+	err := c.APIRequest(ctx, "GET", version.KeysByIDURI, nil, &resp, projectID, keyID)
 	if err != nil {
 		klog.V(1).Infof("GetKey failed. Err: %v\n", err)
 	} else {
@@ -87,7 +87,7 @@ func (c *Client) CreateKey(ctx context.Context, projectID string, key *api.KeyCr
 	}
 
 	var resp api.APIKey
-	err = c.apiRequest(ctx, "POST", version.KeysURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "POST", version.KeysURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("CreateKey failed. Err: %v\n", err)
 	} else {
@@ -103,7 +103,7 @@ func (c *Client) DeleteKey(ctx context.Context, projectID, keyID string) (*api.M
 	klog.V(6).Infof("manage.DeleteKey() ENTER\n")
 
 	var resp api.MessageResult
-	err := c.apiRequest(ctx, "DELETE", version.KeysByIDURI, nil, &resp, projectID, keyID)
+	err := c.APIRequest(ctx, "DELETE", version.KeysByIDURI, nil, &resp, projectID, keyID)
 	if err != nil {
 		klog.V(1).Infof("DeleteKey failed. Err: %v\n", err)
 	} else {

@@ -27,7 +27,7 @@ func (c *Client) ListInvitations(ctx context.Context, projectID string) (*api.In
 	klog.V(6).Infof("manage.ListInvitations() ENTER\n")
 
 	var resp api.InvitationsResult
-	err := c.apiRequest(ctx, "GET", version.InvitationsURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "GET", version.InvitationsURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("ListInvitations failed. Err: %v\n", err)
 	} else {
@@ -49,7 +49,7 @@ func (c *Client) SendInvitation(ctx context.Context, projectID string, invite *a
 	}
 
 	var resp api.MessageResult
-	err = c.apiRequest(ctx, "POST", version.InvitationsURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "POST", version.InvitationsURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("SendInvitation failed. Err: %v\n", err)
 	} else {
@@ -65,7 +65,7 @@ func (c *Client) DeleteInvitation(ctx context.Context, projectID, email string) 
 	klog.V(6).Infof("manage.DeleteInvitation() ENTER\n")
 
 	var resp api.MessageResult
-	err := c.apiRequest(ctx, "DELETE", version.InvitationsByIDURI, nil, &resp, projectID, email)
+	err := c.APIRequest(ctx, "DELETE", version.InvitationsByIDURI, nil, &resp, projectID, email)
 	if err != nil {
 		klog.V(1).Infof("DeleteInvitation failed. Err: %v\n", err)
 	} else {
@@ -81,7 +81,7 @@ func (c *Client) LeaveProject(ctx context.Context, projectID string) (*api.Messa
 	klog.V(6).Infof("manage.LeaveProject() ENTER\n")
 
 	var resp api.MessageResult
-	err := c.apiRequest(ctx, "DELETE", version.InvitationsLeaveURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "DELETE", version.InvitationsLeaveURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("LeaveProject failed. Err: %v\n", err)
 	} else {

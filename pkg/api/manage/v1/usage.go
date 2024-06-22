@@ -33,7 +33,7 @@ func (c *Client) ListRequests(ctx context.Context, projectID string, use *api.Us
 	}
 
 	var resp api.UsageListResult
-	err = c.apiRequest(ctx, "GET", version.UsageRequestURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "GET", version.UsageRequestURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("ListRequests failed. Err: %v\n", err)
 	} else {
@@ -49,7 +49,7 @@ func (c *Client) GetRequest(ctx context.Context, projectID, requestID string) (*
 	klog.V(6).Infof("manage.GetRequest() ENTER\n")
 
 	var resp api.UsageRequestResult
-	err := c.apiRequest(ctx, "GET", version.UsageRequestByIDURI, nil, &resp, projectID, requestID)
+	err := c.APIRequest(ctx, "GET", version.UsageRequestByIDURI, nil, &resp, projectID, requestID)
 	if err != nil {
 		klog.V(1).Infof("GetRequest failed. Err: %v\n", err)
 	} else {
@@ -71,7 +71,7 @@ func (c *Client) GetFields(ctx context.Context, projectID string, use *api.Usage
 	}
 
 	var resp api.UsageFieldResult
-	err = c.apiRequest(ctx, "GET", version.UsageFieldsURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "GET", version.UsageFieldsURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("GetFields failed. Err: %v\n", err)
 	} else {
@@ -93,7 +93,7 @@ func (c *Client) GetUsage(ctx context.Context, projectID string, use *api.UsageR
 	}
 
 	var resp api.UsageResult
-	err = c.apiRequest(ctx, "GET", version.UsageURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "GET", version.UsageURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("GetUsage failed. Err: %v\n", err)
 	} else {

@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/live/v1/interfaces"
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
 	microphone "github.com/deepgram/deepgram-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 // Implement your own callback
@@ -142,7 +142,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.New(ctx, "", cOptions, tOptions, callback)
+	dgClient, err := client.NewWebSocket(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

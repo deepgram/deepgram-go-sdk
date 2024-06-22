@@ -27,7 +27,7 @@ func (c *Client) ListProjects(ctx context.Context) (*api.ProjectsResult, error) 
 	klog.V(6).Infof("manage.ListProjects() ENTER\n")
 
 	var resp api.ProjectsResult
-	err := c.apiRequest(ctx, "GET", version.ProjectsURI, nil, &resp)
+	err := c.APIRequest(ctx, "GET", version.ProjectsURI, nil, &resp)
 	if err != nil {
 		klog.V(1).Infof("ListProjects failed. Err: %v\n", err)
 	} else {
@@ -43,7 +43,7 @@ func (c *Client) GetProject(ctx context.Context, projectID string) (*api.Project
 	klog.V(6).Infof("manage.GetProject() ENTER\n")
 
 	var resp api.ProjectResult
-	err := c.apiRequest(ctx, "GET", version.ProjectsByIDURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "GET", version.ProjectsByIDURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("GetProject failed. Err: %v\n", err)
 	} else {
@@ -65,7 +65,7 @@ func (c *Client) UpdateProject(ctx context.Context, projectID string, proj *api.
 	}
 
 	var resp api.MessageResult
-	err = c.apiRequest(ctx, "PATCH", version.ProjectsByIDURI, bytes.NewBuffer(jsonStr), &resp, projectID)
+	err = c.APIRequest(ctx, "PATCH", version.ProjectsByIDURI, bytes.NewBuffer(jsonStr), &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("UpdateProject failed. Err: %v\n", err)
 	} else {
@@ -81,7 +81,7 @@ func (c *Client) DeleteProject(ctx context.Context, projectID string) (*api.Mess
 	klog.V(6).Infof("manage.DeleteProject() ENTER\n")
 
 	var resp api.MessageResult
-	err := c.apiRequest(ctx, "DELETE", version.InvitationsByIDURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "DELETE", version.InvitationsByIDURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("DeleteProject failed. Err: %v\n", err)
 	} else {

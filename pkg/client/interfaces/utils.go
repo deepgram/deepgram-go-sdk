@@ -5,86 +5,38 @@
 package interfaces
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"net/http"
-	"runtime"
-	"strings"
+
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
 )
 
-// constants
-const (
-	sdkVersion string = "v1.2.0"
-)
+// DgAgent is the agent version
+var DgAgent = interfacesv1.DgAgent
 
-// DgAgent is the user agent string for the SDK
-var DgAgent string = "@deepgram/sdk/" + sdkVersion + " go/" + goVersion()
+// signer
+type Signer = interfacesv1.Signer
+type SignerContext = interfacesv1.SignerContext
 
-func goVersion() string {
-	version := runtime.Version()
-	if strings.HasPrefix(version, "go") {
-		return version[2:]
-	}
-	return version
-}
-
-/*
-	custom headers and configuration options
-*/
-// Signer callback for the certificant signer
-type Signer interface {
-	SignRequest(*http.Request) error
-}
-
-// SignerContext blackbox of data
-type SignerContext struct{}
-
-// WithSigner appends a signer to the given context
 func WithSigner(ctx context.Context, s Signer) context.Context {
-	return context.WithValue(ctx, SignerContext{}, s)
+	return interfacesv1.WithSigner(ctx, s)
 }
 
-// HeadersContext blackbox of data
-type HeadersContext struct{}
+// headers
+type HeadersContext = interfacesv1.HeadersContext
 
-// WithCustomHeaders appends a header to the given context
 func WithCustomHeaders(ctx context.Context, headers http.Header) context.Context {
-	return context.WithValue(ctx, HeadersContext{}, headers)
+	return interfacesv1.WithCustomHeaders(ctx, headers)
 }
 
-// ParametersContext blackbox of data
-type ParametersContext struct{}
+// parameters
+type ParametersContext = interfacesv1.ParametersContext
 
-// WithCustomParameters
 func WithCustomParameters(ctx context.Context, params map[string][]string) context.Context {
-	return context.WithValue(ctx, ParametersContext{}, params)
+	return interfacesv1.WithCustomParameters(ctx, params)
 }
 
-/*
-RawResponse may be used with the Do method as the resBody argument in order
-to capture the raw response data.
-*/
-type RawResponse struct {
-	bytes.Buffer
-}
-
-// DeepgramError is the Deepgram specific response error
-type DeepgramError struct {
-	Type        string
-	ErrCode     string `json:"err_code,omitempty"`
-	ErrMsg      string `json:"err_msg,omitempty"`
-	Description string `json:"description,omitempty"`
-	Variant     string `json:"variant,omitempty"`
-}
-
-// StatusError captures a REST error in the library
-type StatusError struct {
-	Resp          *http.Response
-	DeepgramError *DeepgramError
-}
-
-// Error string representation for a given error
-func (e *StatusError) Error() string {
-	return fmt.Sprintf("%s %s: %s", e.Resp.Request.Method, e.Resp.Request.URL, e.Resp.Status)
-}
+// common structs found throughout the SDK
+type RawResponse = interfacesv1.RawResponse
+type DeepgramError = interfacesv1.DeepgramError
+type StatusError = interfacesv1.StatusError

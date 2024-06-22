@@ -25,7 +25,7 @@ func (c *Client) GetMemberScopes(ctx context.Context, projectID, memberID string
 	klog.V(6).Infof("manage.GetMemberScopes() ENTER\n")
 
 	var resp api.ScopeResult
-	err := c.apiRequest(ctx, "GET", version.MembersScopeByIDURI, nil, &resp, projectID, memberID)
+	err := c.APIRequest(ctx, "GET", version.MembersScopeByIDURI, nil, &resp, projectID, memberID)
 	if err != nil {
 		klog.V(1).Infof("GetMemberScopes failed. Err: %v\n", err)
 	} else {
@@ -47,7 +47,7 @@ func (c *Client) UpdateMemberScopes(ctx context.Context, projectID, memberID str
 	}
 
 	var resp api.MessageResult
-	err = c.apiRequest(ctx, "PUT", version.MembersScopeByIDURI, bytes.NewBuffer(jsonStr), &resp, projectID, memberID)
+	err = c.APIRequest(ctx, "PUT", version.MembersScopeByIDURI, bytes.NewBuffer(jsonStr), &resp, projectID, memberID)
 	if err != nil {
 		klog.V(1).Infof("UpdateMemberScopes failed. Err: %v\n", err)
 	} else {

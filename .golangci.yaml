@@ -106,3 +106,19 @@ issues:
     - linters:
         - gocritic
       text: "unnecessaryDefer:"
+    - path: pkg/api/speak/v1/speak.go
+      linters:
+        - staticcheck
+      text: SA1019
+    - path: pkg/api/manage/v1/manage.go
+      linters:
+        - staticcheck
+      text: SA1019
+    - path: pkg/client/live/legacy.go
+      linters:
+        - staticcheck
+      text: SA1019
+    - path: pkg/api/prerecorded/v1/legacy.go
+      linters:
+        - staticcheck
+      text: SA1019

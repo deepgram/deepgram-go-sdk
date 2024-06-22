@@ -15,9 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/rest"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen/v1/rest"
 
 	utils "github.com/deepgram/deepgram-go-sdk/tests/utils"
 )
