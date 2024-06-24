@@ -88,7 +88,7 @@ c := client.NewWithDefaults()
 dg := prerecorded.New(c)
 
 // transcription options
-options := PreRecordedTranscriptionOptions{
+options := &interfaces.PreRecordedTranscriptionOptions{
     Punctuate:  true,
     Diarize:    true,
     Language:   "en-US",
@@ -108,7 +108,7 @@ You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming
 
 ```go
 // options
-transcriptOptions := interfaces.LiveTranscriptionOptions{
+transcriptOptions := &interfaces.LiveTranscriptionOptions{
     Language:    "en-US",
     Punctuate:   true,
     Encoding:    "linear16",
