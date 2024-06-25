@@ -15,7 +15,7 @@ import (
 
 // constants
 const (
-	sdkVersion string = "v1.2.0"
+	sdkVersion string = "v1.4.0"
 )
 
 // DgAgent is the user agent string for the SDK
@@ -67,6 +67,15 @@ to capture the raw response data.
 */
 type RawResponse struct {
 	bytes.Buffer
+}
+
+// DeepgramWarning is the Deepgram specific response warning
+type DeepgramWarning struct {
+	Type        string
+	WarnCode    string `json:"warn_code,omitempty"`
+	WarnMsg     string `json:"warn_msg,omitempty"`
+	Description string `json:"description,omitempty"`
+	Variant     string `json:"variant,omitempty"`
 }
 
 // DeepgramError is the Deepgram specific response error

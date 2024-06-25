@@ -12,6 +12,7 @@ const (
 	TypeFlushedResponse  string = "Flushed"
 	TypeCloseResponse    string = "Close"
 
-	// Error type
-	TypeErrorResponse string = "Error"
+	// "Error" type
+	TypeWarningResponse string = "Warning"
+	TypeErrorResponse   string = "Error"
 )

@@ -93,6 +93,19 @@ func (r *MessageRouter) processMetadata(byMsg []byte) error {
 	return r.processGeneric("MetadataResponse", byMsg, action, msg)
 }
 
+func (r *MessageRouter) processWarningResponse(byMsg []byte) error {
+	var msg interfaces.WarningResponse
+	if err := json.Unmarshal(byMsg, &msg); err != nil {
+		return err
+	}
+
+	action := func(data *interface{}) error {
+		return r.callback.Warning(&msg)
+	}
+
+	return r.processGeneric("WarningResponse", byMsg, action, msg)
+}
+
 func (r *MessageRouter) processErrorResponse(byMsg []byte) error {
 	var msg interfaces.ErrorResponse
 	if err := json.Unmarshal(byMsg, &msg); err != nil {
@@ -127,6 +140,8 @@ func (r *MessageRouter) Message(byMsg []byte) error {
 		err = r.processFlushed(byMsg)
 	case interfaces.TypeMetadataResponse:
 		err = r.processMetadata(byMsg)
+	case interfaces.TypeWarningResponse:
+		err = r.processWarningResponse(byMsg)
 	case interfaces.TypeErrorResponse:
 		err = r.processErrorResponse(byMsg)
 	default:

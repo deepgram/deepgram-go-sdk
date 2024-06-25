@@ -12,7 +12,7 @@ import (
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	speak "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1" //lint:ignore
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/rest"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/pkg/client/speak"
 )
@@ -37,8 +37,8 @@ func main() {
 	}
 
 	// create a Deepgram client
-	c := client.NewWithDefaults()
-	dg := speak.New(c)
+	c := client.NewRESTWithDefaults()
+	dg := api.New(c)
 
 	// send/process file to Deepgram
 	res, err := dg.ToSave(ctx, filePath, textToSpeech, options)

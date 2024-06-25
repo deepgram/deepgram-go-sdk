@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
@@ -53,12 +54,20 @@ func (c MyCallback) Binary(byMsg []byte) error {
 
 func (c MyCallback) Flush(fl *msginterfaces.FlushedResponse) error {
 	fmt.Printf("\n[Flushed] Received\n")
+	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	return nil
+}
+
+func (c MyCallback) Warning(wr *msginterfaces.WarningResponse) error {
+	fmt.Printf("\n[Warning] Received\n")
+	fmt.Printf("Warning.Code: %s\n", wr.WarnCode)
+	fmt.Printf("Warning.Description: %s\n\n", wr.WarnMsg)
 	return nil
 }
 
 func (c MyCallback) Error(er *msginterfaces.ErrorResponse) error {
 	fmt.Printf("\n[Error] Received\n")
-	fmt.Printf("Error.Type: %s\n", er.Type)
+	fmt.Printf("Error.Code: %s\n", er.ErrCode)
 	fmt.Printf("Error.Description: %s\n\n", er.Description)
 	return nil
 }
@@ -108,18 +117,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Send the text input
-	err = dgClient.WriteJSON(map[string]interface{}{
-		"type": "Speak",
-		"text": TTS_TEXT,
-	})
-	if err != nil {
-		fmt.Printf("Error sending text input: %v\n", err)
-		return
-	}
-
 	// Simulate user input to reset the buffer, flush, send new text, or just exit
-	fmt.Print("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n")
+	time.Sleep(2 * time.Second)
+	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	input := bufio.NewScanner(os.Stdin)
 	for input.Scan() {
 		switch input.Text() {
@@ -140,15 +140,13 @@ func main() {
 		case "":
 			goto EXIT
 		default:
-			err = dgClient.WriteJSON(map[string]interface{}{
-				"type": "Speak",
-				"text": input.Text(),
-			})
+			err = dgClient.SpeakWithText(input.Text())
 			if err != nil {
 				fmt.Printf("Error sending text input: %v\n", err)
 			} else {
 				fmt.Println("Text sent successfully.")
 			}
+			fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 		}
 	}
 

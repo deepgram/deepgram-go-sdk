@@ -12,9 +12,9 @@ import (
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1" //lint:ignore
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/rest"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded" //lint:ignore
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 const (
@@ -38,8 +38,8 @@ func main() {
 	}
 
 	// create a Deepgram client
-	c := client.NewWithDefaults()
-	dg := prerecorded.New(c)
+	c := client.NewRESTWithDefaults()
+	dg := api.New(c)
 
 	// send the URL to Deepgram
 	res, err := dg.FromURL(ctx, url, options)

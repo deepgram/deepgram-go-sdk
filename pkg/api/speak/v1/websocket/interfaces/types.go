@@ -51,5 +51,8 @@ type CloseResponse struct {
 	Type string `json:"type,omitempty"`
 }
 
+// WarningResponse is the Deepgram specific response warning
+type WarningResponse interfaces.DeepgramWarning
+
 // ErrorResponse is the Deepgram specific response error
 type ErrorResponse interfaces.DeepgramError

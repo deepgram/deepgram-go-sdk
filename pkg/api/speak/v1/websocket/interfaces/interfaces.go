@@ -8,11 +8,13 @@ package interfacesv1
 // SpeakMessageCallback is a callback used to receive notifications for platforms messages
 type SpeakMessageCallback interface {
 	// These are WS TextMessage that are used for flow control.
+	Open(or *OpenResponse) error
 	Metadata(md *MetadataResponse) error
 	Flush(fl *FlushedResponse) error
-	Error(er *ErrorResponse) error
 	Close(cr *CloseResponse) error
-	Open(or *OpenResponse) error
+
+	Warning(er *WarningResponse) error
+	Error(er *ErrorResponse) error
 
 	// These are WS BinaryMessage that are used to send audio data to the client
 	Binary(byMsg []byte) error

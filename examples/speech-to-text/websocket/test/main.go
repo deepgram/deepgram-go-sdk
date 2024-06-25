@@ -14,7 +14,7 @@ import (
 
 	microphone "github.com/deepgram/deepgram-go-sdk/pkg/audio/microphone"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live" //lint:ignore
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.New(ctx, "", cOptions, tOptions, nil)
+	dgClient, err := client.NewWebSocket(ctx, "", cOptions, tOptions, nil)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

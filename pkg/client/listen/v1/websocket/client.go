@@ -292,9 +292,28 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 	return nil
 }
 
-// this is a complex function. keep as is
+//nolint:funlen,gocyclo // this is a complex function. keep as is
 func (c *Client) listen() {
 	klog.V(6).Infof("live.listen() ENTER\n")
+
+	defer func() {
+		if r := recover(); r != nil {
+			klog.V(1).Infof("Panic triggered\n")
+
+			// send error on callback
+			err := ErrFatalPanicRecovered
+			sendErr := c.sendError(err)
+			if sendErr != nil {
+				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+			}
+
+			// fatal close
+			c.closeWs(true)
+
+			klog.V(6).Infof("live.listen() LEAVE\n")
+			return
+		}
+	}()
 
 	for {
 		// doing a read, need to lock
@@ -721,7 +740,25 @@ func (c *Client) closeWs(fatal bool) {
 func (c *Client) ping() {
 	klog.V(6).Infof("live.ping() ENTER\n")
 
-	counter := 0
+	defer func() {
+		if r := recover(); r != nil {
+			klog.V(1).Infof("Panic triggered\n")
+
+			// send error on callback
+			err := ErrFatalPanicRecovered
+			sendErr := c.sendError(err)
+			if sendErr != nil {
+				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+			}
+
+			// fatal close
+			c.closeWs(true)
+
+			klog.V(6).Infof("live.ping() LEAVE\n")
+			return
+		}
+	}()
+
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 	for {
@@ -736,7 +773,6 @@ func (c *Client) ping() {
 			return
 		case <-ticker.C:
 			klog.V(5).Infof("Starting ping...")
-			counter++
 
 			// deepgram keepalive message
 			klog.V(5).Infof("Sending Deepgram KeepAlive message...\n")
@@ -753,6 +789,25 @@ func (c *Client) ping() {
 // flush thread
 func (c *Client) flush() {
 	klog.V(6).Infof("live.flush() ENTER\n")
+
+	defer func() {
+		if r := recover(); r != nil {
+			klog.V(1).Infof("Panic triggered\n")
+
+			// send error on callback
+			err := ErrFatalPanicRecovered
+			sendErr := c.sendError(err)
+			if sendErr != nil {
+				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+			}
+
+			// fatal close
+			c.closeWs(true)
+
+			klog.V(6).Infof("live.flush() LEAVE\n")
+			return
+		}
+	}()
 
 	ticker := time.NewTicker(flushPeriod)
 	defer ticker.Stop()
@@ -845,12 +900,12 @@ func (c *Client) errorToResponse(err error) *msginterfaces.ErrorResponse {
 // inspectMessage inspects the message and determines the type to
 // see if we should do anything with those types of messages
 func (c *Client) inspect(byMsg []byte) error {
-	klog.V(7).Infof("client.inspect() ENTER\n")
+	klog.V(7).Infof("live.inspect() ENTER\n")
 
 	var mt msginterfaces.MessageType
 	if err := json.Unmarshal(byMsg, &mt); err != nil {
 		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
-		klog.V(7).Infof("client.inspect() LEAVE\n")
+		klog.V(7).Infof("live.inspect() LEAVE\n")
 		return err
 	}
 
@@ -862,7 +917,7 @@ func (c *Client) inspect(byMsg []byte) error {
 		var mr msginterfaces.MessageResponse
 		if err := json.Unmarshal(byMsg, &mr); err != nil {
 			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			klog.V(7).Infof("client.inspect() LEAVE\n")
+			klog.V(7).Infof("live.inspect() LEAVE\n")
 			return err
 		}
 
@@ -870,7 +925,7 @@ func (c *Client) inspect(byMsg []byte) error {
 		err := c.inspectMessage(&mr)
 		if err != nil {
 			klog.V(1).Infof("inspectMessage() failed. Err: %v\n", err)
-			klog.V(7).Infof("client.inspect() LEAVE\n")
+			klog.V(7).Infof("live.inspect() LEAVE\n")
 			return err
 		}
 	default:
@@ -878,17 +933,17 @@ func (c *Client) inspect(byMsg []byte) error {
 	}
 
 	klog.V(7).Info("inspect() succeeded\n")
-	klog.V(7).Infof("client.inspect() LEAVE\n")
+	klog.V(7).Infof("live.inspect() LEAVE\n")
 	return nil
 }
 
 func (c *Client) inspectMessage(mr *msginterfaces.MessageResponse) error {
-	klog.V(7).Infof("client.inspectMessage() ENTER\n")
+	klog.V(7).Infof("live.inspectMessage() ENTER\n")
 
 	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
 	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
 		klog.V(7).Info("inspectMessage is empty\n")
-		klog.V(7).Infof("client.inspectMessage() LEAVE\n")
+		klog.V(7).Infof("live.inspectMessage() LEAVE\n")
 		return nil
 	}
 
@@ -910,6 +965,6 @@ func (c *Client) inspectMessage(mr *msginterfaces.MessageResponse) error {
 	}
 
 	klog.V(7).Info("inspectMessage() succeeded\n")
-	klog.V(7).Infof("client.inspectMessage() LEAVE\n")
+	klog.V(7).Infof("live.inspectMessage() LEAVE\n")
 	return nil
 }

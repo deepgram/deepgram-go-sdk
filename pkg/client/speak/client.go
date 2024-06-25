@@ -36,6 +36,8 @@ NewWithDefaults creates a new speak client with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+
+Deprecated: This function is deprecated. Please use NewREST(). This will be removed in a future release.
 */
 func NewWithDefaults() *speakv1rest.Client {
 	return speakv1rest.NewWithDefaults()
@@ -53,6 +55,16 @@ Deprecated: This function is deprecated. Please use NewREST(). This will be remo
 */
 func New(apiKey string, options *interfaces.ClientOptions) *speakv1rest.Client {
 	return speakv1rest.New(apiKey, options)
+}
+
+/*
+NewRESTWithDefaults creates a new speak client with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+*/
+func NewRESTWithDefaults() *speakv1rest.Client {
+	return speakv1rest.NewWithDefaults()
 }
 
 /*

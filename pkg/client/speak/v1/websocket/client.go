@@ -29,6 +29,7 @@ type controlMessage struct {
 	Type string `json:"type"`
 }
 type TextSource struct {
+	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
@@ -87,7 +88,7 @@ Notes:
   - The callback handler is set to the default handler
 */
 func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*Client, error) {
-	klog.V(6).Infof("Client.New() ENTER\n")
+	klog.V(6).Infof("speak.New() ENTER\n")
 
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
@@ -121,7 +122,7 @@ func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 	}
 
 	klog.V(3).Infof("NewDeepGramWSClient Succeeded\n")
-	klog.V(6).Infof("Client.New() LEAVE\n")
+	klog.V(6).Infof("speak.New() LEAVE\n")
 
 	return &conn, nil
 }
@@ -160,7 +161,7 @@ func (c *Client) internalConnect() *websocket.Conn {
 
 //nolint:funlen // this is a complex function. keep as is
 func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
-	klog.V(7).Infof("Client.internalConnectWithCancel() ENTER\n")
+	klog.V(7).Infof("speak.internalConnectWithCancel() ENTER\n")
 
 	// set the context
 	c.ctx = ctx
@@ -170,7 +171,7 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
 		klog.V(7).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
-		klog.V(7).Infof("Client.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 		return nil
 	}
 
@@ -186,11 +187,11 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Connection is not valid\n")
-			klog.V(7).Infof("Client.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return nil
 		default:
 			klog.V(7).Infof("Connection is good. Return object.")
-			klog.V(7).Infof("Client.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return c.wsconn
 		}
 	} else {
@@ -251,7 +252,7 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		url, err := version.GetSpeakStreamAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.sOptions)
 		if err != nil {
 			klog.V(1).Infof("version.GetSpeakAPI failed. Err: %v\n", err)
-			klog.V(7).Infof("Client.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return nil // no point in retrying because this is going to fail on every retry
 		}
 		klog.V(5).Infof("Connecting to %s\n", url)
@@ -284,21 +285,40 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
-		klog.V(7).Infof("Client.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 
 		return c.wsconn
 	}
 
 	// if we get here, we failed to connect
 	klog.V(1).Infof("Failed to connect to websocket: %s\n", c.cOptions.Host)
-	klog.V(7).Infof("Client.ConnectWithRetry() LEAVE\n")
+	klog.V(7).Infof("speak.ConnectWithRetry() LEAVE\n")
 
 	return nil
 }
 
-//nolint:funlen // this is a complex function. keep as is
+//nolint:funlen,gocyclo // this is a complex function. keep as is
 func (c *Client) listen() {
-	klog.V(6).Infof("Client.listen() ENTER\n")
+	klog.V(6).Infof("speak.listen() ENTER\n")
+
+	defer func() {
+		if r := recover(); r != nil {
+			klog.V(1).Infof("Panic triggered\n")
+
+			// send error on callback
+			err := ErrFatalPanicRecovered
+			sendErr := c.sendError(err)
+			if sendErr != nil {
+				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+			}
+
+			// fatal close
+			c.closeWs(true)
+
+			klog.V(6).Infof("live.flush() LEAVE\n")
+			return
+		}
+	}()
 
 	for {
 		// doing a read, need to lock
@@ -330,7 +350,7 @@ func (c *Client) listen() {
 				// graceful close
 				c.closeWs(false)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
@@ -338,7 +358,7 @@ func (c *Client) listen() {
 				// fatal close
 				c.closeWs(false)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, FatalReadSocketErr):
 				klog.V(1).Infof("Fatal socket error: %v\n", err)
@@ -346,27 +366,27 @@ func (c *Client) listen() {
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("Client.listen(): Fatal socket error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): Fatal socket error. Err: %v\n", sendErr)
 				}
 
 				// fatal close
 				c.closeWs(true)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, "Deepgram"):
-				klog.V(1).Infof("Client.listen(): Deepgram error. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): Deepgram error. Err: %v\n", err)
 
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("Client.listen(): Deepgram ErrorMsg. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): Deepgram ErrorMsg. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(false)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
 				klog.V(3).Infof("Client object EOF\n")
@@ -374,27 +394,27 @@ func (c *Client) listen() {
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("Client.listen(): EOF error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): EOF error. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(true)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			default:
-				klog.V(1).Infof("Client.listen(): Cannot read websocket message. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): Cannot read websocket message. Err: %v\n", err)
 
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("Client.listen(): EOF error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): EOF error. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(true)
 
-				klog.V(6).Infof("Client.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			}
 		}
@@ -408,7 +428,7 @@ func (c *Client) listen() {
 		// if c.cOptions.InspectMessage() {
 		// 	err := c.inspect(byMsg)
 		// 	if err != nil {
-		// 		klog.V(1).Infof("Client.listen(): inspect failed. Err: %v\n", err)
+		// 		klog.V(1).Infof("speak.listen(): inspect failed. Err: %v\n", err)
 		// 	}
 		// }
 
@@ -416,39 +436,43 @@ func (c *Client) listen() {
 		case websocket.TextMessage:
 			err := c.router.Message(byMsg)
 			if err != nil {
-				klog.V(1).Infof("Client.listen(): router.Message failed. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): router.Message failed. Err: %v\n", err)
 			}
 		case websocket.BinaryMessage:
 			err := c.router.Binary(byMsg)
 			if err != nil {
-				klog.V(1).Infof("Client.listen(): router.Message failed. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): router.Message failed. Err: %v\n", err)
 			}
 		default:
-			klog.V(7).Infof("Client.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
+			klog.V(7).Infof("speak.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
 		}
 	}
 }
 
-// WriteBinary writes binary data to the websocket server
-func (c *Client) SpeakUsingText(text string) error {
-	klog.V(6).Infof("Client.SpeakText() ENTER\n")
+// SpeakWithText writes binary data to the websocket server
+func (c *Client) SpeakWithText(text string) error {
+	klog.V(6).Infof("speak.SpeakText() ENTER\n")
 	klog.V(4).Infof("text: %s\n", text)
 
-	err := c.WriteJSON(TextSource{Text: text})
+	err := c.WriteJSON(TextSource{
+		Type: MessageTypeSpeak,
+		Text: text,
+	})
 	if err == nil {
 		klog.V(4).Infof("SpeakText Succeeded\n")
 	} else {
 		klog.V(1).Infof("SpeakText failed. Err: %v\n", err)
 	}
 
-	klog.V(6).Infof("Client.SpeakText() LEAVE\n")
+	klog.V(6).Infof("speak.SpeakText() LEAVE\n")
 
 	return err
 }
 
-// WriteBinary writes binary data to the websocket server
-func (c *Client) SpeakUsingStream(byData []byte) error {
-	klog.V(6).Infof("Client.SpeakText() ENTER\n")
+// SpeakWithStream writes binary data to the websocket server
+// NOTE: This is unimplemented on the server side
+func (c *Client) SpeakWithStream(byData []byte) error {
+	klog.V(6).Infof("speak.SpeakText() ENTER\n")
 
 	err := c.WriteBinary(byData)
 	if err == nil {
@@ -457,14 +481,14 @@ func (c *Client) SpeakUsingStream(byData []byte) error {
 		klog.V(1).Infof("SpeakText failed. Err: %v\n", err)
 	}
 
-	klog.V(6).Infof("Client.SpeakText() LEAVE\n")
+	klog.V(6).Infof("speak.SpeakText() LEAVE\n")
 
 	return err
 }
 
 // WriteBinary writes binary data to the websocket server
 func (c *Client) WriteBinary(byData []byte) error {
-	klog.V(6).Infof("Client.WriteBinary() ENTER\n")
+	klog.V(6).Infof("speak.WriteBinary() ENTER\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
@@ -475,7 +499,7 @@ func (c *Client) WriteBinary(byData []byte) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(1).Infof("c.Connect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("Client.WriteBinary() LEAVE\n")
+		klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
 
 		return err
 	}
@@ -485,13 +509,13 @@ func (c *Client) WriteBinary(byData []byte) error {
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteBinary WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("Client.WriteBinary() LEAVE\n")
+		klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
 		return err
 	}
 
 	klog.V(6).Infof("WriteBinary Successful\n")
 	klog.V(7).Infof("payload: %x\n", byData)
-	klog.V(6).Infof("Client.WriteBinary() LEAVE\n")
+	klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
 
 	return nil
 }
@@ -501,12 +525,12 @@ WriteJSON writes a JSON control payload to the websocket server. These are contr
 managing the text-to-speech session on the Deepgram server.
 */
 func (c *Client) WriteJSON(payload interface{}) error {
-	klog.V(6).Infof("Client.WriteJSON() ENTER\n")
+	klog.V(6).Infof("speak.WriteJSON() ENTER\n")
 
 	byData, err := json.Marshal(payload)
 	if err != nil {
 		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
-		klog.V(6).Infof("Client.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 		return err
 	}
 
@@ -519,7 +543,7 @@ func (c *Client) WriteJSON(payload interface{}) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(1).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("Client.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 
 		return err
 	}
@@ -528,54 +552,54 @@ func (c *Client) WriteJSON(payload interface{}) error {
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteJSON WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("Client.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 		return err
 	}
 
 	klog.V(4).Infof("WriteJSON succeeded.\n")
 	klog.V(7).Infof("payload: %s\n", string(byData))
-	klog.V(6).Infof("Client.WriteJSON() LEAVE\n")
+	klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 
 	return nil
 }
 
 // Flush will instruct the server to flush the current text buffer
 func (c *Client) Flush() error {
-	klog.V(6).Infof("Client.Flush() ENTER\n")
+	klog.V(6).Infof("speak.Flush() ENTER\n")
 
 	err := c.WriteJSON(controlMessage{Type: MessageTypeFlush})
 	if err != nil {
 		klog.V(1).Infof("Flush failed. Err: %v\n", err)
-		klog.V(6).Infof("Client.Flush() LEAVE\n")
+		klog.V(6).Infof("speak.Flush() LEAVE\n")
 
 		return err
 	}
 
 	klog.V(4).Infof("Flush Succeeded\n")
-	klog.V(6).Infof("Client.Flush() LEAVE\n")
+	klog.V(6).Infof("speak.Flush() LEAVE\n")
 
 	return err
 }
 
 // Reset will instruct the server to reset the current buffer
 func (c *Client) Reset() error {
-	klog.V(6).Infof("Client.Reset() ENTER\n")
+	klog.V(6).Infof("speak.Reset() ENTER\n")
 
 	err := c.WriteJSON(controlMessage{Type: MessageTypeReset})
 	if err != nil {
 		klog.V(1).Infof("Reset failed. Err: %v\n", err)
-		klog.V(6).Infof("Client.Reset() LEAVE\n")
+		klog.V(6).Infof("speak.Reset() LEAVE\n")
 
 		return err
 	}
 
 	klog.V(4).Infof("Reset Succeeded\n")
-	klog.V(6).Infof("Client.Reset() LEAVE\n")
+	klog.V(6).Infof("speak.Reset() LEAVE\n")
 	return nil
 }
 
 func (c *Client) closeStream(lock bool) error {
-	klog.V(6).Infof("Client.closeStream() ENTER\n")
+	klog.V(6).Infof("speak.closeStream() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -586,19 +610,19 @@ func (c *Client) closeStream(lock bool) error {
 	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Close\" }"))
 	if err != nil {
 		klog.V(1).Infof("WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("Client.closeStream() LEAVE\n")
+		klog.V(6).Infof("speak.closeStream() LEAVE\n")
 
 		return err
 	}
 
 	klog.V(4).Infof("closeStream Succeeded\n")
-	klog.V(6).Infof("Client.closeStream() LEAVE\n")
+	klog.V(6).Infof("speak.closeStream() LEAVE\n")
 
 	return err
 }
 
 func (c *Client) normalClosure(lock bool) error {
-	klog.V(6).Infof("Client.normalClosure() ENTER\n")
+	klog.V(6).Infof("speak.normalClosure() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -610,7 +634,7 @@ func (c *Client) normalClosure(lock bool) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(1).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("Client.normalClosure() LEAVE\n")
+		klog.V(6).Infof("speak.normalClosure() LEAVE\n")
 
 		return err
 	}
@@ -625,7 +649,7 @@ func (c *Client) normalClosure(lock bool) error {
 		klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", err)
 	}
 
-	klog.V(6).Infof("Client.normalClosure() LEAVE\n")
+	klog.V(6).Infof("speak.normalClosure() LEAVE\n")
 
 	return err
 }
@@ -641,7 +665,7 @@ func (c *Client) Stop() {
 }
 
 func (c *Client) closeWs(fatal bool) {
-	klog.V(6).Infof("Client.closeWs() closing channels...\n")
+	klog.V(6).Infof("speak.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
@@ -673,8 +697,8 @@ func (c *Client) closeWs(fatal bool) {
 		c.wsconn = nil
 	}
 
-	klog.V(4).Infof("Client.closeWs() Succeeded\n")
-	klog.V(6).Infof("Client.closeWs() LEAVE\n")
+	klog.V(4).Infof("speak.closeWs() Succeeded\n")
+	klog.V(6).Infof("speak.closeWs() LEAVE\n")
 }
 
 // sendError sends an error message to the callback handler
@@ -682,7 +706,7 @@ func (c *Client) sendError(err error) error {
 	response := c.errorToResponse(err)
 	sendErr := c.router.ErrorHelper(response)
 	if err != nil {
-		klog.V(1).Infof("Client.listen(): router.Error failed. Err: %v\n", sendErr)
+		klog.V(1).Infof("speak.listen(): router.Error failed. Err: %v\n", sendErr)
 	}
 
 	return err
