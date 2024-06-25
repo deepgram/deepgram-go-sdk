@@ -2,18 +2,18 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+// *********** WARNING ***********
 // This package defines interfaces for the live API
-package interfaces
+//
+// Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
+//
+// This package is frozen and no new functionality will be added.
+// *********** WARNING ***********
+package legacy
 
-// LiveMessageCallback is a callback used to receive notifcations for platforms messages
-type LiveMessageCallback interface {
-	Open(or *OpenResponse) error
-	Message(mr *MessageResponse) error
-	Metadata(md *MetadataResponse) error
-	SpeechStarted(ssr *SpeechStartedResponse) error
-	UtteranceEnd(ur *UtteranceEndResponse) error
-	Close(cr *CloseResponse) error
-	Error(er *ErrorResponse) error
+import (
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+)
 
-	UnhandledEvent(byData []byte) error
-}
+// Alias
+type LiveMessageCallback = interfacesv1.LiveMessageCallback

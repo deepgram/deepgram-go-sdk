@@ -11,7 +11,7 @@ import (
 	"os"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 func main() {
@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// use the default callback handler which just dumps all messages to the screen
-	dgClient, err := client.NewWithCancel(ctx, ctxCancel, "", cOptions, tOptions, nil)
+	dgClient, err := client.NewWebSocketWithCancel(ctx, ctxCancel, "", cOptions, tOptions, nil)
 	if err != nil {
 		fmt.Println("ERROR creating LiveClient connection:", err)
 		return

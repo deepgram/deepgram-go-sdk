@@ -23,7 +23,7 @@ func (c *Client) ListMembers(ctx context.Context, projectID string) (*api.Member
 	klog.V(6).Infof("manage.ListMembers() ENTER\n")
 
 	var resp api.MembersResult
-	err := c.apiRequest(ctx, "GET", version.MembersURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "GET", version.MembersURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("ListMembers failed. Err: %v\n", err)
 	} else {
@@ -39,7 +39,7 @@ func (c *Client) RemoveMember(ctx context.Context, projectID, memberID string) (
 	klog.V(6).Infof("manage.RemoveMember() ENTER\n")
 
 	var resp api.MessageResult
-	err := c.apiRequest(ctx, "DELETE", version.MembersByIDURI, nil, &resp, projectID, memberID)
+	err := c.APIRequest(ctx, "DELETE", version.MembersByIDURI, nil, &resp, projectID, memberID)
 	if err != nil {
 		klog.V(1).Infof("RemoveMember failed. Err: %v\n", err)
 	} else {

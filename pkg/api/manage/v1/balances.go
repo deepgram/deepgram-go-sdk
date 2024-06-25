@@ -23,7 +23,7 @@ func (c *Client) ListBalances(ctx context.Context, projectID string) (*api.Balan
 	klog.V(6).Infof("manage.ListBalances() ENTER\n")
 
 	var resp api.BalancesResult
-	err := c.apiRequest(ctx, "GET", version.BalancesURI, nil, &resp, projectID)
+	err := c.APIRequest(ctx, "GET", version.BalancesURI, nil, &resp, projectID)
 	if err != nil {
 		klog.V(1).Infof("ListBalances failed. Err: %v\n", err)
 	} else {
@@ -39,7 +39,7 @@ func (c *Client) GetBalance(ctx context.Context, projectID, balanceID string) (*
 	klog.V(6).Infof("manage.GetBalance() ENTER\n")
 
 	var resp api.BalanceResult
-	err := c.apiRequest(ctx, "GET", version.BalancesByIDURI, nil, &resp, projectID, balanceID)
+	err := c.APIRequest(ctx, "GET", version.BalancesByIDURI, nil, &resp, projectID, balanceID)
 	if err != nil {
 		klog.V(1).Infof("GetBalance failed. Err: %v\n", err)
 	} else {

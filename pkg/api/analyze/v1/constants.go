@@ -8,6 +8,10 @@ import (
 	"errors"
 )
 
+const (
+	PackageVersion string = "v1.0"
+)
+
 // errors
 var (
 	// ErrInvalidInput required input was not found

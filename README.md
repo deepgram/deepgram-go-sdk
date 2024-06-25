@@ -10,8 +10,8 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with o
 - [Installation](#installation)
 - [Requirements](#requirements)
 - [Quickstarts](#quickstarts)
-  - [PreRecorded Audio Transcription Quickstart](#prerecorded-audio-transcription-quickstart)
-  - [Live Audio Transcription Quickstart](#live-audio-transcription-quickstart)
+  - [Speech-to-Text from PreRecorded Audio Quickstart](#prerecorded-audio-transcription-quickstart)
+  - [Speech-to-Text from Live/Streaming Audio Quickstart](#live-audio-transcription-quickstart)
 - [Examples](#examples)
 - [Logging](#logging)
 - [Testing](#testing)
@@ -25,35 +25,41 @@ This SDK implements the Deepgram API found at [https://developers.deepgram.com](
 
 Documentation for specifics about the structs, interfaces, and functions of this SDK can be found here: [Go SDK Documentation](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main)
 
-For documentation relating to Live Audio Transcription:
+For documentation relating to Speech-to-Text from Live/Streaming Audio:
 
-- Live Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/live](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/live)
-- Live API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1)
-- Live API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/live/v1/interfaces)
+- Live Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/websocket)
+- Live API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket)
+- Live API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket/interfaces)
 
-For documentation relating to PreRecorded Audio Transcription and Intelligence:
+For documentation relating to Speech-to-Text (and Intelligence) from PreRecorded Audio:
 
-- PreRecorded Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/prerecorded](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/prerecorded)
-- PreRecorded API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1)
-- PreRecorded API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/prerecorded/v1/interfaces)
+- PreRecorded Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/rest)
+- PreRecorded API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest)
+- PreRecorded API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest/interfaces)
 
 For documentation relating to Text-to-Speech:
 
-- Speak Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak)
-- Speak API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1)
-- Speak API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/interfaces)
+- WebSocket:
+  - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket)
+  - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket)
+  - Speak API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces)
+
+- REST:
+  - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest)
+  - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest)
+  - Speak API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest/interfaces)
 
 For documentation relating to Text Intelligence:
 
-- Analyze Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze)
+- Analyze Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze/v1)
 - Analyze API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1)
 - Analyze API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1/interfaces)
 
 For documentation relating to Manage API:
 
-- Management Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live)
+- Management Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1)
 - Manage API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1)
-- Manage API Interfaces -[https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live/v1/interfaces]( https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/live/v1/interfaces)
+- Manage API Interfaces -[https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1/interfaces]( https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1/interfaces)
 
 ## Getting an API Key
 
@@ -118,7 +124,7 @@ transcriptOptions := &interfaces.LiveTranscriptionOptions{
 
 // create a callback for transcription messages
 // for example, you can take a look at this example project:
-// https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go
+// https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go
 
 // create the client
 dgClient, err := client.NewWithDefaults(ctx, transcriptOptions, callback)
@@ -141,22 +147,27 @@ There are examples for **every*- API call in this SDK. You can find all of these
 
 These examples provide:
 
-Speech-to-Text: PreRecorded Audio:
+Speech-to-Text - PreRecorded Audio:
 
-- From an Audio File - [examples/prerecorded/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/file/main.go)
-- From an URL - [examples/prerecorded/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/url/main.go)
-- From an Audio Stream - [examples/prerecorded/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/prerecorded/stream/main.go)
+- From an Audio File - [examples/speech-to-text/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/file/main.go)
+- From an URL - [examples/speech-to-text/rest/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/url/main.go)
+- From an Audio Stream - [examples/speech-to-text/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/stream/main.go)
 
-Speech-to-Text: Live Audio:
+Speech-to-Text - Live Audio:
 
-- From a Microphone - [examples/streaming/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/microphone/main.go)
-- From an HTTP Endpoint - [examples/streaming/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/streaming/http/main.go)
+- From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
+- From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
 
-Text-to-Speech
+Text-to-Speech - WebSocket
 
-- Save audio to a Path - [examples/speak/save](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/save/main.go)
-- Save audio to a user-defined Writer - [examples/speak/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/file/main.go)
-- Save audio to a Stream/Buffer - [examples/speak/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speak/stream/main.go)
+- Websocket Simple Example - [examples/text-to-speech/websocket/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/simple/main.go)
+- Interactive Websocket - [examples/text-to-speech/websocket/interactive](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/interactive/main.go)
+
+Text-to-Speech - REST
+
+- Save audio to a Path - [examples/text-to-speech/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/file/main.go)
+- Save audio to a Stream/Buffer - [examples/text-to-speech/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/stream/main.go)
+- Save audio to a user-defined Writer - [examples/text-to-speech/rest/writer](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/writer/main.go)
 
 Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for:
 
