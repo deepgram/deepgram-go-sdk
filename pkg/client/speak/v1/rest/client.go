@@ -6,9 +6,7 @@
 package restv1
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -79,15 +77,18 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.Sp
 		return nil, err
 	}
 
-	var buf bytes.Buffer
-	err = json.NewEncoder(&buf).Encode(textSource{Text: text})
-	if err != nil {
-		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
-		klog.V(6).Infof("speak.DoURL() LEAVE\n")
-		return nil, err
-	}
+	// TODO: detect if the source is JSON. If not, then wrap the text in a JSON object
+	// and then marshal it to bytes
+	// var buf bytes.Buffer
+	// err = json.NewEncoder(&buf).Encode(textSource{Text: text})
+	// if err != nil {
+	// 	klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
+	// 	klog.V(6).Infof("speak.DoURL() LEAVE\n")
+	// 	return nil, err
+	// }
 
-	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
+	// req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
+	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(text))
 	if err != nil {
 		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
 		klog.V(6).Infof("prerecorded.DoStream() LEAVE\n")

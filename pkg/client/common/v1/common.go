@@ -145,7 +145,8 @@ func decodeResponseBody(res *http.Response, keys []string, resBody interface{}) 
 	switch b := resBody.(type) {
 	case *interfaces.RawResponse:
 		klog.V(3).Infof("RawResponse\n")
-		return retValues, res.Write(b)
+		_, err := io.Copy(b, res.Body)
+		return retValues, err
 	case io.Writer:
 		klog.V(3).Infof("io.Writer\n")
 		_, err := io.Copy(b, res.Body)

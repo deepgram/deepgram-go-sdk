@@ -38,5 +38,6 @@ func WithCustomParameters(ctx context.Context, params map[string][]string) conte
 
 // common structs found throughout the SDK
 type RawResponse = interfacesv1.RawResponse
+type DeepgramWarning = interfacesv1.DeepgramWarning
 type DeepgramError = interfacesv1.DeepgramError
 type StatusError = interfacesv1.StatusError

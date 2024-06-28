@@ -45,6 +45,9 @@ var (
 
 	// ErrInvalidConnection connection is not valid
 	ErrInvalidConnection = errors.New("connection is not valid")
+
+	// ErrFatalPanicRecovered fatal panic recovered
+	ErrFatalPanicRecovered = errors.New("fatal panic - attempt to recover")
 )
 
 // internal constants for retry, waits, back-off, etc.

@@ -56,10 +56,17 @@ func (c MyCallback) Flush(fl *msginterfaces.FlushedResponse) error {
 	return nil
 }
 
+func (c MyCallback) Warning(wr *msginterfaces.WarningResponse) error {
+	fmt.Printf("\n[Warning] Received\n")
+	fmt.Printf("Warning.Code: %s\n", wr.WarnCode)
+	fmt.Printf("Warning.Description: %s\n\n", wr.WarnMsg)
+	return nil
+}
+
 func (c MyCallback) Error(er *msginterfaces.ErrorResponse) error {
 	fmt.Printf("\n[Error] Received\n")
-	fmt.Printf("Error.Type: %s\n", er.Type)
-	fmt.Printf("Error.Description: %s\n\n", er.Description)
+	fmt.Printf("Error.Code: %s\n", er.ErrCode)
+	fmt.Printf("Error.Description: %s\n\n", er.ErrMsg)
 	return nil
 }
 
@@ -106,10 +113,7 @@ func main() {
 	}
 
 	// Send the text input
-	err = dgClient.WriteJSON(map[string]interface{}{
-		"type": "Speak",
-		"text": TTS_TEXT,
-	})
+	err = dgClient.SpeakWithText(TTS_TEXT)
 	if err != nil {
 		fmt.Printf("Error sending text input: %v\n", err)
 		return

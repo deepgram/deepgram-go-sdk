@@ -12,9 +12,9 @@ import (
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	prerecorded "github.com/deepgram/deepgram-go-sdk/pkg/api/prerecorded/v1"
+	api "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/rest"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/prerecorded"
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 const (
@@ -30,8 +30,8 @@ func main() {
 	ctx := context.Background()
 
 	//client
-	c := client.NewWithDefaults()
-	dg := prerecorded.New(c)
+	c := client.NewRESTWithDefaults()
+	dg := api.New(c)
 
 	// send stream
 	res, err := dg.FromURL(

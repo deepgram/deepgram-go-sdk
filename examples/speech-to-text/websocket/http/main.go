@@ -13,7 +13,7 @@ import (
 	"reflect"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live" //lint:ignore
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 const (
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.NewForDemo(ctx, transcriptOptions)
+	dgClient, err := client.NewWebSocketForDemo(ctx, transcriptOptions)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

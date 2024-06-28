@@ -154,6 +154,39 @@ func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 	return nil
 }
 
+// Warning is the callback for error messages
+func (dch DefaultCallbackHandler) Warning(wr *interfaces.WarningResponse) error {
+	var debugStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG found")
+		debugStr = v
+	}
+
+	if strings.EqualFold(debugStr, "true") {
+		data, err := json.Marshal(wr)
+		if err != nil {
+			klog.V(1).Infof("Error json.Marshal failed. Err: %v\n", err)
+			return err
+		}
+
+		prettyJSON, err := prettyjson.Format(data)
+		if err != nil {
+			klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+			return err
+		}
+		klog.V(2).Infof("\n\nWarning Object:\n%s\n\n", prettyJSON)
+
+		return nil
+	}
+
+	// handle the message
+	fmt.Printf("\n[WarningResponse]\n")
+	fmt.Printf("\nError.Code: %s\n", wr.WarnCode)
+	fmt.Printf("Error.Message: %s\n", wr.WarnMsg)
+
+	return nil
+}
+
 // Error is the callback for error messages
 func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 	var debugStr string

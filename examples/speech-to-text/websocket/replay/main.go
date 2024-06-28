@@ -14,7 +14,7 @@ import (
 
 	replay "github.com/deepgram/deepgram-go-sdk/pkg/audio/replay"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/live" //lint:ignore
+	client "github.com/deepgram/deepgram-go-sdk/pkg/client/listen"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.NewForDemo(ctx, options)
+	dgClient, err := client.NewWebSocketForDemo(ctx, options)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return
