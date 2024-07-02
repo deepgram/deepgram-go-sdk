@@ -45,9 +45,14 @@ func New(options *interfaces.ClientOptions) *Client {
 	return &c
 }
 
-// Do is a generic REST API call to the platform
-func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
-	klog.V(6).Infof("rest.Do() ENTER\n")
+// SetupRequest prepares and returns a new REST request with common headers set.
+func (c *Client) SetupRequest(ctx context.Context, method, uri string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, method, uri, body)
+	if err != nil {
+		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
+		return nil, err
+	}
+	klog.V(4).Infof("%s %s\n", req.Method, uri)
 
 	if headers, ok := ctx.Value(interfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
@@ -63,12 +68,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 	req.Header.Set("Authorization", "token "+c.Options.APIKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 
-	switch req.Method {
-	case http.MethodPost, http.MethodPatch, http.MethodPut:
-		klog.V(3).Infof("Content-Type = application/json\n")
-		req.Header.Set("Content-Type", "application/json")
-	}
+	return req, nil
+}
 
+// Do is a generic REST API call to the platform
+func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{}) error {
+	klog.V(6).Infof("rest.Do() ENTER\n")
 	klog.V(4).Infof("%s %s\n", req.Method, req.URL.String())
 
 	err := c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
@@ -77,15 +82,27 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 		case http.StatusCreated:
 		case http.StatusNoContent:
 		case http.StatusBadRequest:
-			klog.V(1).Infof("HTTP Error Code: %d\n", res.StatusCode)
-			detail, errBody := io.ReadAll(res.Body)
-			if errBody != nil {
-				klog.V(1).Infof("io.ReadAll failed. Err: %e\n", errBody)
-				klog.V(6).Infof("rest.Do() LEAVE\n")
+			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			detail, err := io.ReadAll(res.Body)
+			if err != nil {
+				klog.V(4).Infof("io.ReadAll failed. Err: %v\n", err)
 				return &interfaces.StatusError{Resp: res}
 			}
-			klog.V(6).Infof("rest.Do() LEAVE\n")
-			return fmt.Errorf("%s: %s", res.Status, bytes.TrimSpace(detail))
+
+			// attempt to parse out Deepgram error
+			var e interfaces.DeepgramError
+			if err := json.Unmarshal(detail, &e); err == nil {
+				klog.V(6).Infof("Parsed Deepgram Specific Error\n")
+				return &interfaces.StatusError{
+					Resp:          res,
+					DeepgramError: &e,
+				}
+			}
+
+			// give standard generic error
+			byDetails := bytes.TrimSpace(detail)
+			klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
+			return fmt.Errorf("%s: %s", res.Status, byDetails)
 		default:
 			return &interfaces.StatusError{Resp: res}
 		}
@@ -98,9 +115,10 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 		switch b := resBody.(type) {
 		case *interfaces.RawResponse:
+			_, err := io.Copy(b, res.Body)
 			klog.V(3).Infof("RawResponse\n")
 			klog.V(6).Infof("rest.Do() LEAVE\n")
-			return res.Write(b)
+			return err
 		case io.Writer:
 			_, err := io.Copy(b, res.Body)
 			klog.V(3).Infof("io.Writer\n")
@@ -114,10 +132,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 				return errRead
 			}
 			klog.V(5).Infof("json.NewDecoder Raw:\n\n%s\n\n", resultStr)
-			d := json.NewDecoder(strings.NewReader(string(resultStr)))
-			klog.V(3).Infof("json.NewDecoder\n")
 			klog.V(6).Infof("rest.Do() LEAVE\n")
-			return d.Decode(resBody)
+			return json.NewDecoder(strings.NewReader(string(resultStr))).Decode(resBody)
 		}
 	})
 

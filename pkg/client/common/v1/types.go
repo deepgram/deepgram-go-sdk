@@ -8,7 +8,9 @@ import (
 	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
 )
 
+type RESTClient = rest.Client
+
 // Client implements helper functionality for Prerecorded API
 type Client struct {
-	*rest.Client
+	*RESTClient
 }

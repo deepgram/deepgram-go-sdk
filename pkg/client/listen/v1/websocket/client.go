@@ -863,7 +863,7 @@ func (c *Client) sendError(err error) error {
 	response := c.errorToResponse(err)
 	sendErr := c.router.ErrorHelper(response)
 	if err != nil {
-		klog.V(1).Infof("listen: router.Error failed. Err: %v\n", sendErr)
+		klog.V(1).Infof("live.listen(): router.Error failed. Err: %v\n", sendErr)
 	}
 
 	return err

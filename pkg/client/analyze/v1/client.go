@@ -150,6 +150,8 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.An
 		return err
 	}
 
+	// using the Common SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method which
+	// also sets the common headers including the content-type (for example)
 	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
 	if err != nil {
 		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
@@ -157,13 +159,18 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.An
 		return err
 	}
 
-	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
-		_, err := c.HandleResponse(res, nil, resBody)
-		return err
-	})
-
+	// alternatively, we could have used the Common Client Do method, like this
+	// but the default one also sets additional "typical" headers like
+	// content-type, etc.
+	// This is the Common Client way...
+	// err = c.Do(ctx, req, func(res *http.Response) error {
+	// 	_, err := c.HandleResponse(res, nil, resBody)
+	// 	return err
+	// })
+	// This uses the RESTClient Do method
+	err = c.Do(ctx, req, resBody)
 	if err != nil {
-		klog.V(1).Infof("HTTPClient.Do() failed. Err: %v\n", err)
+		klog.V(1).Infof("RESTClient.Do() failed. Err: %v\n", err)
 	} else {
 		klog.V(4).Infof("DoText successful\n")
 	}
@@ -212,6 +219,8 @@ func (c *Client) DoURL(ctx context.Context, uri string, options *interfaces.Anal
 		return err
 	}
 
+	// using the Common SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method which
+	// also sets the common headers including the content-type (for example)
 	req, err := c.SetupRequest(ctx, "POST", uri, &buf)
 	if err != nil {
 		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
@@ -225,13 +234,9 @@ func (c *Client) DoURL(ctx context.Context, uri string, options *interfaces.Anal
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
-		_, err := c.HandleResponse(res, nil, resBody)
-		return err
-	})
-
+	err = c.Do(ctx, req, resBody)
 	if err != nil {
-		klog.V(1).Infof("HTTPClient.Do() failed. Err: %v\n", err)
+		klog.V(1).Infof("RESTClient.Do() failed. Err: %v\n", err)
 	} else {
 		klog.V(4).Infof("DoURL successful\n")
 	}

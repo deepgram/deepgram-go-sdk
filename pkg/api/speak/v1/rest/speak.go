@@ -7,7 +7,6 @@ package restv1
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"strconv"
@@ -135,7 +134,6 @@ func (c *Client) performAction(action func() (map[string]string, error)) (*api.S
 		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
 		return nil, err
 	}
-	fmt.Printf("retVal: %v\n", retVal)
 
 	charCnt, err := strconv.Atoi(retVal["char-count"])
 	if err != nil {

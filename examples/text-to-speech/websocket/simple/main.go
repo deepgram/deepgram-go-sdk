@@ -82,18 +82,20 @@ func (c MyCallback) Open(or *msginterfaces.OpenResponse) error {
 
 func main() {
 	// init library
-	speak.InitWithDefault()
+	speak.Init(speak.InitLib{
+		LogLevel: speak.LogLevelDefault, // LogLevelDefault, LogLevelFull, LogLevelDebug, LogLevelTrace
+	})
 
 	// Go context
 	ctx := context.Background()
+
+	// set the Client options
+	cOptions := &interfaces.ClientOptions{}
 
 	// set the TTS options
 	ttsOptions := &interfaces.SpeakOptions{
 		Model: "aura-asteria-en",
 	}
-
-	// set the Client options
-	cOptions := &interfaces.ClientOptions{}
 
 	// create the callback
 	callback := MyCallback{}
@@ -127,7 +129,7 @@ func main() {
 	}
 
 	// wait for user input to exit
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// close the connection
 	dgClient.Stop()
