@@ -52,15 +52,24 @@ func (c *Client) APIRequest(ctx context.Context, method, apiPath string, body io
 		return err
 	}
 
-	// Setup the HTTP request
+	// using the Common.SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method which
+	// also sets the common headers including the content-type (for example)
 	req, err := c.SetupRequest(ctx, method, uri, body)
 	if err != nil {
 		klog.V(6).Infof("manage.%s() LEAVE\n", method+apiPath)
 		return err
 	}
 
-	// Execute the request
-	err = c.Client.Do(ctx, req, &resBody)
+	// altertatively, we could have used the Common Client Do method, like this
+	// but the default one also sets additional "typical" headers like
+	// content-type, etc.
+	// This is the Common Client way...
+	// err = c.Do(ctx, req, func(res *http.Response) error {
+	// 	_, err := c.HandleResponse(res, nil, resBody)
+	// 	return err
+	// })
+	// This uses the RESTClient Do method
+	err = c.Do(ctx, req, &resBody)
 	if err != nil {
 		klog.V(6).Infof("manage.%s() LEAVE\n", method+apiPath)
 		return err

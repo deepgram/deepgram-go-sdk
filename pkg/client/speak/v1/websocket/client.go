@@ -598,6 +598,7 @@ func (c *Client) Reset() error {
 	return nil
 }
 
+// closeStream sends an application level message to Deepgram
 func (c *Client) closeStream(lock bool) error {
 	klog.V(6).Infof("speak.closeStream() ENTER\n")
 
@@ -621,6 +622,7 @@ func (c *Client) closeStream(lock bool) error {
 	return err
 }
 
+// normalClosure sends a normal closure message to the server
 func (c *Client) normalClosure(lock bool) error {
 	klog.V(6).Infof("speak.normalClosure() ENTER\n")
 
@@ -633,7 +635,7 @@ func (c *Client) normalClosure(lock bool) error {
 	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
-		klog.V(1).Infof("c.internalConnect() is nil. Err: %v\n", err)
+		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
 		klog.V(6).Infof("speak.normalClosure() LEAVE\n")
 
 		return err
@@ -664,6 +666,7 @@ func (c *Client) Stop() {
 	c.closeWs(false)
 }
 
+// closeWs closes the websocket connection
 func (c *Client) closeWs(fatal bool) {
 	klog.V(6).Infof("speak.closeWs() closing channels...\n")
 
@@ -672,9 +675,10 @@ func (c *Client) closeWs(fatal bool) {
 	defer c.muConn.Unlock()
 
 	if c.wsconn != nil && !fatal {
-		// deepgram requires a close message to be sent
-		_ = c.closeStream(false)
-		time.Sleep(TerminationSleep) // allow time for server to register closure
+		// calling this even though it's apart of the TTS WS protocol, causes a websocket: close 1005 (no status)
+		// // deepgram requires a close message to be sent
+		// _ = c.closeStream(false)
+		// time.Sleep(TerminationSleep) // allow time for server to register closure
 
 		// websocket protocol message
 		_ = c.normalClosure(false)

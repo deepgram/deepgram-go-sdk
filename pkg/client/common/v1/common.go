@@ -62,23 +62,9 @@ func (c *Client) SetupRequest(ctx context.Context, method, uri string, body io.R
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", "token "+c.Options.APIKey)
 	req.Header.Set("User-Agent", interfaces.DgAgent)
+	req.Header.Set("Content-Type", "application/json")
 
 	return req, nil
-}
-
-// ProcessRequest sends the HTTP request and processes the response.
-func (c *Client) ProcessRequest(ctx context.Context, req *http.Request, result interface{}) error {
-	err := c.Client.Do(ctx, req, result)
-	if err != nil {
-		if e, ok := err.(*interfaces.StatusError); ok {
-			klog.V(1).Infof("HTTP Code: %v\n", e.Resp.StatusCode)
-			return err
-		}
-		klog.V(1).Infof("Platform Supplied Err: %v\n", err)
-		return err
-	}
-
-	return nil
 }
 
 // HandleResponse processes the HTTP response for both streaming and URL-based API requests.

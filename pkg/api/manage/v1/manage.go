@@ -29,7 +29,7 @@ func New(client interface{}) *Client {
 		return &Client{
 			&manage.Client{
 				Client: &common.Client{
-					Client: client,
+					RESTClient: client,
 				},
 			},
 		}

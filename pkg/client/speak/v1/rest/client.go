@@ -6,7 +6,9 @@
 package restv1
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -79,22 +81,27 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.Sp
 
 	// TODO: detect if the source is JSON. If not, then wrap the text in a JSON object
 	// and then marshal it to bytes
-	// var buf bytes.Buffer
-	// err = json.NewEncoder(&buf).Encode(textSource{Text: text})
-	// if err != nil {
-	// 	klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
-	// 	klog.V(6).Infof("speak.DoURL() LEAVE\n")
-	// 	return nil, err
-	// }
+	var buf bytes.Buffer
+	err = json.NewEncoder(&buf).Encode(textSource{Text: text})
+	if err != nil {
+		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.DoURL() LEAVE\n")
+		return nil, err
+	}
 
-	// req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
-	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(text))
+	req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(buf.String()))
+
+	// using the RESTClient SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method which
+	// also sets the common headers including the content-type (for example)
+	// req, err := c.SetupRequest(ctx, "POST", uri, strings.NewReader(text))
 	if err != nil {
 		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
 		klog.V(6).Infof("prerecorded.DoStream() LEAVE\n")
 		return nil, err
 	}
 
+	// we need to use the HTTPClient + HandleResponse method in order to extract the
+	// response headers from the HTTP response. HandleResponse allows us to do that.
 	var kv map[string]string
 	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
 		kv, err = c.HandleResponse(res, keys, resBody)
@@ -102,7 +109,7 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.Sp
 	})
 
 	if err != nil {
-		klog.V(1).Infof("HTTPClient.Do() failed. Err: %v\n", err)
+		klog.V(1).Infof("RESTClient.Do() failed. Err: %v\n", err)
 	} else {
 		klog.V(4).Infof("DoStream successful\n")
 	}
