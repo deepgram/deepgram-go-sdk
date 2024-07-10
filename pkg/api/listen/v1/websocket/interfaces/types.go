@@ -40,13 +40,15 @@ type Word struct {
 	Start          float64 `json:"start,omitempty"`
 	Word           string  `json:"word,omitempty"`
 	Speaker        *int    `json:"speaker,omitempty"`
+	Language       string  `json:"language,omitempty"`
 }
 
 // Alternative is a single alternative in a transcript
 type Alternative struct {
-	Confidence float64 `json:"confidence,omitempty"`
-	Transcript string  `json:"transcript,omitempty"`
-	Words      []Word  `json:"words,omitempty"`
+	Confidence float64  `json:"confidence,omitempty"`
+	Transcript string   `json:"transcript,omitempty"`
+	Words      []Word   `json:"words,omitempty"`
+	Languages  []string `json:"languages,omitempty"`
 }
 
 // Channel is a single channel in a transcript

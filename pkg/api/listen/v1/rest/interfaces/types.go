@@ -86,6 +86,7 @@ type Word struct {
 	PunctuatedWord    string   `json:"punctuated_word,omitempty"`
 	Sentiment         *string  `json:"sentiment,omitempty"`
 	SentimentScore    *float64 `json:"sentiment_score,omitempty"`
+	Language          string   `json:"language,omitempty"`
 }
 
 type Translation struct {
@@ -101,6 +102,7 @@ type Alternative struct {
 	Entities    *[]Entity    `json:"entities,omitempty"`
 	Summaries   *[]SummaryV1 `json:"summaries,omitempty"`
 	Translation *Translation `json:"translation,omitempty"`
+	Languages   []string     `json:"languages,omitempty"`
 }
 
 type Paragraphs struct {
