@@ -14,6 +14,11 @@ import (
 )
 
 // ToWebVTT implements output for VTT
+//
+// Deprecated: This function is deprecated. This will be removed in a future release. For VTT or SRT please
+// capture the transcription with utterance enabled, then use the following projects to generate VTT or SRT files:
+// - https://github.com/deepgram/deepgram-python-captions
+// - https://github.com/deepgram/deepgram-js-captions
 func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 	if resp.Results.Utterances == nil {
 		return "", errors.New("this function requires a transcript that was generated with the utterances feature")
@@ -32,6 +37,11 @@ func (resp *PreRecordedResponse) ToWebVTT() (string, error) {
 }
 
 // ToSRT implements output for SRT
+//
+// Deprecated: This function is deprecated. This will be removed in a future release. For VTT or SRT please
+// capture the transcription with utterance enabled, then use the following projects to generate VTT or SRT files:
+// - https://github.com/deepgram/deepgram-python-captions
+// - https://github.com/deepgram/deepgram-js-captions
 func (resp *PreRecordedResponse) ToSRT() (string, error) {
 	if resp.Results.Utterances == nil {
 		return "", errors.New("this function requires a transcript that was generated with the utterances feature")
