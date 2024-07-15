@@ -21,18 +21,6 @@ NewForDemo creates a new websocket connection with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-
-Deprecated: Use NewUsingCallbackForDemo instead
-*/
-func NewForDemo(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions) (*WSCallback, error) {
-	return NewUsingCallbackForDemo(ctx, options)
-}
-
-/*
-NewForDemo creates a new websocket connection with all default options
-
-Notes:
-  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
 func NewUsingCallbackForDemo(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions) (*WSCallback, error) {
 	return New(ctx, "", &clientinterfaces.ClientOptions{}, options, nil)
@@ -44,38 +32,9 @@ NewWithDefaults creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
-
-Deprecated: Use NewUsingCallbackWithDefaults instead
-*/
-func NewWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*WSCallback, error) {
-	return NewUsingCallback(ctx, "", &clientinterfaces.ClientOptions{}, options, callback)
-}
-
-/*
-NewWithDefaults creates a new websocket connection with all default options
-
-Notes:
-  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-  - The callback handler is set to the default handler which just prints all messages to the console
 */
 func NewUsingCallbackWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*WSCallback, error) {
 	return NewUsingCallback(ctx, "", &clientinterfaces.ClientOptions{}, options, callback)
-}
-
-/*
-New creates a new websocket connection with the specified options
-
-Input parameters:
-- ctx: context.Context object
-- apiKey: string containing the Deepgram API key
-- cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
-- callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
-
-Deprecated: Use NewUsingCallback instead
-*/
-func New(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*WSCallback, error) {
-	return NewUsingCallback(ctx, apiKey, cOptions, tOptions, callback)
 }
 
 /*
@@ -127,7 +86,7 @@ func NewUsingCallbackWithCancel(ctx context.Context, ctxCancel context.CancelFun
 	}
 
 	// init
-	var router msginterfaces.Router
+	var router commoninterfaces.Router
 	router = websocketv1api.NewCallbackRouter(callback)
 
 	conn := WSCallback{
@@ -141,10 +100,54 @@ func NewUsingCallbackWithCancel(ctx context.Context, ctxCancel context.CancelFun
 
 	var handler commoninterfaces.WebSocketHandler
 	handler = &conn
-	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler)
+	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler, &router)
 
 	klog.V(3).Infof("NewDeepGramWSClient Succeeded\n")
 	klog.V(6).Infof("New() LEAVE\n")
 
 	return &conn, nil
+}
+
+/***********************************/
+// Deprecated functions
+/***********************************/
+/*
+NewForDemo creates a new websocket connection with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+
+Deprecated: Use NewUsingCallbackForDemo instead
+*/
+func NewForDemo(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions) (*WSCallback, error) {
+	return NewUsingCallbackForDemo(ctx, options)
+}
+
+/*
+NewWithDefaults creates a new websocket connection with all default options
+
+Notes:
+  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+  - The callback handler is set to the default handler which just prints all messages to the console
+
+Deprecated: Use NewUsingCallbackWithDefaults instead
+*/
+func NewWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*WSCallback, error) {
+	return NewUsingCallback(ctx, "", &clientinterfaces.ClientOptions{}, options, callback)
+}
+
+/*
+New creates a new websocket connection with the specified options
+
+Input parameters:
+- ctx: context.Context object
+- apiKey: string containing the Deepgram API key
+- cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
+- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
+- callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
+
+Deprecated: Use NewUsingCallback instead
+*/
+func New(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*WSCallback, error) {
+	return NewUsingCallback(ctx, apiKey, cOptions, tOptions, callback)
 }

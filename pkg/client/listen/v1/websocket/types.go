@@ -11,6 +11,7 @@ import (
 
 	msginterface "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
 	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
@@ -33,7 +34,7 @@ type WSCallback struct {
 	tOptions *interfaces.LiveTranscriptionOptions
 
 	callback msginterface.LiveMessageCallback
-	router   *msginterface.Router
+	router   *commoninterfaces.Router
 
 	// internal constants for retry, waits, back-off, etc.
 	lastDatagram *time.Time
@@ -50,7 +51,7 @@ type WSChannel struct {
 	tOptions *interfaces.LiveTranscriptionOptions
 
 	chans  []*msginterface.LiveMessageChan
-	router *msginterface.Router
+	router *commoninterfaces.Router
 
 	// internal constants for retry, waits, back-off, etc.
 	lastDatagram *time.Time

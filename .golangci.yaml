@@ -118,6 +118,12 @@ issues:
     - path: pkg/client/listen/v1/websocket/new_using_chan.go
       linters:
         - gocritic
+    - path: pkg/client/speak/v1/websocket/client_callback.go
+      linters:
+        - dupl
+    - path: pkg/client/speak/v1/websocket/client_channel.go
+      linters:
+        - dupl
     - path: pkg/client/listen/v1/websocket/client_callback.go
       linters:
         - dupl
