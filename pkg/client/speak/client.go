@@ -8,12 +8,10 @@ This package provides the speak client implementation for the Deepgram API
 package speak
 
 import (
-	"context"
-
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
+	// msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
 	speakv1rest "github.com/deepgram/deepgram-go-sdk/pkg/client/speak/v1/rest"
-	speakv1ws "github.com/deepgram/deepgram-go-sdk/pkg/client/speak/v1/websocket"
+	// speakv1ws "github.com/deepgram/deepgram-go-sdk/pkg/client/speak/v1/websocket"
 )
 
 /***********************************/
@@ -79,68 +77,68 @@ func NewREST(apiKey string, options *interfaces.ClientOptions) *speakv1rest.Clie
 	return speakv1rest.New(apiKey, options)
 }
 
-/***********************************/
-// WebSocket Client
-/***********************************/
-const (
-	WebSocketPackageVersion = speakv1ws.PackageVersion
-)
+// /***********************************/
+// // WebSocket Client
+// /***********************************/
+// const (
+// 	WebSocketPackageVersion = speakv1ws.PackageVersion
+// )
 
-type WebSocketClient = speakv1ws.Client
+// type WebSocketClient = speakv1ws.Client
 
-/*
-NewWebSocketForDemo creates a new websocket connection with all default options
+// /*
+// NewWebSocketForDemo creates a new websocket connection with all default options
 
-Notes:
-  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-*/
-func NewWebSocketForDemo(ctx context.Context, options *interfaces.SpeakOptions) (*speakv1ws.Client, error) {
-	return speakv1ws.NewWebSocketForDemo(ctx, options)
-}
+// Notes:
+//   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+// */
+// func NewWebSocketForDemo(ctx context.Context, options *interfaces.SpeakOptions) (*speakv1ws.Client, error) {
+// 	return speakv1ws.NewWebSocketForDemo(ctx, options)
+// }
 
-/*
-NewStreamWithDefaults creates a new websocket connection with all default options
+// /*
+// NewStreamWithDefaults creates a new websocket connection with all default options
 
-Notes:
-  - The callback handler is set to the default handler
-*/
-func NewWebSocketWithDefaults(ctx context.Context, options *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
-	return speakv1ws.NewWebSocketWithDefaults(ctx, options, callback)
-}
+// Notes:
+//   - The callback handler is set to the default handler
+// */
+// func NewWebSocketWithDefaults(ctx context.Context, options *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
+// 	return speakv1ws.NewWebSocketWithDefaults(ctx, options, callback)
+// }
 
-/*
-NewStream creates a new websocket connection with the specified options
+// /*
+// NewStream creates a new websocket connection with the specified options
 
-Input parameters:
-- ctx: context.Context object
-- apiKey: string containing the Deepgram API key
-- cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- sOptions: SpeakOptions which allows overriding things like model, etc.
-- callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
+// Input parameters:
+// - ctx: context.Context object
+// - apiKey: string containing the Deepgram API key
+// - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
+// - sOptions: SpeakOptions which allows overriding things like model, etc.
+// - callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
 
-Notes:
-  - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-  - The callback handler is set to the default handler
-*/
-func NewWebSocket(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
-	return speakv1ws.NewWebSocket(ctx, apiKey, cOptions, sOptions, callback)
-}
+// Notes:
+//   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+//   - The callback handler is set to the default handler
+// */
+// func NewWebSocket(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
+// 	return speakv1ws.NewWebSocket(ctx, apiKey, cOptions, sOptions, callback)
+// }
 
-/*
-NewWebSocketWithCancel creates a new websocket connection but has facilities to BYOC (Bring Your Own Cancel)
+// /*
+// NewWebSocketWithCancel creates a new websocket connection but has facilities to BYOC (Bring Your Own Cancel)
 
-Input parameters:
-- ctx: context.Context object
-- ctxCancel: allow passing in own cancel
-- apiKey: string containing the Deepgram API key
-- cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- sOptions: SpeakOptions which allows overriding things like model, etc.
-- callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
+// Input parameters:
+// - ctx: context.Context object
+// - ctxCancel: allow passing in own cancel
+// - apiKey: string containing the Deepgram API key
+// - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
+// - sOptions: SpeakOptions which allows overriding things like model, etc.
+// - callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
 
-Notes:
-  - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-  - The callback handler is set to the default handler
-*/
-func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
-	return speakv1ws.NewWebSocketWithCancel(ctx, ctxCancel, apiKey, cOptions, sOptions, callback)
-}
+// Notes:
+//   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+//   - The callback handler is set to the default handler
+// */
+// func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*speakv1ws.Client, error) {
+// 	return speakv1ws.NewWebSocketWithCancel(ctx, ctxCancel, apiKey, cOptions, sOptions, callback)
+// }
