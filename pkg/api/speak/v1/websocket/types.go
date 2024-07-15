@@ -5,7 +5,7 @@
 package websocketv1
 
 import (
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 )
 
 /*
@@ -17,14 +17,14 @@ type DefaultChanHandler struct {
 	debugWebsocket        bool
 	debugWebsocketVerbose bool
 
-	openChan          chan *interfaces.OpenResponse
-	messageChan       chan *interfaces.MessageResponse
-	metadataChan      chan *interfaces.MetadataResponse
-	speechStartedChan chan *interfaces.SpeechStartedResponse
-	utteranceEndChan  chan *interfaces.UtteranceEndResponse
-	closeChan         chan *interfaces.CloseResponse
-	errorChan         chan *interfaces.ErrorResponse
-	unhandledChan     chan *[]byte
+	binaryChan    chan *[]byte
+	openChan      chan *interfaces.OpenResponse
+	metadataChan  chan *interfaces.MetadataResponse
+	flushedChan   chan *interfaces.FlushedResponse
+	closeChan     chan *interfaces.CloseResponse
+	warningChan   chan *interfaces.WarningResponse
+	errorChan     chan *interfaces.ErrorResponse
+	unhandledChan chan *[]byte
 }
 
 // ChanRouter routes events
@@ -32,14 +32,14 @@ type ChanRouter struct {
 	debugWebsocket bool
 
 	// call out to channels
-	openChan          []*chan *interfaces.OpenResponse
-	messageChan       []*chan *interfaces.MessageResponse
-	metadataChan      []*chan *interfaces.MetadataResponse
-	speechStartedChan []*chan *interfaces.SpeechStartedResponse
-	utteranceEndChan  []*chan *interfaces.UtteranceEndResponse
-	closeChan         []*chan *interfaces.CloseResponse
-	errorChan         []*chan *interfaces.ErrorResponse
-	unhandledChan     []*chan *[]byte
+	binaryChan    []*chan *[]byte
+	openChan      []*chan *interfaces.OpenResponse
+	metadataChan  []*chan *interfaces.MetadataResponse
+	flushedChan   []*chan *interfaces.FlushedResponse
+	closeChan     []*chan *interfaces.CloseResponse
+	warningChan   []*chan *interfaces.WarningResponse
+	errorChan     []*chan *interfaces.ErrorResponse
+	unhandledChan []*chan *[]byte
 }
 
 /*
@@ -55,7 +55,7 @@ type DefaultCallbackHandler struct {
 // CallbackRouter routes events
 type CallbackRouter struct {
 	debugWebsocket bool
-	callback       interfaces.LiveMessageCallback
+	callback       interfaces.SpeakMessageCallback
 }
 
 // MessageRouter is the interface for routing messages

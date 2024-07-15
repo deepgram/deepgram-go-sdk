@@ -248,7 +248,7 @@ func main() {
 	callback = *NewMyHandler()
 
 	// create a Deepgram client
-	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, &callback)
+	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

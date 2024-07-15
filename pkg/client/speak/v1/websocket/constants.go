@@ -1,4 +1,4 @@
-// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -21,15 +21,20 @@ const (
 )
 
 const (
-	// MessageTypeKeepAlive keep the connection alive
-	MessageTypeKeepAlive string = "KeepAlive"
+	// MessageTypeFlush flushes the audio from the server
+	MessageTypeSpeak string = "Speak"
 
-	// MessageTypeFinalize flushes the transcription from the server
-	MessageTypeFinalize string = "Finalize"
+	// MessageTypeFlush flushes the audio from the server
+	MessageTypeFlush string = "Flush"
+
+	// MessageTypeReset resets the text buffer
+	MessageTypeReset string = "Reset"
+
+	// MessageTypeClose closes the stream
+	MessageTypeClose string = "Close"
 )
 
 // internal constants for retry, waits, back-off, etc.
 const (
 	flushPeriod = 500 * time.Millisecond
-	pingPeriod  = 5 * time.Second
 )

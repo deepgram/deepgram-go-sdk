@@ -22,7 +22,7 @@ import (
 )
 
 // gocritic:ignore
-func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, options *clientinterfaces.ClientOptions, processMessages *commonv1interfaces.WebSocketHandler) *WSClient {
+func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, options *clientinterfaces.ClientOptions, processMessages *commonv1interfaces.WebSocketHandler, router *commonv1interfaces.Router) *WSClient {
 	if apiKey != "" {
 		options.APIKey = apiKey
 	}
@@ -39,6 +39,7 @@ func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, opt
 		ctxCancel:       ctxCancel,
 		retry:           true,
 		processMessages: processMessages,
+		router:          router,
 	}
 
 	return &c
@@ -195,6 +196,14 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 		// start WS specific items
 		(*c.processMessages).Start()
+
+		// fire off close connection
+		err = (*c.router).Open(&commonv1interfaces.OpenResponse{
+			Type: string(commonv1interfaces.TypeOpenResponse),
+		})
+		if err != nil {
+			klog.V(1).Infof("router.Open failed. Err: %v\n", err)
+		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
 		klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
@@ -533,6 +542,14 @@ func (c *WSClient) closeWs(fatal bool) {
 	if fatal || c.wsconn != nil {
 		// process WS specific items
 		(*c.processMessages).Finish()
+
+		// fire off close connection
+		err := (*c.router).Close(&commonv1interfaces.CloseResponse{
+			Type: string(commonv1interfaces.TypeCloseResponse),
+		})
+		if err != nil {
+			klog.V(1).Infof("router.CloseHelper failed. Err: %v\n", err)
+		}
 	}
 
 	// close the connection

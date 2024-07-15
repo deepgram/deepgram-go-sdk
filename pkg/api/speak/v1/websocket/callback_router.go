@@ -1,4 +1,4 @@
-// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
@@ -12,28 +12,19 @@ import (
 	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 )
 
 // NewWithDefault creates a CallbackRouter with the default callback handler
-// Deprecated: Use NewCallbackWithDefault instead
-func NewWithDefault() *CallbackRouter {
-	return NewCallbackWithDefault()
-}
-
-// NewCallbackWithDefault creates a CallbackRouter with the default callback handler
 func NewCallbackWithDefault() *CallbackRouter {
-	return NewCallbackRouter(NewDefaultCallbackHandler())
-}
-
-// New creates a CallbackRouter with a user-defined callback
-// Deprecated: Use NewCallbackRouter instead
-func New(callback interfaces.LiveMessageCallback) *CallbackRouter {
+	var callback interfaces.SpeakMessageCallback
+	handler := NewDefaultCallbackHandler()
+	callback = handler
 	return NewCallbackRouter(callback)
 }
 
 // New creates a CallbackRouter with a user-defined callback
-func NewCallbackRouter(callback interfaces.LiveMessageCallback) *CallbackRouter {
+func NewCallbackRouter(callback interfaces.SpeakMessageCallback) *CallbackRouter {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
@@ -45,17 +36,17 @@ func NewCallbackRouter(callback interfaces.LiveMessageCallback) *CallbackRouter 
 	}
 }
 
-// Open sends an OpenResponse message to the callback
+// OpenHelper handles the OpenResponse message
 func (r *CallbackRouter) Open(or *interfaces.OpenResponse) error {
 	return r.callback.Open(or)
 }
 
-// Close sends an CloseResponse message to the callback
+// CloseHelper handles the OpenResponse message
 func (r *CallbackRouter) Close(or *interfaces.CloseResponse) error {
 	return r.callback.Close(or)
 }
 
-// Error sends an ErrorResponse message to the callback
+// ErrorHelper handles the ErrorResponse message
 func (r *CallbackRouter) Error(er *interfaces.ErrorResponse) error {
 	return r.callback.Error(er)
 }
@@ -77,17 +68,17 @@ func (r *CallbackRouter) processGeneric(msgType string, byMsg []byte, action fun
 	return err
 }
 
-func (r *CallbackRouter) processMessage(byMsg []byte) error {
-	var msg interfaces.MessageResponse
+func (r *CallbackRouter) processFlushed(byMsg []byte) error {
+	var msg interfaces.FlushedResponse
 	if err := json.Unmarshal(byMsg, &msg); err != nil {
 		return err
 	}
 
 	action := func(data *interface{}) error {
-		return r.callback.Message(&msg)
+		return r.callback.Flush(&msg)
 	}
 
-	return r.processGeneric("MessageResponse", byMsg, action, msg)
+	return r.processGeneric(string(interfaces.TypeFlushedResponse), byMsg, action, msg)
 }
 
 func (r *CallbackRouter) processMetadata(byMsg []byte) error {
@@ -100,33 +91,20 @@ func (r *CallbackRouter) processMetadata(byMsg []byte) error {
 		return r.callback.Metadata(&msg)
 	}
 
-	return r.processGeneric("MetadataResponse", byMsg, action, msg)
+	return r.processGeneric(string(interfaces.TypeMetadataResponse), byMsg, action, msg)
 }
 
-func (r *CallbackRouter) processSpeechStartedResponse(byMsg []byte) error {
-	var msg interfaces.SpeechStartedResponse
+func (r *CallbackRouter) processWarningResponse(byMsg []byte) error {
+	var msg interfaces.WarningResponse
 	if err := json.Unmarshal(byMsg, &msg); err != nil {
 		return err
 	}
 
 	action := func(data *interface{}) error {
-		return r.callback.SpeechStarted(&msg)
+		return r.callback.Warning(&msg)
 	}
 
-	return r.processGeneric("SpeechStartedResponse", byMsg, action, msg)
-}
-
-func (r *CallbackRouter) processUtteranceEndResponse(byMsg []byte) error {
-	var msg interfaces.UtteranceEndResponse
-	if err := json.Unmarshal(byMsg, &msg); err != nil {
-		return err
-	}
-
-	action := func(data *interface{}) error {
-		return r.callback.UtteranceEnd(&msg)
-	}
-
-	return r.processGeneric("UtteranceEndResponse", byMsg, action, msg)
+	return r.processGeneric(string(interfaces.TypeWarningResponse), byMsg, action, msg)
 }
 
 func (r *CallbackRouter) processErrorResponse(byMsg []byte) error {
@@ -139,7 +117,7 @@ func (r *CallbackRouter) processErrorResponse(byMsg []byte) error {
 		return r.callback.Error(&msg)
 	}
 
-	return r.processGeneric("ErrorResponse", byMsg, action, msg)
+	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action, msg)
 }
 
 // Message handles platform messages and routes them appropriately based on the MessageType
@@ -159,18 +137,17 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 
 	var err error
 	switch interfaces.TypeResponse(mt.Type) {
-	case interfaces.TypeMessageResponse:
-		err = r.processMessage(byMsg)
+	case interfaces.TypeFlushedResponse:
+		err = r.processFlushed(byMsg)
 	case interfaces.TypeMetadataResponse:
 		err = r.processMetadata(byMsg)
-	case interfaces.TypeSpeechStartedResponse:
-		err = r.processSpeechStartedResponse(byMsg)
-	case interfaces.TypeUtteranceEndResponse:
-		err = r.processUtteranceEndResponse(byMsg)
+	case interfaces.TypeWarningResponse:
+		err = r.processWarningResponse(byMsg)
 	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
 		err = r.processErrorResponse(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
+		klog.V(1).Infof("Message type %s is unhandled\n", mt.Type)
 	}
 
 	if err == nil {
@@ -182,18 +159,32 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 	return err
 }
 
-// Binary handles platform messages and routes them appropriately based on the MessageType
+// Binary handles binary messages
 func (r *CallbackRouter) Binary(byMsg []byte) error {
-	// No implementation needed on STT
-	return nil
+	klog.V(6).Infof("router.Binary ENTER\n")
+
+	err := r.callback.Binary(byMsg)
+	if err != nil {
+		klog.V(1).Infof("callback.Binary failed. Err: %v\n", err)
+	} else {
+		klog.V(5).Infof("callback.Binary succeeded\n")
+	}
+
+	klog.V(6).Infof("router.Binary LEAVE\n")
+	return err
 }
 
 // UnhandledMessage logs and handles any unexpected message types
 func (r *CallbackRouter) UnhandledMessage(byMsg []byte) error {
-	klog.V(6).Infof("router.UnhandledMessage ENTER\n")
-	r.printDebugMessages(3, "UnhandledMessage", byMsg)
-	klog.V(1).Infof("Unknown Event was received\n")
-	klog.V(6).Infof("router.UnhandledMessage LEAVE\n")
+	action := func(data *interface{}) error {
+		return r.callback.UnhandledEvent(byMsg)
+	}
+
+	err := r.processGeneric(string(interfaces.TypeUnhandledResponse), byMsg, action, byMsg)
+	if err != nil {
+		klog.V(1).Infof("callback.UnhandledEvent failed. Err: %v\n", err)
+	}
+
 	return ErrInvalidMessageType
 }
 

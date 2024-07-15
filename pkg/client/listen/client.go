@@ -186,13 +186,13 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The chans handler is set to the default handler which just prints all messages to the console
 */
-func NewWSUsingChanWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChanWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	return listenv1ws.NewUsingChanWithDefaults(ctx, options, chans)
 }
 
 // NewWebSocketUsingChanWithDefaults is an alias for NewWSUsingChanWithDefaults
 // TODO: Deprecate this function later
-func NewWebSocketUsingChanWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWebSocketUsingChanWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	return NewWSUsingChanWithDefaults(ctx, options, chans)
 }
 
@@ -206,14 +206,14 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
 */
-func NewWSUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return listenv1ws.NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
 
 // NewWebSocketUsingChan is an alias for NewWSUsingChan
 // TODO: Deprecate this function later
-func NewWebSocketUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWebSocketUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	return NewWSUsingChan(ctx, apiKey, cOptions, tOptions, chans)
 }
 
@@ -228,13 +228,13 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
 */
-func NewWSUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	return listenv1ws.NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
 
 // NewWebSocketUsingChanWithCancel is an alias for NewWSUsingChanWithCancel
 // TODO: Deprecate this function later
-func NewWebSocketUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWebSocketUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*listenv1ws.WSChannel, error) {
 	return NewWSUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
 

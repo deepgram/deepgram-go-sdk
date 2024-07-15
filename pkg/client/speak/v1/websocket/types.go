@@ -9,11 +9,17 @@ import (
 	"sync"
 	"time"
 
-	msginterface "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	msginterface "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
 )
+
+// external structs
+type TextSource struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
 
 // internal structs
 type controlMessage struct {
@@ -31,14 +37,15 @@ type WSCallback struct {
 	ctxCancel context.CancelFunc
 
 	cOptions *interfaces.ClientOptions
-	tOptions *interfaces.LiveTranscriptionOptions
+	sOptions *interfaces.WSSpeakOptions
 
-	callback msginterface.LiveMessageCallback
+	callback msginterface.SpeakMessageCallback
 	router   *commoninterfaces.Router
 
 	// internal constants for retry, waits, back-off, etc.
 	lastDatagram *time.Time
 	muFinal      sync.RWMutex
+	flushCount   int64
 }
 
 // WSChannel is a struct representing the websocket client connection using channels
@@ -48,12 +55,13 @@ type WSChannel struct {
 	ctxCancel context.CancelFunc
 
 	cOptions *interfaces.ClientOptions
-	tOptions *interfaces.LiveTranscriptionOptions
+	sOptions *interfaces.WSSpeakOptions
 
-	chans  []*msginterface.LiveMessageChan
+	chans  []*msginterface.SpeakMessageChan
 	router *commoninterfaces.Router
 
 	// internal constants for retry, waits, back-off, etc.
 	lastDatagram *time.Time
 	muFinal      sync.RWMutex
+	flushCount   int64
 }

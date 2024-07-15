@@ -1,4 +1,4 @@
-module github.com/vmware-tanzu/community-edition/hack/tools
+module github.com/deepgram/deepgram-go-sdk/hack/tools
 
 go 1.19
 
@@ -171,3 +171,5 @@ require (
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20220706161116-678bad134442 // indirect
 )
+
+replace github.com/gorilla/websocket => github.com/dvonthenen/websocket v1.5.1-dyv.2
