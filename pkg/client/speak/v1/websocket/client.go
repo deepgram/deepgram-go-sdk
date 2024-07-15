@@ -1,8 +1,8 @@
-// Copyright 2023-2024 Deepgram SDK contributors. All Rights Reserved.
+// Copyright 2024 Deepgram SDK contributors. All Rights Reserved.
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// This package provides the live/streaming client implementation for the Deepgram API
+// This package provides the speak/streaming client implementation for the Deepgram API
 package websocketv1
 
 import (
@@ -19,14 +19,18 @@ import (
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
 
-	live "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket"
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	speak "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
 )
 
 type controlMessage struct {
 	Type string `json:"type"`
+}
+type TextSource struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
 }
 
 /*
@@ -35,7 +39,7 @@ NewForDemo creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*Client, error) {
+func NewForDemo(ctx context.Context, options *interfaces.SpeakOptions) (*Client, error) {
 	return New(ctx, "", &interfaces.ClientOptions{}, options, nil)
 }
 
@@ -43,10 +47,9 @@ func NewForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOption
 NewWithDefaults creates a new websocket connection with all default options
 
 Notes:
-  - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
-  - The callback handler is set to the default handler which just prints all messages to the console
+  - The callback handler is set to the default handler
 */
-func NewWithDefaults(ctx context.Context, options *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func NewWithDefaults(ctx context.Context, options *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*Client, error) {
 	return New(ctx, "", &interfaces.ClientOptions{}, options, callback)
 }
 
@@ -57,27 +60,35 @@ Input parameters:
 - ctx: context.Context object
 - apiKey: string containing the Deepgram API key
 - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
-- callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
+- sOptions: SpeakOptions which allows overriding things like model, etc.
+- callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
+
+Notes:
+  - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+  - The callback handler is set to the default handler
 */
-func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
+func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*Client, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
-	return NewWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
+	return NewWithCancel(ctx, ctxCancel, apiKey, cOptions, sOptions, callback)
 }
 
 /*
-New creates a new websocket connection with the specified options
+NewWithCancel creates a new websocket connection with the specified options
 
 Input parameters:
 - ctx: context.Context object
 - ctxCancel: allow passing in own cancel
 - apiKey: string containing the Deepgram API key
 - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
-- callback: LiveMessageCallback which is a callback that allows you to perform actions based on the transcription
+- sOptions: SpeakOptions which allows overriding things like model, etc.
+- callback: SpeakMessageCallback is a callback which lets you perform actions based on platform messages
+
+Notes:
+  - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+  - The callback handler is set to the default handler
 */
-func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	klog.V(6).Infof("live.New() ENTER\n")
+func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, sOptions *interfaces.SpeakOptions, callback msginterfaces.SpeakMessageCallback) (*Client, error) {
+	klog.V(6).Infof("speak.New() ENTER\n")
 
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
@@ -87,31 +98,31 @@ func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey str
 		klog.V(1).Infof("ClientOptions.Parse() failed. Err: %v\n", err)
 		return nil, err
 	}
-	err = tOptions.Check()
+	err = sOptions.Check()
 	if err != nil {
-		klog.V(1).Infof("TranscribeOptions.Check() failed. Err: %v\n", err)
+		klog.V(1).Infof("SpeakOptions.Check() failed. Err: %v\n", err)
 		return nil, err
 	}
 
 	if callback == nil {
 		klog.V(2).Infof("Using DefaultCallbackHandler.\n")
-		callback = live.NewDefaultCallbackHandler()
+		callback = speak.NewDefaultCallbackHandler()
 	}
 
 	// init
 	conn := Client{
 		cOptions:  cOptions,
-		tOptions:  tOptions,
+		sOptions:  sOptions,
 		sendBuf:   make(chan []byte, 1),
 		callback:  callback,
-		router:    live.New(callback),
+		router:    speak.NewStream(callback),
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
 		retry:     true,
 	}
 
 	klog.V(3).Infof("NewDeepGramWSClient Succeeded\n")
-	klog.V(6).Infof("live.New() LEAVE\n")
+	klog.V(6).Infof("speak.New() LEAVE\n")
 
 	return &conn, nil
 }
@@ -150,7 +161,7 @@ func (c *Client) internalConnect() *websocket.Conn {
 
 //nolint:funlen // this is a complex function. keep as is
 func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
-	klog.V(7).Infof("live.internalConnectWithCancel() ENTER\n")
+	klog.V(7).Infof("speak.internalConnectWithCancel() ENTER\n")
 
 	// set the context
 	c.ctx = ctx
@@ -160,7 +171,7 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
 		klog.V(7).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
-		klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 		return nil
 	}
 
@@ -176,18 +187,18 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Connection is not valid\n")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return nil
 		default:
 			klog.V(7).Infof("Connection is good. Return object.")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return c.wsconn
 		}
 	} else {
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return nil
 		default:
 			klog.V(3).Infof("Context is still valid. Retry...\n")
@@ -238,10 +249,10 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		i++
 
 		// create new connection
-		url, err := version.GetLiveAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.tOptions)
+		url, err := version.GetSpeakStreamAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.sOptions)
 		if err != nil {
-			klog.V(1).Infof("version.GetLiveAPI failed. Err: %v\n", err)
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(1).Infof("version.GetSpeakAPI failed. Err: %v\n", err)
+			klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 			return nil // no point in retrying because this is going to fail on every retry
 		}
 		klog.V(5).Infof("Connecting to %s\n", url)
@@ -262,12 +273,10 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		c.wsconn = ws
 		c.retry = true
 
-		// kick off threads to listen for messages and ping/keepalive
+		// kick off threads to listen for messages
 		go c.listen()
-		if c.cOptions.EnableKeepAlive {
-			go c.ping()
-		}
-		if c.cOptions.AutoFlushReplyDelta != 0 {
+
+		if c.cOptions.AutoFlushSpeakDelta != 0 {
 			go c.flush()
 		}
 
@@ -280,21 +289,21 @@ func (c *Client) internalConnectWithCancel(ctx context.Context, ctxCancel contex
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
-		klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("speak.internalConnectWithCancel() LEAVE\n")
 
 		return c.wsconn
 	}
 
 	// if we get here, we failed to connect
 	klog.V(1).Infof("Failed to connect to websocket: %s\n", c.cOptions.Host)
-	klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+	klog.V(7).Infof("speak.ConnectWithRetry() LEAVE\n")
 
 	return nil
 }
 
 //nolint:funlen,gocyclo // this is a complex function. keep as is
 func (c *Client) listen() {
-	klog.V(6).Infof("live.listen() ENTER\n")
+	klog.V(6).Infof("speak.listen() ENTER\n")
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -310,7 +319,7 @@ func (c *Client) listen() {
 			// fatal close
 			c.closeWs(true)
 
-			klog.V(6).Infof("live.listen() LEAVE\n")
+			klog.V(6).Infof("speak.flush() LEAVE\n")
 			return
 		}
 	}()
@@ -326,7 +335,7 @@ func (c *Client) listen() {
 			c.muConn.Unlock()
 
 			klog.V(3).Infof("listen: Connection is not valid\n")
-			klog.V(6).Infof("live.listen() LEAVE\n")
+			klog.V(6).Infof("speak.listen() LEAVE\n")
 			return
 		}
 
@@ -345,7 +354,7 @@ func (c *Client) listen() {
 				// graceful close
 				c.closeWs(false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
@@ -353,7 +362,7 @@ func (c *Client) listen() {
 				// fatal close
 				c.closeWs(false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, FatalReadSocketErr):
 				klog.V(1).Infof("Fatal socket error: %v\n", err)
@@ -361,55 +370,55 @@ func (c *Client) listen() {
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): Fatal socket error. Err: %v\n", sendErr)
 				}
 
 				// fatal close
 				c.closeWs(true)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, "Deepgram"):
-				klog.V(1).Infof("listen: Deepgram error. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): Deepgram error. Err: %v\n", err)
 
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("listen: Deepgram ErrorMsg. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): Deepgram ErrorMsg. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
-				klog.V(3).Infof("stream object EOF\n")
+				klog.V(3).Infof("Client object EOF\n")
 
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("listen: EOF error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): EOF error. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(true)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			default:
-				klog.V(1).Infof("listen: Cannot read websocket message. Err: %v\n", err)
+				klog.V(1).Infof("speak.listen(): Cannot read websocket message. Err: %v\n", err)
 
 				// send error on callback
 				sendErr := c.sendError(err)
 				if sendErr != nil {
-					klog.V(1).Infof("listen: EOF error. Err: %v\n", sendErr)
+					klog.V(1).Infof("speak.listen(): EOF error. Err: %v\n", sendErr)
 				}
 
 				// close the connection
 				c.closeWs(true)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("speak.listen() LEAVE\n")
 				return
 			}
 		}
@@ -419,125 +428,162 @@ func (c *Client) listen() {
 			continue
 		}
 
-		// inspect the message
-		if c.cOptions.InspectListenMessage() {
-			err := c.inspect(byMsg)
-			if err != nil {
-				klog.V(1).Infof("listen: inspect failed. Err: %v\n", err)
-			}
-		}
-
-		// callback
-		if msgType == websocket.TextMessage {
-			err := c.router.Message(byMsg)
-			if err != nil {
-				klog.V(1).Infof("live.listen(): router.Message failed. Err: %v\n", err)
-			}
-		} else {
-			// this shouldn't happen, but let's log it
-			klog.V(7).Infof("live.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
-		}
-	}
-}
-
-// Stream is a helper function to stream audio data from a io.Reader object to deepgram
-func (c *Client) Stream(r io.Reader) error {
-	klog.V(6).Infof("live.Stream() ENTER\n")
-
-	chunk := make([]byte, ChunkSize)
-
-	for {
-		select {
-		case <-c.ctx.Done():
-			klog.V(2).Infof("stream object Done()\n")
-			klog.V(6).Infof("live.Stream() LEAVE\n")
-			return nil
-		default:
-			bytesRead, err := r.Read(chunk)
-			if err != nil {
-				errStr := err.Error()
-				switch {
-				case strings.Contains(errStr, SuccessfulSocketErr):
-					klog.V(3).Infof("Graceful websocket close\n")
-					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return nil
-				case strings.Contains(errStr, FatalReadSocketErr):
-					klog.V(1).Infof("Fatal socket error: %v\n", err)
-					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return err
-				case (err == io.EOF || err == io.ErrUnexpectedEOF) && !c.retry:
-					klog.V(3).Infof("stream object EOF\n")
-					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return err
-				default:
-					klog.V(1).Infof("r.Read error. Err: %v\n", err)
-					klog.V(6).Infof("live.Stream() LEAVE\n")
-					return err
+		switch msgType {
+		case websocket.TextMessage:
+			// inspect the message
+			if c.cOptions.InspectSpeakMessage() {
+				err := c.inspect(byMsg)
+				if err != nil {
+					klog.V(1).Infof("speak: inspect failed. Err: %v\n", err)
 				}
 			}
 
-			if bytesRead == 0 {
-				klog.V(7).Infof("Skipping. bytesRead == 0\n")
-				continue
-			}
-
-			byteCount, err := c.Write(chunk[:bytesRead])
+			// route the message
+			err := c.router.Message(byMsg)
 			if err != nil {
-				klog.V(1).Infof("w.Write failed. Err: %v\n", err)
-				klog.V(6).Infof("live.Stream() LEAVE\n")
-				return err
+				klog.V(1).Infof("speak.listen(): router.Message failed. Err: %v\n", err)
 			}
-			klog.V(7).Infof("io.Writer succeeded. Bytes written: %d\n", byteCount)
+		case websocket.BinaryMessage:
+			// audio data!
+			err := c.router.Binary(byMsg)
+			if err != nil {
+				klog.V(1).Infof("speak.listen(): router.Message failed. Err: %v\n", err)
+			}
+		default:
+			klog.V(7).Infof("speak.listen(): msg recv: type %d, len: %d\n", msgType, len(byMsg))
 		}
 	}
 }
 
-// WriteBinary writes binary data to the websocket server
-func (c *Client) WriteBinary(byData []byte) error {
-	klog.V(7).Infof("live.WriteBinary() ENTER\n")
+// SpeakWithText writes text to the websocket server to obtain corresponding audio
+//
+// This function will automatically wrap the text in the appropriate JSON structure
+// and send it to the server
+//
+// Args:
+//
+//	text: string containing the text to be spoken
+//
+// Return:
+//
+//	error: if successful, returns nil otherwise an error object
+func (c *Client) SpeakWithText(text string) error {
+	klog.V(6).Infof("speak.SpeakText() ENTER\n")
+	klog.V(4).Infof("text: %s\n", text)
 
-	// doing a write, need to lock
-	c.muConn.Lock()
-	defer c.muConn.Unlock()
-
-	// get the connection
-	ws := c.internalConnect()
-	if ws == nil {
-		err := ErrInvalidConnection
-		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(7).Infof("live.WriteBinary() LEAVE\n")
-
-		return err
+	err := c.WriteJSON(TextSource{
+		Type: MessageTypeSpeak,
+		Text: text,
+	})
+	if err == nil {
+		klog.V(4).Infof("SpeakText Succeeded\n")
+	} else {
+		klog.V(1).Infof("SpeakText failed. Err: %v\n", err)
 	}
 
-	if err := ws.WriteMessage(
-		websocket.BinaryMessage,
-		byData,
-	); err != nil {
-		klog.V(1).Infof("WriteBinary WriteMessage failed. Err: %v\n", err)
-		klog.V(7).Infof("live.WriteBinary() LEAVE\n")
-		return err
-	}
+	klog.V(6).Infof("speak.SpeakText() LEAVE\n")
 
-	klog.V(7).Infof("WriteBinary Successful\n")
-	klog.V(7).Infof("payload: %x\n", byData)
-	klog.V(7).Infof("live.WriteBinary() LEAVE\n")
-
-	return nil
+	return err
 }
 
-/*
-WriteJSON writes a JSON control payload to the websocket server. These are control messages for
-managing the live transcription session on the Deepgram server.
-*/
+// Speak is an alias function for SpeakWithText
+func (c *Client) Speak(text string) error {
+	return c.SpeakWithText(text)
+}
+
+// // SpeakWithStream writes binary data to the websocket server
+// // NOTE: This is unimplemented on the server side
+// func (c *Client) SpeakWithStream(byData []byte) error {
+// 	klog.V(6).Infof("speak.SpeakText() ENTER\n")
+
+// 	err := c.WriteBinary(byData)
+// 	if err == nil {
+// 		klog.V(4).Infof("SpeakText Succeeded\n")
+// 	} else {
+// 		klog.V(1).Infof("SpeakText failed. Err: %v\n", err)
+// 	}
+
+// 	klog.V(6).Infof("speak.SpeakText() LEAVE\n")
+
+// 	return err
+// }
+
+// // WriteBinary writes binary data to the websocket server
+// // NOTE: This is unimplemented on the server side
+// func (c *Client) WriteBinary(byData []byte) error {
+// 	klog.V(6).Infof("speak.WriteBinary() ENTER\n")
+
+// 	// doing a write, need to lock
+// 	c.muConn.Lock()
+// 	defer c.muConn.Unlock()
+
+// 	// get the connection
+// 	ws := c.internalConnect()
+// 	if ws == nil {
+// 		err := ErrInvalidConnection
+// 		klog.V(1).Infof("c.Connect() is nil. Err: %v\n", err)
+// 		klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
+
+// 		return err
+// 	}
+
+// 	if err := ws.WriteMessage(
+// 		websocket.BinaryMessage,
+// 		byData,
+// 	); err != nil {
+// 		klog.V(1).Infof("WriteBinary WriteMessage failed. Err: %v\n", err)
+// 		klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
+// 		return err
+// 	}
+
+// 	klog.V(6).Infof("WriteBinary Successful\n")
+// 	klog.V(7).Infof("payload: %x\n", byData)
+// 	klog.V(6).Infof("speak.WriteBinary() LEAVE\n")
+
+// 	return nil
+// }
+
+// WriteJSON writes a JSON control payload to the websocket server. In using this function,
+// use must provide the payload in JSON-format. These are control messages are for
+// managing the text-to-speech session on the Deepgram server.
+//
+// Args:
+//
+//	payload: interface{} containing the JSON payload
+//
+// Return:
+//
+//	error: if successful, returns nil otherwise an error object
 func (c *Client) WriteJSON(payload interface{}) error {
-	klog.V(6).Infof("live.WriteJSON() ENTER\n")
+	klog.V(6).Infof("speak.WriteJSON() ENTER\n")
 
 	byData, err := json.Marshal(payload)
 	if err != nil {
 		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 		return err
+	}
+
+	if c.cOptions.AutoFlushSpeakDelta > 0 {
+		var mt MessageType
+		if err := json.Unmarshal(byData, &mt); err == nil {
+			switch mt.Type {
+			case MessageTypeSpeak:
+				// last datagram received
+				c.muFinal.Lock()
+				now := time.Now()
+				klog.V(6).Infof("Speak Text Sent at: %s\n", now.String())
+				c.lastDatagram = &now
+				c.muFinal.Unlock()
+			case MessageTypeFlush:
+				// increment the flush count
+				c.muFinal.Lock()
+				c.flushCount++
+				c.lastDatagram = nil
+				klog.V(5).Infof("Increment Flush Count: %d\n", c.flushCount)
+				c.muFinal.Unlock()
+			}
+		}
 	}
 
 	// doing a write, need to lock
@@ -548,91 +594,65 @@ func (c *Client) WriteJSON(payload interface{}) error {
 	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
-		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(1).Infof("c.internalConnect() is nil. Err: %v\n", err)
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 
 		return err
 	}
-
 	if err := ws.WriteMessage(
 		websocket.TextMessage,
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteJSON WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 		return err
 	}
 
-	klog.V(4).Infof("live.WriteJSON() Succeeded\n")
-	klog.V(6).Infof("payload: %s\n", string(byData))
-	klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+	klog.V(4).Infof("WriteJSON succeeded.\n")
+	klog.V(7).Infof("payload: %s\n", string(byData))
+	klog.V(6).Infof("speak.WriteJSON() LEAVE\n")
 
 	return nil
 }
 
-/*
-Write performs the lower level websocket write operation.
-This is needed to implement the io.Writer interface. (aka the streaming interface)
-*/
-func (c *Client) Write(p []byte) (int, error) {
-	klog.V(7).Infof("live.Write() ENTER\n")
+// Flush will instruct the server to flush the current text buffer
+func (c *Client) Flush() error {
+	klog.V(6).Infof("speak.Flush() ENTER\n")
 
-	byteLen := len(p)
-	err := c.WriteBinary(p)
+	err := c.WriteJSON(controlMessage{Type: MessageTypeFlush})
 	if err != nil {
-		klog.V(1).Infof("Write failed. Err: %v\n", err)
-		klog.V(7).Infof("live.Write() LEAVE\n")
-		return 0, err
-	}
-
-	klog.V(7).Infof("live.Write Succeeded\n")
-	klog.V(7).Infof("live.Write() LEAVE\n")
-	return byteLen, nil
-}
-
-/*
-Kick off the keepalive message to the server
-*/
-func (c *Client) KeepAlive() error {
-	klog.V(7).Infof("live.KeepAlive() ENTER\n")
-
-	err := c.WriteJSON(controlMessage{Type: MessageTypeKeepAlive})
-	if err != nil {
-		klog.V(1).Infof("KeepAlive failed. Err: %v\n", err)
-		klog.V(7).Infof("live.KeepAlive() LEAVE\n")
+		klog.V(1).Infof("Flush failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.Flush() LEAVE\n")
 
 		return err
 	}
 
-	klog.V(4).Infof("KeepAlive Succeeded\n")
-	klog.V(7).Infof("live.KeepAlive() LEAVE\n")
+	klog.V(4).Infof("Flush Succeeded\n")
+	klog.V(6).Infof("speak.Flush() LEAVE\n")
 
 	return err
 }
 
-/*
-Finalize the live transcription utterance/sentence/fragment
-*/
-func (c *Client) Finalize() error {
-	klog.V(7).Infof("live.KeepAlive() ENTER\n")
+// Reset will instruct the server to reset the current buffer
+func (c *Client) Reset() error {
+	klog.V(6).Infof("speak.Reset() ENTER\n")
 
-	err := c.WriteJSON(controlMessage{Type: MessageTypeFinalize})
+	err := c.WriteJSON(controlMessage{Type: MessageTypeReset})
 	if err != nil {
-		klog.V(1).Infof("Finalize failed. Err: %v\n", err)
-		klog.V(7).Infof("live.Finalize() LEAVE\n")
+		klog.V(1).Infof("Reset failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.Reset() LEAVE\n")
 
 		return err
 	}
 
-	klog.V(4).Infof("Finalize Succeeded\n")
-	klog.V(7).Infof("live.Finalize() LEAVE\n")
-
-	return err
+	klog.V(4).Infof("Reset Succeeded\n")
+	klog.V(6).Infof("speak.Reset() LEAVE\n")
+	return nil
 }
 
 // closeStream sends an application level message to Deepgram
 func (c *Client) closeStream(lock bool) error {
-	klog.V(7).Infof("live.closeStream() ENTER\n")
+	klog.V(6).Infof("speak.closeStream() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -640,23 +660,23 @@ func (c *Client) closeStream(lock bool) error {
 		defer c.muConn.Unlock()
 	}
 
-	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"CloseStream\" }"))
+	err := c.wsconn.WriteMessage(websocket.TextMessage, []byte("{ \"type\": \"Close\" }"))
 	if err != nil {
 		klog.V(1).Infof("WriteMessage failed. Err: %v\n", err)
-		klog.V(7).Infof("live.closeStream() LEAVE\n")
+		klog.V(6).Infof("speak.closeStream() LEAVE\n")
 
 		return err
 	}
 
 	klog.V(4).Infof("closeStream Succeeded\n")
-	klog.V(7).Infof("live.closeStream() LEAVE\n")
+	klog.V(6).Infof("speak.closeStream() LEAVE\n")
 
 	return err
 }
 
 // normalClosure sends a normal closure message to the server
 func (c *Client) normalClosure(lock bool) error {
-	klog.V(7).Infof("live.normalClosure() ENTER\n")
+	klog.V(6).Infof("speak.normalClosure() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -668,7 +688,7 @@ func (c *Client) normalClosure(lock bool) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(7).Infof("live.normalClosure() LEAVE\n")
+		klog.V(6).Infof("speak.normalClosure() LEAVE\n")
 
 		return err
 	}
@@ -683,7 +703,7 @@ func (c *Client) normalClosure(lock bool) error {
 		klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", err)
 	}
 
-	klog.V(7).Infof("live.normalClosure() LEAVE\n")
+	klog.V(6).Infof("speak.normalClosure() LEAVE\n")
 
 	return err
 }
@@ -700,16 +720,17 @@ func (c *Client) Stop() {
 
 // closeWs closes the websocket connection
 func (c *Client) closeWs(fatal bool) {
-	klog.V(6).Infof("live.closeWs() closing channels...\n")
+	klog.V(6).Infof("speak.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
 	if c.wsconn != nil && !fatal {
-		// deepgram requires a close message to be sent
-		_ = c.closeStream(false)
-		time.Sleep(TerminationSleep) // allow time for server to register closure
+		// calling this even though it's apart of the TTS WS protocol, causes a websocket: close 1005 (no status)
+		// // deepgram requires a close message to be sent
+		// _ = c.closeStream(false)
+		// time.Sleep(TerminationSleep) // allow time for server to register closure
 
 		// websocket protocol message
 		_ = c.normalClosure(false)
@@ -732,63 +753,13 @@ func (c *Client) closeWs(fatal bool) {
 		c.wsconn = nil
 	}
 
-	klog.V(4).Infof("live.closeWs() Succeeded\n")
-	klog.V(6).Infof("live.closeWs() LEAVE\n")
-}
-
-// ping thread
-func (c *Client) ping() {
-	klog.V(6).Infof("live.ping() ENTER\n")
-
-	defer func() {
-		if r := recover(); r != nil {
-			klog.V(1).Infof("Panic triggered\n")
-
-			// send error on callback
-			err := ErrFatalPanicRecovered
-			sendErr := c.sendError(err)
-			if sendErr != nil {
-				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
-			}
-
-			// fatal close
-			c.closeWs(true)
-
-			klog.V(6).Infof("live.ping() LEAVE\n")
-			return
-		}
-	}()
-
-	ticker := time.NewTicker(pingPeriod)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-c.ctx.Done():
-			klog.V(3).Infof("live.ping() Exiting\n")
-
-			// exit gracefully
-			c.closeWs(false)
-
-			klog.V(6).Infof("live.ping() LEAVE\n")
-			return
-		case <-ticker.C:
-			klog.V(5).Infof("Starting ping...")
-
-			// deepgram keepalive message
-			klog.V(5).Infof("Sending Deepgram KeepAlive message...\n")
-			err := c.KeepAlive()
-			if err == nil {
-				klog.V(5).Infof("Ping sent!")
-			} else {
-				klog.V(1).Infof("Failed to send Deepgram KeepAlive. Err: %v\n", err)
-			}
-		}
-	}
+	klog.V(4).Infof("speak.closeWs() Succeeded\n")
+	klog.V(6).Infof("speak.closeWs() LEAVE\n")
 }
 
 // flush thread
 func (c *Client) flush() {
-	klog.V(6).Infof("live.flush() ENTER\n")
+	klog.V(6).Infof("speak.flush() ENTER\n")
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -798,13 +769,13 @@ func (c *Client) flush() {
 			err := ErrFatalPanicRecovered
 			sendErr := c.sendError(err)
 			if sendErr != nil {
-				klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
+				klog.V(1).Infof("speak: Fatal socket error. Err: %v\n", sendErr)
 			}
 
 			// fatal close
 			c.closeWs(true)
 
-			klog.V(6).Infof("live.flush() LEAVE\n")
+			klog.V(6).Infof("speak.flush() LEAVE\n")
 			return
 		}
 	}()
@@ -814,12 +785,12 @@ func (c *Client) flush() {
 	for {
 		select {
 		case <-c.ctx.Done():
-			klog.V(3).Infof("live.flush() Exiting\n")
+			klog.V(3).Infof("speak.flush() Exiting\n")
 
 			// exit gracefully
 			c.closeWs(false)
 
-			klog.V(6).Infof("live.flush() LEAVE\n")
+			klog.V(6).Infof("speak.flush() LEAVE\n")
 			return
 		case <-ticker.C:
 			// doing a read, need to lock.
@@ -833,10 +804,10 @@ func (c *Client) flush() {
 			}
 
 			// we have received something, but is it recent?
-			trigger := c.lastDatagram.Add(time.Millisecond * time.Duration(c.cOptions.AutoFlushReplyDelta))
+			trigger := c.lastDatagram.Add(time.Millisecond * time.Duration(c.cOptions.AutoFlushSpeakDelta))
 			now := time.Now()
-			klog.V(7).Infof("Time (Last): %s\n", trigger.String())
-			klog.V(7).Infof("Time (Now ): %s\n", now.String())
+			klog.V(6).Infof("Time (Last): %s\n", trigger.String())
+			klog.V(6).Infof("Time (Now ): %s\n", now.String())
 			bNeedFlush := trigger.Before(now)
 			if bNeedFlush {
 				c.lastDatagram = nil
@@ -846,12 +817,12 @@ func (c *Client) flush() {
 			c.muFinal.Unlock()
 
 			if bNeedFlush {
-				klog.V(5).Infof("Sending Finalize message...\n")
-				err := c.Finalize()
+				klog.V(5).Infof("Sending Flush message...\n")
+				err := c.Flush()
 				if err == nil {
-					klog.V(5).Infof("Finalize sent!")
+					klog.V(5).Infof("Flush sent!")
 				} else {
-					klog.V(1).Infof("Failed to send Finalize. Err: %v\n", err)
+					klog.V(1).Infof("Failed to send Flush. Err: %v\n", err)
 				}
 			}
 		}
@@ -863,7 +834,7 @@ func (c *Client) sendError(err error) error {
 	response := c.errorToResponse(err)
 	sendErr := c.router.ErrorHelper(response)
 	if err != nil {
-		klog.V(1).Infof("live.listen(): router.Error failed. Err: %v\n", sendErr)
+		klog.V(1).Infof("speak.listen(): router.Error failed. Err: %v\n", sendErr)
 	}
 
 	return err
@@ -897,74 +868,32 @@ func (c *Client) errorToResponse(err error) *msginterfaces.ErrorResponse {
 	return response
 }
 
-// inspectMessage inspects the message and determines the type to
-// see if we should do anything with those types of messages
+// inspect will check the message and determine the type to
+// see if we should do  actionable based on those types of messages
 func (c *Client) inspect(byMsg []byte) error {
-	klog.V(7).Infof("live.inspect() ENTER\n")
+	klog.V(7).Infof("speak.inspect() ENTER\n")
 
-	var mt msginterfaces.MessageType
+	var mt MessageType
 	if err := json.Unmarshal(byMsg, &mt); err != nil {
 		klog.V(1).Infof("json.Unmarshal(MessageType) failed. Err: %v\n", err)
-		klog.V(7).Infof("live.inspect() LEAVE\n")
+		klog.V(7).Infof("speak.inspect() LEAVE\n")
 		return err
 	}
 
 	switch mt.Type {
-	case msginterfaces.TypeMessageResponse:
-		klog.V(7).Infof("TypeMessageResponse\n")
+	case msginterfaces.TypeFlushedResponse:
+		klog.V(7).Infof("TypeFlushedResponse\n")
 
-		// convert to MessageResponse
-		var mr msginterfaces.MessageResponse
-		if err := json.Unmarshal(byMsg, &mr); err != nil {
-			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
-			klog.V(7).Infof("live.inspect() LEAVE\n")
-			return err
-		}
-
-		// inspect the message
-		err := c.inspectMessage(&mr)
-		if err != nil {
-			klog.V(1).Infof("inspectMessage() failed. Err: %v\n", err)
-			klog.V(7).Infof("live.inspect() LEAVE\n")
-			return err
-		}
+		// decrement the flush count
+		c.muFinal.Lock()
+		c.flushCount--
+		klog.V(5).Infof("Flush Count: %d\n", c.flushCount)
+		c.muFinal.Unlock()
 	default:
-		klog.V(7).Infof("MessageType: %s\n", mt.Type)
+		klog.V(5).Infof("MessageType: %s\n", mt.Type)
 	}
 
 	klog.V(7).Info("inspect() succeeded\n")
-	klog.V(7).Infof("live.inspect() LEAVE\n")
-	return nil
-}
-
-func (c *Client) inspectMessage(mr *msginterfaces.MessageResponse) error {
-	klog.V(7).Infof("live.inspectMessage() ENTER\n")
-
-	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
-	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
-		klog.V(7).Info("inspectMessage is empty\n")
-		klog.V(7).Infof("live.inspectMessage() LEAVE\n")
-		return nil
-	}
-
-	if mr.IsFinal {
-		klog.V(7).Infof("IsFinal received: %s\n", time.Now().String())
-
-		// doing a write, need to lock
-		c.muFinal.Lock()
-		c.lastDatagram = nil
-		c.muFinal.Unlock()
-	} else {
-		klog.V(7).Infof("Interim received: %s\n", time.Now().String())
-
-		// last datagram received
-		c.muFinal.Lock()
-		now := time.Now()
-		c.lastDatagram = &now
-		c.muFinal.Unlock()
-	}
-
-	klog.V(7).Info("inspectMessage() succeeded\n")
-	klog.V(7).Infof("live.inspectMessage() LEAVE\n")
+	klog.V(7).Infof("speak.inspect() LEAVE\n")
 	return nil
 }

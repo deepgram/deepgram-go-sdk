@@ -83,8 +83,11 @@ NewWebSocketForDemo creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewWebSocketForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*listenv1ws.Client, error) {
+func NewWSForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*listenv1ws.Client, error) {
 	return listenv1ws.New(ctx, "", &interfaces.ClientOptions{}, options, nil)
+}
+func NewWebSocketForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*listenv1ws.Client, error) {
+	return NewWSForDemo(ctx, options)
 }
 
 // NewLiveForDemo is an alias for NewWebSocketForDemo
@@ -104,8 +107,11 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
 */
-func NewWebSocketWithDefaults(ctx context.Context, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+func NewWSWithDefaults(ctx context.Context, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
 	return listenv1ws.New(ctx, "", &interfaces.ClientOptions{}, tOptions, callback)
+}
+func NewWebSocketWithDefaults(ctx context.Context, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+	return NewWSWithDefaults(ctx, tOptions, callback)
 }
 
 // NewLiveWithDefaults is an alias for NewWebSocketWithDefaults
@@ -127,9 +133,12 @@ Notes:
   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
 */
-func NewWebSocket(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+func NewWS(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return listenv1ws.NewWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
+}
+func NewWebSocket(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+	return NewWS(ctx, apiKey, cOptions, tOptions, callback)
 }
 
 // NewLive is an alias for NewWebSocket
@@ -152,8 +161,11 @@ Notes:
   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
 */
-func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+func NewWSWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
 	return listenv1ws.NewWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
+}
+func NewWebSocketWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*listenv1ws.Client, error) {
+	return NewWSWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
 }
 
 // NewLiveWithCancel is an alias for NewWebSocketWithCancel
