@@ -29,6 +29,6 @@ mechanism for:
 
 The return value is the complete URL endpoint to be used for the text-to-speech
 */
-func GetSpeakStreamAPI(ctx context.Context, host, version, path string, options *interfaces.SpeakOptions, args ...interface{}) (string, error) {
+func GetSpeakStreamAPI(ctx context.Context, host, version, path string, options *interfaces.WSSpeakOptions, args ...interface{}) (string, error) {
 	return getAPIURL(ctx, "speak-stream", host, version, path, options, args...)
 }

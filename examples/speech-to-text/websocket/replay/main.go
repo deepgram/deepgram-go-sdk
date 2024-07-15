@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.NewWebSocketForDemo(ctx, options)
+	dgClient, err := client.NewWSUsingChanForDemo(ctx, options)
 	if err != nil {
 		log.Println("ERROR creating LiveTranscription connection:", err)
 		return

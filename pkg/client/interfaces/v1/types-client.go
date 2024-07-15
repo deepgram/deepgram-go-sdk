@@ -17,10 +17,11 @@ type ClientOptions struct {
 
 	// prerecorded client options
 
-	// live client options
-	RedirectService bool // allows HTTP redirects to be followed
-	EnableKeepAlive bool // enables the keep alive feature
+	// speech-to-text client options
+	RedirectService     bool  // allows HTTP redirects to be followed
+	EnableKeepAlive     bool  // enables the keep alive feature
+	AutoFlushReplyDelta int64 // enables the auto flush feature based on the delta in milliseconds
 
-	// these require inspecting messages, therefore you must update the InspectMessage() method
-	AutoFlushReplyDelta int64 // enables the auto flush feature
+	// text-to-speech client options
+	AutoFlushSpeakDelta int64 // enables the auto flush feature based on the delta in milliseconds
 }

@@ -17,29 +17,20 @@ import (
 
 // NewWithDefault creates a ChanRouter with the default callback handler
 func NewChanWithDefault() *ChanRouter {
-	defChan := NewDefaultChanHandler()
+	chans := NewDefaultChanHandler()
 	go func() {
-		err := defChan.Run()
+		err := chans.Run()
 		if err != nil {
-			klog.V(1).Infof("defChan.Run failed. Err: %v\n", err)
+			klog.V(1).Infof("chans.Run failed. Err: %v\n", err)
 		}
 	}()
 
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	return &ChanRouter{
-		debugWebsocket: strings.EqualFold(strings.ToLower(debugStr), "true"),
-		defaultHandler: defChan,
-	}
+	return NewChanRouter(chans)
 }
 
 // New creates a ChanRouter with a user-defined channels
 // gocritic:ignore
-func NewChanRouter(chans *interfaces.LiveMessageChan) *ChanRouter {
+func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
@@ -59,14 +50,14 @@ func NewChanRouter(chans *interfaces.LiveMessageChan) *ChanRouter {
 	}
 
 	if chans != nil {
-		router.openChan = append(router.openChan, (*chans).GetOpen()...)
-		router.messageChan = append(router.messageChan, (*chans).GetMessage()...)
-		router.metadataChan = append(router.metadataChan, (*chans).GetMetadata()...)
-		router.speechStartedChan = append(router.speechStartedChan, (*chans).GetSpeechStarted()...)
-		router.utteranceEndChan = append(router.utteranceEndChan, (*chans).GetUtteranceEnd()...)
-		router.closeChan = append(router.closeChan, (*chans).GetClose()...)
-		router.errorChan = append(router.errorChan, (*chans).GetError()...)
-		router.unhandledChan = append(router.unhandledChan, (*chans).GetUnhandled()...)
+		router.openChan = append(router.openChan, chans.GetOpen()...)
+		router.messageChan = append(router.messageChan, chans.GetMessage()...)
+		router.metadataChan = append(router.metadataChan, chans.GetMetadata()...)
+		router.speechStartedChan = append(router.speechStartedChan, chans.GetSpeechStarted()...)
+		router.utteranceEndChan = append(router.utteranceEndChan, chans.GetUtteranceEnd()...)
+		router.closeChan = append(router.closeChan, chans.GetClose()...)
+		router.errorChan = append(router.errorChan, chans.GetError()...)
+		router.unhandledChan = append(router.unhandledChan, chans.GetUnhandled()...)
 	}
 
 	return router
@@ -93,7 +84,7 @@ func (r *ChanRouter) Open(or *interfaces.OpenResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeOpenResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeOpenResponse), byMsg, action)
 }
 
 // Close sends an CloseResponse message to the callback
@@ -117,7 +108,7 @@ func (r *ChanRouter) Close(cr *interfaces.CloseResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeCloseResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeCloseResponse), byMsg, action)
 }
 
 // Error sends an ErrorResponse message to the callback
@@ -141,11 +132,11 @@ func (r *ChanRouter) Error(er *interfaces.ErrorResponse) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeErrorResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action)
 }
 
 // processGeneric generalizes the handling of all message types
-func (r *ChanRouter) processGeneric(msgType interfaces.TypeResponse, byMsg []byte, action func(data []byte) error) error {
+func (r *ChanRouter) processGeneric(msgType string, byMsg []byte, action func(data []byte) error) error {
 	klog.V(6).Infof("router.%s ENTER\n", msgType)
 
 	r.printDebugMessages(5, msgType, byMsg)
@@ -175,7 +166,7 @@ func (r *ChanRouter) processMessage(byMsg []byte) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeMessageResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeMessageResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processMetadata(byMsg []byte) error {
@@ -192,7 +183,7 @@ func (r *ChanRouter) processMetadata(byMsg []byte) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeMetadataResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeMetadataResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processSpeechStartedResponse(byMsg []byte) error {
@@ -209,7 +200,7 @@ func (r *ChanRouter) processSpeechStartedResponse(byMsg []byte) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeSpeechStartedResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeSpeechStartedResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processUtteranceEndResponse(byMsg []byte) error {
@@ -226,7 +217,7 @@ func (r *ChanRouter) processUtteranceEndResponse(byMsg []byte) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeUtteranceEndResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeUtteranceEndResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processErrorResponse(byMsg []byte) error {
@@ -243,7 +234,7 @@ func (r *ChanRouter) processErrorResponse(byMsg []byte) error {
 		return nil
 	}
 
-	return r.processGeneric(interfaces.TypeErrorResponse, byMsg, action)
+	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action)
 }
 
 // Message handles platform messages and routes them appropriately based on the MessageType
@@ -271,7 +262,7 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processSpeechStartedResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
 		err = r.processUtteranceEndResponse(byMsg)
-	case interfaces.TypeErrorResponse:
+	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
 		err = r.processErrorResponse(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
@@ -284,6 +275,12 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 	}
 	klog.V(6).Infof("router.Message LEAVE\n")
 	return err
+}
+
+// Binary handles platform messages and routes them appropriately based on the MessageType
+func (r *ChanRouter) Binary(byMsg []byte) error {
+	// No implementation needed on STT
+	return nil
 }
 
 // UnhandledMessage logs and handles any unexpected message types
@@ -301,7 +298,7 @@ func (r *ChanRouter) UnhandledMessage(byMsg []byte) error {
 }
 
 // printDebugMessages formats and logs debugging messages
-func (r *ChanRouter) printDebugMessages(level klog.Level, function interfaces.TypeResponse, byMsg []byte) {
+func (r *ChanRouter) printDebugMessages(level klog.Level, function string, byMsg []byte) {
 	prettyJSON, err := prettyjson.Format(byMsg)
 	if err != nil {
 		klog.V(1).Infof("prettyjson.Format failed. Err: %v\n", err)

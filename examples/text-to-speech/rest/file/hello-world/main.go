@@ -19,7 +19,7 @@ import (
 
 const (
 	textToSpeech string = "Hello, World!"
-	filePath     string = "./test.mp3"
+	filePath     string = "./test.wav"
 )
 
 func main() {
@@ -33,7 +33,9 @@ func main() {
 
 	// set the Transcription options
 	options := &interfaces.SpeakOptions{
-		Model: "aura-asteria-en",
+		Model:      "aura-asteria-en",
+		Encoding:   "linear16",
+		SampleRate: 48000,
 	}
 
 	// create a Deepgram client

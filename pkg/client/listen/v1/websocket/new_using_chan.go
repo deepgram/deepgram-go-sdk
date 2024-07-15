@@ -33,7 +33,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The chans handler is set to the default handler which just prints all messages to the console
 */
-func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*WSChannel, error) { // gocritic:ignore
+func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) { // gocritic:ignore
 	return NewUsingChan(ctx, "", &clientinterfaces.ClientOptions{}, options, chans)
 }
 
@@ -47,7 +47,7 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*WSChannel, error) {
+func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
@@ -63,7 +63,7 @@ Input parameters:
 - tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
 - chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans *msginterfaces.LiveMessageChan) (*WSChannel, error) {
+func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) {
 	klog.V(6).Infof("live.New() ENTER\n")
 
 	if apiKey != "" {
@@ -82,14 +82,11 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 
 	if chans == nil {
 		klog.V(2).Infof("Using DefaultCallbackHandler.\n")
-		defaultHandler := websocketv1api.NewDefaultChanHandler()
-		var handler msginterfaces.LiveMessageChan
-		handler = defaultHandler
-		chans = &handler
+		chans = websocketv1api.NewDefaultChanHandler()
 	}
 
 	// init
-	var router msginterfaces.Router
+	var router commoninterfaces.Router
 	router = websocketv1api.NewChanRouter(chans)
 
 	conn := WSChannel{
@@ -103,7 +100,7 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 
 	var handler commoninterfaces.WebSocketHandler
 	handler = &conn
-	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler)
+	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler, &router)
 
 	klog.V(3).Infof("NewDeepGramWSClient Succeeded\n")
 	klog.V(6).Infof("live.New() LEAVE\n")
