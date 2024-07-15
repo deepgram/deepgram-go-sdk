@@ -4,20 +4,22 @@
 
 package interfacesv1
 
+import (
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
+)
+
 // These are the message types that can be received from the live API
-type TypeResponse string
+type TypeResponse commoninterfaces.TypeResponse
 
 const (
 	// message types
-	TypeOpenResponse          TypeResponse = "Open"
+	TypeOpenResponse                       = commoninterfaces.TypeOpenResponse
 	TypeMessageResponse       TypeResponse = "Results"
 	TypeMetadataResponse      TypeResponse = "Metadata"
 	TypeUtteranceEndResponse  TypeResponse = "UtteranceEnd"
 	TypeSpeechStartedResponse TypeResponse = "SpeechStarted"
 	TypeFinalizeResponse      TypeResponse = "Finalize"
+	TypeCloseResponse                      = commoninterfaces.TypeCloseResponse
 	TypeCloseStreamResponse   TypeResponse = "CloseStream"
-	TypeCloseResponse         TypeResponse = "Close"
-
-	// Error type
-	TypeErrorResponse TypeResponse = "Error"
+	TypeErrorResponse                      = commoninterfaces.TypeErrorResponse
 )

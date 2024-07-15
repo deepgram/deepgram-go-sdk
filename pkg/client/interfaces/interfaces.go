@@ -17,3 +17,4 @@ type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOpti
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions
 type SpeakOptions = interfacesv1.SpeakOptions
+type WSSpeakOptions = interfacesv1.WSSpeakOptions
