@@ -6,16 +6,6 @@
 package interfacesv1
 
 /*
-Router definition
-*/
-type Router interface {
-	Open(or *OpenResponse) error
-	Message(byMsg []byte) error
-	Close(or *CloseResponse) error
-	Error(er *ErrorResponse) error
-}
-
-/*
 Chan Interfaces
 */
 // LiveMessageCallback is a callback used to receive notifcations for platforms messages

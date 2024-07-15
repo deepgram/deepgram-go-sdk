@@ -36,6 +36,7 @@ type WSClient struct {
 	retryCnt int64
 
 	processMessages *commonv1interfaces.WebSocketHandler
+	router          *commonv1interfaces.Router
 }
 
 // ***************************
