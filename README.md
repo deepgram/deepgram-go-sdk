@@ -10,8 +10,10 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with o
 - [Installation](#installation)
 - [Requirements](#requirements)
 - [Quickstarts](#quickstarts)
-  - [Speech-to-Text from PreRecorded Audio Quickstart](#prerecorded-audio-transcription-quickstart)
-  - [Speech-to-Text from Live/Streaming Audio Quickstart](#live-audio-transcription-quickstart)
+  - [Speech-to-Text WebSocket (from Live/Streaming Audio) Quickstart](#speech-to-text-from-livestreaming-audio-quickstart)
+  - [Speech-to-Text REST (from PreRecorded Audio) Quickstart](#speech-to-text-from-prerecorded-audio-quickstart)
+  - [Text-to-Speech WebSocket Quickstart](#text-to-speech-websocket-quickstart)
+  - [Text-to-Speech REST Quickstart](#text-to-speech-rest-quickstart)
 - [Examples](#examples)
 - [Logging](#logging)
 - [Testing](#testing)
@@ -76,7 +78,36 @@ go get github.com/deepgram/deepgram-go-sdk
 
 This SDK aims to reduce complexity and abtract/hide some internal Deepgram details that clients shouldn't need to know about.  However you can still tweak options and settings if you need.
 
-### PreRecorded Audio Transcription Quickstart
+### Speech-to-Text from Live/Streaming Audio Quickstart
+
+You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+
+```go
+// options
+transcriptOptions := &interfaces.LiveTranscriptionOptions{
+    Language:    "en-US",
+    Punctuate:   true,
+    Encoding:    "linear16",
+    Channels:    1,
+    Sample_rate: 16000,
+}
+
+// create the client
+dgClient, err := client.NewWebSocketWithDefaults(ctx, transcriptOptions, callback)
+if err != nil {
+    log.Println("ERROR creating LiveTranscription connection:", err)
+    os.Exit(1)
+}
+
+// call connect!
+wsconn := dgClient.Connect()
+if wsconn == nil {
+    log.Println("Client.Connect failed")
+    os.Exit(1)
+}
+```
+
+### Speech-to-Text from PreRecorded Audio Quickstart
 
 You can find a [walkthrough](https://developers.deepgram.com/docs/pre-recorded-audio-transcription) on our documentation site. Transcribing Pre-Recorded Audio can be done using the following sample code:
 
@@ -85,7 +116,7 @@ You can find a [walkthrough](https://developers.deepgram.com/docs/pre-recorded-a
 ctx := context.Background()
 
 //client
-c := client.NewWithDefaults()
+c := client.NewRESTWithDefaults()
 dg := prerecorded.New(c)
 
 // transcription options
@@ -100,38 +131,56 @@ URL := "https://my-domain.com/files/my-conversation.mp3"
 res, err := dg.FromURL(ctx, URL, options)
 if err != nil {
     log.Fatalf("FromURL failed. Err: %v\n", err)
+    os.Exit(1)
 }
 ```
 
-### Live Audio Transcription Quickstart
+### Text-to-Speech WebSocket Quickstart
 
 You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
 
 ```go
-// options
-transcriptOptions := &interfaces.LiveTranscriptionOptions{
-    Language:    "en-US",
-    Punctuate:   true,
-    Encoding:    "linear16",
-    Channels:    1,
-    Sample_rate: 16000,
+// set the TTS options
+ttsOptions := &interfaces.SpeakOptions{
+    Model: "aura-asteria-en",
 }
 
-// create a callback for transcription messages
-// for example, you can take a look at this example project:
-// https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go
+// create the callback
+callback := MyCallback{}
 
-// create the client
-dgClient, err := client.NewWithDefaults(ctx, transcriptOptions, callback)
+// create a new stream using the NewStream function
+dgClient, err := speak.NewWebSocketWithDefaults(ctx, ttsOptions, callback)
 if err != nil {
-    log.Println("ERROR creating LiveTranscription connection:", err)
-    return
+    fmt.Println("ERROR creating TTS connection:", err)
+    os.Exit(1)
 }
 
-// call connect!
-wsconn := dgClient.Connect()
-if wsconn == nil {
-    log.Println("Client.Connect failed")
+// connect the websocket to Deepgram
+bConnected := dgClient.Connect()
+if !bConnected {
+    fmt.Println("Client.Connect failed")
+    os.Exit(1)
+}
+```
+
+### Text-to-Speech REST Quickstart
+
+You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+
+```go
+// set the Transcription options
+options := &interfaces.SpeakOptions{
+    Model: "aura-asteria-en",
+}
+
+// create a Deepgram client
+c := client.NewRESTWithDefaults()
+dg := api.New(c)
+
+// send/process file to Deepgram
+res, err := dg.ToSave(ctx, "Hello, World!", textToSpeech, options)
+if err != nil {
+    fmt.Printf("FromStream failed. Err: %v\n", err)
     os.Exit(1)
 }
 ```
@@ -142,7 +191,12 @@ There are examples for **every*- API call in this SDK. You can find all of these
 
 These examples provide:
 
-Speech-to-Text - PreRecorded Audio:
+Speech-to-Text - Live Audio / WebSocket:
+
+- From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
+- From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
+
+Speech-to-Text - PreRecorded / REST:
 
 - From an Audio File - [examples/speech-to-text/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/file/main.go)
 - From an URL - [examples/speech-to-text/rest/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/url/main.go)
@@ -196,7 +250,7 @@ TBD
 
 Older SDK versions will receive Priority 1 (P1) bug support only. Security issues, both in our code and dependencies, are promptly addressed. Significant bugs without clear workarounds are also given priority attention.
 
-### Development and Contributing
+## Development and Contributing
 
 Interested in contributing? We ❤️ pull requests!
 
