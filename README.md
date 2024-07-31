@@ -219,6 +219,8 @@ Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_re
 - Invitations - [examples/manage/invitations](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/invitations/main.go)
 - Keys - [examples/manage/keys](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/keys/main.go)
 - Members - [examples/manage/members](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/members/main.go)
+- Models - [examples/manage/models](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/models/main.go)
+
 - Projects - [examples/manage/projects](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/projects/main.go)
 - Scopes - [examples/manage/scopes](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/scopes/main.go)
 - Usage - [examples/manage/usage](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/usage/main.go)
