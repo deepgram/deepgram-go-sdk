@@ -5,12 +5,43 @@
 package commonv1
 
 import (
-	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
+	"context"
+	"sync"
+
+	"github.com/dvonthenen/websocket"
+
+	commonv1interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	restv1 "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
 )
 
-type RESTClient = rest.Client
+const (
+	PackageVersion string = "v1.0"
+)
 
-// Client implements helper functionality for Prerecorded API
-type Client struct {
-	*RESTClient
+// ***************************
+// Common WS Client
+// ***************************
+// WSClient is a struct representing the websocket client connection
+type WSClient struct {
+	cOptions *clientinterfaces.ClientOptions
+
+	sendBuf   chan []byte
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
+	muConn   sync.RWMutex
+	wsconn   *websocket.Conn
+	retry    bool
+	retryCnt int64
+
+	processMessages *commonv1interfaces.WebSocketHandler
+}
+
+// ***************************
+// Common REST Client
+// ***************************
+// RESTClient implements an extensible REST client
+type RESTClient struct {
+	*restv1.Client
 }

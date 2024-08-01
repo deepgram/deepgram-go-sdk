@@ -10,5 +10,5 @@ import (
 
 // Client implements helper functionality for Prerecorded API
 type Client struct {
-	*common.Client
+	*common.RESTClient
 }

@@ -5,7 +5,6 @@
 package websocketv1
 
 import (
-	"errors"
 	"time"
 )
 
@@ -19,16 +18,17 @@ const (
 
 	ChunkSize        = 1024 * 2
 	TerminationSleep = 100 * time.Millisecond
-
-	// socket errors
-	FatalReadSocketErr  string = "read: can't assign requested address"
-	FatalWriteSocketErr string = "write: broken pipe"
-	UseOfClosedSocket   string = "use of closed network connection"
-	UnknownDeepgramErr  string = "unknown deepgram error"
-
-	// socket successful close error
-	SuccessfulSocketErr string = "close 1000"
 )
+
+// 	// socket errors
+// 	FatalReadSocketErr  string = "read: can't assign requested address"
+// 	FatalWriteSocketErr string = "write: broken pipe"
+// 	UseOfClosedSocket   string = "use of closed network connection"
+// 	UnknownDeepgramErr  string = "unknown deepgram error"
+
+// 	// socket successful close error
+// 	SuccessfulSocketErr string = "close 1000"
+// )
 
 const (
 	// MessageTypeKeepAlive keep the connection alive
@@ -38,22 +38,20 @@ const (
 	MessageTypeFinalize string = "Finalize"
 )
 
-// errors
-var (
-	// ErrInvalidInput required input was not found
-	ErrInvalidInput = errors.New("required input was not found")
+// // errors
+// var (
+// 	// ErrInvalidInput required input was not found
+// 	ErrInvalidInput = errors.New("required input was not found")
 
-	// ErrInvalidConnection connection is not valid
-	ErrInvalidConnection = errors.New("connection is not valid")
+// 	// ErrInvalidConnection connection is not valid
+// 	ErrInvalidConnection = errors.New("connection is not valid")
 
-	// ErrFatalPanicRecovered fatal panic recovered
-	ErrFatalPanicRecovered = errors.New("fatal panic - attempt to recover")
-)
+// 	// ErrFatalPanicRecovered fatal panic recovered
+// 	ErrFatalPanicRecovered = errors.New("fatal panic - attempt to recover")
+// )
 
 // internal constants for retry, waits, back-off, etc.
 const (
 	flushPeriod = 500 * time.Millisecond
 	pingPeriod  = 5 * time.Second
-
-	defaultDelayBetweenRetry int64 = 2
 )

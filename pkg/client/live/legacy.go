@@ -70,7 +70,7 @@ Notes:
 */
 func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
-	return listenv1ws.NewWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
+	return listenv1ws.NewUsingCallbackWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
 }
 
 /*
@@ -89,5 +89,5 @@ Notes:
   - The callback handler is set to the default handler which just prints all messages to the console
 */
 func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
-	return listenv1ws.NewWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
+	return listenv1ws.NewUsingCallbackWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
 }

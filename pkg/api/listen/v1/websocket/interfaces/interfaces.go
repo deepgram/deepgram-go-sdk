@@ -5,6 +5,34 @@
 // This package defines interfaces for the live API
 package interfacesv1
 
+/*
+Router definition
+*/
+type Router interface {
+	Open(or *OpenResponse) error
+	Message(byMsg []byte) error
+	Close(or *CloseResponse) error
+	Error(er *ErrorResponse) error
+}
+
+/*
+Chan Interfaces
+*/
+// LiveMessageCallback is a callback used to receive notifcations for platforms messages
+type LiveMessageChan interface {
+	GetOpen() []*chan *OpenResponse
+	GetMessage() []*chan *MessageResponse
+	GetMetadata() []*chan *MetadataResponse
+	GetSpeechStarted() []*chan *SpeechStartedResponse
+	GetUtteranceEnd() []*chan *UtteranceEndResponse
+	GetClose() []*chan *CloseResponse
+	GetError() []*chan *ErrorResponse
+	GetUnhandled() []*chan *[]byte
+}
+
+/*
+Callback Interfaces
+*/
 // LiveMessageCallback is a callback used to receive notifcations for platforms messages
 type LiveMessageCallback interface {
 	Open(or *OpenResponse) error

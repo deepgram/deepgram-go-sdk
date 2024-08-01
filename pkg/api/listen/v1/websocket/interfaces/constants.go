@@ -5,17 +5,19 @@
 package interfacesv1
 
 // These are the message types that can be received from the live API
+type TypeResponse string
+
 const (
 	// message types
-	TypeOpenResponse          string = "Open"
-	TypeMessageResponse       string = "Results"
-	TypeMetadataResponse      string = "Metadata"
-	TypeUtteranceEndResponse  string = "UtteranceEnd"
-	TypeSpeechStartedResponse string = "SpeechStarted"
-	TypeFinalizeResponse      string = "Finalize"
-	TypeCloseStreamResponse   string = "CloseStream"
-	TypeCloseResponse         string = "Close"
+	TypeOpenResponse          TypeResponse = "Open"
+	TypeMessageResponse       TypeResponse = "Results"
+	TypeMetadataResponse      TypeResponse = "Metadata"
+	TypeUtteranceEndResponse  TypeResponse = "UtteranceEnd"
+	TypeSpeechStartedResponse TypeResponse = "SpeechStarted"
+	TypeFinalizeResponse      TypeResponse = "Finalize"
+	TypeCloseStreamResponse   TypeResponse = "CloseStream"
+	TypeCloseResponse         TypeResponse = "Close"
 
 	// Error type
-	TypeErrorResponse string = "Error"
+	TypeErrorResponse TypeResponse = "Error"
 )

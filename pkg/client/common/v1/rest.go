@@ -16,14 +16,10 @@ import (
 	klog "k8s.io/klog/v2"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
-	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
+	restv1 "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
 )
 
-const (
-	PackageVersion string = "v1.0"
-)
-
-func New(apiKey string, options *interfaces.ClientOptions) *Client {
+func NewREST(apiKey string, options *interfaces.ClientOptions) *RESTClient {
 	if apiKey != "" {
 		options.APIKey = apiKey
 	}
@@ -33,15 +29,15 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 		return nil
 	}
 
-	c := Client{
-		rest.New(options),
+	c := RESTClient{
+		restv1.New(options),
 	}
 
 	return &c
 }
 
 // SetupRequest prepares and returns a new HTTP request with common headers set.
-func (c *Client) SetupRequest(ctx context.Context, method, uri string, body io.Reader) (*http.Request, error) {
+func (c *RESTClient) SetupRequest(ctx context.Context, method, uri string, body io.Reader) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, method, uri, body)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
@@ -68,7 +64,7 @@ func (c *Client) SetupRequest(ctx context.Context, method, uri string, body io.R
 }
 
 // HandleResponse processes the HTTP response for both streaming and URL-based API requests.
-func (c *Client) HandleResponse(res *http.Response, keys []string, resBody interface{}) (map[string]string, error) {
+func (c *RESTClient) HandleResponse(res *http.Response, keys []string, resBody interface{}) (map[string]string, error) {
 	klog.V(6).Infof("Handle HTTP response\n")
 	switch res.StatusCode {
 	case http.StatusOK, http.StatusCreated, http.StatusNoContent:

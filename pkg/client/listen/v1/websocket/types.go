@@ -9,29 +9,48 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dvonthenen/websocket"
-
-	live "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket"
 	msginterface "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
-// Client is a struct representing the websocket client connection
-type Client struct {
-	cOptions *interfaces.ClientOptions
-	tOptions *interfaces.LiveTranscriptionOptions
+// internal structs
+type controlMessage struct {
+	Type string `json:"type"`
+}
 
-	sendBuf   chan []byte
+// Client is an alias for WSCallback
+// Deprecated: use WSCallback instead
+type Client = WSCallback
+
+// WSCallback is a struct representing the websocket client connection using callbacks
+type WSCallback struct {
+	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	muConn   sync.RWMutex
-	wsconn   *websocket.Conn
-	retry    bool
-	retryCnt int64
+	cOptions *interfaces.ClientOptions
+	tOptions *interfaces.LiveTranscriptionOptions
 
 	callback msginterface.LiveMessageCallback
-	router   *live.MessageRouter
+	router   *msginterface.Router
+
+	// internal constants for retry, waits, back-off, etc.
+	lastDatagram *time.Time
+	muFinal      sync.RWMutex
+}
+
+// WSChannel is a struct representing the websocket client connection using channels
+type WSChannel struct {
+	*common.WSClient
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+
+	cOptions *interfaces.ClientOptions
+	tOptions *interfaces.LiveTranscriptionOptions
+
+	chans  []*msginterface.LiveMessageChan
+	router *msginterface.Router
 
 	// internal constants for retry, waits, back-off, etc.
 	lastDatagram *time.Time

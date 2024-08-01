@@ -14,6 +14,9 @@ var (
 	// ErrInvalidMessageType invalid message type
 	ErrInvalidMessageType = errors.New("invalid message type")
 
-	// ErrUserCallbackNotDefined user callback object not defined
-	ErrUserCallbackNotDefined = errors.New("user callback object not defined")
+	// ErrUserCallbackNotDefined user callback not defined or invalid
+	ErrUserCallbackNotDefined = errors.New("user callback not defined or invalid")
+
+	// ErrUserChanNotDefined user chan not defined or invalid
+	ErrUserChanNotDefined = errors.New("user chan not defined or invalid")
 )

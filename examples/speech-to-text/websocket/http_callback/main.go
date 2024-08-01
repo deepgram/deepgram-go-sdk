@@ -37,7 +37,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.NewWebSocketForDemo(ctx, transcriptOptions)
+	dgClient, err := client.NewWSUsingCallbackForDemo(ctx, transcriptOptions)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return
@@ -51,7 +51,6 @@ func main() {
 		fmt.Printf("httpClient.Get failed. Err: %v\n", err)
 		return
 	}
-
 	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(res))
 
 	// connect the websocket to Deepgram
