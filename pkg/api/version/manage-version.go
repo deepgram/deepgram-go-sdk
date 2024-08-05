@@ -29,6 +29,12 @@ const (
 	MembersURI     string = "projects/%s/members"
 	MembersByIDURI string = "projects/%s/members/%s"
 
+	// models
+	ModelsURI            string = "models"
+	ModelsByIDURI        string = "models/%s"
+	ModelsProjectURI     string = "project/%s/models"
+	ModelsProjectByIDURI string = "project/%s/models/%s"
+
 	// projects
 	ProjectsURI     string = "projects"
 	ProjectsByIDURI string = "projects/%s"
