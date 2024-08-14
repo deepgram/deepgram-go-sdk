@@ -91,6 +91,39 @@ type ProjectList struct {
 	Projects []Project `json:"projects,omitempty"`
 }
 
+// Stt provides a STT info
+type Stt struct {
+	Name            string   `json:"name,omitempty"`
+	CanonicalName   string   `json:"canonical_name,omitempty"`
+	Architecture    string   `json:"architecture,omitempty"`
+	Languages       []string `json:"languages,omitempty"`
+	Version         string   `json:"version,omitempty"`
+	UUID            string   `json:"uuid,omitempty"`
+	Batch           bool     `json:"batch,omitempty"`
+	Streaming       bool     `json:"streaming,omitempty"`
+	FormattedOutput bool     `json:"formatted_output,omitempty"`
+}
+
+// Metadata provides a metadata about a given model
+type Metadata struct {
+	Accent string   `json:"accent,omitempty"`
+	Color  string   `json:"color,omitempty"`
+	Image  string   `json:"image,omitempty"`
+	Sample string   `json:"sample,omitempty"`
+	Tags   []string `json:"tags,omitempty"`
+}
+
+// Tts provides a TTS info
+type Tts struct {
+	Name          string   `json:"name,omitempty"`
+	CanonicalName string   `json:"canonical_name,omitempty"`
+	Architecture  string   `json:"architecture,omitempty"`
+	Languages     []string `json:"languages,omitempty"`
+	Version       string   `json:"version,omitempty"`
+	UUID          string   `json:"uuid,omitempty"`
+	Metadata      Metadata `json:"metadata,omitempty"`
+}
+
 // Token provides a token
 type Token struct {
 	In  int `json:"in,omitempty"`
@@ -240,6 +273,11 @@ type ProjectUpdateRequest struct {
 	Company string `json:"company,omitempty" url:"company,omitempty"`
 }
 
+// ModelRequest provides a model request
+type ModelRequest struct {
+	IncludeOutdated bool `json:"include_outdated,omitempty" url:"include_outdated,omitempty"`
+}
+
 // InvitationRequest provides an invitation request
 type InvitationRequest struct {
 	Email string `json:"email,omitempty" url:"email,omitempty"`
@@ -352,6 +390,24 @@ type ProjectResult struct {
 	Project
 }
 
+// ModelsResult provides a result with a list of models
+type ModelsResult struct {
+	Stt []Stt `json:"stt,omitempty"`
+	Tts []Tts `json:"tts,omitempty"`
+}
+
+// ModelResult provides a result with a single model
+type ModelResult struct {
+	Name          string   `json:"name,omitempty"`
+	CanonicalName string   `json:"canonical_name,omitempty"`
+	Architecture  string   `json:"architecture,omitempty"`
+	Language      string   `json:"language,omitempty"`
+	Version       string   `json:"version,omitempty"`
+	UUID          string   `json:"uuid,omitempty"`
+	Metadata      Metadata `json:"metadata,omitempty"`
+}
+
+// ScopeResult provides a result with a list of scopes
 type ScopeResult struct {
 	ScopeList
 }
