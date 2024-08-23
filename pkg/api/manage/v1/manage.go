@@ -28,8 +28,8 @@ func New(client interface{}) *Client {
 	case *rest.Client:
 		return &Client{
 			&manage.Client{
-				Client: &common.Client{
-					RESTClient: client,
+				RESTClient: &common.RESTClient{
+					Client: client,
 				},
 			},
 		}

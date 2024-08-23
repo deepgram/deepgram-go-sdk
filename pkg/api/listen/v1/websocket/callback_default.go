@@ -16,24 +16,27 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
 )
 
-// DefaultCallbackHandler is a default callback handler for live transcription
-// Simply prints the transcript to stdout
-type DefaultCallbackHandler struct{}
-
 // NewDefaultCallbackHandler creates a new DefaultCallbackHandler
-func NewDefaultCallbackHandler() DefaultCallbackHandler {
-	return DefaultCallbackHandler{}
-}
-
-// Open is the callback for when the connection opens
-func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
+func NewDefaultCallbackHandler() *DefaultCallbackHandler {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
 		klog.V(4).Infof("DEEPGRAM_DEBUG found")
 		debugStr = v
 	}
+	var debugExtStr string
+	if v := os.Getenv("DEEPGRAM_DEBUG_VERBOSE"); v != "" {
+		klog.V(4).Infof("DEEPGRAM_DEBUG_VERBOSE found")
+		debugExtStr = v
+	}
+	return &DefaultCallbackHandler{
+		debugWebsocket:        strings.EqualFold(debugStr, "true"),
+		debugWebsocketVerbose: strings.EqualFold(debugExtStr, "true"),
+	}
+}
 
-	if strings.EqualFold(debugStr, "true") {
+// Open is the callback for when the connection opens
+func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(or)
 		if err != nil {
 			klog.V(1).Infof("Open json.Marshal failed. Err: %v\n", err)
@@ -58,13 +61,7 @@ func (dch DefaultCallbackHandler) Open(or *interfaces.OpenResponse) error {
 
 // Message is the callback for a transcription message
 func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(mr)
 		if err != nil {
 			klog.V(1).Infof("Message json.Marshal failed. Err: %v\n", err)
@@ -100,13 +97,7 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 
 // Metadata is the callback for information about the connection
 func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(md)
 		if err != nil {
 			klog.V(1).Infof("Metadata json.Marshal failed. Err: %v\n", err)
@@ -133,18 +124,7 @@ func (dch DefaultCallbackHandler) Metadata(md *interfaces.MetadataResponse) erro
 
 // SpeechStarted is when VAD detects noise
 func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedResponse) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-	var debugExtStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG_VERBOSE"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG_VERBOSE found")
-		debugExtStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(ssr)
 		if err != nil {
 			klog.V(1).Infof("SpeechStarted json.Marshal failed. Err: %v\n", err)
@@ -163,7 +143,7 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 
 	// handle the message
 	fmt.Printf("\n[SpeechStarted]\n")
-	if strings.EqualFold(debugExtStr, "true") {
+	if dch.debugWebsocketVerbose {
 		fmt.Printf("\n\nSpeechStarted.Timestamp: %f\n", ssr.Timestamp)
 		fmt.Printf("SpeechStarted.Channels:\n")
 		for _, val := range ssr.Channel {
@@ -177,14 +157,8 @@ func (dch DefaultCallbackHandler) SpeechStarted(ssr *interfaces.SpeechStartedRes
 
 // UtteranceEnd is the callback for when a channel goes silent
 func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndResponse) error {
-	var debugExtStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG_VERBOSE"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG_VERBOSE found")
-		debugExtStr = v
-	}
-
 	fmt.Printf("\n[UtteranceEnd]\n")
-	if strings.EqualFold(debugExtStr, "true") {
+	if dch.debugWebsocketVerbose {
 		fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", ur.LastWordEnd)
 		fmt.Printf("UtteranceEnd.Channel: %d\n\n", ur.Channel)
 	}
@@ -193,13 +167,7 @@ func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndRespon
 
 // Close is the callback for when the connection closes
 func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(or)
 		if err != nil {
 			klog.V(1).Infof("Close json.Marshal failed. Err: %v\n", err)
@@ -224,13 +192,7 @@ func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 
 // Error is the callback for a error messages
 func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		data, err := json.Marshal(er)
 		if err != nil {
 			klog.V(1).Infof("Error json.Marshal failed. Err: %v\n", err)
@@ -259,13 +221,7 @@ func (dch DefaultCallbackHandler) Error(er *interfaces.ErrorResponse) error {
 
 // UnhandledEvent is the callback for unknown messages
 func (dch DefaultCallbackHandler) UnhandledEvent(byData []byte) error {
-	var debugStr string
-	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
-		klog.V(4).Infof("DEEPGRAM_DEBUG found")
-		debugStr = v
-	}
-
-	if strings.EqualFold(debugStr, "true") {
+	if dch.debugWebsocket {
 		prettyJSON, err := prettyjson.Format(byData)
 		if err != nil {
 			klog.V(2).Infof("\n\nRaw Data:\n%s\n\n", string(byData))

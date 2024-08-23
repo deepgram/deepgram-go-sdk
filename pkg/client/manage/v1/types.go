@@ -11,5 +11,5 @@ import (
 
 // Client is the client for the Deepgram Manage API
 type Client struct {
-	*common.Client
+	*common.RESTClient
 }

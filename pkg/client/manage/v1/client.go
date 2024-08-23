@@ -36,7 +36,7 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	}
 
 	c := Client{
-		common.New(apiKey, options),
+		common.NewREST(apiKey, options),
 	}
 	return &c
 }
