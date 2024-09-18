@@ -9,6 +9,9 @@ import (
 )
 
 // Client implements helper functionality for Prerecorded API
-type Client struct {
+type RESTClient struct {
 	*common.RESTClient
 }
+
+// Client is an alias for RESTClient
+type Client = RESTClient

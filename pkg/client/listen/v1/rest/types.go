@@ -8,7 +8,10 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
 )
 
-// Client implements helper functionality for Prerecorded API
-type Client struct {
+// RESTClient implements helper functionality for Prerecorded API
+type RESTClient struct {
 	*common.RESTClient
 }
+
+// Client is an alias for WSCallback
+type Client = RESTClient

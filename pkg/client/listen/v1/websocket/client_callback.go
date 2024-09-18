@@ -75,7 +75,7 @@ func (c *WSCallback) ProcessMessage(wsType int, byMsg []byte) error {
 	klog.V(6).Infof("ProcessMessage() ENTER\n")
 
 	// inspect the message
-	if c.cOptions.InspectMessage() {
+	if c.cOptions.InspectListenMessage() {
 		err := c.inspect(byMsg)
 		if err != nil {
 			klog.V(1).Infof("ProcessMessage: inspect failed. Err: %v\n", err)
@@ -120,6 +120,10 @@ func (c *WSCallback) Stream(r io.Reader) error {
 				errStr := err.Error()
 				switch {
 				case strings.Contains(errStr, common.SuccessfulSocketErr):
+					klog.V(3).Infof("Graceful websocket close\n")
+					klog.V(6).Infof("live.Stream() LEAVE\n")
+					return nil
+				case strings.Contains(errStr, common.UseOfClosedSocket):
 					klog.V(3).Infof("Graceful websocket close\n")
 					klog.V(6).Infof("live.Stream() LEAVE\n")
 					return nil

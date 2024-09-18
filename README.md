@@ -41,6 +41,11 @@ For documentation relating to Speech-to-Text (and Intelligence) from PreRecorded
 
 For documentation relating to Text-to-Speech:
 
+- WebSocket:
+  - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket)
+  - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket)
+  - Speak API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces)
+
 - REST:
   - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest)
   - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest)
@@ -206,6 +211,11 @@ Speech-to-Text - Live Audio:
 
 - From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
 - From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
+
+Text-to-Speech - WebSocket
+
+- Websocket Simple Example - [examples/text-to-speech/websocket/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/simple/main.go)
+- Interactive Websocket - [examples/text-to-speech/websocket/interactive](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/interactive/main.go)
 
 Text-to-Speech - REST
 

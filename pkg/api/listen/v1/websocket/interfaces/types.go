@@ -5,6 +5,7 @@
 package interfacesv1
 
 import (
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
 
@@ -79,11 +80,8 @@ type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
 /***********************************/
 // Results from Live Transcription
 /***********************************/
-
-// OpenResponse is the response from the connection starting
-type OpenResponse struct {
-	Type string `json:"type,omitempty"`
-}
+// OpenResponse is the response from opening the connection
+type OpenResponse = commoninterfaces.OpenResponse
 
 // MessageResponse is the response from a live transcription
 type MessageResponse struct {
@@ -125,10 +123,8 @@ type SpeechStartedResponse struct {
 	Timestamp float64 `json:"timestamp,omitempty"`
 }
 
-// CloseResponse is the response from the connection closing
-type CloseResponse struct {
-	Type string `json:"type,omitempty"`
-}
+// CloseResponse is the response from closing the connection
+type CloseResponse = commoninterfaces.CloseResponse
 
 // ErrorResponse is the Deepgram specific response error
 type ErrorResponse = interfaces.DeepgramError

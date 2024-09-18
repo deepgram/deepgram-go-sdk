@@ -167,7 +167,7 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 		err = r.processSpeechStartedResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
 		err = r.processUtteranceEndResponse(byMsg)
-	case interfaces.TypeErrorResponse:
+	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
 		err = r.processErrorResponse(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
@@ -180,6 +180,12 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 	}
 	klog.V(6).Infof("router.Message LEAVE\n")
 	return err
+}
+
+// Binary handles platform messages and routes them appropriately based on the MessageType
+func (r *CallbackRouter) Binary(byMsg []byte) error {
+	// No implementation needed on STT
+	return nil
 }
 
 // UnhandledMessage logs and handles any unexpected message types

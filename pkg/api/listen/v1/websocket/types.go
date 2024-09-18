@@ -30,7 +30,6 @@ type DefaultChanHandler struct {
 // ChanRouter routes events
 type ChanRouter struct {
 	debugWebsocket bool
-	defaultHandler *DefaultChanHandler
 
 	// call out to channels
 	openChan          []*chan *interfaces.OpenResponse
