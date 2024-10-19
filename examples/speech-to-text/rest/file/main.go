@@ -24,7 +24,7 @@ const (
 func main() {
 	// init library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelTrace, // LogLevelStandard / LogLevelFull / LogLevelTrace
+		LogLevel: client.LogLevelVerbose, // LogLevelStandard / LogLevelFull / LogLevelTrace / LogLevelVerbose
 	})
 
 	// Go context

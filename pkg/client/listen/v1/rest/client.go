@@ -126,7 +126,7 @@ func (c *Client) DoStream(ctx context.Context, src io.Reader, options *interface
 	// the Common.SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method, sets
 	// additional "typical" headers like content-type, etc.
 	// but we want RESTClient.SetupRequest only provides the basic headers in this caser
-	req, err := c.RESTClient.SetupRequest(ctx, "POST", uri, src)
+	req, err := c.RESTClient.Client.SetupRequest(ctx, "POST", uri, src)
 	if err != nil {
 		klog.V(1).Infof("SetupRequest failed. Err: %v\n", err)
 		klog.V(6).Infof("prerecorded.DoStream() LEAVE\n")
