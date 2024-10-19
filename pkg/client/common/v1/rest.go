@@ -38,6 +38,8 @@ func NewREST(apiKey string, options *interfaces.ClientOptions) *RESTClient {
 
 // SetupRequest prepares and returns a new HTTP request with common headers set.
 func (c *RESTClient) SetupRequest(ctx context.Context, method, uri string, body io.Reader) (*http.Request, error) {
+	klog.V(3).Infof("Using SetupRequest from Common Package\n")
+
 	req, err := http.NewRequestWithContext(ctx, method, uri, body)
 	if err != nil {
 		klog.V(1).Infof("http.NewRequestWithContext failed. Err: %v\n", err)
