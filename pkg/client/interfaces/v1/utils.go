@@ -95,5 +95,8 @@ type StatusError struct {
 
 // Error string representation for a given error
 func (e *StatusError) Error() string {
+	if e.DeepgramError != nil && e.DeepgramError.ErrMsg != "" {
+		return fmt.Sprintf("%s %s: %s - %s", e.Resp.Request.Method, e.Resp.Request.URL, e.Resp.Status, e.DeepgramError.ErrMsg)
+	}
 	return fmt.Sprintf("%s %s: %s", e.Resp.Request.Method, e.Resp.Request.URL, e.Resp.Status)
 }
