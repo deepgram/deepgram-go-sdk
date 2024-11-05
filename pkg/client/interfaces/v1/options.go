@@ -130,3 +130,40 @@ func (o *WSSpeakOptions) Check() error {
 
 	return nil
 }
+
+func NewSettingsConfigurationOptions() *SettingsConfigurationOptions {
+	return &SettingsConfigurationOptions{
+		Type: TypeSettingsConfiguration,
+		Audio: Audio{
+			Input: &Input{
+				Encoding:   "linear16",
+				SampleRate: 16000,
+			},
+			Output: &Output{
+				Encoding:   "linear16",
+				SampleRate: 16000,
+				Container:  "none",
+			},
+		},
+		Agent: Agent{
+			Listen: Listen{
+				Model: "nova-2",
+			},
+			Think: Think{
+				Provider: Provider{
+					Type: "", // Required to be set
+				},
+				Model: "", // Required to be set
+			},
+			Speak: Speak{
+				Model: "aura-asteria-en",
+			},
+		},
+	}
+}
+func (o *SettingsConfigurationOptions) Check() error {
+	// checks
+	// currently no op
+
+	return nil
+}

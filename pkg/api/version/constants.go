@@ -17,6 +17,9 @@ const (
 	// APIPathListen
 	APIPathListen string = "listen"
 
+	// APITypeAgent
+	APITypeAgent string = "agent"
+
 	// APITypeLive
 	APITypeLive string = "live"
 
@@ -35,6 +38,7 @@ var (
 
 	// APIPathMap maps the API types to their default paths
 	APIPathMap = map[string]string{
+		"agent":        "agent",
 		"analyze":      "read",
 		"prerecorded":  APIPathListen,
 		"speak":        "speak",

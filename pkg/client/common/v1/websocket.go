@@ -83,7 +83,7 @@ func (c *WSClient) internalConnect() *websocket.Conn {
 
 //nolint:funlen // this is a complex function. keep as is
 func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
-	klog.V(7).Infof("live.internalConnectWithCancel() ENTER\n")
+	klog.V(7).Infof("common.internalConnectWithCancel() ENTER\n")
 
 	// set the context
 	c.ctx = ctx
@@ -94,13 +94,16 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	if lock {
 		klog.V(3).Infof("Locking connection mutex\n")
 		c.muConn.Lock()
-		defer c.muConn.Unlock()
 	}
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
 		klog.V(7).Infof("This connection has been terminated. Please either call with AttemptReconnect or create a new Client object using NewWebSocketClient.")
-		klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+		if lock {
+			klog.V(3).Infof("Unlocking connection mutex\n")
+			c.muConn.Unlock()
+		}
 		return nil
 	}
 
@@ -109,30 +112,34 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Connection is not valid\n")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
 			return nil
 		default:
 			klog.V(7).Infof("Connection is good. Return object.")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
 			return c.wsconn
 		}
 	} else {
 		select {
 		case <-c.ctx.Done():
 			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
-			klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
 			return nil
 		default:
 			klog.V(3).Infof("Context is still valid. Retry...\n")
 		}
-	}
-
-	dialer := websocket.Dialer{
-		HandshakeTimeout: 45 * time.Second,
-		/* #nosec G402 */
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
-		RedirectService: c.cOptions.RedirectService,
-		SkipServerAuth:  c.cOptions.SkipServerAuth,
 	}
 
 	// set websocket headers
@@ -175,9 +182,30 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		if err != nil {
 			klog.V(1).Infof("GetURL failed. Err: %v\n", err)
 			klog.V(7).Infof("internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
 			return nil // no point in retrying because this is going to fail on every retry
 		}
 		klog.V(5).Infof("Connecting to %s\n", url)
+
+		// if host starts with "ws://", then disable TLS
+		var dialer websocket.Dialer
+		if url[:5] == "ws://" {
+			dialer = websocket.Dialer{
+				HandshakeTimeout: 15 * time.Second,
+				RedirectService:  c.cOptions.RedirectService,
+			}
+		} else {
+			dialer = websocket.Dialer{
+				HandshakeTimeout: 15 * time.Second,
+				/* #nosec G402 */
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
+				RedirectService: c.cOptions.RedirectService,
+				SkipServerAuth:  c.cOptions.SkipServerAuth,
+			}
+		}
 
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
@@ -198,6 +226,11 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		// kick off threads to listen for messages and ping/keepalive
 		go c.listen()
 
+		if lock {
+			klog.V(3).Infof("Unlocking connection mutex\n")
+			c.muConn.Unlock()
+		}
+
 		// start WS specific items
 		(*c.processMessages).Start()
 
@@ -210,21 +243,26 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
-		klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 
 		return c.wsconn
 	}
 
 	// if we get here, we failed to connect
 	klog.V(1).Infof("Failed to connect to websocket: %s\n", c.cOptions.Host)
-	klog.V(7).Infof("live.internalConnectWithCancel() LEAVE\n")
+	klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+
+	if lock {
+		klog.V(3).Infof("Unlocking connection mutex\n")
+		c.muConn.Unlock()
+	}
 
 	return nil
 }
 
 //nolint:funlen // this is a complex function. keep as is
 func (c *WSClient) listen() {
-	klog.V(6).Infof("live.listen() ENTER\n")
+	klog.V(6).Infof("common.listen() ENTER\n")
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -240,7 +278,7 @@ func (c *WSClient) listen() {
 			// fatal close
 			c.closeWs(true, false)
 
-			klog.V(6).Infof("live.listen() LEAVE\n")
+			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
 		}
 	}()
@@ -256,7 +294,7 @@ func (c *WSClient) listen() {
 			c.muConn.Unlock()
 
 			klog.V(3).Infof("listen: Connection is not valid\n")
-			klog.V(6).Infof("live.listen() LEAVE\n")
+			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
 		}
 
@@ -275,7 +313,7 @@ func (c *WSClient) listen() {
 				// graceful close
 				c.closeWs(false, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
@@ -283,7 +321,7 @@ func (c *WSClient) listen() {
 				// fatal close
 				c.closeWs(false, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, FatalReadSocketErr):
 				klog.V(1).Infof("Fatal socket error: %v\n", err)
@@ -297,7 +335,7 @@ func (c *WSClient) listen() {
 				// fatal close
 				c.closeWs(true, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, "Deepgram"):
 				klog.V(1).Infof("listen: Deepgram error. Err: %v\n", err)
@@ -311,7 +349,7 @@ func (c *WSClient) listen() {
 				// close the connection
 				c.closeWs(false, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case (err == io.EOF || err == io.ErrUnexpectedEOF):
 				klog.V(3).Infof("stream object EOF\n")
@@ -325,7 +363,7 @@ func (c *WSClient) listen() {
 				// close the connection
 				c.closeWs(true, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			default:
 				klog.V(1).Infof("listen: Cannot read websocket message. Err: %v\n", err)
@@ -339,7 +377,7 @@ func (c *WSClient) listen() {
 				// close the connection
 				c.closeWs(true, false)
 
-				klog.V(6).Infof("live.listen() LEAVE\n")
+				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			}
 		}
@@ -359,7 +397,7 @@ func (c *WSClient) listen() {
 
 // WriteBinary writes binary data to the websocket server
 func (c *WSClient) WriteBinary(byData []byte) error {
-	klog.V(7).Infof("live.WriteBinary() ENTER\n")
+	klog.V(7).Infof("common.WriteBinary() ENTER\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
@@ -370,7 +408,7 @@ func (c *WSClient) WriteBinary(byData []byte) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(7).Infof("live.WriteBinary() LEAVE\n")
+		klog.V(7).Infof("common.WriteBinary() LEAVE\n")
 
 		return err
 	}
@@ -380,28 +418,28 @@ func (c *WSClient) WriteBinary(byData []byte) error {
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteBinary WriteMessage failed. Err: %v\n", err)
-		klog.V(7).Infof("live.WriteBinary() LEAVE\n")
+		klog.V(7).Infof("common.WriteBinary() LEAVE\n")
 		return err
 	}
 
 	klog.V(7).Infof("WriteBinary Successful\n")
 	klog.V(7).Infof("payload: %x\n", byData)
-	klog.V(7).Infof("live.WriteBinary() LEAVE\n")
+	klog.V(7).Infof("common.WriteBinary() LEAVE\n")
 
 	return nil
 }
 
 /*
 WriteJSON writes a JSON control payload to the websocket server. These are control messages for
-managing the live transcription session on the Deepgram server.
+managing the websocket connection.
 */
 func (c *WSClient) WriteJSON(payload interface{}) error {
-	klog.V(6).Infof("live.WriteJSON() ENTER\n")
+	klog.V(6).Infof("common.WriteJSON() ENTER\n")
 
 	byData, err := json.Marshal(payload)
 	if err != nil {
 		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 		return err
 	}
 
@@ -414,7 +452,7 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 		return err
 	}
@@ -424,20 +462,20 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteJSON WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 		return err
 	}
 
-	klog.V(4).Infof("live.WriteJSON() Succeeded\n")
+	klog.V(4).Infof("common.WriteJSON() Succeeded\n")
 	klog.V(6).Infof("payload: %s\n", string(byData))
-	klog.V(6).Infof("live.WriteJSON() LEAVE\n")
+	klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 	return nil
 }
 
 // closeStream sends an application level message to Deepgram
 func (c *WSClient) closeStream(lock bool) error {
-	klog.V(7).Infof("live.closeStream() ENTER\n")
+	klog.V(7).Infof("common.closeStream() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -456,20 +494,20 @@ func (c *WSClient) closeStream(lock bool) error {
 
 	if err != nil {
 		klog.V(1).Infof("WriteMessage failed. Err: %v\n", err)
-		klog.V(7).Infof("live.closeStream() LEAVE\n")
+		klog.V(7).Infof("common.closeStream() LEAVE\n")
 
 		return err
 	}
 
 	klog.V(4).Infof("closeStream Succeeded\n")
-	klog.V(7).Infof("live.closeStream() LEAVE\n")
+	klog.V(7).Infof("common.closeStream() LEAVE\n")
 
 	return err
 }
 
 // normalClosure sends a normal closure message to the server
 func (c *WSClient) normalClosure(lock bool) error {
-	klog.V(7).Infof("live.normalClosure() ENTER\n")
+	klog.V(7).Infof("common.normalClosure() ENTER\n")
 
 	// doing a write, need to lock
 	if lock {
@@ -481,7 +519,7 @@ func (c *WSClient) normalClosure(lock bool) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(7).Infof("live.normalClosure() LEAVE\n")
+		klog.V(7).Infof("common.normalClosure() LEAVE\n")
 
 		return err
 	}
@@ -496,7 +534,7 @@ func (c *WSClient) normalClosure(lock bool) error {
 		klog.V(1).Infof("Failed to send CloseNormalClosure. Err: %v\n", err)
 	}
 
-	klog.V(7).Infof("live.normalClosure() LEAVE\n")
+	klog.V(7).Infof("common.normalClosure() LEAVE\n")
 
 	return err
 }
@@ -514,7 +552,7 @@ func (c *WSClient) Stop() {
 
 // closeWs closes the websocket connection
 func (c *WSClient) closeWs(fatal bool, perm bool) {
-	klog.V(6).Infof("live.closeWs() closing channels...\n")
+	klog.V(6).Infof("common.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
@@ -555,8 +593,8 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 		c.wsconn = nil
 	}
 
-	klog.V(4).Infof("live.closeWs() Succeeded\n")
-	klog.V(6).Infof("live.closeWs() LEAVE\n")
+	klog.V(4).Infof("common.closeWs() Succeeded\n")
+	klog.V(6).Infof("common.closeWs() LEAVE\n")
 }
 
 // sendError sends an error message to the callback handler
