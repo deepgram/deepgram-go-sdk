@@ -12,7 +12,14 @@ const (
 	PackageVersion = interfacesv1.PackageVersion
 )
 
+// NewSettingsConfigurationOptions creates a new SettingsConfigurationOptions object
+func NewSettingsConfigurationOptions() *interfacesv1.SettingsConfigurationOptions {
+	return interfacesv1.NewSettingsConfigurationOptions()
+}
+
+// options
 type ClientOptions = interfacesv1.ClientOptions
+type SettingsConfigurationOptions = interfacesv1.SettingsConfigurationOptions
 type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOptions
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions
