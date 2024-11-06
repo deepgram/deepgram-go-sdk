@@ -89,7 +89,7 @@ func (c *WSChannel) ProcessMessage(wsType int, byMsg []byte) error {
 		// audio data!
 		err := (*c.router).Binary(byMsg)
 		if err != nil {
-			klog.V(1).Infof("speak.listen(): router.Message failed. Err: %v\n", err)
+			klog.V(1).Infof("speak.listen(): router.Binary failed. Err: %v\n", err)
 		}
 	default:
 		klog.V(7).Infof("speak.listen(): msg recv: type %d, len: %d\n", wsType, len(byMsg))
