@@ -30,6 +30,8 @@ NewWithDefaults creates a new analyze/read client with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func NewWithDefaults() *Client {
 	return listenv1rest.NewWithDefaults()
@@ -41,6 +43,8 @@ New creates a new prerecorded client with the specified options
 Input parameters:
 - apiKey: string containing the Deepgram API key
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	return listenv1rest.New(apiKey, options)
