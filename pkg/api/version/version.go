@@ -37,7 +37,7 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 
 	// check if the host has a protocol
 	r := regexp.MustCompile(`^(https?)://(.+)$`)
-	if apiType == APITypeLive {
+	if apiType == APITypeLive || apiType == APITypeSpeakStream {
 		r = regexp.MustCompile(`^(wss?)://(.+)$`)
 	}
 
@@ -98,6 +98,7 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 	// construct the full path and substitute the version and all query parameters
 	fullpath := fmt.Sprintf("%%s/%s", path)
 	completeFullpath := fmt.Sprintf(fullpath, append([]interface{}{version}, args...)...)
+	klog.V(3).Infof("completeFullpath: %s\n", completeFullpath)
 
 	// construct the URL
 	var u url.URL
@@ -106,6 +107,7 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 	} else {
 		u = url.URL{Scheme: protocol, Host: host, Path: completeFullpath}
 	}
+	klog.V(3).Infof("URI final: %s\n", u.String())
 
 	return u.String(), nil
 }
