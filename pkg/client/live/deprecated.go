@@ -26,6 +26,11 @@ const (
 /***********************************/
 // LiveClient
 /***********************************/
+/*
+Client is an alias for the listenv1ws.Client
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
+*/
 type Client = listenv1ws.Client
 
 /*
@@ -33,6 +38,8 @@ NewForDemo creates a new websocket connection with all default options
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func NewForDemo(ctx context.Context, options *interfaces.LiveTranscriptionOptions) (*Client, error) {
 	return listenv1ws.New(ctx, "", &interfaces.ClientOptions{}, options, nil)
@@ -49,6 +56,8 @@ Input parameters:
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func NewWithDefaults(ctx context.Context, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	return listenv1ws.New(ctx, "", &interfaces.ClientOptions{}, tOptions, callback)
@@ -67,6 +76,8 @@ Input parameters:
 Notes:
   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func New(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
@@ -87,6 +98,8 @@ Input parameters:
 Notes:
   - If apiKey is an empty string, the Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The callback handler is set to the default handler which just prints all messages to the console
+
+Deprecated: This package is deprecated. Use the listen package instead. This will be removed in a future release.
 */
 func NewWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.LiveTranscriptionOptions, callback msginterfaces.LiveMessageCallback) (*Client, error) {
 	return listenv1ws.NewUsingCallbackWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, callback)
