@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"runtime/debug"
 
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
@@ -265,6 +266,8 @@ func (c *WSClient) listen() {
 	defer func() {
 		if r := recover(); r != nil {
 			klog.V(1).Infof("Panic triggered\n")
+			klog.V(1).Infof("Panic: %v\n", r)
+			klog.V(1).Infof("Stack trace: %s\n", string(debug.Stack()))
 
 			// send error on callback
 			err := ErrFatalPanicRecovered
