@@ -319,15 +319,20 @@ func (r *ChanRouter) processErrorResponse(byMsg []byte) error {
 }
 
 func (r *ChanRouter) processInjectionRefused(byMsg []byte) error {
-	var response interfaces.InjectionRefusedResponse
-	if err := json.Unmarshal(byMsg, &response); err != nil {
-		return err
+	action := func(data []byte) error {
+		var msg interfaces.InjectionRefusedResponse
+		if err := json.Unmarshal(byMsg, &msg); err != nil {
+			klog.V(1).Infof("json.Unmarshal(InjectionRefusedResponse) failed. Err: %v\n", err)
+			return err
+		}
+
+		for _, ch := range r.injectionRefusedResponse {
+			*ch <- &msg
+		}
+		return nil
 	}
 
-	for _, ch := range r.injectionRefusedResponse {
-		*ch <- &response
-	}
-	return nil
+	return r.processGeneric(string(interfaces.TypeInjectionRefusedResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processKeepAlive(byMsg []byte) error {
