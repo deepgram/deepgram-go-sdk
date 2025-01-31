@@ -33,6 +33,8 @@ type MyHandler struct {
 	closeChan                    chan *msginterfaces.CloseResponse
 	errorChan                    chan *msginterfaces.ErrorResponse
 	unhandledChan                chan *[]byte
+	injectionRefusedResponse     chan *msginterfaces.InjectionRefusedResponse
+	keepAliveResponse            chan *msginterfaces.KeepAlive
 }
 
 func NewMyHandler() *MyHandler {
@@ -50,6 +52,8 @@ func NewMyHandler() *MyHandler {
 		closeChan:                    make(chan *msginterfaces.CloseResponse),
 		errorChan:                    make(chan *msginterfaces.ErrorResponse),
 		unhandledChan:                make(chan *[]byte),
+		injectionRefusedResponse:     make(chan *msginterfaces.InjectionRefusedResponse),
+		keepAliveResponse:            make(chan *msginterfaces.KeepAlive),
 	}
 
 	go func() {
@@ -109,9 +113,6 @@ func (dch MyHandler) GetAgentAudioDone() []*chan *msginterfaces.AgentAudioDoneRe
 	return []*chan *msginterfaces.AgentAudioDoneResponse{&dch.agentAudioDoneResponse}
 }
 
-func (dch MyHandler) GetEndOfThought() []*chan *msginterfaces.EndOfThoughtResponse {
-	return []*chan *msginterfaces.EndOfThoughtResponse{&dch.endOfThoughtResponse}
-}
 // GetClose returns the close channels
 func (dch MyHandler) GetClose() []*chan *msginterfaces.CloseResponse {
 	return []*chan *msginterfaces.CloseResponse{&dch.closeChan}
@@ -125,6 +126,16 @@ func (dch MyHandler) GetError() []*chan *msginterfaces.ErrorResponse {
 // GetUnhandled returns the unhandled event channels
 func (dch MyHandler) GetUnhandled() []*chan *[]byte {
 	return []*chan *[]byte{&dch.unhandledChan}
+}
+
+// GetInjectionRefused returns the injection refused response channels
+func (dch MyHandler) GetInjectionRefused() []*chan *msginterfaces.InjectionRefusedResponse {
+	return []*chan *msginterfaces.InjectionRefusedResponse{&dch.injectionRefusedResponse}
+}
+
+// GetKeepAlive returns the keep alive channels
+func (dch MyHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive {
+	return []*chan *msginterfaces.KeepAlive{&dch.keepAliveResponse}
 }
 
 // Open is the callback for when the connection opens
@@ -284,6 +295,16 @@ func (dch MyHandler) Run() error {
 
 		for _ = range dch.agentAudioDoneResponse {
 			fmt.Printf("\n\n[AgentAudioDoneResponse]\n\n")
+		}
+	}()
+
+	// keep alive response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for _ = range dch.keepAliveResponse {
+			fmt.Printf("\n\n[KeepAliveResponse]\n\n")
 		}
 	}()
 
