@@ -23,4 +23,6 @@ type AgentMessageChan interface {
 	GetClose() []*chan *CloseResponse
 	GetError() []*chan *ErrorResponse
 	GetUnhandled() []*chan *[]byte
+	GetInjectionRefused() []*chan *InjectionRefusedResponse
+	GetKeepAlive() []*chan *KeepAlive
 }

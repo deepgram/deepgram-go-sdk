@@ -132,3 +132,9 @@ type CloseResponse = commoninterfaces.CloseResponse
 
 // ErrorResponse is the Deepgram specific response error
 type ErrorResponse = interfaces.DeepgramError
+
+// InjectionRefusedResponse is the response when an agent message injection is refused
+type InjectionRefusedResponse struct {
+	Type    string `json:"type,omitempty"`
+	Message string `json:"message,omitempty"`
+}

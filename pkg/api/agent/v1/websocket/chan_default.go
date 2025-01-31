@@ -42,7 +42,8 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		functionCallingResponse:      make(chan *interfaces.FunctionCallingResponse),
 		agentStartedSpeakingResponse: make(chan *interfaces.AgentStartedSpeakingResponse),
 		agentAudioDoneResponse:       make(chan *interfaces.AgentAudioDoneResponse),
-		endOfThoughtResponse:         make(chan *interfaces.EndOfThoughtResponse),
+		injectionRefusedResponse:     make(chan *interfaces.InjectionRefusedResponse),
+		keepAliveResponse:            make(chan *interfaces.KeepAlive),
 		closeChan:                    make(chan *interfaces.CloseResponse),
 		errorChan:                    make(chan *interfaces.ErrorResponse),
 		unhandledChan:                make(chan *[]byte),
@@ -116,6 +117,16 @@ func (dch DefaultChanHandler) GetClose() []*chan *interfaces.CloseResponse {
 // GetError returns the error channels
 func (dch DefaultChanHandler) GetError() []*chan *interfaces.ErrorResponse {
 	return []*chan *interfaces.ErrorResponse{&dch.errorChan}
+}
+
+// GetInjectionRefused returns the injection refused channels
+func (dch DefaultChanHandler) GetInjectionRefused() []*chan *interfaces.InjectionRefusedResponse {
+	return []*chan *interfaces.InjectionRefusedResponse{&dch.injectionRefusedResponse}
+}
+
+// GetKeepAlive returns the keep alive channels
+func (dch DefaultChanHandler) GetKeepAlive() []*chan *interfaces.KeepAlive {
+	return []*chan *interfaces.KeepAlive{&dch.keepAliveResponse}
 }
 
 // GetUnhandled returns the unhandled event channels
@@ -382,6 +393,31 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[AgentAudioDoneResponse]\n\n")
+		}
+	}()
+
+	// keep alive response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for ka := range dch.keepAliveResponse {
+			if dch.debugWebsocket {
+				data, err := json.Marshal(ka)
+				if err != nil {
+					klog.V(1).Infof("KeepAlive json.Marshal failed. Err: %v\n", err)
+					continue
+				}
+
+				prettyJSON, err := prettyjson.Format(data)
+				if err != nil {
+					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+					continue
+				}
+				klog.V(2).Infof("\n\nKeepAlive Object:\n%s\n\n", prettyJSON)
+			}
+
+			fmt.Printf("\n\n[KeepAliveResponse]\n\n")
 		}
 	}()
 

@@ -71,7 +71,9 @@ type Think struct {
 	Functions    []Functions `json:"functions,omitempty"`
 }
 type Speak struct {
-	Model string `json:"model,omitempty"`
+	Model    string `json:"model,omitempty"`
+	Provider string `json:"provider,omitempty"`
+	VoiceID  string `json:"voice_id,omitempty"`
 }
 type Agent struct {
 	Listen Listen `json:"listen"`

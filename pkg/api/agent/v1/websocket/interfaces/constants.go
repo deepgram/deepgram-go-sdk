@@ -36,4 +36,5 @@ const (
 	TypeAgentAudioDoneResponse       = "AgentAudioDone"
 	TypeCloseResponse                = commoninterfaces.TypeCloseResponse
 	TypeErrorResponse                = commoninterfaces.TypeErrorResponse
+	TypeInjectionRefusedResponse     = "InjectionRefused"
 )
