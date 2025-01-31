@@ -134,6 +134,11 @@ func (dch DefaultChanHandler) GetUnhandled() []*chan *[]byte {
 	return []*chan *[]byte{&dch.unhandledChan}
 }
 
+// GetSettingsApplied returns the settings applied response channels
+func (dch DefaultChanHandler) GetSettingsApplied() []*chan *interfaces.SettingsAppliedResponse {
+	return []*chan *interfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
+}
+
 // Open is the callback for when the connection opens
 //
 //nolint:funlen,gocyclo // this is a complex function. keep as is
@@ -418,6 +423,31 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[KeepAliveResponse]\n\n")
+		}
+	}()
+
+	// settings applied response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for sa := range dch.settingsAppliedResponse {
+			if dch.debugWebsocket {
+				data, err := json.Marshal(sa)
+				if err != nil {
+					klog.V(1).Infof("SettingsApplied json.Marshal failed. Err: %v\n", err)
+					continue
+				}
+
+				prettyJSON, err := prettyjson.Format(data)
+				if err != nil {
+					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+					continue
+				}
+				klog.V(2).Infof("\n\nSettingsApplied Object:\n%s\n\n", prettyJSON)
+			}
+
+			fmt.Printf("\n\n[SettingsAppliedResponse]\n\n")
 		}
 	}()
 

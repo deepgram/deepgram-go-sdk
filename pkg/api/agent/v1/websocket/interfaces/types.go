@@ -138,3 +138,8 @@ type InjectionRefusedResponse struct {
 	Type    string `json:"type,omitempty"`
 	Message string `json:"message,omitempty"`
 }
+
+// SettingsAppliedResponse is the response confirming settings were applied
+type SettingsAppliedResponse struct {
+	Type string `json:"type,omitempty"`
+}

@@ -25,4 +25,5 @@ type AgentMessageChan interface {
 	GetUnhandled() []*chan *[]byte
 	GetInjectionRefused() []*chan *InjectionRefusedResponse
 	GetKeepAlive() []*chan *KeepAlive
+	GetSettingsApplied() []*chan *SettingsAppliedResponse
 }

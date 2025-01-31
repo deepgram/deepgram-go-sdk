@@ -51,6 +51,8 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		agentStartedSpeakingResponse: make([]*chan *interfaces.AgentStartedSpeakingResponse, 0),
 		agentAudioDoneResponse:       make([]*chan *interfaces.AgentAudioDoneResponse, 0),
 		injectionRefusedResponse:     make([]*chan *interfaces.InjectionRefusedResponse, 0),
+		keepAliveResponse:            make([]*chan *interfaces.KeepAlive, 0),
+		settingsAppliedResponse:      make([]*chan *interfaces.SettingsAppliedResponse, 0),
 		closeChan:                    make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                    make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:                make([]*chan *[]byte, 0),
@@ -71,6 +73,8 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.errorChan = append(router.errorChan, chans.GetError()...)
 		router.unhandledChan = append(router.unhandledChan, chans.GetUnhandled()...)
 		router.injectionRefusedResponse = append(router.injectionRefusedResponse, chans.GetInjectionRefused()...)
+		router.keepAliveResponse = append(router.keepAliveResponse, chans.GetKeepAlive()...)
+		router.settingsAppliedResponse = append(router.settingsAppliedResponse, chans.GetSettingsApplied()...)
 	}
 
 	return router
@@ -352,6 +356,23 @@ func (r *ChanRouter) processKeepAlive(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeKeepAlive), byMsg, action)
 }
 
+func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.SettingsAppliedResponse
+		if err := json.Unmarshal(byMsg, &msg); err != nil {
+			klog.V(1).Infof("json.Unmarshal(SettingsAppliedResponse) failed. Err: %v\n", err)
+			return err
+		}
+
+		for _, ch := range r.settingsAppliedResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeSettingsAppliedResponse), byMsg, action)
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -391,6 +412,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processInjectionRefused(byMsg)
 	case interfaces.TypeKeepAlive:
 		err = r.processKeepAlive(byMsg)
+	case interfaces.TypeSettingsAppliedResponse:
+		err = r.processSettingsApplied(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}

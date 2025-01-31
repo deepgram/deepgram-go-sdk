@@ -37,4 +37,5 @@ const (
 	TypeCloseResponse                = commoninterfaces.TypeCloseResponse
 	TypeErrorResponse                = commoninterfaces.TypeErrorResponse
 	TypeInjectionRefusedResponse     = "InjectionRefused"
+	TypeSettingsAppliedResponse      = "SettingsApplied"
 )

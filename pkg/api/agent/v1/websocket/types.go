@@ -29,6 +29,7 @@ type DefaultChanHandler struct {
 	agentAudioDoneResponse       chan *interfaces.AgentAudioDoneResponse
 	injectionRefusedResponse     chan *interfaces.InjectionRefusedResponse
 	keepAliveResponse            chan *interfaces.KeepAlive
+	settingsAppliedResponse      chan *interfaces.SettingsAppliedResponse
 	closeChan                    chan *interfaces.CloseResponse
 	errorChan                    chan *interfaces.ErrorResponse
 	unhandledChan                chan *[]byte
@@ -51,6 +52,7 @@ type ChanRouter struct {
 	agentAudioDoneResponse       []*chan *interfaces.AgentAudioDoneResponse
 	injectionRefusedResponse     []*chan *interfaces.InjectionRefusedResponse
 	keepAliveResponse            []*chan *interfaces.KeepAlive
+	settingsAppliedResponse      []*chan *interfaces.SettingsAppliedResponse
 	closeChan                    []*chan *interfaces.CloseResponse
 	errorChan                    []*chan *interfaces.ErrorResponse
 	unhandledChan                []*chan *[]byte

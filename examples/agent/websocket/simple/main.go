@@ -35,6 +35,7 @@ type MyHandler struct {
 	unhandledChan                chan *[]byte
 	injectionRefusedResponse     chan *msginterfaces.InjectionRefusedResponse
 	keepAliveResponse            chan *msginterfaces.KeepAlive
+	settingsAppliedResponse      chan *msginterfaces.SettingsAppliedResponse
 }
 
 func NewMyHandler() *MyHandler {
@@ -54,6 +55,7 @@ func NewMyHandler() *MyHandler {
 		unhandledChan:                make(chan *[]byte),
 		injectionRefusedResponse:     make(chan *msginterfaces.InjectionRefusedResponse),
 		keepAliveResponse:            make(chan *msginterfaces.KeepAlive),
+		settingsAppliedResponse:      make(chan *msginterfaces.SettingsAppliedResponse),
 	}
 
 	go func() {
@@ -138,6 +140,11 @@ func (dch MyHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive {
 	return []*chan *msginterfaces.KeepAlive{&dch.keepAliveResponse}
 }
 
+// GetSettingsApplied returns the settings applied response channels
+func (dch MyHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
+	return []*chan *msginterfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
+}
+
 // Open is the callback for when the connection opens
 // golintci: funlen
 func (dch MyHandler) Run() error {
@@ -152,8 +159,8 @@ func (dch MyHandler) Run() error {
 		lastBytesReceived := time.Now().Add(-7 * time.Second)
 
 		for br := range dch.binaryChan {
-			fmt.Printf("\n\n[Binary Data]\n\n")
-			fmt.Printf("Size: %d\n\n", len(*br))
+			fmt.Printf("\n\n[Binary Data Received]\n")
+			fmt.Printf("Size: %d bytes\n", len(*br))
 
 			if lastBytesReceived.Add(5 * time.Second).Before(time.Now()) {
 				counter = counter + 1
@@ -308,6 +315,16 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
+	// settings applied response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for _ = range dch.settingsAppliedResponse {
+			fmt.Printf("\n\n[SettingsAppliedResponse]\n\n")
+		}
+	}()
+
 	// close channel
 	wgReceivers.Add(1)
 	go func() {
@@ -338,8 +355,8 @@ func (dch MyHandler) Run() error {
 		defer wgReceivers.Done()
 
 		for byData := range dch.unhandledChan {
-			fmt.Printf("\n[UnhandledEvent]")
-			fmt.Printf("Dump:\n%s\n\n", string(*byData))
+			fmt.Printf("\n[UnhandledEvent]\n")
+			fmt.Printf("Raw message: %s\n", string(*byData))
 		}
 	}()
 
@@ -378,28 +395,30 @@ func main() {
 	tOptions.Agent.Think.Instructions = "You are a helpful AI assistant."
 
 	// implement your own callback
-	var callback msginterfaces.AgentMessageChan
-	callback = *NewMyHandler()
+	callback := msginterfaces.AgentMessageChan(*NewMyHandler())
 
 	// create a Deepgram client
+	fmt.Printf("Creating new Deepgram WebSocket client...\n")
 	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
-		fmt.Println("ERROR creating LiveTranscription connection:", err)
+		fmt.Printf("ERROR creating LiveTranscription connection:\n- Error: %v\n- Type: %T\n", err, err)
 		return
 	}
 
 	// connect the websocket to Deepgram
-	fmt.Printf("Starting Agent...\n")
+	fmt.Printf("Attempting to connect to Deepgram WebSocket...\n")
 	bConnected := dgClient.Connect()
 	if !bConnected {
-		fmt.Println("Client.Connect failed")
+		fmt.Printf("WebSocket connection failed - check your API key and network connection\n")
 		os.Exit(1)
 	}
+	fmt.Printf("Successfully connected to Deepgram WebSocket\n")
 
 	/*
 		Microphone package
 	*/
-	// mic stuf
+	// mic stuff
+	fmt.Printf("Initializing microphone...\n")
 	mic, err := microphone.New(microphone.AudioConfig{
 		InputChannels: 1,
 		SamplingRate:  16000,
@@ -408,6 +427,7 @@ func main() {
 		fmt.Printf("Initialize failed. Err: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Microphone initialized successfully\n")
 
 	// start the mic
 	fmt.Printf("Starting Microphone...\n")
@@ -416,10 +436,13 @@ func main() {
 		fmt.Printf("mic.Start failed. Err: %v\n", err)
 		os.Exit(1)
 	}
+	fmt.Printf("Microphone started successfully\n")
 
 	go func() {
+		fmt.Printf("Starting audio stream...\n")
 		// feed the microphone stream to the Deepgram client (this is a blocking call)
 		mic.Stream(dgClient)
+		fmt.Printf("Audio stream ended\n")
 	}()
 
 	// wait for user input to exit
