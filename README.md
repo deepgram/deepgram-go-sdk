@@ -200,18 +200,18 @@ These examples provide:
 
 - Agent Simple - [examples/agent/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/agent/simple/main.go)
 
-### Speech-to-Text - Live Audio / WebSocket:
+### Speech-to-Text - Live Audio / WebSocket
 
 - From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
 - From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
 
-### Speech-to-Text - PreRecorded / REST:
+### Speech-to-Text - PreRecorded / REST
 
 - From an Audio File - [examples/speech-to-text/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/file/main.go)
 - From an URL - [examples/speech-to-text/rest/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/url/main.go)
 - From an Audio Stream - [examples/speech-to-text/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/stream/main.go)
 
-### Speech-to-Text - Live Audio:
+### Speech-to-Text - Live Audio
 
 - From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
 - From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
