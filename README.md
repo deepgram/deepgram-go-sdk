@@ -196,28 +196,32 @@ There are examples for **every*- API call in this SDK. You can find all of these
 
 These examples provide:
 
-Speech-to-Text - Live Audio / WebSocket:
+### Agent
+
+- Agent Simple - [examples/agent/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/agent/simple/main.go)
+
+### Speech-to-Text - Live Audio / WebSocket
 
 - From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
 - From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
 
-Speech-to-Text - PreRecorded / REST:
+### Speech-to-Text - PreRecorded / REST
 
 - From an Audio File - [examples/speech-to-text/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/file/main.go)
 - From an URL - [examples/speech-to-text/rest/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/url/main.go)
 - From an Audio Stream - [examples/speech-to-text/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/stream/main.go)
 
-Speech-to-Text - Live Audio:
+### Speech-to-Text - Live Audio
 
 - From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
 - From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
 
-Text-to-Speech - WebSocket
+### Text-to-Speech - WebSocket
 
 - Websocket Simple Example - [examples/text-to-speech/websocket/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/simple/main.go)
 - Interactive Websocket - [examples/text-to-speech/websocket/interactive](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/interactive/main.go)
 
-Text-to-Speech - REST
+### Text-to-Speech - REST
 
 - Save audio to a Path - [examples/text-to-speech/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/file/main.go)
 - Save audio to a Stream/Buffer - [examples/text-to-speech/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/stream/main.go)
@@ -256,7 +260,21 @@ client.Init(client.InitLib{
 
 ## Testing
 
-TBD
+There are several test folders in [/tests](https://github.com/deepgram/deepgram-go-sdk/tree/main/tests) you can run:
+
+- unit_test/ - Unit tests
+- daily_test/ - Integration/daily tests
+- edge_cases/ - Edge case testing
+- response_data/ - Test data
+- utils/ - Test utilities
+
+To run the tests, you can use the following commands:
+
+Run specific tests in a directory:
+
+```bash
+go run filename
+```
 
 ## Backwards Compatibility
 
@@ -273,6 +291,6 @@ To make sure our community is safe for all, be sure to review and agree to our [
 We love to hear from you so if you have questions, comments or find a bug in the
 project, let us know! You can either:
 
-- [Open an issue in this repository](https://github.com/deepgram/deepgram-dotnet-sdk/issues/new)
+- [Open an issue in this repository](https://github.com/deepgram/deepgram-go-sdk/issues/new)
 - [Join the Deepgram Github Discussions Community](https://github.com/orgs/deepgram/discussions)
 - [Join the Deepgram Discord Community](https://discord.gg/xWRaCDBtW4)

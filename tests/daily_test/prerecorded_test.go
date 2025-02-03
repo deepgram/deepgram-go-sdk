@@ -29,7 +29,7 @@ const (
 )
 
 const (
-	FromURLSmartFormat = "Yep. I said it before and I'll say it again. Life moves pretty fast. You don't stop and look around once in a while, you could miss it."
+	FromURLSmartFormat = "Yep. I said it before, and I'll say it again. Life moves pretty fast. You don't stop and look around once in a while, you could miss it."
 	FromURLSummarize   = "Yep. I said it before, and I'll say it again. Life moves pretty fast. You don't stop and look around once in a while, you could miss it."
 )
 

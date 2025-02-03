@@ -7,6 +7,9 @@ package common
 const (
 	// default host
 	DefaultHost string = "api.deepgram.com"
+
+	// default agent host
+	DefaultAgentHost string = "agent.deepgram.com"
 )
 
 // LogLevel expressed as an int64

@@ -211,6 +211,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 				Proxy:           c.cOptions.Proxy,
 			}
 		}
+
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
 		if res != nil {

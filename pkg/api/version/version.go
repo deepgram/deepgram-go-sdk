@@ -28,11 +28,15 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 
 	// set the protocol
 	protocol := HTTPProtocol
-	if apiType == APITypeLive || apiType == APITypeSpeakStream {
+	if apiType == APITypeLive || apiType == APITypeSpeakStream || apiType == APITypeAgent {
 		protocol = WSProtocol
 	}
 	if host == "" {
 		host = common.DefaultHost
+	}
+	if apiType == APITypeAgent && host == common.DefaultHost {
+		klog.V(4).Infof("overriding with agent host\n")
+		host = common.DefaultAgentHost
 	}
 
 	// check if the host has a protocol
@@ -61,6 +65,10 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 	// make sure the version is set
 	if version == "" {
 		version = DefaultAPIVersion
+	}
+	if apiType == APITypeAgent {
+		klog.V(4).Infof("overriding agent version with empty string since API isn't versioned\n")
+		version = ""
 	}
 
 	// remove the version from the path if it exists

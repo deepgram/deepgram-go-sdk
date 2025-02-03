@@ -74,7 +74,6 @@ func (c MyCallback) UtteranceEnd(ur *api.UtteranceEndResponse) error {
 	} else {
 		fmt.Printf("\n[UtteranceEnd] Received\n")
 	}
-
 	return nil
 }
 
@@ -142,7 +141,7 @@ func main() {
 	}
 
 	// create a Deepgram client
-	dgClient, err := client.NewWebSocket(ctx, "", cOptions, tOptions, callback)
+	dgClient, err := client.NewWebSocketUsingCallback(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return
