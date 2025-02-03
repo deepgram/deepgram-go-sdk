@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -246,6 +247,8 @@ func (c *WSCallback) ping() {
 	defer func() {
 		if r := recover(); r != nil {
 			klog.V(1).Infof("Panic triggered\n")
+			klog.V(1).Infof("Panic: %v\n", r)
+			klog.V(1).Infof("Stack trace: %s\n", string(debug.Stack()))
 
 			// send error on callback
 			err := common.ErrFatalPanicRecovered
@@ -289,6 +292,8 @@ func (c *WSCallback) flush() {
 	defer func() {
 		if r := recover(); r != nil {
 			klog.V(1).Infof("Panic triggered\n")
+			klog.V(1).Infof("Panic: %v\n", r)
+			klog.V(1).Infof("Stack trace: %s\n", string(debug.Stack()))
 
 			// send error on callback
 			err := common.ErrFatalPanicRecovered
