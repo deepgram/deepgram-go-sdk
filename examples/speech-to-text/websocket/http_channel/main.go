@@ -36,6 +36,8 @@ func main() {
 
 	// set the Transcription options
 	transcriptOptions := &interfaces.LiveTranscriptionOptions{
+		Model:     "nova-3",
+		Keyterms:  []string{"deepgram"},
 		Language:  "en-US",
 		Punctuate: true,
 	}

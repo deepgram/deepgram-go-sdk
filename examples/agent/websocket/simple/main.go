@@ -393,6 +393,8 @@ func main() {
 	tOptions.Agent.Think.Provider.Type = "open_ai"
 	tOptions.Agent.Think.Model = "gpt-4o-mini"
 	tOptions.Agent.Think.Instructions = "You are a helpful AI assistant."
+	tOptions.Agent.Listen.Model = "nova-3"
+	tOptions.Agent.Listen.Keyterms = &[]string{"Bueller"}
 
 	// implement your own callback
 	callback := msginterfaces.AgentMessageChan(*NewMyHandler())
