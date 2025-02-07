@@ -35,7 +35,8 @@ type Audio struct {
 	Output *Output `json:"output,omitempty"`
 }
 type Listen struct {
-	Model string `json:"model,omitempty"`
+	Model    string    `json:"model,omitempty"`
+	Keyterms *[]string `json:"keyterms,omitempty"`
 }
 type Provider struct {
 	Type string `json:"type,omitempty"`
