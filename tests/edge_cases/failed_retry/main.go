@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// use the default callback handler which just dumps all messages to the screen
-	dgClient, err := client.NewWebSocket(ctx, "", cOptions, tOptions, nil)
+	dgClient, err := client.NewWebSocketUsingChan(ctx, "", cOptions, tOptions, nil)
 	if err != nil {
 		fmt.Println("ERROR creating LiveClient connection:", err)
 		return

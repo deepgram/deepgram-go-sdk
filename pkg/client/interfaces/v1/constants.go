@@ -12,6 +12,10 @@ const (
 	PackageVersion string = "v1.0"
 )
 
+const (
+	TypeSettingsConfiguration = "SettingsConfiguration"
+)
+
 // errors
 var (
 	// ErrNoAPIKey no api key found

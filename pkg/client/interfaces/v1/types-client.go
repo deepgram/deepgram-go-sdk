@@ -4,13 +4,20 @@
 
 package interfacesv1
 
+import (
+	"net/http"
+	"net/url"
+)
+
 // ClientOptions defines any options for the client
 type ClientOptions struct {
-	APIKey     string
-	Host       string // override for the host endpoint
-	APIVersion string // override for the version used
-	Path       string // override for the endpoint path usually <version/listen> or <version/projects>
-	SelfHosted bool   // set to true if using on-prem
+	APIKey            string
+	Host              string                                // override for the host endpoint
+	APIVersion        string                                // override for the version used
+	Path              string                                // override for the endpoint path usually <version/listen> or <version/projects>
+	SelfHosted        bool                                  // set to true if using on-prem
+	Proxy             func(*http.Request) (*url.URL, error) // provide function for proxy -- e.g. http.ProxyFromEnvironment
+	WSHeaderProcessor func(http.Header)                     // process headers before dialing for websocket connection
 
 	// shared client options
 	SkipServerAuth bool // keeps the client from authenticating with the server

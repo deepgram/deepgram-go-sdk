@@ -31,6 +31,7 @@ type PreRecordedTranscriptionOptions struct {
 	FillerWords      bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
 	Intents          bool     `json:"intents,omitempty" schema:"intents,omitempty"`
 	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
+	Keyterms         []string `json:"keyterms,omitempty" schema:"keyterms,omitempty"`
 	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
 	Measurements     bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`
 	Model            string   `json:"model,omitempty" schema:"model,omitempty"`

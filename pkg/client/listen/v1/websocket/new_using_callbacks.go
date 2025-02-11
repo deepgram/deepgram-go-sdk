@@ -6,6 +6,7 @@ package websocketv1
 
 import (
 	"context"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
@@ -68,6 +69,10 @@ func NewUsingCallbackWithCancel(ctx context.Context, ctxCancel context.CancelFun
 
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
+	}
+	if len(tOptions.Keyterms) > 0 && !strings.HasPrefix(tOptions.Model, "nova-3") {
+		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
+		return nil, nil
 	}
 	err := cOptions.Parse()
 	if err != nil {

@@ -10,8 +10,8 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	websocketv1api "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket"
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	websocketv1api "github.com/deepgram/deepgram-go-sdk/pkg/api/agent/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/agent/v1/websocket/interfaces"
 	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
@@ -23,7 +23,7 @@ NewForDemo creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewUsingChanForDemo(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions) (*WSChannel, error) {
+func NewUsingChanForDemo(ctx context.Context, options *clientinterfaces.SettingsConfigurationOptions) (*WSChannel, error) {
 	return NewUsingChan(ctx, "", &clientinterfaces.ClientOptions{}, options, nil)
 }
 
@@ -34,7 +34,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The chans handler is set to the default handler which just prints all messages to the console
 */
-func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) { // gocritic:ignore
+func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) { // gocritic:ignore
 	return NewUsingChan(ctx, "", &clientinterfaces.ClientOptions{}, options, chans)
 }
 
@@ -45,10 +45,10 @@ Input parameters:
 - ctx: context.Context object
 - apiKey: string containing the Deepgram API key
 - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
-- chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
+- tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
+- chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) {
+func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
@@ -61,16 +61,16 @@ Input parameters:
 - ctxCancel: allow passing in own cancel
 - apiKey: string containing the Deepgram API key
 - cOptions: ClientOptions which allows overriding things like hostname, version of the API, etc.
-- tOptions: LiveTranscriptionOptions which allows overriding things like language, model, etc.
-- chans: LiveMessageCallback which is a chans that allows you to perform actions based on the transcription
+- tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
+- chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.LiveTranscriptionOptions, chans msginterfaces.LiveMessageChan) (*WSChannel, error) {
-	klog.V(6).Infof("live.New() ENTER\n")
+func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
+	klog.V(6).Infof("agent.New() ENTER\n")
 
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
 	}
-	if len(tOptions.Keyterms) > 0 && !strings.HasPrefix(tOptions.Model, "nova-3") {
+	if len(tOptions.Agent.Listen.Keyterms) > 0 && !strings.HasPrefix(tOptions.Agent.Listen.Model, "nova-3") {
 		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
 		return nil, nil
 	}
@@ -97,7 +97,7 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 	conn := WSChannel{
 		cOptions:  cOptions,
 		tOptions:  tOptions,
-		chans:     make([]*msginterfaces.LiveMessageChan, 0),
+		chans:     make([]*msginterfaces.AgentMessageChan, 0),
 		router:    &router,
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
@@ -108,7 +108,7 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler, &router)
 
 	klog.V(3).Infof("NewDeepGramWSClient Succeeded\n")
-	klog.V(6).Infof("live.New() LEAVE\n")
+	klog.V(6).Infof("agent.New() LEAVE\n")
 
 	return &conn, nil
 }

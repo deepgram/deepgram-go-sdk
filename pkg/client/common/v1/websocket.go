@@ -160,6 +160,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	myHeader.Set("Host", c.cOptions.Host)
 	myHeader.Set("Authorization", "token "+c.cOptions.APIKey)
 	myHeader.Set("User-Agent", clientinterfaces.DgAgent)
+	if c.cOptions.WSHeaderProcessor != nil {
+		c.cOptions.WSHeaderProcessor(myHeader)
+	}
 
 	// attempt to establish connection
 	i := int64(0)
@@ -197,6 +200,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			dialer = websocket.Dialer{
 				HandshakeTimeout: 15 * time.Second,
 				RedirectService:  c.cOptions.RedirectService,
+				Proxy:            c.cOptions.Proxy,
 			}
 		} else {
 			dialer = websocket.Dialer{
@@ -205,8 +209,10 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
 				RedirectService: c.cOptions.RedirectService,
 				SkipServerAuth:  c.cOptions.SkipServerAuth,
+				Proxy:           c.cOptions.Proxy,
 			}
 		}
+
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
 		if res != nil {
