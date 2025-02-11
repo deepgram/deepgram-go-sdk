@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 
@@ -75,6 +76,11 @@ Output parameters:
 func (c *Client) DoFile(ctx context.Context, filePath string, req *interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	klog.V(6).Infof("prerecorded.DoFile() ENTER\n")
 
+	if len(req.Keyterms) > 0 && !strings.HasPrefix(req.Model, "nova-3") {
+		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
+		return nil
+	}
+
 	// file?
 	fileInfo, err := os.Stat(filePath)
 	if err != nil || errors.Is(err, os.ErrNotExist) {
@@ -115,6 +121,11 @@ Output parameters:
 // DoStream initiates a streaming API request.
 func (c *Client) DoStream(ctx context.Context, src io.Reader, options *interfaces.PreRecordedTranscriptionOptions, resBody interface{}) error {
 	klog.V(6).Infof("prerecorded.DoStream() ENTER\n")
+
+	if len(options.Keyterms) > 0 && !strings.HasPrefix(options.Model, "nova-3") {
+		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
+		return nil
+	}
 
 	uri, err := version.GetPrerecordedAPI(ctx, c.Options.Host, c.Options.APIVersion, c.Options.Path, options)
 	if err != nil {

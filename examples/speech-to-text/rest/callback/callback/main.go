@@ -38,6 +38,8 @@ func main() {
 		ctx,
 		url,
 		&interfaces.PreRecordedTranscriptionOptions{
+			Model:      "nova-3",
+			Keyterms:   []string{"deepgram"},
 			Punctuate:  true,
 			Diarize:    true,
 			Language:   "en-US",
