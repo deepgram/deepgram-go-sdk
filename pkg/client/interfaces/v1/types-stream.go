@@ -25,7 +25,7 @@ type LiveTranscriptionOptions struct {
 	FillerWords     bool     `json:"filler_words,omitempty" schema:"filler_words,omitempty"`
 	InterimResults  bool     `json:"interim_results,omitempty" schema:"interim_results,omitempty"`
 	Keywords        []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
-	Keyterms        []string `json:"keyterms,omitempty" schema:"keyterms,omitempty"`
+	Keyterm         []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Language        string   `json:"language,omitempty" schema:"language,omitempty"`
 	Model           string   `json:"model,omitempty" schema:"model,omitempty"`
 	Multichannel    bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`

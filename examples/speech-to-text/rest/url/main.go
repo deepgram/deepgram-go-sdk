@@ -31,7 +31,7 @@ func main() {
 	// send stream to Deepgram
 	options := &interfaces.PreRecordedTranscriptionOptions{
 		Model:      "nova-3",
-		Keyterms:   []string{"deepgram"},
+		Keyterm:    []string{"deepgram"},
 		Punctuate:  true,
 		Diarize:    true,
 		Language:   "en-US",

@@ -225,7 +225,7 @@ func main() {
 	// set the Transcription options
 	tOptions := &interfaces.LiveTranscriptionOptions{
 		Model:       "nova-3",
-		Keyterms:    []string{"deepgram"},
+		Keyterm:     []string{"deepgram"},
 		Language:    "en-US",
 		Punctuate:   true,
 		Encoding:    "linear16",

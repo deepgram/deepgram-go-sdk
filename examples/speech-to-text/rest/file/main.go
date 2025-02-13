@@ -33,7 +33,7 @@ func main() {
 	// set the Transcription options
 	options := &interfaces.PreRecordedTranscriptionOptions{
 		Model:       "nova-3",
-		Keyterms:    []string{"Bueller"},
+		Keyterm:     []string{"Bueller"},
 		Punctuate:   true,
 		Paragraphs:  true,
 		SmartFormat: true,

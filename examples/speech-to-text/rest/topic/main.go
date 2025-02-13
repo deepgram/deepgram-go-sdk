@@ -33,7 +33,7 @@ func main() {
 	// set the Transcription options
 	options := &interfaces.PreRecordedTranscriptionOptions{
 		Model:       "nova-3",
-		Keyterms:    []string{"deepgram"},
+		Keyterm:     []string{"deepgram"},
 		Punctuate:   true,
 		Language:    "en-US",
 		SmartFormat: true,
