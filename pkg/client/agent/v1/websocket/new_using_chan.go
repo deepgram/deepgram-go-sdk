@@ -70,7 +70,7 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
 	}
-	if len(tOptions.Agent.Listen.Keyterms) > 0 && !strings.HasPrefix(tOptions.Agent.Listen.Model, "nova-3") {
+	if len(tOptions.Agent.Listen.Keyterm) > 0 && !strings.HasPrefix(tOptions.Agent.Listen.Model, "nova-3") {
 		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
 		return nil, nil
 	}
