@@ -5,6 +5,8 @@
 package interfacesv1
 
 import (
+	"encoding/json"
+
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
 )
@@ -102,16 +104,15 @@ type AgentThinkingResponse struct {
 
 // FunctionCallRequestResponse is the response from a function call request
 type FunctionCallRequestResponse struct {
-	Type           string            `json:"type,omitempty"`
-	FunctionName   string            `json:"function_name,omitempty"`
-	FunctionCallID string            `json:"function_call_id,omitempty"`
-	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
+	Type           string          `json:"type,omitempty"`
+	FunctionName   string          `json:"function_name,omitempty"`
+	FunctionCallID string          `json:"function_call_id,omitempty"`
+	Input          json.RawMessage `json:"input,omitempty"`
 }
 
 // FunctionCallingResponse is the response from a function calling
 type FunctionCallingResponse struct {
-	Type   string            `json:"type,omitempty"`
-	Output map[string]string `json:"output,omitempty"` // TODO: this is still undefined
+	Type string `json:"type,omitempty"`
 }
 
 // AgentStartedSpeakingResponse is the response from the Agent starting to speak
