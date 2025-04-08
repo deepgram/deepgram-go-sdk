@@ -395,6 +395,7 @@ func main() {
 	tOptions.Agent.Think.Instructions = "You are a helpful AI assistant."
 	tOptions.Agent.Listen.Model = "nova-3"
 	tOptions.Agent.Listen.Keyterms = []string{"Bueller"}
+	tOptions.Agent.Speak.Model = "aura-2-thalia-en"
 
 	// implement your own callback
 	callback := msginterfaces.AgentMessageChan(*NewMyHandler())
