@@ -31,7 +31,7 @@ func main() {
 
 	// set the TTS options
 	options := &interfaces.SpeakOptions{
-		Model: "aura-asteria-en",
+		Model: "aura-2-thalia-en",
 	}
 
 	// create a Deepgram client

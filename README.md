@@ -147,7 +147,7 @@ You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming
 ```go
 // set the TTS options
 ttsOptions := &interfaces.SpeakOptions{
-    Model: "aura-asteria-en",
+    Model: "aura-2-thalia-en",
 }
 
 // create the callback
@@ -175,7 +175,7 @@ You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming
 ```go
 // set the Transcription options
 options := &interfaces.SpeakOptions{
-    Model: "aura-asteria-en",
+    Model: "aura-2-thalia-en",
 }
 
 // create a Deepgram client
