@@ -148,7 +148,7 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.An
 
 	if err := json.Unmarshal([]byte(text), &tmp); err == nil {
 		// It's valid JSON, now check if it already contains a "text" field
-		if val, exists := tmp["Text"]; exists && val != nil {
+		if val, exists := tmp["text"]; exists && val != nil {
 			isValidJSON = true
 		}
 	}
@@ -161,7 +161,7 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.An
 			klog.V(6).Infof("speak.DoText() LEAVE\n")
 			return err
 		}
-		
+
 	} else {
 	err = json.NewEncoder(&buf).Encode(textSource{Text: text})
 	if err != nil {
