@@ -28,5 +28,5 @@ mechanism for:
 The return value is the complete URL endpoint to be used for auth
 */
 func GetAuthAPI(ctx context.Context, host, version, path string, vals interface{}, args ...interface{}) (string, error) {
-	return getAPIURL(ctx, "speak", host, version, path, nil, args...)
+	return getAPIURL(ctx, "auth", host, version, path, nil, args...)
 }

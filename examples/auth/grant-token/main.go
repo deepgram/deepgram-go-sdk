@@ -27,14 +27,14 @@ func main() {
 	authClient := api.New(dg)
 
 	// list projects
-	respProject, err := authClient.GrantToken(ctx)
+	respToken, err := authClient.GrantToken(ctx)
 	if err != nil {
-		fmt.Printf("ListProjects failed. Err: %v\n", err)
+		fmt.Printf("GrantToken failed. Err: %v\n", err)
 		os.Exit(1)
 	}
 
-	var token = respProject.AccessToken
-	var ttl = respProject.ExpiresIn
+	var token = respToken.AccessToken
+	var ttl = respToken.ExpiresIn
 
 	fmt.Printf("GrantToken() - Token: %s, TTL: %f\n", token, ttl)
 }
