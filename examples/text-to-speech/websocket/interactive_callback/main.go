@@ -111,7 +111,7 @@ func main() {
 
 	// set the TTS options
 	ttsOptions := &interfaces.WSSpeakOptions{
-		Model:      "aura-2-thalia-en",
+		Model:      "aura-asteria-en",
 		Encoding:   "linear16",
 		SampleRate: 48000,
 	}
