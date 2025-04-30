@@ -9,12 +9,11 @@ import (
 )
 
 const (
-	// TODO: The API currently isn't versioned... this seems like a bad idea
 	// APIVersion current supported version
-	// AgentAPIVersion string = "v1"
+	AgentAPIVersion string = "v1"
 
 	// AgentPath is the current path for agent API
-	AgentPath string = "agent"
+	AgentPath string = "agent/converse"
 )
 
 /*
@@ -28,5 +27,11 @@ GetAgentAPI is a function which controls the versioning of the agent API and pro
 The return value is the complete URL endpoint to be used for the agent API
 */
 func GetAgentAPI(ctx context.Context, host, version, path string /*options *interfaces.SettingsConfigurationOptions,*/, args ...interface{}) (string, error) {
+	if version == "" {
+		version = AgentAPIVersion
+	}
+	if path == "" {
+		path = AgentPath
+	}
 	return getAPIURL(ctx, "agent", host, version, path, nil, args...)
 }

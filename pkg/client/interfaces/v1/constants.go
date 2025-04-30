@@ -13,7 +13,7 @@ const (
 )
 
 const (
-	TypeSettingsConfiguration = "SettingsConfiguration"
+	TypeSettings = "Settings"
 )
 
 // errors

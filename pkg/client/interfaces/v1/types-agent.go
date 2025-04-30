@@ -5,20 +5,20 @@
 package interfacesv1
 
 /*
-SettingsConfigurationOptions contain all of the knobs and dials to control the Agent API
+SettingsOptions contain all of the knobs and dials to control the Agent API
 
 Please see the live/streaming documentation for more details:
 XXXX
 */
-type SettingsConfigurationOptions struct {
-	Type    string   `json:"type"`
-	Audio   Audio    `json:"audio"`
-	Agent   Agent    `json:"agent"`
-	Context *Context `json:"context,omitempty"`
+type SettingsOptions struct {
+	Type         string `json:"type"`
+	Experimental bool   `json:"experimental,omitempty"`
+	Audio        Audio  `json:"audio"`
+	Agent        Agent  `json:"agent"`
 }
 
 /*
-Sub-structs in SettingsConfigurationOptions
+Sub-structs in SettingsOptions
 */
 type Input struct {
 	Encoding   string `json:"encoding,omitempty"`
@@ -34,12 +34,32 @@ type Audio struct {
 	Input  *Input  `json:"input,omitempty"`
 	Output *Output `json:"output,omitempty"`
 }
-type Listen struct {
-	Model    string   `json:"model,omitempty"`
+type Endpoint struct {
+	Url     string            `json:"url,omitempty"`
+	Headers map[string]string `json:"headers,omitempty"`
+	Method  string            `json:"method,omitempty"`
+}
+type CartesiaVoice struct {
+	Mode string `json:"mode,omitempty"`
+	Id   string `json:"id,omitempty"`
+}
+type ListenProvider struct {
+	Type     string   `json:"type"`
+	Model    string   `json:"model"`
 	Keyterms []string `json:"keyterms,omitempty"`
 }
-type Provider struct {
-	Type string `json:"type,omitempty"`
+type SpeakProvider struct {
+	Type         string         `json:"type"`
+	Model        string         `json:"model,omitempty"`
+	ModelId      string         `json:"model_id,omitempty"`
+	Voice        *CartesiaVoice `json:"voice,omitempty"`
+	Language     string         `json:"language,omitempty"`
+	LanguageCode string         `json:"language_code,omitempty"`
+}
+type ThinkProvider struct {
+	Type        string  `json:"type"`
+	Model       string  `json:"model"`
+	Temperature float32 `json:"temperature,omitempty"`
 }
 type Item struct {
 	Type        string `json:"type,omitempty"`
@@ -61,27 +81,25 @@ type Functions struct {
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description,omitempty"`
 	Parameters  Parameters `json:"parameters,omitempty"`
-	URL         *string    `json:"url,omitempty"`
-	Headers     *[]Headers `json:"headers,omitempty"`
-	Method      *string    `json:"method,omitempty"`
+	Endpoint    Endpoint   `json:"endpoint,omitempty"`
+}
+type Listen struct {
+	Provider ListenProvider `json:"provider"`
 }
 type Think struct {
-	Provider     Provider    `json:"provider"`
-	Model        string      `json:"model,omitempty"`
-	Instructions string      `json:"instructions,omitempty"`
-	Functions    []Functions `json:"functions,omitempty"`
+	Provider  ThinkProvider `json:"provider"`
+	Endpoint  *Endpoint     `json:"endpoint,omitempty"`
+	Functions *[]Functions  `json:"functions,omitempty"`
+	Prompt    string        `json:"prompt,omitempty"`
 }
 type Speak struct {
-	Model    string `json:"model,omitempty"`
-	Provider string `json:"provider,omitempty"`
-	VoiceID  string `json:"voice_id,omitempty"`
+	Provider SpeakProvider `json:"provider,omitempty"`
+	Endpoint *Endpoint     `json:"endpoint,omitempty"`
 }
 type Agent struct {
-	Listen Listen `json:"listen"`
-	Think  Think  `json:"think"`
-	Speak  Speak  `json:"speak"`
-}
-type Context struct {
-	Messages map[string]string `json:"messages,omitempty"`
-	Replay   bool              `json:"replay,omitempty"`
+	Language string `json:"language,omitempty"`
+	Listen   Listen `json:"listen"`
+	Think    Think  `json:"think"`
+	Speak    Speak  `json:"speak"`
+	Greeting string `json:"greeting,omitempty"`
 }

@@ -12,24 +12,24 @@ import (
 /***********************************/
 // Request/Input structs
 /***********************************/
-type SettingsConfigurationOptions interfaces.SettingsConfigurationOptions
+type SettingsOptions interfaces.SettingsOptions
 
-// UpdateInstructions is the request to update the Agent instructions
-type UpdateInstructions struct {
-	Type         string `json:"type,omitempty"`
-	Instructions string `json:"instructions,omitempty"`
+// UpdatePrompt is the request to update the Agent prompt
+type UpdatePrompt struct {
+	Type   string `json:"type,omitempty"`
+	Prompt string `json:"instructions,omitempty"`
 }
 
-// UpdateSpeak is the request to update model for speaking
+// UpdateSpeak is the request to update configuration for speaking
 type UpdateSpeak struct {
-	Type  string `json:"type,omitempty"`
-	Model string `json:"model,omitempty"`
+	Type  string                  `json:"type,omitempty"`
+	Speak interfaces.SpeakOptions `json:"speak,omitempty"`
 }
 
 // InjectAgentMessage is the request to inject a message into the Agent
 type InjectAgentMessage struct {
 	Type    string `json:"type,omitempty"`
-	Message string `json:"message,omitempty"`
+	Content string `json:"content,omitempty"`
 }
 
 // FunctionCallResponse is the response from a function call
@@ -108,13 +108,7 @@ type FunctionCallRequestResponse struct {
 	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
 }
 
-// FunctionCallingResponse is the response from a function calling
-type FunctionCallingResponse struct {
-	Type   string            `json:"type,omitempty"`
-	Output map[string]string `json:"output,omitempty"` // TODO: this is still undefined
-}
-
-// AgentStartedSpeakingResponse is the response from the Agent starting to speak
+// AgentStartedSpeakingResponse is the response from the Agent starting to speak. You will ONLY get this if `experimental` is set to true.
 type AgentStartedSpeakingResponse struct {
 	Type         string  `json:"type,omitempty"`
 	TotalLatency float64 `json:"total_latency,omitempty"`

@@ -39,7 +39,6 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		userStartedSpeakingResponse:  make(chan *interfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:        make(chan *interfaces.AgentThinkingResponse),
 		functionCallRequestResponse:  make(chan *interfaces.FunctionCallRequestResponse),
-		functionCallingResponse:      make(chan *interfaces.FunctionCallingResponse),
 		agentStartedSpeakingResponse: make(chan *interfaces.AgentStartedSpeakingResponse),
 		agentAudioDoneResponse:       make(chan *interfaces.AgentAudioDoneResponse),
 		injectionRefusedResponse:     make(chan *interfaces.InjectionRefusedResponse),
@@ -92,11 +91,6 @@ func (dch DefaultChanHandler) GetAgentThinking() []*chan *interfaces.AgentThinki
 // GetFunctionCallRequestResponse returns the function call request response channels
 func (dch DefaultChanHandler) GetFunctionCallRequest() []*chan *interfaces.FunctionCallRequestResponse {
 	return []*chan *interfaces.FunctionCallRequestResponse{&dch.functionCallRequestResponse}
-}
-
-// GetFunctionCallingResponse returns the function calling response channels
-func (dch DefaultChanHandler) GetFunctionCalling() []*chan *interfaces.FunctionCallingResponse {
-	return []*chan *interfaces.FunctionCallingResponse{&dch.functionCallingResponse}
 }
 
 // GetAgentStartedSpeakingResponse returns the agent started speaking response channels
@@ -323,31 +317,6 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
-		}
-	}()
-
-	// function calling response channel
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for fcr := range dch.functionCallingResponse {
-			if dch.debugWebsocket {
-				data, err := json.Marshal(fcr)
-				if err != nil {
-					klog.V(1).Infof("FunctionCalling json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nFunctionCalling Object:\n%s\n\n", prettyJSON)
-			}
-
-			fmt.Printf("\n\n[FunctionCallingResponse]\n\n")
 		}
 	}()
 

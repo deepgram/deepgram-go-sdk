@@ -26,7 +26,7 @@ const (
 type WSChannel = listenv1ws.WSChannel
 
 // options
-func NewSettingsConfigurationOptions() *interfaces.SettingsConfigurationOptions {
+func NewSettingsConfigurationOptions() *interfaces.SettingsOptions {
 	return interfaces.NewSettingsConfigurationOptions()
 }
 
@@ -43,7 +43,7 @@ Input parameters:
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewWSUsingChanForDemo(ctx context.Context, options *interfaces.SettingsConfigurationOptions) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChanForDemo(ctx context.Context, options *interfaces.SettingsOptions) (*listenv1ws.WSChannel, error) {
 	return listenv1ws.NewUsingChanForDemo(ctx, options)
 }
 
@@ -58,7 +58,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The chans handler is set to the default handler which just prints all messages to the console
 */
-func NewWSUsingChanWithDefaults(ctx context.Context, options *interfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChanWithDefaults(ctx context.Context, options *interfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
 	return listenv1ws.NewUsingChanWithDefaults(ctx, options, chans)
 }
 
@@ -72,7 +72,7 @@ Input parameters:
 - tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
 - chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewWSUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChan(ctx context.Context, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return listenv1ws.NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
@@ -88,6 +88,6 @@ Input parameters:
 - tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
 - chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewWSUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
+func NewWSUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *interfaces.ClientOptions, tOptions *interfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*listenv1ws.WSChannel, error) {
 	return listenv1ws.NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }

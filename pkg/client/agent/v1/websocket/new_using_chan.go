@@ -23,7 +23,7 @@ NewForDemo creates a new websocket connection with all default options
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewUsingChanForDemo(ctx context.Context, options *clientinterfaces.SettingsConfigurationOptions) (*WSChannel, error) {
+func NewUsingChanForDemo(ctx context.Context, options *clientinterfaces.SettingsOptions) (*WSChannel, error) {
 	return NewUsingChan(ctx, "", &clientinterfaces.ClientOptions{}, options, nil)
 }
 
@@ -34,7 +34,7 @@ Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
   - The chans handler is set to the default handler which just prints all messages to the console
 */
-func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) { // gocritic:ignore
+func NewUsingChanWithDefaults(ctx context.Context, options *clientinterfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) { // gocritic:ignore
 	return NewUsingChan(ctx, "", &clientinterfaces.ClientOptions{}, options, chans)
 }
 
@@ -48,7 +48,7 @@ Input parameters:
 - tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
 - chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
+func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
 	ctx, ctxCancel := context.WithCancel(ctx)
 	return NewUsingChanWithCancel(ctx, ctxCancel, apiKey, cOptions, tOptions, chans)
 }
@@ -64,13 +64,13 @@ Input parameters:
 - tOptions: SettingsConfigurationOptions which allows overriding things like language, model, etc.
 - chans: AgentMessageChan which is a chans that allows you to perform actions based on the transcription
 */
-func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsConfigurationOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
+func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptions, tOptions *clientinterfaces.SettingsOptions, chans msginterfaces.AgentMessageChan) (*WSChannel, error) {
 	klog.V(6).Infof("agent.New() ENTER\n")
 
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
 	}
-	if len(tOptions.Agent.Listen.Keyterms) > 0 && !strings.HasPrefix(tOptions.Agent.Listen.Model, "nova-3") {
+	if len(tOptions.Agent.Listen.Provider.Keyterms) > 0 && !strings.HasPrefix(tOptions.Agent.Listen.Provider.Model, "nova-3") {
 		klog.V(1).Info("Keyterms are only supported with nova-3 models.")
 		return nil, nil
 	}
