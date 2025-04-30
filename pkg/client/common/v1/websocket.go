@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"runtime/debug"
@@ -450,7 +449,6 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 		return err
 	}
-	fmt.Printf("WriteJSON: %s\n", string(byData))
 
 	// doing a write, need to lock
 	c.muConn.Lock()

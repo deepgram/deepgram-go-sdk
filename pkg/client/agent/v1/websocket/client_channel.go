@@ -53,7 +53,6 @@ func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel co
 func (c *WSChannel) GetURL(host string) (string, error) {
 	// we dont send the SettingsConfigurationOptions because that is sent as a WS message to the server
 	url, err := version.GetAgentAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path /*, c.tOptions*/)
-	print(url)
 	if err != nil {
 		klog.V(1).Infof("version.GetAgentAPI failed. Err: %v\n", err)
 		return "", err
