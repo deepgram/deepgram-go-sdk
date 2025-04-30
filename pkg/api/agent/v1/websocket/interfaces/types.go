@@ -79,7 +79,7 @@ type OpenResponse = commoninterfaces.OpenResponse
 // WelcomeResponse is the response from the welcome message
 type WelcomeResponse struct {
 	Type      string `json:"type,omitempty"`
-	SessionID string `json:"session_id,omitempty"`
+	RequestID string `json:"request_id,omitempty"`
 }
 
 // ConversationTextResponse is the response from the conversation text
