@@ -143,7 +143,7 @@ func NewMyHandler() *MyHandler {
 func configureAgent() *interfaces.ClientOptions {
 	// Initialize library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelDefault,
+		LogLevel: client.LogLevelVerbose,
 	})
 
 	// Set client options
@@ -469,7 +469,7 @@ func main() {
 	// Set transcription options
 	tOptions := client.NewSettingsConfigurationOptions()
 	tOptions.Audio.Input.Encoding = "linear16"
-	tOptions.Audio.Input.SampleRate = 24000
+	tOptions.Audio.Input.SampleRate = 48000
 	tOptions.Agent.Think.Provider.Type = "open_ai"
 	tOptions.Agent.Think.Provider.Model = "gpt-4o-mini"
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
