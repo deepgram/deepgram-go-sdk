@@ -13,6 +13,8 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,7 +31,6 @@ type MyHandler struct {
 	conversationTextResponse     chan *msginterfaces.ConversationTextResponse
 	userStartedSpeakingResponse  chan *msginterfaces.UserStartedSpeakingResponse
 	agentThinkingResponse        chan *msginterfaces.AgentThinkingResponse
-	functionCallRequestResponse  chan *msginterfaces.FunctionCallRequestResponse
 	agentStartedSpeakingResponse chan *msginterfaces.AgentStartedSpeakingResponse
 	agentAudioDoneResponse       chan *msginterfaces.AgentAudioDoneResponse
 	closeChan                    chan *msginterfaces.CloseResponse
@@ -38,6 +39,7 @@ type MyHandler struct {
 	injectionRefusedResponse     chan *msginterfaces.InjectionRefusedResponse
 	keepAliveResponse            chan *msginterfaces.KeepAlive
 	settingsAppliedResponse      chan *msginterfaces.SettingsAppliedResponse
+	functionCallRequestResponse  chan *msginterfaces.FunctionCallRequestResponse
 	chatLogFile                  *os.File
 }
 
@@ -64,10 +66,6 @@ func (dch MyHandler) GetUserStartedSpeaking() []*chan *msginterfaces.UserStarted
 
 func (dch MyHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResponse {
 	return []*chan *msginterfaces.AgentThinkingResponse{&dch.agentThinkingResponse}
-}
-
-func (dch MyHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
-	return []*chan *msginterfaces.FunctionCallRequestResponse{&dch.functionCallRequestResponse}
 }
 
 func (dch MyHandler) GetAgentStartedSpeaking() []*chan *msginterfaces.AgentStartedSpeakingResponse {
@@ -98,6 +96,10 @@ func (dch MyHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive {
 	return []*chan *msginterfaces.KeepAlive{&dch.keepAliveResponse}
 }
 
+func (dch MyHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
+	return []*chan *msginterfaces.FunctionCallRequestResponse{&dch.functionCallRequestResponse}
+}
+
 func (dch MyHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
 	return []*chan *msginterfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
 }
@@ -118,7 +120,6 @@ func NewMyHandler() *MyHandler {
 		conversationTextResponse:     make(chan *msginterfaces.ConversationTextResponse),
 		userStartedSpeakingResponse:  make(chan *msginterfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:        make(chan *msginterfaces.AgentThinkingResponse),
-		functionCallRequestResponse:  make(chan *msginterfaces.FunctionCallRequestResponse),
 		agentStartedSpeakingResponse: make(chan *msginterfaces.AgentStartedSpeakingResponse),
 		agentAudioDoneResponse:       make(chan *msginterfaces.AgentAudioDoneResponse),
 		closeChan:                    make(chan *msginterfaces.CloseResponse),
@@ -127,6 +128,7 @@ func NewMyHandler() *MyHandler {
 		injectionRefusedResponse:     make(chan *msginterfaces.InjectionRefusedResponse),
 		keepAliveResponse:            make(chan *msginterfaces.KeepAlive),
 		settingsAppliedResponse:      make(chan *msginterfaces.SettingsAppliedResponse),
+		functionCallRequestResponse:  make(chan *msginterfaces.FunctionCallRequestResponse),
 		chatLogFile:                  chatLogFile,
 	}
 
@@ -141,7 +143,7 @@ func NewMyHandler() *MyHandler {
 func configureAgent() *interfaces.ClientOptions {
 	// Initialize library
 	client.Init(client.InitLib{
-		LogLevel: client.LogLevelFull,
+		LogLevel: client.LogLevelDefault,
 	})
 
 	// Set client options
@@ -181,8 +183,8 @@ func (dch MyHandler) Run() error {
 					0x10, 0x00, 0x00, 0x00, // Chunk size (16)
 					0x01, 0x00, // Audio format (1 for PCM)
 					0x01, 0x00, // Number of channels (1)
-					0x80, 0x3e, 0x00, 0x00, // Sample rate (16000)
-					0x00, 0x7d, 0x00, 0x00, // Byte rate (16000 * 2)
+					0x80, 0x5d, 0x00, 0x00, // Sample rate (24000)
+					0x00, 0xbb, 0x00, 0x00, // Byte rate (24000 * 2)
 					0x02, 0x00, // Block align (2)
 					0x10, 0x00, // Bits per sample (16)
 					0x64, 0x61, 0x74, 0x61, // "data"
@@ -220,31 +222,103 @@ func (dch MyHandler) Run() error {
 	go func() {
 		defer wgReceivers.Done()
 
-		for ctr := range dch.conversationTextResponse {
-			fmt.Printf("\n\n[ConversationTextResponse]\n")
-			fmt.Printf("%s: %s\n\n", ctr.Role, ctr.Content)
+		var currentSpeaker string
+		var currentMessage strings.Builder
+		lastUpdate := time.Now()
 
-			// Write to chat log
-			if err := dch.writeToChatLog(ctr.Role, ctr.Content); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
+		for ctr := range dch.conversationTextResponse {
+			// If speaker changed or it's been more than 2 seconds, print accumulated message
+			if currentSpeaker != ctr.Role || time.Since(lastUpdate) > 2*time.Second {
+				if currentMessage.Len() > 0 {
+					fmt.Printf("\n\n[ConversationTextResponse]\n")
+					fmt.Printf("%s: %s\n\n", currentSpeaker, currentMessage.String())
+
+					// Write to chat log
+					if err := dch.writeToChatLog(currentSpeaker, currentMessage.String()); err != nil {
+						fmt.Printf("Failed to write to chat log: %v\n", err)
+					}
+				}
+				currentSpeaker = ctr.Role
+				currentMessage.Reset()
 			}
 
-			// If this is an agent response, we can consider the conversation turn complete
-			if ctr.Role == "assistant" {
-				fmt.Printf("Agent has responded, waiting for next user input...\n")
+			// Add new content to current message
+			if currentMessage.Len() > 0 {
+				currentMessage.WriteString(" ")
+			}
+			currentMessage.WriteString(ctr.Content)
+			lastUpdate = time.Now()
+
+			// Track conversation flow
+			switch ctr.Role {
+			case "user":
+				fmt.Printf("Received user message: %s\n", ctr.Content)
+				fmt.Printf("Waiting for agent to process...\n")
+			case "assistant":
+				fmt.Printf("Agent response: %s\n", ctr.Content)
+				fmt.Printf("Waiting for next user input...\n")
+			default:
+				fmt.Printf("Received message from %s: %s\n", ctr.Role, ctr.Content)
+			}
+		}
+
+		// Print any remaining message
+		if currentMessage.Len() > 0 {
+			fmt.Printf("\n\n[ConversationTextResponse]\n")
+			fmt.Printf("%s: %s\n\n", currentSpeaker, currentMessage.String())
+
+			// Write to chat log
+			if err := dch.writeToChatLog(currentSpeaker, currentMessage.String()); err != nil {
+				fmt.Printf("Failed to write to chat log: %v\n", err)
 			}
 		}
 	}()
 
-	// Handle keep alive responses
+	// Handle user started speaking
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
 
-		for range dch.keepAliveResponse {
-			fmt.Printf("\n\n[KeepAliveResponse]\n")
+		for range dch.userStartedSpeakingResponse {
+			fmt.Printf("\n\n[UserStartedSpeakingResponse]\n")
+			fmt.Printf("User has started speaking, waiting for completion...\n\n")
+
 			// Write to chat log
-			if err := dch.writeToChatLog("system", "Keep alive received"); err != nil {
+			if err := dch.writeToChatLog("system", "User has started speaking"); err != nil {
+				fmt.Printf("Failed to write to chat log: %v\n", err)
+			}
+		}
+	}()
+
+	// Handle agent thinking
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for atr := range dch.agentThinkingResponse {
+			fmt.Printf("\n\n[AgentThinkingResponse]\n")
+			fmt.Printf("Agent is processing input: %s\n", atr.Content)
+			fmt.Printf("Waiting for agent's response...\n\n")
+
+			// Write to chat log
+			if err := dch.writeToChatLog("system", fmt.Sprintf("Agent is processing: %s", atr.Content)); err != nil {
+				fmt.Printf("Failed to write to chat log: %v\n", err)
+			}
+		}
+	}()
+
+	// Handle agent started speaking
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for asr := range dch.agentStartedSpeakingResponse {
+			fmt.Printf("\n\n[AgentStartedSpeakingResponse]\n")
+			fmt.Printf("Agent is starting to respond (latency: %.2fms)\n", asr.TotalLatency)
+			fmt.Printf("Processing agent's response...\n\n")
+
+			// Write to chat log
+			if err := dch.writeToChatLog("system", "Agent is starting to respond"); err != nil {
 				fmt.Printf("Failed to write to chat log: %v\n", err)
 			}
 		}
@@ -257,10 +331,26 @@ func (dch MyHandler) Run() error {
 
 		for range dch.agentAudioDoneResponse {
 			fmt.Printf("\n\n[AgentAudioDoneResponse]\n")
-			fmt.Printf("Audio processing completed\n")
+			fmt.Printf("Agent finished speaking, waiting for next user input...\n\n")
 
 			// Write to chat log
-			if err := dch.writeToChatLog("system", "Audio processing completed"); err != nil {
+			if err := dch.writeToChatLog("system", "Agent finished speaking"); err != nil {
+				fmt.Printf("Failed to write to chat log: %v\n", err)
+			}
+		}
+	}()
+
+	// Handle keep alive responses
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for range dch.keepAliveResponse {
+			fmt.Printf("\n\n[KeepAliveResponse]\n")
+			fmt.Printf("Connection is alive, waiting for next event...\n\n")
+
+			// Write to chat log
+			if err := dch.writeToChatLog("system", "Keep alive received"); err != nil {
 				fmt.Printf("Failed to write to chat log: %v\n", err)
 			}
 		}
@@ -275,6 +365,7 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
+	// welcome channel
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
@@ -283,38 +374,7 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		for range dch.userStartedSpeakingResponse {
-			fmt.Printf("\n\n[UserStartedSpeakingResponse]\n\n")
-		}
-	}()
-
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		for range dch.agentThinkingResponse {
-			fmt.Printf("\n\n[AgentThinkingResponse]\n\n")
-		}
-	}()
-
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		for range dch.functionCallRequestResponse {
-			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
-		}
-	}()
-
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		for range dch.agentStartedSpeakingResponse {
-			fmt.Printf("\n\n[AgentStartedSpeakingResponse]\n\n")
-		}
-	}()
-
+	// settings applied channel
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
@@ -323,14 +383,22 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
+	// close channel
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
-		for range dch.closeChan {
-			fmt.Printf("\n\n[CloseResponse]\n\n")
+		for closeResp := range dch.closeChan {
+			fmt.Printf("\n\n[CloseResponse]\n")
+			// TODO: Remove debug logging
+			fmt.Printf("TODO: Close response received\n")
+			fmt.Printf("TODO: Close response type: %+v\n", closeResp)
+			fmt.Printf("TODO: Stack trace:\n")
+			debug.PrintStack()
+			fmt.Printf("\n")
 		}
 	}()
 
+	// error channel
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
@@ -343,12 +411,22 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
+	// unhandled event channel
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
 		for byData := range dch.unhandledChan {
 			fmt.Printf("\n[UnhandledEvent]\n")
 			fmt.Printf("Raw message: %s\n", string(*byData))
+		}
+	}()
+
+	// Handle function call request
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for range dch.functionCallRequestResponse {
+			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
 		}
 	}()
 
@@ -376,14 +454,17 @@ func (dch *MyHandler) writeToChatLog(role, content string) error {
 
 // Main function
 func main() {
+	fmt.Printf("TODO: Program starting\n")
 	// Print instructions
 	fmt.Print("\n\nPress ENTER to exit!\n\n")
 
 	// Initialize context
 	ctx := context.Background()
+	fmt.Printf("TODO: Context initialized\n")
 
 	// Configure agent
 	cOptions := configureAgent()
+	fmt.Printf("TODO: Agent configured\n")
 
 	// Set transcription options
 	tOptions := client.NewSettingsConfigurationOptions()
@@ -398,6 +479,7 @@ func main() {
 	tOptions.Agent.Speak.Provider.Model = "aura-2-thalia-en"
 	tOptions.Agent.Language = "en"
 	tOptions.Agent.Greeting = "Hello! How can I help you today?"
+	fmt.Printf("TODO: Transcription options set\n")
 
 	// Create handler
 	fmt.Printf("Creating new Deepgram WebSocket client...\n")
@@ -406,15 +488,18 @@ func main() {
 		fmt.Printf("Failed to create handler\n")
 		return
 	}
+	fmt.Printf("TODO: Handler created\n")
 	defer handler.chatLogFile.Close()
 
 	// Create client
 	callback := msginterfaces.AgentMessageChan(*handler)
+	fmt.Printf("TODO: Callback created\n")
 	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Printf("ERROR creating LiveTranscription connection:\n- Error: %v\n- Type: %T\n", err, err)
 		return
 	}
+	fmt.Printf("TODO: Deepgram client created\n")
 
 	// Connect to Deepgram
 	fmt.Printf("Attempting to connect to Deepgram WebSocket...\n")
@@ -423,7 +508,7 @@ func main() {
 		fmt.Printf("WebSocket connection failed - check your API key and network connection\n")
 		os.Exit(1)
 	}
-	fmt.Printf("Successfully connected to Deepgram WebSocket\n")
+	fmt.Printf("TODO: Successfully connected to Deepgram WebSocket\n")
 
 	// Stream audio from URL
 	audioURL := "https://dpgr.am/spacewalk.wav"
@@ -433,9 +518,11 @@ func main() {
 		fmt.Printf("Failed to fetch audio from URL. Err: %v\n", err)
 		return
 	}
+	fmt.Printf("TODO: Audio URL fetched, content length: %d bytes\n", resp.ContentLength)
 	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(resp))
-	buf := bufio.NewReader(resp.Body)
+	buf := bufio.NewReaderSize(resp.Body, 960*200) // Increase buffer to handle 200 chunks at once
 	go func() {
+		fmt.Printf("TODO: Starting audio stream goroutine\n")
 		fmt.Printf("Starting to stream audio from URL...\n")
 		defer resp.Body.Close()
 		err = dgClient.Stream(buf)
@@ -443,15 +530,20 @@ func main() {
 			fmt.Printf("Failed to stream audio. Err: %v\n", err)
 			return
 		}
+		fmt.Printf("TODO: Audio stream completed\n")
 		fmt.Printf("Finished streaming audio from URL\n")
 	}()
 
 	// Wait for user input to exit
+	fmt.Printf("TODO: Waiting for user input\n")
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
+	fmt.Printf("TODO: User input received\n")
 
 	// Cleanup
-	fmt.Printf("Stopping Agent...\n")
+	fmt.Printf("TODO: Starting cleanup sequence...\n")
+	fmt.Printf("TODO: Calling dgClient.Stop()\n")
 	dgClient.Stop()
+	fmt.Printf("TODO: dgClient.Stop() completed\n")
 	fmt.Printf("\n\nProgram exiting...\n")
 }
