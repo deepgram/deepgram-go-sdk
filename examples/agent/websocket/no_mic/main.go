@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -389,11 +388,8 @@ func (dch MyHandler) Run() error {
 		defer wgReceivers.Done()
 		for closeResp := range dch.closeChan {
 			fmt.Printf("\n\n[CloseResponse]\n")
-			// TODO: Remove debug logging
-			fmt.Printf("TODO: Close response received\n")
-			fmt.Printf("TODO: Close response type: %+v\n", closeResp)
-			fmt.Printf("TODO: Stack trace:\n")
-			debug.PrintStack()
+			fmt.Printf("Close response received\n")
+			fmt.Printf("Close response type: %+v\n", closeResp)
 			fmt.Printf("\n")
 		}
 	}()
@@ -454,17 +450,17 @@ func (dch *MyHandler) writeToChatLog(role, content string) error {
 
 // Main function
 func main() {
-	fmt.Printf("TODO: Program starting\n")
+	fmt.Printf("Program starting\n")
 	// Print instructions
 	fmt.Print("\n\nPress ENTER to exit!\n\n")
 
 	// Initialize context
 	ctx := context.Background()
-	fmt.Printf("TODO: Context initialized\n")
+	fmt.Printf("Context initialized\n")
 
 	// Configure agent
 	cOptions := configureAgent()
-	fmt.Printf("TODO: Agent configured\n")
+	fmt.Printf("Agent configured\n")
 
 	// Set transcription options
 	tOptions := client.NewSettingsConfigurationOptions()
@@ -479,7 +475,7 @@ func main() {
 	tOptions.Agent.Speak.Provider.Model = "aura-2-thalia-en"
 	tOptions.Agent.Language = "en"
 	tOptions.Agent.Greeting = "Hello! How can I help you today?"
-	fmt.Printf("TODO: Transcription options set\n")
+	fmt.Printf("Transcription options set\n")
 
 	// Create handler
 	fmt.Printf("Creating new Deepgram WebSocket client...\n")
@@ -488,18 +484,18 @@ func main() {
 		fmt.Printf("Failed to create handler\n")
 		return
 	}
-	fmt.Printf("TODO: Handler created\n")
+	fmt.Printf("Handler created\n")
 	defer handler.chatLogFile.Close()
 
 	// Create client
 	callback := msginterfaces.AgentMessageChan(*handler)
-	fmt.Printf("TODO: Callback created\n")
+	fmt.Printf("Callback created\n")
 	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
 		fmt.Printf("ERROR creating LiveTranscription connection:\n- Error: %v\n- Type: %T\n", err, err)
 		return
 	}
-	fmt.Printf("TODO: Deepgram client created\n")
+	fmt.Printf("Deepgram client created\n")
 
 	// Connect to Deepgram
 	fmt.Printf("Attempting to connect to Deepgram WebSocket...\n")
@@ -508,7 +504,7 @@ func main() {
 		fmt.Printf("WebSocket connection failed - check your API key and network connection\n")
 		os.Exit(1)
 	}
-	fmt.Printf("TODO: Successfully connected to Deepgram WebSocket\n")
+	fmt.Printf("Successfully connected to Deepgram WebSocket\n")
 
 	// Stream audio from URL
 	audioURL := "https://dpgr.am/spacewalk.wav"
@@ -518,11 +514,11 @@ func main() {
 		fmt.Printf("Failed to fetch audio from URL. Err: %v\n", err)
 		return
 	}
-	fmt.Printf("TODO: Audio URL fetched, content length: %d bytes\n", resp.ContentLength)
+	fmt.Printf("Audio URL fetched, content length: %d bytes\n", resp.ContentLength)
 	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(resp))
 	buf := bufio.NewReaderSize(resp.Body, 960*200) // Increase buffer to handle 200 chunks at once
 	go func() {
-		fmt.Printf("TODO: Starting audio stream goroutine\n")
+		fmt.Printf("Starting audio stream goroutine\n")
 		fmt.Printf("Starting to stream audio from URL...\n")
 		defer resp.Body.Close()
 		err = dgClient.Stream(buf)
@@ -530,20 +526,20 @@ func main() {
 			fmt.Printf("Failed to stream audio. Err: %v\n", err)
 			return
 		}
-		fmt.Printf("TODO: Audio stream completed\n")
+		fmt.Printf("Audio stream completed\n")
 		fmt.Printf("Finished streaming audio from URL\n")
 	}()
 
 	// Wait for user input to exit
-	fmt.Printf("TODO: Waiting for user input\n")
+	fmt.Printf("Waiting for user input\n")
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
-	fmt.Printf("TODO: User input received\n")
+	fmt.Printf("User input received\n")
 
 	// Cleanup
-	fmt.Printf("TODO: Starting cleanup sequence...\n")
-	fmt.Printf("TODO: Calling dgClient.Stop()\n")
+	fmt.Printf("Starting cleanup sequence...\n")
+	fmt.Printf("Calling dgClient.Stop()\n")
 	dgClient.Stop()
-	fmt.Printf("TODO: dgClient.Stop() completed\n")
+	fmt.Printf("dgClient.Stop() completed\n")
 	fmt.Printf("\n\nProgram exiting...\n")
 }
