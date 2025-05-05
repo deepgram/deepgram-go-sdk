@@ -14,8 +14,8 @@ import (
 )
 
 // client messages
-type SettingsConfigurationOptions interfaces.SettingsConfigurationOptions
-type UpdateInstructions msginterface.UpdateInstructions
+type SettingsOptions interfaces.SettingsOptions
+type UpdatePrompt msginterface.UpdatePrompt
 type UpdateSpeak msginterface.UpdateSpeak
 type InjectAgentMessage msginterface.InjectAgentMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
@@ -28,7 +28,7 @@ type WSChannel struct {
 	ctxCancel context.CancelFunc
 
 	cOptions *interfaces.ClientOptions
-	tOptions *interfaces.SettingsConfigurationOptions
+	tOptions *interfaces.SettingsOptions
 
 	chans  []*msginterface.AgentMessageChan
 	router *commoninterfaces.Router

@@ -131,9 +131,9 @@ func (o *WSSpeakOptions) Check() error {
 	return nil
 }
 
-func NewSettingsConfigurationOptions() *SettingsConfigurationOptions {
-	return &SettingsConfigurationOptions{
-		Type: TypeSettingsConfiguration,
+func NewSettingsOptions() *SettingsOptions {
+	return &SettingsOptions{
+		Type: TypeSettings,
 		Audio: Audio{
 			Input: &Input{
 				Encoding:   "linear16",
@@ -146,22 +146,29 @@ func NewSettingsConfigurationOptions() *SettingsConfigurationOptions {
 			},
 		},
 		Agent: Agent{
+			Language: "en",
 			Listen: Listen{
-				Model: "nova-2",
+				Provider: ListenProvider{
+					Type:  "deepgram",
+					Model: "nova-3",
+				},
 			},
 			Think: Think{
-				Provider: Provider{
-					Type: "", // Required to be set
+				Provider: ThinkProvider{
+					Type:  "open_ai",
+					Model: "gpt-4o-mini",
 				},
-				Model: "", // Required to be set
 			},
 			Speak: Speak{
-				Model: "aura-asteria-en",
+				Provider: SpeakProvider{
+					Type:  "deepgram",
+					Model: "aura-2-thalia-en",
+				},
 			},
 		},
 	}
 }
-func (o *SettingsConfigurationOptions) Check() error {
+func (o *SettingsOptions) Check() error {
 	// checks
 	// currently no op
 

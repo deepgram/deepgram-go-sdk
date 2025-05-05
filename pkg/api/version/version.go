@@ -66,10 +66,6 @@ func getAPIURL(ctx context.Context, apiType, host, version, path string, options
 	if version == "" {
 		version = DefaultAPIVersion
 	}
-	if apiType == APITypeAgent {
-		klog.V(4).Infof("overriding agent version with empty string since API isn't versioned\n")
-		version = ""
-	}
 
 	// remove the version from the path if it exists
 	r = regexp.MustCompile(`^(v\d+|%%s)/`)

@@ -13,13 +13,13 @@ const (
 )
 
 // NewSettingsConfigurationOptions creates a new SettingsConfigurationOptions object
-func NewSettingsConfigurationOptions() *interfacesv1.SettingsConfigurationOptions {
-	return interfacesv1.NewSettingsConfigurationOptions()
+func NewSettingsConfigurationOptions() *interfacesv1.SettingsOptions {
+	return interfacesv1.NewSettingsOptions()
 }
 
 // options
 type ClientOptions = interfacesv1.ClientOptions
-type SettingsConfigurationOptions = interfacesv1.SettingsConfigurationOptions
+type SettingsOptions = interfacesv1.SettingsOptions
 type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOptions
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions

@@ -11,9 +11,9 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
-	"runtime/debug"
 
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"

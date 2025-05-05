@@ -27,7 +27,6 @@ type MyHandler struct {
 	userStartedSpeakingResponse  chan *msginterfaces.UserStartedSpeakingResponse
 	agentThinkingResponse        chan *msginterfaces.AgentThinkingResponse
 	functionCallRequestResponse  chan *msginterfaces.FunctionCallRequestResponse
-	functionCallingResponse      chan *msginterfaces.FunctionCallingResponse
 	agentStartedSpeakingResponse chan *msginterfaces.AgentStartedSpeakingResponse
 	agentAudioDoneResponse       chan *msginterfaces.AgentAudioDoneResponse
 	closeChan                    chan *msginterfaces.CloseResponse
@@ -47,7 +46,6 @@ func NewMyHandler() *MyHandler {
 		userStartedSpeakingResponse:  make(chan *msginterfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:        make(chan *msginterfaces.AgentThinkingResponse),
 		functionCallRequestResponse:  make(chan *msginterfaces.FunctionCallRequestResponse),
-		functionCallingResponse:      make(chan *msginterfaces.FunctionCallingResponse),
 		agentStartedSpeakingResponse: make(chan *msginterfaces.AgentStartedSpeakingResponse),
 		agentAudioDoneResponse:       make(chan *msginterfaces.AgentAudioDoneResponse),
 		closeChan:                    make(chan *msginterfaces.CloseResponse),
@@ -98,11 +96,6 @@ func (dch MyHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResp
 // GetFunctionCallRequestResponse returns the function call request response channels
 func (dch MyHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
 	return []*chan *msginterfaces.FunctionCallRequestResponse{&dch.functionCallRequestResponse}
-}
-
-// GetFunctionCallingResponse returns the function calling response channels
-func (dch MyHandler) GetFunctionCalling() []*chan *msginterfaces.FunctionCallingResponse {
-	return []*chan *msginterfaces.FunctionCallingResponse{&dch.functionCallingResponse}
 }
 
 // GetAgentStartedSpeakingResponse returns the agent started speaking response channels
@@ -275,16 +268,6 @@ func (dch MyHandler) Run() error {
 		}
 	}()
 
-	// function calling response channel
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for _ = range dch.functionCallingResponse {
-			fmt.Printf("\n\n[FunctionCallingResponse]\n\n")
-		}
-	}()
-
 	// agent started speaking response channel
 	wgReceivers.Add(1)
 	go func() {
@@ -391,11 +374,15 @@ func main() {
 	// set the Transcription options
 	tOptions := client.NewSettingsConfigurationOptions()
 	tOptions.Agent.Think.Provider.Type = "open_ai"
-	tOptions.Agent.Think.Model = "gpt-4o-mini"
-	tOptions.Agent.Think.Instructions = "You are a helpful AI assistant."
-	tOptions.Agent.Listen.Model = "nova-3"
-	tOptions.Agent.Listen.Keyterms = []string{"Bueller"}
-	tOptions.Agent.Speak.Model = "aura-asteria-en"
+	tOptions.Agent.Think.Provider.Model = "gpt-4o-mini"
+	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
+	tOptions.Agent.Listen.Provider.Type = "deepgram"
+	tOptions.Agent.Listen.Provider.Model = "nova-3"
+	tOptions.Agent.Listen.Provider.Keyterms = []string{"Bueller"}
+	tOptions.Agent.Speak.Provider.Type = "deepgram"
+	tOptions.Agent.Speak.Provider.Model = "aura-2-thalia-en"
+	tOptions.Agent.Language = "en"
+	tOptions.Agent.Greeting = "Hello! How can I help you today?"
 
 	// implement your own callback
 	callback := msginterfaces.AgentMessageChan(*NewMyHandler())

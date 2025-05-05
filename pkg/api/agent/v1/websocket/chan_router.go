@@ -47,7 +47,6 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		userStartedSpeakingResponse:  make([]*chan *interfaces.UserStartedSpeakingResponse, 0),
 		agentThinkingResponse:        make([]*chan *interfaces.AgentThinkingResponse, 0),
 		functionCallRequestResponse:  make([]*chan *interfaces.FunctionCallRequestResponse, 0),
-		functionCallingResponse:      make([]*chan *interfaces.FunctionCallingResponse, 0),
 		agentStartedSpeakingResponse: make([]*chan *interfaces.AgentStartedSpeakingResponse, 0),
 		agentAudioDoneResponse:       make([]*chan *interfaces.AgentAudioDoneResponse, 0),
 		injectionRefusedResponse:     make([]*chan *interfaces.InjectionRefusedResponse, 0),
@@ -66,7 +65,6 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.userStartedSpeakingResponse = append(router.userStartedSpeakingResponse, chans.GetUserStartedSpeaking()...)
 		router.agentThinkingResponse = append(router.agentThinkingResponse, chans.GetAgentThinking()...)
 		router.functionCallRequestResponse = append(router.functionCallRequestResponse, chans.GetFunctionCallRequest()...)
-		router.functionCallingResponse = append(router.functionCallingResponse, chans.GetFunctionCalling()...)
 		router.agentStartedSpeakingResponse = append(router.agentStartedSpeakingResponse, chans.GetAgentStartedSpeaking()...)
 		router.agentAudioDoneResponse = append(router.agentAudioDoneResponse, chans.GetAgentAudioDone()...)
 		router.closeChan = append(router.closeChan, chans.GetClose()...)
@@ -254,23 +252,6 @@ func (r *ChanRouter) processFunctionCallRequest(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeFunctionCallRequestResponse), byMsg, action)
 }
 
-func (r *ChanRouter) processFunctionCalling(byMsg []byte) error {
-	action := func(data []byte) error {
-		var msg interfaces.FunctionCallingResponse
-		if err := json.Unmarshal(byMsg, &msg); err != nil {
-			klog.V(1).Infof("json.Unmarshal(FunctionCallingResponse) failed. Err: %v\n", err)
-			return err
-		}
-
-		for _, ch := range r.functionCallingResponse {
-			*ch <- &msg
-		}
-		return nil
-	}
-
-	return r.processGeneric(string(interfaces.TypeFunctionCallingResponse), byMsg, action)
-}
-
 func (r *ChanRouter) processAgentStartedSpeaking(byMsg []byte) error {
 	action := func(data []byte) error {
 		var msg interfaces.AgentStartedSpeakingResponse
@@ -400,8 +381,6 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processAgentThinking(byMsg)
 	case interfaces.TypeFunctionCallRequestResponse:
 		err = r.processFunctionCallRequest(byMsg)
-	case interfaces.TypeFunctionCallingResponse:
-		err = r.processFunctionCalling(byMsg)
 	case interfaces.TypeAgentStartedSpeakingResponse:
 		err = r.processAgentStartedSpeaking(byMsg)
 	case interfaces.TypeAgentAudioDoneResponse:

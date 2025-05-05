@@ -13,8 +13,8 @@ type TypeResponse commoninterfaces.TypeResponse
 
 // client message types
 const (
-	TypeSettingsConfiguration = "SettingsConfiguration"
-	TypeUpdateInstructions    = "UpdateInstructions"
+	TypeSettings			  = "Settings"
+	TypeUpdatePrompt          = "UpdatePrompt"
 	TypeUpdateSpeak           = "UpdateSpeak"
 	TypeInjectAgentMessage    = "InjectAgentMessage"
 	TypeFunctionCallResponse  = "FunctionCallResponse"
@@ -31,7 +31,6 @@ const (
 	TypeUserStartedSpeakingResponse  = "UserStartedSpeaking"
 	TypeAgentThinkingResponse        = "AgentThinking"
 	TypeFunctionCallRequestResponse  = "FunctionCallRequest"
-	TypeFunctionCallingResponse      = "FunctionCalling"
 	TypeAgentStartedSpeakingResponse = "AgentStartedSpeaking"
 	TypeAgentAudioDoneResponse       = "AgentAudioDone"
 	TypeCloseResponse                = commoninterfaces.TypeCloseResponse

@@ -17,7 +17,6 @@ type AgentMessageChan interface {
 	GetUserStartedSpeaking() []*chan *UserStartedSpeakingResponse
 	GetAgentThinking() []*chan *AgentThinkingResponse
 	GetFunctionCallRequest() []*chan *FunctionCallRequestResponse
-	GetFunctionCalling() []*chan *FunctionCallingResponse
 	GetAgentStartedSpeaking() []*chan *AgentStartedSpeakingResponse
 	GetAgentAudioDone() []*chan *AgentAudioDoneResponse
 	GetClose() []*chan *CloseResponse
