@@ -10,10 +10,10 @@ package listen
 import (
 	"context"
 
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	listenv1rest "github.com/deepgram/deepgram-go-sdk/pkg/client/listen/v1/rest"
-	listenv1ws "github.com/deepgram/deepgram-go-sdk/pkg/client/listen/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/websocket/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	listenv1rest "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen/v1/rest"
+	listenv1ws "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen/v1/websocket"
 )
 
 /***********************************/

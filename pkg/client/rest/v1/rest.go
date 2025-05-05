@@ -18,7 +18,7 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
 )
 
 const (

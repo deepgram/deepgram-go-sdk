@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/websocket/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
-	speak "github.com/deepgram/deepgram-go-sdk/pkg/client/speak"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/speak/v1/websocket/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces/v1"
+	speak "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/speak"
 )
 
 const (

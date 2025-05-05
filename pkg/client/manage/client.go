@@ -6,8 +6,8 @@
 package manage
 
 import (
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
-	managev1 "github.com/deepgram/deepgram-go-sdk/pkg/client/manage/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces/v1"
+	managev1 "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/manage/v1"
 )
 
 const (

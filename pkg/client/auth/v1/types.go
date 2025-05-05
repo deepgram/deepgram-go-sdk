@@ -6,7 +6,7 @@
 package authv1
 
 import (
-	common "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1"
+	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1"
 )
 
 // Client is the client for the Deepgram Auth API

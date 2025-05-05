@@ -19,8 +19,8 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
-	version "github.com/deepgram/deepgram-go-sdk/pkg/api/version"
+	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/manage/v1/interfaces"
+	version "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/version"
 )
 
 // ListKeys lists all keys for a project

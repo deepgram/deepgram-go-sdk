@@ -5,7 +5,7 @@
 package interfacesv1
 
 import (
-	commoninterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1/interfaces"
 )
 
 // These are the message types that can be received from the live API
@@ -13,13 +13,13 @@ type TypeResponse commoninterfaces.TypeResponse
 
 // client message types
 const (
-	TypeSettings			  = "Settings"
-	TypeUpdatePrompt          = "UpdatePrompt"
-	TypeUpdateSpeak           = "UpdateSpeak"
-	TypeInjectAgentMessage    = "InjectAgentMessage"
-	TypeFunctionCallResponse  = "FunctionCallResponse"
-	TypeKeepAlive             = "KeepAlive"
-	TypeClose                 = "Close"
+	TypeSettings             = "Settings"
+	TypeUpdatePrompt         = "UpdatePrompt"
+	TypeUpdateSpeak          = "UpdateSpeak"
+	TypeInjectAgentMessage   = "InjectAgentMessage"
+	TypeFunctionCallResponse = "FunctionCallResponse"
+	TypeKeepAlive            = "KeepAlive"
+	TypeClose                = "Close"
 )
 
 // server message types

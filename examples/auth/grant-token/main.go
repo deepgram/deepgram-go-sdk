@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"os"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/auth/v1"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/auth"
+	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/auth/v1"
+	client "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/auth"
 )
 
 func main() {

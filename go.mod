@@ -1,4 +1,4 @@
-module github.com/deepgram/deepgram-go-sdk
+module github.com/deepgram/deepgram-go-sdk/v2
 
 go 1.19
 

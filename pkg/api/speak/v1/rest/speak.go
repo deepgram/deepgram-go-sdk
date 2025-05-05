@@ -13,9 +13,9 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/speak/v1/rest/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	speak "github.com/deepgram/deepgram-go-sdk/pkg/client/speak/v1/rest"
+	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/speak/v1/rest/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	speak "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/speak/v1/rest"
 )
 
 type Client struct {
