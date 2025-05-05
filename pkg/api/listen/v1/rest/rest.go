@@ -11,9 +11,9 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/rest/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	rest "github.com/deepgram/deepgram-go-sdk/pkg/client/listen/v1/rest"
+	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/rest/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	rest "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen/v1/rest"
 )
 
 // Alias

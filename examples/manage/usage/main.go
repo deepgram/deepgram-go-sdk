@@ -12,9 +12,9 @@ import (
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	api "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1"
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/manage/v1/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/pkg/client/manage"
+	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/manage/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/manage/v1/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/manage"
 )
 
 func main() {

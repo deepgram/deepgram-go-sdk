@@ -10,9 +10,9 @@ import (
 
 	"github.com/dvonthenen/websocket"
 
-	commonv1interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/common/v1/interfaces"
-	clientinterfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
-	restv1 "github.com/deepgram/deepgram-go-sdk/pkg/client/rest/v1"
+	commonv1interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1/interfaces"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	restv1 "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/rest/v1"
 )
 
 const (

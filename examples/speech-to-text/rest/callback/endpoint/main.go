@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/rest/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/rest/interfaces"
 )
 
 type SampleProxy struct {

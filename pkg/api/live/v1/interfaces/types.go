@@ -5,7 +5,7 @@
 package legacy
 
 import (
-	interfacesv1 "github.com/deepgram/deepgram-go-sdk/pkg/api/listen/v1/websocket/interfaces"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/websocket/interfaces"
 )
 
 /***********************************/

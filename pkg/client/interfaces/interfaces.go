@@ -5,7 +5,7 @@
 package interfaces
 
 import (
-	interfacesv1 "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces/v1"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces/v1"
 )
 
 const (

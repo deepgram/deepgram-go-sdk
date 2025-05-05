@@ -5,7 +5,7 @@
 package interfaces
 
 import (
-	interfaces "github.com/deepgram/deepgram-go-sdk/pkg/client/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
 )
 
 /***********************************/
