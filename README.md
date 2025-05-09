@@ -5,21 +5,27 @@
 Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
 
 - [Deepgram Go SDK](#deepgram-go-sdk)
-- [SDK Documentation](#sdk-documentation)
-- [Getting an API Key](#getting-an-api-key)
-- [Installation](#installation)
-- [Requirements](#requirements)
-- [Quickstarts](#quickstarts)
-  - [Speech-to-Text WebSocket (from Live/Streaming Audio) Quickstart](#speech-to-text-from-livestreaming-audio-quickstart)
-  - [Speech-to-Text REST (from PreRecorded Audio) Quickstart](#speech-to-text-from-prerecorded-audio-quickstart)
-  - [Text-to-Speech WebSocket Quickstart](#text-to-speech-websocket-quickstart)
-  - [Text-to-Speech REST Quickstart](#text-to-speech-rest-quickstart)
-- [Examples](#examples)
-- [Logging](#logging)
-- [Testing](#testing)
-- [Backwards Compatability](#backwards-compatibility)
-- [Development and Contributing](#development-and-contributing)
-- [Getting Help](#getting-help)
+  - [SDK Documentation](#sdk-documentation)
+  - [Getting an API Key](#getting-an-api-key)
+  - [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Quickstarts](#quickstarts)
+    - [Speech-to-Text from Live/Streaming Audio Quickstart](#speech-to-text-from-livestreaming-audio-quickstart)
+    - [Speech-to-Text from PreRecorded Audio Quickstart](#speech-to-text-from-prerecorded-audio-quickstart)
+    - [Text-to-Speech WebSocket Quickstart](#text-to-speech-websocket-quickstart)
+    - [Text-to-Speech REST Quickstart](#text-to-speech-rest-quickstart)
+  - [Examples](#examples)
+    - [Agent](#agent)
+    - [Speech-to-Text - Live Audio / WebSocket](#speech-to-text---live-audio--websocket)
+    - [Speech-to-Text - PreRecorded / REST](#speech-to-text---prerecorded--rest)
+    - [Speech-to-Text - Live Audio](#speech-to-text---live-audio)
+    - [Text-to-Speech - WebSocket](#text-to-speech---websocket)
+    - [Text-to-Speech - REST](#text-to-speech---rest)
+  - [Logging](#logging)
+  - [Testing](#testing)
+  - [Backwards Compatibility](#backwards-compatibility)
+  - [Development and Contributing](#development-and-contributing)
+    - [Getting Help](#getting-help)
 
 ## SDK Documentation
 
@@ -147,7 +153,7 @@ You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming
 ```go
 // set the TTS options
 ttsOptions := &interfaces.SpeakOptions{
-    Model: "aura-asteria-en",
+    Model: "aura-2-thalia-en",
 }
 
 // create the callback
