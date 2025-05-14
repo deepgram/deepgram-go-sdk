@@ -28,3 +28,6 @@ _cgo_export.*
 _testmain.go
 .idea/
 *.iml
+
+chatlog.txt
+*.wav
