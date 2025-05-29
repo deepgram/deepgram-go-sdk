@@ -160,10 +160,7 @@ func NewSettingsOptions() *SettingsOptions {
 				},
 			},
 			Speak: Speak{
-				Provider: SpeakProvider{
-					Type:  "deepgram",
-					Model: "aura-2-thalia-en",
-				},
+				Provider: make(map[string]interface{}),
 			},
 		},
 	}

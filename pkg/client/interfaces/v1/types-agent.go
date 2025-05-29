@@ -48,14 +48,6 @@ type ListenProvider struct {
 	Model    string   `json:"model"`
 	Keyterms []string `json:"keyterms,omitempty"`
 }
-type SpeakProvider struct {
-	Type         string         `json:"type"`
-	Model        string         `json:"model,omitempty"`
-	ModelId      string         `json:"model_id,omitempty"`
-	Voice        *CartesiaVoice `json:"voice,omitempty"`
-	Language     string         `json:"language,omitempty"`
-	LanguageCode string         `json:"language_code,omitempty"`
-}
 type ThinkProvider struct {
 	Type        string  `json:"type"`
 	Model       string  `json:"model"`
@@ -93,8 +85,8 @@ type Think struct {
 	Prompt    string        `json:"prompt,omitempty"`
 }
 type Speak struct {
-	Provider SpeakProvider `json:"provider,omitempty"`
-	Endpoint *Endpoint     `json:"endpoint,omitempty"`
+	Provider map[string]interface{} `json:"provider,omitempty"`
+	Endpoint *Endpoint              `json:"endpoint,omitempty"`
 }
 type Agent struct {
 	Language string `json:"language,omitempty"`
