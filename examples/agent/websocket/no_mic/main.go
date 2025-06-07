@@ -466,13 +466,13 @@ func main() {
 	tOptions := client.NewSettingsConfigurationOptions()
 	tOptions.Audio.Input.Encoding = "linear16"
 	tOptions.Audio.Input.SampleRate = 48000
-	tOptions.Agent.Think.Provider.Type = "open_ai"
-	tOptions.Agent.Think.Provider.Model = "gpt-4o-mini"
+	tOptions.Agent.Think.Provider["type"] = "open_ai"
+	tOptions.Agent.Think.Provider["model"] = "gpt-4o-mini"
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
-	tOptions.Agent.Listen.Provider.Type = "deepgram"
-	tOptions.Agent.Listen.Provider.Model = "nova-3"
-	tOptions.Agent.Speak.Provider.Type = "deepgram"
-	tOptions.Agent.Speak.Provider.Model = "aura-2-thalia-en"
+	tOptions.Agent.Listen.Provider["type"] = "deepgram"
+	tOptions.Agent.Listen.Provider["model"] = "nova-3"
+	tOptions.Agent.Speak.Provider["type"] = "deepgram"
+	tOptions.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
 	tOptions.Agent.Language = "en"
 	tOptions.Agent.Greeting = "Hello! How can I help you today?"
 	fmt.Printf("Transcription options set\n")

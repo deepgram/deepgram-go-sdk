@@ -39,20 +39,6 @@ type Endpoint struct {
 	Headers map[string]string `json:"headers,omitempty"`
 	Method  string            `json:"method,omitempty"`
 }
-type CartesiaVoice struct {
-	Mode string `json:"mode,omitempty"`
-	Id   string `json:"id,omitempty"`
-}
-type ListenProvider struct {
-	Type     string   `json:"type"`
-	Model    string   `json:"model"`
-	Keyterms []string `json:"keyterms,omitempty"`
-}
-type ThinkProvider struct {
-	Type        string  `json:"type"`
-	Model       string  `json:"model"`
-	Temperature float32 `json:"temperature,omitempty"`
-}
 type Item struct {
 	Type        string `json:"type,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -76,13 +62,13 @@ type Functions struct {
 	Endpoint    Endpoint   `json:"endpoint,omitempty"`
 }
 type Listen struct {
-	Provider ListenProvider `json:"provider"`
+	Provider map[string]interface{} `json:"provider,omitempty"`
 }
 type Think struct {
-	Provider  ThinkProvider `json:"provider"`
-	Endpoint  *Endpoint     `json:"endpoint,omitempty"`
-	Functions *[]Functions  `json:"functions,omitempty"`
-	Prompt    string        `json:"prompt,omitempty"`
+	Provider  map[string]interface{} `json:"provider,omitempty"`
+	Endpoint  *Endpoint              `json:"endpoint,omitempty"`
+	Functions *[]Functions           `json:"functions,omitempty"`
+	Prompt    string                 `json:"prompt,omitempty"`
 }
 type Speak struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
