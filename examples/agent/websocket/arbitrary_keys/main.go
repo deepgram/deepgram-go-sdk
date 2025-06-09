@@ -280,8 +280,8 @@ func main() {
 		fmt.Printf("Failed to create handler\n")
 		return
 	}
-	fmt.Printf("Handler created\n")
 	defer handler.chatLogFile.Close()
+	fmt.Printf("Handler created\n")
 
 	// Create client
 	callback := msginterfaces.AgentMessageChan(*handler)
