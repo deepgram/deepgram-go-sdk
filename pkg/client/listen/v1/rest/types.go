@@ -5,7 +5,7 @@
 package restv1
 
 import (
-	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1"
+	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
 )
 
 // RESTClient implements helper functionality for Prerecorded API

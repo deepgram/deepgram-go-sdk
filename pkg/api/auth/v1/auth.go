@@ -8,9 +8,9 @@ This package contains the code for the Token APIs in the Deepgram auth API
 package auth
 
 import (
-	auth "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/auth"
-	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1"
-	rest "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/rest" //lint:ignore
+	auth "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/auth"
+	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
+	rest "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/rest" //lint:ignore
 )
 
 const (

@@ -12,9 +12,9 @@ import (
 
 	prettyjson "github.com/hokaccha/go-prettyjson"
 
-	analyze "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/analyze/v1"
-	client "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/analyze"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	analyze "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/analyze/v1"
+	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/analyze"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
 const (

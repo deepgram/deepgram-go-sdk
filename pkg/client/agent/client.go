@@ -10,9 +10,9 @@ package agent
 import (
 	"context"
 
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/agent/v1/websocket/interfaces"
-	listenv1ws "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/agent/v1/websocket"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
+	listenv1ws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent/v1/websocket"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
 /***********************************/

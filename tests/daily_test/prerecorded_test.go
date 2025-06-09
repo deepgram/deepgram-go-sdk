@@ -15,11 +15,11 @@ import (
 	"strings"
 	"testing"
 
-	prerecorded "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/rest"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen/v1/rest"
+	prerecorded "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v1/rest"
 
-	utils "github.com/deepgram/deepgram-go-sdk/v2/tests/utils"
+	utils "github.com/deepgram/deepgram-go-sdk/v3/tests/utils"
 )
 
 const (

@@ -18,8 +18,8 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/manage/v1/interfaces"
-	version "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/version"
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1/interfaces"
+	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 )
 
 // ListInvitations lists all invitations for a project

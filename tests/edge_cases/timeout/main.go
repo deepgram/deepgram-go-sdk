@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"os"
 
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
-	client "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
 )
 
 func main() {

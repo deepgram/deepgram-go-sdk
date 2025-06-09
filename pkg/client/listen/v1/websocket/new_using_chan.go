@@ -10,11 +10,11 @@ import (
 
 	klog "k8s.io/klog/v2"
 
-	websocketv1api "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/websocket"
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/listen/v1/websocket/interfaces"
-	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1"
-	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1/interfaces"
-	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+	websocketv1api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
+	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
 /*

@@ -5,7 +5,7 @@
 // This package defines interfaces for the live API
 package interfacesv1
 
-import "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
+import "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 
 /*
 Shared Structs
