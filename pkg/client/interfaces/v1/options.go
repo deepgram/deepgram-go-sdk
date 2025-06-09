@@ -148,22 +148,13 @@ func NewSettingsOptions() *SettingsOptions {
 		Agent: Agent{
 			Language: "en",
 			Listen: Listen{
-				Provider: ListenProvider{
-					Type:  "deepgram",
-					Model: "nova-3",
-				},
+				Provider: make(map[string]interface{}),
 			},
 			Think: Think{
-				Provider: ThinkProvider{
-					Type:  "open_ai",
-					Model: "gpt-4o-mini",
-				},
+				Provider: make(map[string]interface{}),
 			},
 			Speak: Speak{
-				Provider: SpeakProvider{
-					Type:  "deepgram",
-					Model: "aura-2-thalia-en",
-				},
+				Provider: make(map[string]interface{}),
 			},
 		},
 	}

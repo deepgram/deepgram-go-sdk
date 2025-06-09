@@ -2,18 +2,15 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+// This example should fail, due to the arbitrary key being included in the settings payload.
+
 package main
 
 // Import dependencies
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
-	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -155,206 +152,6 @@ func configureAgent() *interfaces.ClientOptions {
 func (dch MyHandler) Run() error {
 	wgReceivers := sync.WaitGroup{}
 
-	// Handle binary data
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		counter := 0
-		lastBytesReceived := time.Now().Add(-7 * time.Second)
-
-		for br := range dch.binaryChan {
-			fmt.Printf("\n\n[Binary Data Received]\n")
-			fmt.Printf("Size: %d bytes\n", len(*br))
-
-			if lastBytesReceived.Add(5 * time.Second).Before(time.Now()) {
-				counter = counter + 1
-				file, err := os.OpenFile(fmt.Sprintf("output_%d.wav", counter), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o666)
-				if err != nil {
-					fmt.Printf("Failed to open file. Err: %v\n", err)
-					continue
-				}
-				// Add WAV header
-				header := []byte{
-					0x52, 0x49, 0x46, 0x46, // "RIFF"
-					0x00, 0x00, 0x00, 0x00, // Placeholder for file size
-					0x57, 0x41, 0x56, 0x45, // "WAVE"
-					0x66, 0x6d, 0x74, 0x20, // "fmt "
-					0x10, 0x00, 0x00, 0x00, // Chunk size (16)
-					0x01, 0x00, // Audio format (1 for PCM)
-					0x01, 0x00, // Number of channels (1)
-					0x80, 0x5d, 0x00, 0x00, // Sample rate (24000)
-					0x00, 0xbb, 0x00, 0x00, // Byte rate (24000 * 2)
-					0x02, 0x00, // Block align (2)
-					0x10, 0x00, // Bits per sample (16)
-					0x64, 0x61, 0x74, 0x61, // "data"
-					0x00, 0x00, 0x00, 0x00, // Placeholder for data size
-				}
-
-				_, err = file.Write(header)
-				if err != nil {
-					fmt.Printf("Failed to write header to file. Err: %v\n", err)
-					continue
-				}
-				file.Close()
-			}
-
-			file, err := os.OpenFile(fmt.Sprintf("output_%d.wav", counter), os.O_APPEND|os.O_WRONLY, 0o644)
-			if err != nil {
-				fmt.Printf("Failed to open file. Err: %v\n", err)
-				continue
-			}
-
-			_, err = file.Write(*br)
-			file.Close()
-
-			if err != nil {
-				fmt.Printf("Failed to write to file. Err: %v\n", err)
-				continue
-			}
-
-			lastBytesReceived = time.Now()
-		}
-	}()
-
-	// Handle conversation text
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		var currentSpeaker string
-		var currentMessage strings.Builder
-		lastUpdate := time.Now()
-
-		for ctr := range dch.conversationTextResponse {
-			// If speaker changed or it's been more than 2 seconds, print accumulated message
-			if currentSpeaker != ctr.Role || time.Since(lastUpdate) > 2*time.Second {
-				if currentMessage.Len() > 0 {
-					fmt.Printf("\n\n[ConversationTextResponse]\n")
-					fmt.Printf("%s: %s\n\n", currentSpeaker, currentMessage.String())
-
-					// Write to chat log
-					if err := dch.writeToChatLog(currentSpeaker, currentMessage.String()); err != nil {
-						fmt.Printf("Failed to write to chat log: %v\n", err)
-					}
-				}
-				currentSpeaker = ctr.Role
-				currentMessage.Reset()
-			}
-
-			// Add new content to current message
-			if currentMessage.Len() > 0 {
-				currentMessage.WriteString(" ")
-			}
-			currentMessage.WriteString(ctr.Content)
-			lastUpdate = time.Now()
-
-			// Track conversation flow
-			switch ctr.Role {
-			case "user":
-				fmt.Printf("Received user message: %s\n", ctr.Content)
-				fmt.Printf("Waiting for agent to process...\n")
-			case "assistant":
-				fmt.Printf("Agent response: %s\n", ctr.Content)
-				fmt.Printf("Waiting for next user input...\n")
-			default:
-				fmt.Printf("Received message from %s: %s\n", ctr.Role, ctr.Content)
-			}
-		}
-
-		// Print any remaining message
-		if currentMessage.Len() > 0 {
-			fmt.Printf("\n\n[ConversationTextResponse]\n")
-			fmt.Printf("%s: %s\n\n", currentSpeaker, currentMessage.String())
-
-			// Write to chat log
-			if err := dch.writeToChatLog(currentSpeaker, currentMessage.String()); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
-	// Handle user started speaking
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for range dch.userStartedSpeakingResponse {
-			fmt.Printf("\n\n[UserStartedSpeakingResponse]\n")
-			fmt.Printf("User has started speaking, waiting for completion...\n\n")
-
-			// Write to chat log
-			if err := dch.writeToChatLog("system", "User has started speaking"); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
-	// Handle agent thinking
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for atr := range dch.agentThinkingResponse {
-			fmt.Printf("\n\n[AgentThinkingResponse]\n")
-			fmt.Printf("Agent is processing input: %s\n", atr.Content)
-			fmt.Printf("Waiting for agent's response...\n\n")
-
-			// Write to chat log
-			if err := dch.writeToChatLog("system", fmt.Sprintf("Agent is processing: %s", atr.Content)); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
-	// Handle agent started speaking
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for asr := range dch.agentStartedSpeakingResponse {
-			fmt.Printf("\n\n[AgentStartedSpeakingResponse]\n")
-			fmt.Printf("Agent is starting to respond (latency: %.2fms)\n", asr.TotalLatency)
-			fmt.Printf("Processing agent's response...\n\n")
-
-			// Write to chat log
-			if err := dch.writeToChatLog("system", "Agent is starting to respond"); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
-	// Handle agent audio done
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for range dch.agentAudioDoneResponse {
-			fmt.Printf("\n\n[AgentAudioDoneResponse]\n")
-			fmt.Printf("Agent finished speaking, waiting for next user input...\n\n")
-
-			// Write to chat log
-			if err := dch.writeToChatLog("system", "Agent finished speaking"); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
-	// Handle keep alive responses
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-
-		for range dch.keepAliveResponse {
-			fmt.Printf("\n\n[KeepAliveResponse]\n")
-			fmt.Printf("Connection is alive, waiting for next event...\n\n")
-
-			// Write to chat log
-			if err := dch.writeToChatLog("system", "Keep alive received"); err != nil {
-				fmt.Printf("Failed to write to chat log: %v\n", err)
-			}
-		}
-	}()
-
 	// Handle other events
 	wgReceivers.Add(1)
 	go func() {
@@ -473,6 +270,7 @@ func main() {
 	tOptions.Agent.Listen.Provider["model"] = "nova-3"
 	tOptions.Agent.Speak.Provider["type"] = "deepgram"
 	tOptions.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
+	tOptions.Agent.Speak.Provider["arbitrary_key"] = "test"
 	tOptions.Agent.Language = "en"
 	tOptions.Agent.Greeting = "Hello! How can I help you today?"
 	fmt.Printf("Transcription options set\n")
@@ -484,8 +282,8 @@ func main() {
 		fmt.Printf("Failed to create handler\n")
 		return
 	}
-	fmt.Printf("Handler created\n")
 	defer handler.chatLogFile.Close()
+	fmt.Printf("Handler created\n")
 
 	// Create client
 	callback := msginterfaces.AgentMessageChan(*handler)
@@ -505,41 +303,11 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("Successfully connected to Deepgram WebSocket\n")
-
-	// Stream audio from URL
-	audioURL := "https://dpgr.am/spacewalk.wav"
-	httpClient := new(http.Client)
-	resp, err := httpClient.Get(audioURL)
-	if err != nil {
-		fmt.Printf("Failed to fetch audio from URL. Err: %v\n", err)
-		return
-	}
-	fmt.Printf("Audio URL fetched, content length: %d bytes\n", resp.ContentLength)
-	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(resp))
-	buf := bufio.NewReaderSize(resp.Body, 960*200) // Increase buffer to handle 200 chunks at once
-	go func() {
-		fmt.Printf("Starting audio stream goroutine\n")
-		fmt.Printf("Starting to stream audio from URL...\n")
-		defer resp.Body.Close()
-		err = dgClient.Stream(buf)
-		if err != nil && err != io.EOF {
-			fmt.Printf("Failed to stream audio. Err: %v\n", err)
-			return
-		}
-		fmt.Printf("Audio stream completed\n")
-		fmt.Printf("Finished streaming audio from URL\n")
-	}()
-
-	// Wait for user input to exit
-	fmt.Printf("Waiting for user input\n")
-	input := bufio.NewScanner(os.Stdin)
-	input.Scan()
-	fmt.Printf("User input received\n")
-
-	// Cleanup
 	fmt.Printf("Starting cleanup sequence...\n")
 	fmt.Printf("Calling dgClient.Stop()\n")
 	dgClient.Stop()
 	fmt.Printf("dgClient.Stop() completed\n")
 	fmt.Printf("\n\nProgram exiting...\n")
+	fmt.Printf("Finished! You should see an error for the arbitrary key - scroll up and you can see it is included in the settings payload.\n")
+	fmt.Printf("If you do not see that error, this example has failed.\n")
 }
