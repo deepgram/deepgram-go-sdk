@@ -2,6 +2,8 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
+// This example should fail, due to the arbitrary key being included in the settings payload.
+
 package main
 
 // Import dependencies
@@ -306,4 +308,6 @@ func main() {
 	dgClient.Stop()
 	fmt.Printf("dgClient.Stop() completed\n")
 	fmt.Printf("\n\nProgram exiting...\n")
+	fmt.Printf("Finished! You should see an error for the arbitrary key - scroll up and you can see it is included in the settings payload.\n")
+	fmt.Printf("If you do not see that error, this example has failed.\n")
 }
