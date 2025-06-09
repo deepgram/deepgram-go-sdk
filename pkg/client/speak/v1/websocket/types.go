@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	msginterface "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/speak/v1/websocket/interfaces"
-	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1"
-	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/common/v1/interfaces"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces/v1"
+	msginterface "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/websocket/interfaces"
+	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 // external structs

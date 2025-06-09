@@ -5,7 +5,7 @@
 package listen
 
 import (
-	common "github.com/deepgram/deepgram-go-sdk/v2/pkg/common"
+	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/common"
 )
 
 // please see pkg/common/init.go for more information

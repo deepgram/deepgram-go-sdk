@@ -176,7 +176,7 @@ Before merging a PR, squash the following kinds of commits:
 
 Aim to have every commit in a PR compile and pass tests independently if you can, but it's not a requirement.
 
-To squash your commits, perform an [interactive rebase](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History):
+To squash your commits, perform an [interactive rebase](https://git-scm.com/book/en/v3/Git-Tools-Rewriting-History):
 
 1. Check your git branch:
 

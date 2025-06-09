@@ -13,7 +13,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/deepgram/deepgram-go-sdk/v2/pkg/client/rest/v1/debug"
+	"github.com/deepgram/deepgram-go-sdk/v3/pkg/client/rest/v1/debug"
 )
 
 var (

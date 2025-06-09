@@ -14,9 +14,9 @@ package live
 import (
 	"context"
 
-	msginterfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/api/live/v1/interfaces" //lint:ignore
-	interfaces "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/interfaces"
-	listenv1ws "github.com/deepgram/deepgram-go-sdk/v2/pkg/client/listen/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/live/v1/interfaces" //lint:ignore
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	listenv1ws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v1/websocket"
 )
 
 const (
