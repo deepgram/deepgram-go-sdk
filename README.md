@@ -1,251 +1,1029 @@
 # Deepgram Go SDK
 
-[![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4)
+[![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4) [![Go Reference](https://pkg.go.dev/badge/github.com/deepgram/deepgram-go-sdk/v3.svg)](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk/v3) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg?style=flat-rounded)](./.github/CODE_OF_CONDUCT.md)
 
-Official Go SDK for [Deepgram](https://www.deepgram.com/). Start building with our powerful transcription & speech understanding API.
+Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with world-class speech and Language AI models.
 
 - [Deepgram Go SDK](#deepgram-go-sdk)
-  - [SDK Documentation](#sdk-documentation)
-  - [Getting an API Key](#getting-an-api-key)
-  - [Installation](#installation)
+  - [Documentation](#documentation)
+  - [Migrating from earlier versions](#migrating-from-earlier-versions)
+    - [V1.2 to V1.3](#v12-to-v13)
+    - [V1.* to V2.* to V3](#v1-to-v2-to-v3)
+    - [V2.* to V3](#v2-to-v3)
   - [Requirements](#requirements)
-  - [Quickstarts](#quickstarts)
-    - [Speech-to-Text from Live/Streaming Audio Quickstart](#speech-to-text-from-livestreaming-audio-quickstart)
-    - [Speech-to-Text from PreRecorded Audio Quickstart](#speech-to-text-from-prerecorded-audio-quickstart)
-    - [Text-to-Speech WebSocket Quickstart](#text-to-speech-websocket-quickstart)
-    - [Text-to-Speech REST Quickstart](#text-to-speech-rest-quickstart)
-  - [Examples](#examples)
-    - [Agent](#agent)
-    - [Speech-to-Text - Live Audio / WebSocket](#speech-to-text---live-audio--websocket)
-    - [Speech-to-Text - PreRecorded / REST](#speech-to-text---prerecorded--rest)
-    - [Speech-to-Text - Live Audio](#speech-to-text---live-audio)
-    - [Text-to-Speech - WebSocket](#text-to-speech---websocket)
-    - [Text-to-Speech - REST](#text-to-speech---rest)
+  - [Installation](#installation)
+  - [Getting an API Key](#getting-an-api-key)
+  - [Initialization](#initialization)
+  - [Pre-Recorded (Synchronous)](#pre-recorded-synchronous)
+    - [Remote Files (Synchronous)](#remote-files-synchronous)
+    - [Local Files (Synchronous)](#local-files-synchronous)
+  - [Pre-Recorded (Asynchronous / Callbacks)](#pre-recorded-asynchronous--callbacks)
+    - [Remote Files (Asynchronous)](#remote-files-asynchronous)
+    - [Local Files (Asynchronous)](#local-files-asynchronous)
+  - [Web Socket Initialization](#websocket-initialization)
+  - [Streaming Audio](#streaming-audio)
+  - [Voice Agent](#voice-agent)
+  - [Text to Speech REST](#text-to-speech-rest)
+  - [Text to Speech Streaming](#text-to-speech-streaming)
+  - [Text Intelligence](#text-intelligence)
+  - [Authentication](#authentication)
+    - [Grant Token](#grant-token)
+  - [Projects](#projects)
+    - [Get Projects](#get-projects)
+    - [Get Project](#get-project)
+    - [Update Project](#update-project)
+    - [Delete Project](#delete-project)
+  - [Keys](#keys)
+    - [List Keys](#list-keys)
+    - [Get Key](#get-key)
+    - [Create Key](#create-key)
+    - [Delete Key](#delete-key)
+  - [Members](#members)
+    - [Get Members](#get-members)
+    - [Remove Member](#remove-member)
+  - [Scopes](#scopes)
+    - [Get Member Scopes](#get-member-scopes)
+    - [Update Scope](#update-scope)
+  - [Invitations](#invitations)
+    - [List Invites](#list-invites)
+    - [Send Invite](#send-invite)
+    - [Delete Invite](#delete-invite)
+    - [Leave Project](#leave-project)
+  - [Usage](#usage)
+    - [Get All Requests](#get-all-requests)
+    - [Get Request](#get-request)
+    - [Get Fields](#get-fields)
+    - [Summarize Usage](#summarize-usage)
+  - [Billing](#billing)
+    - [Get All Balances](#get-all-balances)
+    - [Get Balance](#get-balance)
+  - [Models](#models)
+    - [Get All Project Models](#get-all-project-models)
+    - [Get Model](#get-model)
+  - [On-Prem APIs](#on-prem-apis)
+    - [List On-Prem credentials](#list-on-prem-credentials)
+    - [Get On-Prem credentials](#get-on-prem-credentials)
+    - [Create On-Prem credentials](#create-on-prem-credentials)
+    - [Delete On-Prem credentials](#delete-on-prem-credentials)
   - [Logging](#logging)
   - [Testing](#testing)
   - [Backwards Compatibility](#backwards-compatibility)
   - [Development and Contributing](#development-and-contributing)
     - [Getting Help](#getting-help)
 
-## SDK Documentation
+## Documentation
 
-This SDK implements the Deepgram API found at [https://developers.deepgram.com](https://developers.deepgram.com).
+You can learn more about the Deepgram API at [developers.deepgram.com](https://developers.deepgram.com/docs).
 
 Documentation for specifics about the structs, interfaces, and functions of this SDK can be found here: [Go SDK Documentation](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main)
 
-For documentation relating to Speech-to-Text from Live/Streaming Audio:
+## Migrating from earlier versions
 
-- Live Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/websocket)
-- Live API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket)
-- Live API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/websocket/interfaces)
+### V1.2 to V1.3
 
-For documentation relating to Speech-to-Text (and Intelligence) from PreRecorded Audio:
+See the [migration guide](https://developers.deepgram.com/sdks/go-sdk/v12-to-v13-migration) for more details.
 
-- PreRecorded Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/listen/v1/rest)
-- PreRecorded API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest)
-- PreRecorded API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/listen/v1/rest/interfaces)
+### V1.\* to V2.* to V3
 
-For documentation relating to Text-to-Speech:
+The Voice Agent interfaces have been updated to use the new Voice Agent V1 API. Please refer to our [Documentation](https://developers.deepgram.com/docs/voice-agent-v1-migration) on Migration to new V1 Agent API.
 
-- WebSocket:
-  - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/websocket)
-  - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket)
-  - Speak API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/websocket/interfaces)
+### V2.\* to V3
 
-- REST:
-  - Speak REST Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/speak/v1/rest)
-  - Speak REST API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest)
-  - Speak API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/speak/v1/rest/interfaces)
+V3 Introduced a generic object approach for Agent Providers to ease the maintenance overhead of adding new providers see this [PR](https://github.com/deepgram/deepgram-go-sdk/pull/296) for more details.
 
-For documentation relating to Text Intelligence:
+## Requirements
 
-- Analyze Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/client/analyze/v1)
-- Analyze API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1)
-- Analyze API Interfaces - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1/interfaces](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/analyze/v1/interfaces)
-
-For documentation relating to Manage API:
-
-- Management Client - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1)
-- Manage API - [https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/api/manage/v1)
-- Manage API Interfaces -[https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1/interfaces]( https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk@main/pkg/manage/v1/interfaces)
-
-## Getting an API Key
-
-🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
+[Go](https://go.dev/doc/install) (version ^1.19)
 
 ## Installation
 
 To incorporate this SDK into your project's `go.mod` file, run the following command from your repo:
 
 ```bash
-go get github.com/deepgram/deepgram-go-sdk
+go get github.com/deepgram/deepgram-go-sdk/v3
 ```
 
-## Requirements
+## Getting an API Key
 
-[Go](https://go.dev/doc/install) (version ^1.19)
+🔑 To access the Deepgram API you will need a [free Deepgram API Key](https://console.deepgram.com/signup?jump=keys).
 
-## Quickstarts
+## Initialization
 
-This SDK aims to reduce complexity and abtract/hide some internal Deepgram details that clients shouldn't need to know about.  However you can still tweak options and settings if you need.
-
-### Speech-to-Text from Live/Streaming Audio Quickstart
-
-You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+All of the examples below will require initializing the Deepgram client and inclusion of imports.
 
 ```go
-// options
-transcriptOptions := &interfaces.LiveTranscriptionOptions{
-    Language:    "en-US",
-    Punctuate:   true,
-    Encoding:    "linear16",
-    Channels:    1,
-    Sample_rate: 16000,
-}
+package main
 
-// create the client
-dgClient, err := client.NewWebSocketWithDefaults(ctx, transcriptOptions, callback)
-if err != nil {
-    log.Println("ERROR creating LiveTranscription connection:", err)
-    os.Exit(1)
-}
+import (
+    "context"
+    "fmt"
+    "log"
+    "os"
 
-// call connect!
-wsconn := dgClient.Connect()
-if wsconn == nil {
-    log.Println("Client.Connect failed")
-    os.Exit(1)
-}
-```
-
-### Speech-to-Text from PreRecorded Audio Quickstart
-
-You can find a [walkthrough](https://developers.deepgram.com/docs/pre-recorded-audio-transcription) on our documentation site. Transcribing Pre-Recorded Audio can be done using the following sample code:
-
-```go
-// context
+    api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+    client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
+)
+// initiate client
 ctx := context.Background()
+c := client.NewREST("YOUR_API_KEY", &interfaces.ClientOptions{
+    Host: "https://api.deepgram.com",
+})
+```
 
-//client
-c := client.NewRESTWithDefaults()
-dg := prerecorded.New(c)
+## Pre-Recorded (Synchronous)
 
-// transcription options
+### Remote Files (Synchronous)
+
+Transcribe audio from a URL.
+
+```go
+// Define Deepgram options
 options := &interfaces.PreRecordedTranscriptionOptions{
-    Punctuate:  true,
-    Diarize:    true,
-    Language:   "en-US",
+    Model:       "nova-3",
 }
-
-// send URL
-URL := "https://my-domain.com/files/my-conversation.mp3"
+// Define url to use
+URL := "https://dpgr.am/spacewalk.wav"
 res, err := dg.FromURL(ctx, URL, options)
 if err != nil {
     log.Fatalf("FromURL failed. Err: %v\n", err)
     os.Exit(1)
 }
+
+fmt.Printf("Transcript: %s\n", res.Results.Channels[0].Alternatives[0].Transcript)
 ```
 
-### Text-to-Speech WebSocket Quickstart
+[See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
 
-You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+[See the Example for more info](./examples/speech-to-text/rest/url/main.go).
+
+### Local Files (Synchronous)
+
+Transcribe audio from a file.
 
 ```go
-// set the TTS options
-ttsOptions := &interfaces.SpeakOptions{
-    Model: "aura-2-thalia-en",
+// Define Deepgram options
+options := &interfaces.PreRecordedTranscriptionOptions{
+    Model:       "nova-3",
 }
-
-// create the callback
-callback := MyCallback{}
-
-// create a new stream using the NewStream function
-dgClient, err := speak.NewWebSocketWithDefaults(ctx, ttsOptions, callback)
+// Define file to use
+filePath := "path/to/your/audio.wav"
+res, err := dg.FromFile(ctx, filePath, options)
 if err != nil {
-    fmt.Println("ERROR creating TTS connection:", err)
+    log.Fatalf("FromFile failed. Err: %v\n", err)
     os.Exit(1)
 }
 
-// connect the websocket to Deepgram
-bConnected := dgClient.Connect()
-if !bConnected {
-    fmt.Println("Client.Connect failed")
-    os.Exit(1)
-}
+fmt.Printf("Transcript: %s\n", res.Results.Channels[0].Alternatives[0].Transcript)
 ```
 
-### Text-to-Speech REST Quickstart
+[See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
 
-You can find a [walkthrough](https://developers.deepgram.com/docs/live-streaming-audio-transcription) on our documentation site. Transcribing Live Audio can be done using the following sample code:
+[See the Example for more info](./examples/speech-to-text/rest/file/main.go).
+
+## Pre-Recorded (Asynchronous / Callbacks)
+
+### Remote Files (Asynchronous)
+
+Transcribe audio from a URL with callback.
 
 ```go
-// set the Transcription options
+// Define Deepgram options
+options := &interfaces.PreRecordedTranscriptionOptions{
+    Model:       "nova-3",
+}
+// Define URL to use
+URL := "https://dpgr.am/spacewalk.wav"
+callbackURL := "https://your-callback-url.com/webhook"
+res, err := dg.FromURLAsync(ctx, URL, callbackURL, options)
+if err != nil {
+    log.Fatalf("FromURLAsync failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Request ID: %s\n", res.RequestID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
+
+### Local Files (Asynchronous)
+
+Transcribe audio from a file with callback.
+
+```go
+// Define Deepgram options
+options := &interfaces.PreRecordedTranscriptionOptions{
+    Model:       "nova-3",
+}
+// Define file to use and Callback URL
+filePath := "path/to/your/audio.wav"
+callbackURL := "https://your-callback-url.com/webhook"
+res, err := dg.FromFileAsync(ctx, filePath, callbackURL, options)
+if err != nil {
+    log.Fatalf("FromFileAsync failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Request ID: %s\n", res.RequestID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
+
+## Websocket Initialization
+
+All of the examples below will require initializing the Deepgram client and inclusion of imports.
+
+```go
+import (
+    "context"
+    "fmt"
+    "os"
+
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+    client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
+)
+
+// Initiate Client
+client.InitWithDefault()
+ctx := context.Background()
+
+// Create WebSocket client with default handler
+dgClient, err := client.NewWSUsingChanForDemo(ctx, &interfaces.LiveTranscriptionOptions{})
+```
+
+## Streaming Audio
+
+Transcribe streaming audio.
+
+```go
+// Define Deepgram options
+options := &interfaces.LiveTranscriptionOptions{
+    Model:     "nova-3",
+}
+
+// Define Streaming URL
+const audioURL = "streaming_audio.url"
+
+// Connect to Deepgram WebSocket
+dgClient.Connect()
+
+// Fetch audio from URL
+resp, err := http.Get(audioURL)
+if err != nil {
+    fmt.Printf("Error fetching audio: %v\n", err)
+    os.Exit(1)
+}
+defer resp.Body.Close()
+
+// Stream audio data to Deepgram in background
+go dgClient.Stream(bufio.NewReader(resp.Body))
+
+// Wait for user input to exit
+fmt.Println("Press ENTER to exit...")
+bufio.NewScanner(os.Stdin).Scan()
+
+// Cleanup and close connection
+dgClient.Stop()
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
+
+[See the Examples for more info](./examples/speech-to-text/websocket/).
+
+## Voice Agent
+
+Configure a Voice Agent using WebSocket.
+
+```go
+import (
+    "context"
+    "fmt"
+    "os"
+    "time"
+
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+    client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent"
+)
+
+// Initialize the SDK
+client.InitWithDefault()
+
+// Create context
+ctx := context.Background()
+
+// Configure agent settings
+options := &interfaces.SettingsOptions{}
+options.Language = "en"
+options.Agent.Think.Provider.Type = "open_ai"
+options.Agent.Think.Provider.Model = "gpt-4o-mini"
+options.Agent.Think.Prompt = "You are a helpful AI assistant."
+options.Agent.Listen.Provider.Type = "deepgram"
+options.Agent.Listen.Provider.Model = "nova-3"
+options.Agent.Speak.Provider.Type = "deepgram"
+options.Agent.Speak.Provider.Model = "aura-2-thalia-en"
+options.Greeting = "Hello, I'm your AI assistant."
+
+// Create Deepgram client (uses default handler that prints to console)
+dgClient, err := client.NewWSUsingChanForDemo(ctx, options)
+if err != nil {
+    fmt.Printf("Error creating client: %v\n", err)
+    os.Exit(1)
+}
+
+// Connect to Deepgram
+dgClient.Connect()
+
+// Keep connection alive
+time.Sleep(30 * time.Second)
+
+// Cleanup
+dgClient.Stop()
+```
+
+This example demonstrates:
+
+- Setting up a WebSocket connection for Voice Agent
+- Configuring the agent with speech, language, and audio settings
+- Handling various agent events (speech, transcripts, audio)
+- Sending audio data and keeping the connection alive
+
+For a complete implementation, you would need to:
+
+1. Add your audio input source (e.g., microphone)
+2. Implement audio playback for the agent's responses
+3. Handle any function calls if your agent uses them
+4. Add proper error handling and connection management
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent-api/agent).
+
+[See the Examples for more info](./examples/agent/).
+
+## Text to Speech REST
+
+Convert text into speech using the REST API.
+
+```go
+// Define Deepgram options
 options := &interfaces.SpeakOptions{
-    Model: "aura-2-thalia-en",
+    Model:      "aura-2-thalia-en",
 }
 
-// create a Deepgram client
-c := client.NewRESTWithDefaults()
-dg := api.New(c)
-
-// send/process file to Deepgram
-res, err := dg.ToSave(ctx, "Hello, World!", textToSpeech, options)
+// Convert text to speech and save to file
+text := "Hello world!"
+filePath := "output.wav"
+res, err := dg.ToSave(ctx, filePath, text, options)
 if err != nil {
-    fmt.Printf("FromStream failed. Err: %v\n", err)
+    fmt.Printf("ToSave failed. Err: %v\n", err)
     os.Exit(1)
 }
+
+fmt.Printf("Audio saved to: %s\n", filePath)
 ```
 
-## Examples
+[See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak).
 
-There are examples for **every*- API call in this SDK. You can find all of these examples in the [examples folder](https://github.com/deepgram/deepgram-go-sdk/tree/main/examples) at the root of this repo.
+[See the Example for more info](./examples/text-to-speech/rest/).
 
-These examples provide:
+## Text to Speech Streaming
 
-### Agent
+Convert streaming text into speech using a WebSocket.
 
-- Agent Simple - [examples/agent/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/agent/simple/main.go)
+```go
+// Define Deepgram options
+options := &interfaces.SpeakWSOptions{
+    Model:      "aura-2-thalia-en",
+    Encoding:   "linear16",
+    SampleRate: 16000,
+}
 
-### Speech-to-Text - Live Audio / WebSocket
+// Create Deepgram client with custom callback
+dgClient, err := client.NewWSUsingCallback(ctx, "", &interfaces.ClientOptions{}, options, callback)
+if err != nil {
+    fmt.Printf("Error creating client: %v\n", err)
+    os.Exit(1)
+}
 
-- From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
-- From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
+// Connect to Deepgram
+dgClient.Connect()
 
-### Speech-to-Text - PreRecorded / REST
+// Send text to convert to speech
+text := "Hello, this is a text to speech example."
+dgClient.SendText(text)
+dgClient.Flush()
 
-- From an Audio File - [examples/speech-to-text/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/file/main.go)
-- From an URL - [examples/speech-to-text/rest/url](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/url/main.go)
-- From an Audio Stream - [examples/speech-to-text/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/rest/stream/main.go)
+// Wait for completion and cleanup
+dgClient.WaitForComplete()
+dgClient.Stop()
+```
 
-### Speech-to-Text - Live Audio
+[See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
 
-- From a Microphone - [examples/speech-to-text/websocket/microphone](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/microphone/main.go)
-- From an HTTP Endpoint - [examples/speech-to-text/websocket/http](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/speech-to-text/websocket/http/main.go)
+[See the Examples for more info](./examples/text-to-speech/websocket/).
 
-### Text-to-Speech - WebSocket
+## Text Intelligence
 
-- Websocket Simple Example - [examples/text-to-speech/websocket/simple](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/simple/main.go)
-- Interactive Websocket - [examples/text-to-speech/websocket/interactive](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/websocket/interactive/main.go)
+Analyze text.
 
-### Text-to-Speech - REST
+```go
+// Define Deepgram options
+options := &interfaces.AnalyzeOptions{
+    Model: "Nova-3"
+    // Read options
+}
 
-- Save audio to a Path - [examples/text-to-speech/rest/file](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/file/main.go)
-- Save audio to a Stream/Buffer - [examples/text-to-speech/rest/stream](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/stream/main.go)
-- Save audio to a user-defined Writer - [examples/text-to-speech/rest/writer](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/text-to-speech/rest/writer/main.go)
+// Define text file to analyze
+filePath := "text_to_analyze.txt"
 
-Management API exercise the full [CRUD](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) operations for:
+// Analyze text content from file
+res, err := dg.FromFile(ctx, filePath, options)
+if err != nil {
+    fmt.Printf("FromFile failed. Err: %v\n", err)
+    os.Exit(1)
+}
 
-- Balances - [examples/manage/balances](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/balances/main.go)
-- Invitations - [examples/manage/invitations](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/invitations/main.go)
-- Keys - [examples/manage/keys](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/keys/main.go)
-- Members - [examples/manage/members](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/members/main.go)
-- Models - [examples/manage/models](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/models/main.go)
+// Display results
+fmt.Printf("Analysis Results: %+v\n", res.Results)
+```
 
-- Projects - [examples/manage/projects](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/projects/main.go)
-- Scopes - [examples/manage/scopes](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/scopes/main.go)
-- Usage - [examples/manage/usage](https://github.com/deepgram/deepgram-go-sdk/blob/main/examples/manage/usage/main.go)
+[See our API reference for more info](https://developers.deepgram.com/reference/text-intelligence-api/text-read).
 
-To run each example set the `DEEPGRAM_API_KEY` as an environment variable, then `cd` into each example folder and execute the example: `go run main.go`.
+[See the Examples for more info](./examples/analyze/).
+
+## Authentication
+
+### Grant Token
+
+Creates a temporary token with a 30-second TTL.
+
+```go
+// Grant token
+res, err := dg.GrantToken(ctx)
+if err != nil {
+    fmt.Printf("GrantToken failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Token: %s\n", res.AccessToken)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/token-based-auth-api/grant-token).
+
+[See The Examples for more info](./examples/auth/)
+
+## Projects
+
+### Get Projects
+
+Returns all projects accessible by the API key.
+
+```go
+// Get all projects
+res, err := dg.ListProjects(ctx)
+if err != nil {
+    fmt.Printf("ListProjects failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Projects: %+v\n", res.Projects)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/list).
+
+[See The Example for more info](./examples/manage/projects/main.go).
+
+### Get Project
+
+Retrieves a specific project based on the provided project_id.
+
+```go
+// Get specific project
+res, err := dg.GetProject(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetProject failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Project: %+v\n", res.Project)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/get).
+
+[See The Example for more info](./examples/manage/projects/main.go).
+
+### Update Project
+
+Update a project.
+
+```go
+// Update project
+options := &interfaces.ProjectUpdateRequest{
+    Name: "Updated Project Name",
+}
+res, err := dg.UpdateProject(ctx, myProjectId, options)
+if err != nil {
+    fmt.Printf("UpdateProject failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Update result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/update).
+
+[See The Example for more info](./examples/manage/projects/main.go).
+
+### Delete Project
+
+Delete a project.
+
+```go
+// Delete project
+res, err := dg.DeleteProject(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("DeleteProject failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Delete result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/delete).
+
+[See The Example for more info](./examples/manage/projects/main.go).
+
+## Keys
+
+### List Keys
+
+Retrieves all keys associated with the provided project_id.
+
+```go
+// List all keys
+res, err := dg.ListKeys(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("ListKeys failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Keys: %+v\n", res.APIKeys)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/list)
+
+[See The Example for more info](./examples/manage/keys/main.go).
+
+### Get Key
+
+Retrieves a specific key associated with the provided project_id.
+
+```go
+// Get specific key
+res, err := dg.GetKey(ctx, myProjectId, myKeyId)
+if err != nil {
+    fmt.Printf("GetKey failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Key: %+v\n", res.APIKey)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/get)
+
+[See The Example for more info](./examples/manage/keys/main.go).
+
+### Create Key
+
+Creates an API key with the provided scopes.
+
+```go
+// Create new key
+options := &interfaces.KeyCreateRequest{
+    Comment: "My API Key",
+    Scopes:  []string{"admin"},
+}
+res, err := dg.CreateKey(ctx, myProjectId, options)
+if err != nil {
+    fmt.Printf("CreateKey failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Created key: %s\n", res.APIKeyID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/create)
+
+[See The Example for more info](./examples/manage/keys/main.go).
+
+### Delete Key
+
+Deletes a specific key associated with the provided project_id.
+
+```go
+// Delete key
+res, err := dg.DeleteKey(ctx, myProjectId, myKeyId)
+if err != nil {
+    fmt.Printf("DeleteKey failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Delete result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/delete)
+
+[See The Example for more info](./examples/manage/keys/main.go).
+
+## Members
+
+### Get Members
+
+Retrieves account objects for all of the accounts in the specified project_id.
+
+```go
+// List all members
+res, err := dg.ListMembers(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("ListMembers failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Members: %+v\n", res.Members)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/members/list).
+
+[See The Example for more info](./examples/manage/members/main.go).
+
+### Remove Member
+
+Removes member account for specified member_id.
+
+```go
+// Remove member
+res, err := dg.RemoveMember(ctx, myProjectId, memberId)
+if err != nil {
+    fmt.Printf("RemoveMember failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Remove result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/members/delete).
+
+[See The Example for more info](./examples/manage/members/main.go).
+
+## Scopes
+
+### Get Member Scopes
+
+Retrieves scopes of the specified member in the specified project.
+
+```go
+// Get member scopes
+res, err := dg.GetMemberScopes(ctx, myProjectId, memberId)
+if err != nil {
+    fmt.Printf("GetMemberScopes failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Scopes: %+v\n", res.Scopes)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/scopes/list).
+
+[See The Example for more info](./examples/manage/scopes/main.go).
+
+### Update Scope
+
+Updates the scope for the specified member in the specified project.
+
+```go
+// Update member scope
+options := &interfaces.ScopeUpdateRequest{
+    Scope: "admin",
+}
+res, err := dg.UpdateMemberScopes(ctx, myProjectId, memberId, options)
+if err != nil {
+    fmt.Printf("UpdateMemberScopes failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Update result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/scopes/update).
+
+[See The Example for more info](./examples/manage/scopes/main.go).
+
+## Invitations
+
+### List Invites
+
+Retrieves all invitations associated with the provided project_id.
+
+```go
+// List all invitations
+res, err := dg.ListInvitations(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("ListInvitations failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Invitations: %+v\n", res.Invites)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/list).
+
+[See The Example for more info](./examples/manage/invitations/main.go).
+
+### Send Invite
+
+Sends an invitation to the provided email address.
+
+```go
+// Send invitation
+options := &interfaces.InvitationCreateRequest{
+    Email: "user@example.com",
+    Scope: "admin",
+}
+res, err := dg.SendInvitation(ctx, myProjectId, options)
+if err != nil {
+    fmt.Printf("SendInvitation failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Invitation sent: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/create).
+
+[See The Example for more info](./examples/manage/invitations/main.go).
+
+### Delete Invite
+
+Removes the specified invitation from the project.
+
+```go
+// Delete invitation
+res, err := dg.DeleteInvitation(ctx, myProjectId, email)
+if err != nil {
+    fmt.Printf("DeleteInvitation failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Delete result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/delete).
+
+[See The Example for more info](./examples/manage/invitations/main.go).
+
+### Leave Project
+
+```go
+// Leave project
+res, err := dg.LeaveProject(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("LeaveProject failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Leave result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/leave).
+
+[See The Example for more info](./examples/manage/invitations/main.go).
+
+## Usage
+
+### Get All Requests
+
+Retrieves all requests associated with the provided project_id based on the provided options.
+
+```go
+// Get all requests
+res, err := dg.GetUsageRequests(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetUsageRequests failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Requests: %+v\n", res.Requests)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/list-requests).
+
+### Get Request
+
+Retrieves a specific request associated with the provided project_id
+
+```go
+// Get specific request
+res, err := dg.GetUsageRequest(ctx, myProjectId, requestId)
+if err != nil {
+    fmt.Printf("GetUsageRequest failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Request: %+v\n", res.Request)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/get-request).
+
+[See The Example for more info](./examples/manage/usage/main.go).
+
+### Get Fields
+
+Lists the features, models, tags, languages, and processing method used for requests in the specified project.
+
+```go
+// Get usage fields
+res, err := dg.GetUsageFields(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetUsageFields failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Fields: %+v\n", res.Fields)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/list-fields).
+
+[See The Example for more info](./examples/manage/usage/main.go).
+
+### Summarize Usage
+
+`Deprecated` Retrieves the usage for a specific project. Use Get Project Usage Breakdown for a more comprehensive usage summary.
+
+```go
+// Get usage summary
+res, err := dg.GetUsageSummary(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetUsageSummary failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Usage summary: %+v\n", res.Usage)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/get).
+
+[See The Example for more info](./examples/manage/usage/main.go).
+
+## Billing
+
+### Get All Balances
+
+Retrieves the list of balance info for the specified project.
+
+```go
+// Get all balances
+res, err := dg.GetBalances(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetBalances failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Balances: %+v\n", res.Balances)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/balances/list).
+
+[See The Example for more info](./examples/manage/balances/main.go).
+
+### Get Balance
+
+Retrieves the balance info for the specified project and balance_id.
+
+```go
+// Get specific balance
+res, err := dg.GetBalance(ctx, myProjectId, balanceId)
+if err != nil {
+    fmt.Printf("GetBalance failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Balance: %+v\n", res.Balance)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/balances/get).
+
+[See The Example for more info](./examples/manage/balances/main.go).
+
+## Models
+
+### Get All Project Models
+
+Retrieves all models available for a given project.
+
+```go
+// Get all project models
+res, err := dg.GetProjectModels(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("GetProjectModels failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Models: %+v\n", res)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/list-models).
+
+[See The Example for more info](./examples/manage/models/main.go).
+
+### Get Model
+
+Retrieves details of a specific model.
+
+```go
+// Get specific model
+res, err := dg.GetProjectModel(ctx, myProjectId, modelId)
+if err != nil {
+    fmt.Printf("GetProjectModel failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Model: %+v\n", res.Model)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/get-model).
+
+[See The Example for more info](./examples/manage/models/main.go).
+
+## On-Prem APIs
+
+### List On-Prem credentials
+
+Lists sets of distribution credentials for the specified project.
+
+```go
+// List on-prem credentials
+res, err := dg.ListSelfhostedCredentials(ctx, projectId)
+if err != nil {
+    fmt.Printf("ListSelfhostedCredentials failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Credentials: %+v\n", res.Credentials)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/self-hosted-api/list-credentials).
+
+### Get On-Prem credentials
+
+Returns a set of distribution credentials for the specified project.
+
+```go
+// Get specific on-prem credentials
+res, err := dg.GetSelfhostedCredentials(ctx, projectId, distributionCredentialsId)
+if err != nil {
+    fmt.Printf("GetSelfhostedCredentials failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Credentials: %+v\n", res.Credentials)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/self-hosted-api/get-credentials).
+
+### Create On-Prem credentials
+
+Creates a set of distribution credentials for the specified project.
+
+```go
+// Create on-prem credentials
+options := &interfaces.SelfhostedCredentialsCreateRequest{
+    Comment: "My on-prem credentials",
+}
+res, err := dg.CreateSelfhostedCredentials(ctx, projectId, options)
+if err != nil {
+    fmt.Printf("CreateSelfhostedCredentials failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Created credentials: %s\n", res.CredentialsID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/self-hosted-api/create-credentials).
+
+### Delete On-Prem credentials
+
+Deletes a set of distribution credentials for the specified project.
+
+```go
+// Delete on-prem credentials
+res, err := dg.DeleteSelfhostedCredentials(ctx, projectId, distributionCredentialId)
+if err != nil {
+    fmt.Printf("DeleteSelfhostedCredentials failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Delete result: %s\n", res.Message)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/self-hosted-api/delete-credentials).
 
 ## Logging
 
@@ -266,7 +1044,7 @@ client.Init(client.InitLib{
 
 ## Testing
 
-There are several test folders in [/tests](https://github.com/deepgram/deepgram-go-sdk/tree/main/tests) you can run:
+There are several test folders in [/tests](./tests/) you can run:
 
 - unit_test/ - Unit tests
 - daily_test/ - Integration/daily tests
@@ -283,6 +1061,8 @@ go run filename
 ```
 
 ## Backwards Compatibility
+
+We follow semantic versioning (semver) to ensure a smooth upgrade experience. Within a major version (like `3.*`), we will maintain backward compatibility so your code will continue to work without breaking changes. When we release a new major version (like moving from `2.*` to `3.*`), we may introduce breaking changes to improve the SDK. We'll always document these changes clearly in our release notes to help you upgrade smoothly.
 
 Older SDK versions will receive Priority 1 (P1) bug support only. Security issues, both in our code and dependencies, are promptly addressed. Significant bugs without clear workarounds are also given priority attention.
 
