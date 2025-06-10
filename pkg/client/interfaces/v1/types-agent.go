@@ -65,10 +65,11 @@ type Listen struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
 }
 type Think struct {
-	Provider  map[string]interface{} `json:"provider,omitempty"`
-	Endpoint  *Endpoint              `json:"endpoint,omitempty"`
-	Functions *[]Functions           `json:"functions,omitempty"`
-	Prompt    string                 `json:"prompt,omitempty"`
+	Provider      map[string]interface{} `json:"provider,omitempty"`
+	Endpoint      *Endpoint              `json:"endpoint,omitempty"`
+	Functions     *[]Functions           `json:"functions,omitempty"`
+	Prompt        string                 `json:"prompt,omitempty"`
+	ContextLength any                    `json:"context_length,omitempty"` // int or "max"
 }
 type Speak struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
