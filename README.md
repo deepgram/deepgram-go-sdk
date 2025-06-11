@@ -82,7 +82,7 @@ Documentation for specifics about the structs, interfaces, and functions of this
 
 See the [migration guide](https://developers.deepgram.com/sdks/go-sdk/v12-to-v13-migration) for more details.
 
-### V1.\* to V2.* to V3
+### V1 to V2
 
 The Voice Agent interfaces have been updated to use the new Voice Agent V1 API. Please refer to our [Documentation](https://developers.deepgram.com/docs/voice-agent-v1-migration) on Migration to new V1 Agent API.
 
