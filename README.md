@@ -20,7 +20,6 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Pre-Recorded (Asynchronous / Callbacks)](#pre-recorded-asynchronous--callbacks)
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
-  - [Web Socket Initialization](#websocket-initialization)
   - [Streaming Audio](#streaming-audio)
   - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
@@ -89,7 +88,7 @@ The Voice Agent interfaces have been updated to use the new Voice Agent V1 API. 
 
 ### V2.\* to V3
 
-V3 Introduced a generic object approach for Agent Providers to ease the maintenance overhead of adding new providers. See this [PR](https://github.com/deepgram/deepgram-go-sdk/pull/296) for more details.
+V3 Introduced a generic object approach for Agent Providers to ease the maintenance overhead of adding new providers see this [PR](https://github.com/deepgram/deepgram-go-sdk/pull/296) for more details.
 
 ## Requirements
 
@@ -229,9 +228,9 @@ fmt.Printf("Request ID: %s\n", res.RequestID)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
 
-## Websocket Initialization
+## Streaming Audio
 
-All of the examples below will require initializing the Deepgram client and inclusion of imports.
+Transcribe streaming audio.
 
 ```go
 import (
@@ -249,13 +248,6 @@ ctx := context.Background()
 
 // Create WebSocket client with default handler
 dgClient, err := client.NewWSUsingChanForDemo(ctx, &interfaces.LiveTranscriptionOptions{})
-```
-
-## Streaming Audio
-
-Transcribe streaming audio.
-
-```go
 // Define Deepgram options
 options := &interfaces.LiveTranscriptionOptions{
     Model:     "nova-3",
@@ -314,13 +306,13 @@ ctx := context.Background()
 // Configure agent settings
 options := &interfaces.SettingsOptions{}
 options.Language = "en"
-options.Agent.Think.Provider["type"] = "open_ai"
-options.Agent.Think.Provider["model"] = "gpt-4o-mini"
+options.Agent.Think.Provider.Type = "open_ai"
+options.Agent.Think.Provider.Model = "gpt-4o-mini"
 options.Agent.Think.Prompt = "You are a helpful AI assistant."
-options.Agent.Listen.Provider["type"] = "deepgram"
-options.Agent.Listen.Provider["model"] = "nova-3"
-options.Agent.Speak.Provider["type"] = "deepgram"
-options.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
+options.Agent.Listen.Provider.Type = "deepgram"
+options.Agent.Listen.Provider.Model = "nova-3"
+options.Agent.Speak.Provider.Type = "deepgram"
+options.Agent.Speak.Provider.Model = "aura-2-thalia-en"
 options.Greeting = "Hello, I'm your AI assistant."
 
 // Create Deepgram client (uses default handler that prints to console)
@@ -398,12 +390,12 @@ options := &interfaces.SpeakWSOptions{
 
 // Create Deepgram client with custom callback
 dgClient, err := client.NewWSUsingCallback(ctx, "", &interfaces.ClientOptions{}, options, callback)
-if err != nil {
+    if err != nil {
     fmt.Printf("Error creating client: %v\n", err)
-    os.Exit(1)
-}
+        os.Exit(1)
+    }
 
-// Connect to Deepgram
+    // Connect to Deepgram
 dgClient.Connect()
 
 // Send text to convert to speech
@@ -661,10 +653,10 @@ Removes member account for specified member_id.
 ```go
 // Remove member
 res, err := dg.RemoveMember(ctx, myProjectId, memberId)
-if err != nil {
+    if err != nil {
     fmt.Printf("RemoveMember failed. Err: %v\n", err)
-    os.Exit(1)
-}
+        os.Exit(1)
+    }
 
 fmt.Printf("Remove result: %s\n", res.Message)
 ```
@@ -684,8 +676,8 @@ Retrieves scopes of the specified member in the specified project.
 res, err := dg.GetMemberScopes(ctx, myProjectId, memberId)
 if err != nil {
     fmt.Printf("GetMemberScopes failed. Err: %v\n", err)
-    os.Exit(1)
-}
+        os.Exit(1)
+    }
 
 fmt.Printf("Scopes: %+v\n", res.Scopes)
 ```
@@ -815,6 +807,8 @@ fmt.Printf("Requests: %+v\n", res.Requests)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/list-requests).
 
+[See The Example for more info](./examples/manage/usage/main.go).
+
 ### Get Request
 
 Retrieves a specific request associated with the provided project_id
@@ -940,10 +934,10 @@ Retrieves details of a specific model.
 ```go
 // Get specific model
 res, err := dg.GetProjectModel(ctx, myProjectId, modelId)
-if err != nil {
+    if err != nil {
     fmt.Printf("GetProjectModel failed. Err: %v\n", err)
-    os.Exit(1)
-}
+        os.Exit(1)
+    }
 
 fmt.Printf("Model: %+v\n", res.Model)
 ```
@@ -963,8 +957,8 @@ Lists sets of distribution credentials for the specified project.
 res, err := dg.ListSelfhostedCredentials(ctx, projectId)
 if err != nil {
     fmt.Printf("ListSelfhostedCredentials failed. Err: %v\n", err)
-    os.Exit(1)
-}
+        os.Exit(1)
+    }
 
 fmt.Printf("Credentials: %+v\n", res.Credentials)
 ```
