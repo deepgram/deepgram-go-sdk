@@ -314,13 +314,13 @@ ctx := context.Background()
 // Configure agent settings
 options := &interfaces.SettingsOptions{}
 options.Language = "en"
-options.Agent.Think.Provider.Type = "open_ai"
-options.Agent.Think.Provider.Model = "gpt-4o-mini"
+options.Agent.Think.Provider["type"] = "open_ai"
+options.Agent.Think.Provider["model"] = "gpt-4o-mini"
 options.Agent.Think.Prompt = "You are a helpful AI assistant."
-options.Agent.Listen.Provider.Type = "deepgram"
-options.Agent.Listen.Provider.Model = "nova-3"
-options.Agent.Speak.Provider.Type = "deepgram"
-options.Agent.Speak.Provider.Model = "aura-2-thalia-en"
+options.Agent.Listen.Provider["type"] = "deepgram"
+options.Agent.Listen.Provider["model"] = "nova-3"
+options.Agent.Speak.Provider["type"] = "deepgram"
+options.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
 options.Greeting = "Hello, I'm your AI assistant."
 
 // Create Deepgram client (uses default handler that prints to console)
