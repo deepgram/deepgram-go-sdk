@@ -89,7 +89,7 @@ The Voice Agent interfaces have been updated to use the new Voice Agent V1 API. 
 
 ### V2.\* to V3
 
-V3 Introduced a generic object approach for Agent Providers to ease the maintenance overhead of adding new providers see this [PR](https://github.com/deepgram/deepgram-go-sdk/pull/296) for more details.
+V3 Introduced a generic object approach for Agent Providers to ease the maintenance overhead of adding new providers. See this [PR](https://github.com/deepgram/deepgram-go-sdk/pull/296) for more details.
 
 ## Requirements
 
