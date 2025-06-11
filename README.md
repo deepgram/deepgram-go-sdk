@@ -8,7 +8,7 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Documentation](#documentation)
   - [Migrating from earlier versions](#migrating-from-earlier-versions)
     - [V1.2 to V1.3](#v12-to-v13)
-    - [V1.* to V2.* to V3](#v1-to-v2-to-v3)
+    - [V1 to V2](#v1-to-v2)
     - [V2.* to V3](#v2-to-v3)
   - [Requirements](#requirements)
   - [Installation](#installation)
