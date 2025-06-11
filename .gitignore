@@ -33,3 +33,4 @@ _testmain.go
 *.wav
 *.mp3
 chatlog.txt
+output_*.wav
