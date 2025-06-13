@@ -77,8 +77,8 @@ type Speak struct {
 }
 type Agent struct {
 	Language string `json:"language,omitempty"`
-	Listen   Listen `json:"listen"`
-	Think    Think  `json:"think"`
-	Speak    Speak  `json:"speak"`
+	Listen   Listen `json:"listen,omitempty"`
+	Think    Think  `json:"think,omitempty"`
+	Speak    Speak  `json:"speak,omitempty"`
 	Greeting string `json:"greeting,omitempty"`
 }

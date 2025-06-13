@@ -22,6 +22,17 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
 )
 
+func deleteEmptyProvider(m map[string]interface{}, key string) {
+	if sub, ok := m[key].(map[string]interface{}); ok {
+		if provider, ok := sub["provider"].(map[string]interface{}); ok && len(provider) == 0 {
+			delete(sub, "provider")
+		}
+		if len(sub) == 0 {
+			delete(m, key)
+		}
+	}
+}
+
 // Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
 func (c *WSChannel) Connect() bool {
 	c.ctx, c.ctxCancel = context.WithCancel(c.ctx)
@@ -67,7 +78,36 @@ func (c *WSChannel) Start() {
 	if c.tOptions != nil {
 		// send the configuration settings to the server
 		klog.V(4).Infof("Sending ConfigurationSettings to server\n")
-		err := c.WriteJSON(c.tOptions)
+		tmp, marshalErr := json.Marshal(c.tOptions)
+		if marshalErr != nil {
+			klog.V(1).Infof("Marshalling configuration settings failed. Err: %v\n", marshalErr)
+			// terminate the connection
+			c.WSClient.Stop()
+			return
+		}
+		clone := make(map[string]interface{})
+		jsonErr := json.Unmarshal(tmp, &clone)
+		if jsonErr != nil {
+			klog.V(1).Infof("Parsing configuration settings failed. Err: %v\n", jsonErr)
+			// terminate the connection
+			c.WSClient.Stop()
+			return
+		}
+		if agent, ok := clone["agent"].(map[string]interface{}); ok {
+			deleteEmptyProvider(agent, "speak")
+			deleteEmptyProvider(agent, "think")
+			deleteEmptyProvider(agent, "listen")
+		}
+		byteData, marshalErr2 := json.Marshal(clone)
+		if marshalErr2 != nil {
+			klog.V(1).Infof("Marshaling cleaned configuration settings failed. Err: %v\n", marshalErr2)
+			c.WSClient.Stop()
+			return
+		}
+		print("ConfigurationSettings: ")
+		fmt.Println(string(byteData))
+		klog.V(4).Infof("Cleaned ConfigurationSettings: %s", string(byteData))
+		err := c.WriteJSON(clone)
 		if err != nil {
 			klog.V(1).Infof("w.WriteJSON ConfigurationSettings failed. Err: %v\n", err)
 
