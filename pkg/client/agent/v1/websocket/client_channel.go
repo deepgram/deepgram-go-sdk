@@ -67,7 +67,13 @@ func (c *WSChannel) Start() {
 	if c.tOptions != nil {
 		// send the configuration settings to the server
 		klog.V(4).Infof("Sending ConfigurationSettings to server\n")
-		tmp, _ := json.Marshal(c.tOptions)
+		tmp, marshalErr := json.Marshal(c.tOptions)
+		if marshalErr != nil {
+			klog.V(1).Infof("Marshalling configuration settings failed. Err: %v\n", marshalErr)
+			// terminate the connection
+			c.WSClient.Stop()
+			return
+		}
 		clone := make(map[string]interface{})
 		jsonErr := json.Unmarshal(tmp, &clone)
 		if jsonErr != nil {
