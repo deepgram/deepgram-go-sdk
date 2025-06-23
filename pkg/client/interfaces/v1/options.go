@@ -19,6 +19,8 @@ func (o *ClientOptions) Parse() error {
 	// 3. DEEPGRAM_ACCESS_TOKEN environment variable
 	// 4. DEEPGRAM_API_KEY environment variable (lowest priority)
 
+	// Thread-safe credential assignment
+	o.credentialsMutex.Lock()
 	if o.AccessToken == "" {
 		if v := os.Getenv("DEEPGRAM_ACCESS_TOKEN"); v != "" {
 			klog.V(3).Infof("DEEPGRAM_ACCESS_TOKEN found")
@@ -32,6 +34,7 @@ func (o *ClientOptions) Parse() error {
 			o.APIKey = v
 		}
 	}
+	o.credentialsMutex.Unlock()
 
 	if v := os.Getenv("DEEPGRAM_HOST"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_HOST found")
@@ -51,7 +54,12 @@ func (o *ClientOptions) Parse() error {
 	}
 
 	// checks - ensure we have some form of authentication unless self-hosted
-	if !o.SelfHosted && o.AccessToken == "" && o.APIKey == "" {
+	// Use thread-safe access to check credentials
+	o.credentialsMutex.RLock()
+	hasCredentials := o.AccessToken != "" || o.APIKey != ""
+	o.credentialsMutex.RUnlock()
+
+	if !o.SelfHosted && !hasCredentials {
 		klog.V(1).Infof("Neither DEEPGRAM_ACCESS_TOKEN nor DEEPGRAM_API_KEY is set")
 		return ErrNoAPIKey // Using existing error for backward compatibility
 	}
