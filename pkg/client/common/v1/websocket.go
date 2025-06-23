@@ -19,7 +19,7 @@ import (
 	klog "k8s.io/klog/v2"
 
 	commonv1interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
-	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 // gocritic:ignore
@@ -156,9 +156,16 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 	}
 
-	// sets the API key
+	// Set Authorization header based on priority: AccessToken (Bearer) > APIKey (Token)
 	myHeader.Set("Host", c.cOptions.Host)
-	myHeader.Set("Authorization", "token "+c.cOptions.APIKey)
+	token, isBearer := c.cOptions.GetAuthToken()
+	if isBearer {
+		myHeader.Set("Authorization", "Bearer "+token)
+		klog.V(4).Infof("WebSocket using Bearer authentication")
+	} else {
+		myHeader.Set("Authorization", "token "+token)
+		klog.V(4).Infof("WebSocket using Token authentication")
+	}
 	myHeader.Set("User-Agent", clientinterfaces.DgAgent)
 	if c.cOptions.WSHeaderProcessor != nil {
 		c.cOptions.WSHeaderProcessor(myHeader)

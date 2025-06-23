@@ -12,6 +12,7 @@ import (
 // ClientOptions defines any options for the client
 type ClientOptions struct {
 	APIKey            string
+	AccessToken       string                                // JWT access token for Bearer authentication
 	Host              string                                // override for the host endpoint
 	APIVersion        string                                // override for the version used
 	Path              string                                // override for the endpoint path usually <version/listen> or <version/projects>
@@ -31,4 +32,24 @@ type ClientOptions struct {
 
 	// text-to-speech client options
 	AutoFlushSpeakDelta int64 // enables the auto flush feature based on the delta in milliseconds
+}
+
+// SetAccessToken dynamically sets the access token for Bearer authentication
+func (o *ClientOptions) SetAccessToken(accessToken string) {
+	o.AccessToken = accessToken
+}
+
+// SetAPIKey dynamically sets the API key for Token authentication
+func (o *ClientOptions) SetAPIKey(apiKey string) {
+	o.APIKey = apiKey
+}
+
+// GetAuthToken returns the effective authentication token following priority order:
+// 1. AccessToken (Bearer) - highest priority
+// 2. APIKey (Token) - fallback
+func (o *ClientOptions) GetAuthToken() (token string, isBearer bool) {
+	if o.AccessToken != "" {
+		return o.AccessToken, true
+	}
+	return o.APIKey, false
 }

@@ -58,7 +58,17 @@ func (c *RESTClient) SetupRequest(ctx context.Context, method, uri string, body 
 
 	req.Header.Set("Host", c.Options.Host)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "token "+c.Options.APIKey)
+
+	// Set Authorization header based on priority: AccessToken (Bearer) > APIKey (Token)
+	token, isBearer := c.Options.GetAuthToken()
+	if isBearer {
+		req.Header.Set("Authorization", "Bearer "+token)
+		klog.V(4).Infof("Using Bearer authentication")
+	} else {
+		req.Header.Set("Authorization", "token "+token)
+		klog.V(4).Infof("Using Token authentication")
+	}
+
 	req.Header.Set("User-Agent", interfaces.DgAgent)
 	req.Header.Set("Content-Type", "application/json")
 
