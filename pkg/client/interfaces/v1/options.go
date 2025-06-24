@@ -13,13 +13,29 @@ import (
 )
 
 func (o *ClientOptions) Parse() error {
-	// general
+	// Priority-based credential resolution for authentication
+	// 1. Explicit AccessToken parameter (highest priority)
+	// 2. Explicit APIKey parameter
+	// 3. DEEPGRAM_ACCESS_TOKEN environment variable
+	// 4. DEEPGRAM_API_KEY environment variable (lowest priority)
+
+	// Thread-safe credential assignment
+	o.credentialsMutex.Lock()
+	if o.AccessToken == "" {
+		if v := os.Getenv("DEEPGRAM_ACCESS_TOKEN"); v != "" {
+			klog.V(3).Infof("DEEPGRAM_ACCESS_TOKEN found")
+			o.AccessToken = v
+		}
+	}
+
 	if o.APIKey == "" {
 		if v := os.Getenv("DEEPGRAM_API_KEY"); v != "" {
 			klog.V(3).Infof("DEEPGRAM_API_KEY found")
 			o.APIKey = v
 		}
 	}
+	o.credentialsMutex.Unlock()
+
 	if v := os.Getenv("DEEPGRAM_HOST"); v != "" {
 		klog.V(3).Infof("DEEPGRAM_HOST found")
 		o.Host = v
@@ -37,10 +53,15 @@ func (o *ClientOptions) Parse() error {
 		o.SelfHosted = strings.EqualFold(strings.ToLower(v), "true")
 	}
 
-	// checks
-	if !o.SelfHosted && o.APIKey == "" {
-		klog.V(1).Infof("DEEPGRAM_API_KEY not set")
-		return ErrNoAPIKey
+	// checks - ensure we have some form of authentication unless self-hosted
+	// Use thread-safe access to check credentials
+	o.credentialsMutex.RLock()
+	hasCredentials := o.AccessToken != "" || o.APIKey != ""
+	o.credentialsMutex.RUnlock()
+
+	if !o.SelfHosted && !hasCredentials {
+		klog.V(1).Infof("Neither DEEPGRAM_ACCESS_TOKEN nor DEEPGRAM_API_KEY is set")
+		return ErrNoAPIKey // Using existing error for backward compatibility
 	}
 
 	// shared
@@ -148,13 +169,22 @@ func NewSettingsOptions() *SettingsOptions {
 		Agent: Agent{
 			Language: "en",
 			Listen: Listen{
-				Provider: make(map[string]interface{}),
+				Provider: map[string]interface{}{
+					"type":  "deepgram",
+					"model": "nova-3",
+				},
 			},
 			Think: Think{
-				Provider: make(map[string]interface{}),
+				Provider: map[string]interface{}{
+					"type":  "open_ai",
+					"model": "gpt-4o-mini",
+				},
 			},
 			Speak: Speak{
-				Provider: make(map[string]interface{}),
+				Provider: map[string]interface{}{
+					"type":  "deepgram",
+					"model": "aura-2-thalia-en",
+				},
 			},
 		},
 	}

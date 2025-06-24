@@ -9,7 +9,7 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Migrating from earlier versions](#migrating-from-earlier-versions)
     - [V1.2 to V1.3](#v12-to-v13)
     - [V1 to V2](#v1-to-v2)
-    - [V2.* to V3](#v2-to-v3)
+    - [V2.\* to V3](#v2-to-v3)
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Getting an API Key](#getting-an-api-key)
@@ -26,7 +26,12 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Text to Speech Streaming](#text-to-speech-streaming)
   - [Text Intelligence](#text-intelligence)
   - [Authentication](#authentication)
+    - [Authentication Methods](#authentication-methods)
+    - [Authentication Priority](#authentication-priority)
+    - [Environment Variables](#environment-variables)
+    - [OAuth-Style Workflow: API Key → Bearer Token](#oauth-style-workflow-api-key--bearer-token)
     - [Grant Token](#grant-token)
+    - [Migration Guide](#migration-guide)
   - [Projects](#projects)
     - [Get Projects](#get-projects)
     - [Get Project](#get-project)
@@ -108,7 +113,7 @@ go get github.com/deepgram/deepgram-go-sdk/v3
 
 ## Initialization
 
-All of the examples below will require initializing the Deepgram client and inclusion of imports.
+All of the examples below will require initializing the Deepgram client and inclusion of imports. The SDK supports **dual authentication** with both API Keys and Bearer tokens.
 
 ```go
 package main
@@ -120,14 +125,26 @@ import (
     "os"
 
     api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
-    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
     client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
 )
-// initiate client
+
 ctx := context.Background()
+
+// Option 1: API Key Authentication (Traditional)
 c := client.NewREST("YOUR_API_KEY", &interfaces.ClientOptions{
     Host: "https://api.deepgram.com",
 })
+
+// Option 2: Bearer Token Authentication (Modern)
+c := client.NewREST("", &interfaces.ClientOptions{
+    Host:        "https://api.deepgram.com",
+    AccessToken: "YOUR_ACCESS_TOKEN",
+})
+
+// Option 3: Environment Variables (Recommended)
+// Set DEEPGRAM_API_KEY or DEEPGRAM_ACCESS_TOKEN
+c := client.NewWithDefaults()
 ```
 
 ## Pre-Recorded (Synchronous)
@@ -154,8 +171,6 @@ fmt.Printf("Transcript: %s\n", res.Results.Channels[0].Alternatives[0].Transcrip
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
 
-[See the Example for more info](./examples/speech-to-text/rest/url/main.go).
-
 ### Local Files (Synchronous)
 
 Transcribe audio from a file.
@@ -177,8 +192,6 @@ fmt.Printf("Transcript: %s\n", res.Results.Channels[0].Alternatives[0].Transcrip
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
-
-[See the Example for more info](./examples/speech-to-text/rest/file/main.go).
 
 ## Pre-Recorded (Asynchronous / Callbacks)
 
@@ -280,8 +293,6 @@ dgClient.Stop()
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 
-[See the Examples for more info](./examples/speech-to-text/websocket/).
-
 ## Voice Agent
 
 Configure a Voice Agent using WebSocket.
@@ -348,8 +359,6 @@ For a complete implementation, you would need to:
 
 [See our API reference for more info](https://developers.deepgram.com/reference/voice-agent-api/agent).
 
-[See the Examples for more info](./examples/agent/).
-
 ## Text to Speech REST
 
 Convert text into speech using the REST API.
@@ -373,8 +382,6 @@ fmt.Printf("Audio saved to: %s\n", filePath)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak).
-
-[See the Example for more info](./examples/text-to-speech/rest/).
 
 ## Text to Speech Streaming
 
@@ -410,8 +417,6 @@ dgClient.Stop()
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
 
-[See the Examples for more info](./examples/text-to-speech/websocket/).
-
 ## Text Intelligence
 
 Analyze text.
@@ -439,28 +444,201 @@ fmt.Printf("Analysis Results: %+v\n", res.Results)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-intelligence-api/text-read).
 
-[See the Examples for more info](./examples/analyze/).
-
 ## Authentication
+
+The Deepgram Go SDK supports **dual authentication** with both traditional API Keys and modern JWT Bearer tokens. This provides flexibility for different authentication workflows while maintaining 100% backward compatibility.
+
+### Authentication Methods
+
+#### 1. API Key Authentication (Traditional)
+
+Use your Deepgram API Key directly:
+
+```go
+// Using API key in client options
+c := client.NewREST("YOUR_API_KEY", &interfaces.ClientOptions{
+    Host: "https://api.deepgram.com",
+})
+
+// Or using environment variable
+// Set DEEPGRAM_API_KEY=your_api_key
+c := client.NewWithDefaults()
+```
+
+#### 2. Bearer Token Authentication (Modern)
+
+Use JWT Bearer tokens for enhanced security:
+
+```go
+// Using Bearer token in client options
+c := client.NewREST("", &interfaces.ClientOptions{
+    Host:        "https://api.deepgram.com",
+    AccessToken: "YOUR_ACCESS_TOKEN",
+})
+
+// Or using environment variable
+// Set DEEPGRAM_ACCESS_TOKEN=your_access_token
+c := client.NewWithDefaults()
+```
+
+#### 3. Dynamic Authentication Switching
+
+Switch between authentication methods at runtime:
+
+```go
+// Initialize client
+c := client.NewREST("YOUR_API_KEY", &interfaces.ClientOptions{
+    Host: "https://api.deepgram.com",
+})
+
+// Switch to Bearer token authentication
+c.SetAccessToken("YOUR_ACCESS_TOKEN")
+
+// Switch back to API key authentication
+c.SetAPIKey("YOUR_API_KEY")
+
+// Get current effective authentication
+token, isBearer := c.GetAuthToken()
+if isBearer {
+    fmt.Printf("Using Bearer token: %s\n", token)
+} else {
+    fmt.Printf("Using API key: %s\n", token)
+}
+```
+
+### Authentication Priority
+
+When multiple authentication methods are provided, the SDK uses the following priority order:
+
+1. **Explicit AccessToken parameter** (highest priority)
+2. **Explicit APIKey parameter**
+3. **DEEPGRAM_ACCESS_TOKEN environment variable**
+4. **DEEPGRAM_API_KEY environment variable** (lowest priority)
+
+```go
+// Example: AccessToken takes precedence over APIKey
+c := client.NewREST("fallback_api_key", &interfaces.ClientOptions{
+    AccessToken: "preferred_access_token", // This will be used
+    Host:        "https://api.deepgram.com",
+})
+```
+
+### Environment Variables
+
+Set your credentials using environment variables:
+
+```bash
+# API Key authentication
+export DEEPGRAM_API_KEY="your_api_key"
+
+# Bearer token authentication (takes precedence if both are set)
+export DEEPGRAM_ACCESS_TOKEN="your_access_token"
+
+# Optional: Custom host
+export DEEPGRAM_HOST="https://api.deepgram.com"
+```
+
+Then initialize the client without explicit credentials:
+
+```go
+// Automatically uses environment variables based on priority
+c := client.NewWithDefaults()
+```
+
+### OAuth-Style Workflow: API Key → Bearer Token
+
+The SDK supports a complete OAuth-style authentication workflow where you use an API key to obtain a Bearer token, then use that token for subsequent requests:
+
+```go
+import (
+    "context"
+
+    authAPI "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/auth/v1"
+    authClient "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/auth"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+    listenClient "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
+)
+
+func main() {
+    ctx := context.Background()
+
+    // Step 1: Use API Key to get Bearer token
+    authOptions := &interfaces.ClientOptions{
+        APIKey: "YOUR_API_KEY",
+    }
+
+    authClient := authClient.NewWithOptions(authOptions)
+    tokenResponse, err := authClient.GrantToken(ctx, &authAPI.GrantTokenRequest{})
+    if err != nil {
+        log.Fatal("Failed to get token:", err)
+    }
+
+    // Step 2: Use Bearer token for API calls
+    clientOptions := &interfaces.ClientOptions{
+        AccessToken: tokenResponse.AccessToken, // Bearer token
+    }
+
+    listenClient := listenClient.NewRESTWithOptions(clientOptions)
+
+    // Step 3: Make API calls with Bearer authentication
+    result, err := listenClient.FromURL(ctx, "https://dpgr.am/spacewalk.wav", &interfaces.PreRecordedTranscriptionOptions{
+        Model: "nova-3",
+    })
+    if err != nil {
+        log.Fatal("Transcription failed:", err)
+    }
+
+    fmt.Printf("Transcript: %s\n", result.Results.Channels[0].Alternatives[0].Transcript)
+}
+```
 
 ### Grant Token
 
-Creates a temporary token with a 30-second TTL.
+Creates a temporary token with a 30-second TTL using your API key:
 
 ```go
-// Grant token
+// Grant token using API key
 res, err := dg.GrantToken(ctx)
 if err != nil {
     fmt.Printf("GrantToken failed. Err: %v\n", err)
     os.Exit(1)
 }
 
-fmt.Printf("Token: %s\n", res.AccessToken)
+fmt.Printf("Access Token: %s\n", res.AccessToken)
+fmt.Printf("Expires In: %d seconds\n", res.ExpiresIn)
+```
+
+The generated token can then be used for Bearer authentication:
+
+```go
+// Use the granted token for Bearer authentication
+clientOptions := &interfaces.ClientOptions{
+    AccessToken: res.AccessToken,
+}
+dgClient := client.NewRESTWithOptions(clientOptions)
+```
+
+### Migration Guide
+
+**Existing code continues to work unchanged!** No migration is required for current implementations.
+
+**To adopt Bearer tokens:**
+
+```go
+// Old way (still works)
+c := client.NewREST("YOUR_API_KEY", &interfaces.ClientOptions{})
+
+// New way with Bearer token
+c := client.NewREST("", &interfaces.ClientOptions{
+    AccessToken: "YOUR_ACCESS_TOKEN",
+})
+
+// Best practice: Use environment variables
+// Set DEEPGRAM_ACCESS_TOKEN or DEEPGRAM_API_KEY
+c := client.NewWithDefaults()
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/token-based-auth-api/grant-token).
-
-[See The Examples for more info](./examples/auth/)
 
 ## Projects
 
@@ -481,8 +659,6 @@ fmt.Printf("Projects: %+v\n", res.Projects)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/list).
 
-[See The Example for more info](./examples/manage/projects/main.go).
-
 ### Get Project
 
 Retrieves a specific project based on the provided project_id.
@@ -499,8 +675,6 @@ fmt.Printf("Project: %+v\n", res.Project)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/get).
-
-[See The Example for more info](./examples/manage/projects/main.go).
 
 ### Update Project
 
@@ -522,8 +696,6 @@ fmt.Printf("Update result: %s\n", res.Message)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/update).
 
-[See The Example for more info](./examples/manage/projects/main.go).
-
 ### Delete Project
 
 Delete a project.
@@ -540,8 +712,6 @@ fmt.Printf("Delete result: %s\n", res.Message)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/delete).
-
-[See The Example for more info](./examples/manage/projects/main.go).
 
 ## Keys
 
@@ -562,8 +732,6 @@ fmt.Printf("Keys: %+v\n", res.APIKeys)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/list)
 
-[See The Example for more info](./examples/manage/keys/main.go).
-
 ### Get Key
 
 Retrieves a specific key associated with the provided project_id.
@@ -580,8 +748,6 @@ fmt.Printf("Key: %+v\n", res.APIKey)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/get)
-
-[See The Example for more info](./examples/manage/keys/main.go).
 
 ### Create Key
 
@@ -604,8 +770,6 @@ fmt.Printf("Created key: %s\n", res.APIKeyID)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/create)
 
-[See The Example for more info](./examples/manage/keys/main.go).
-
 ### Delete Key
 
 Deletes a specific key associated with the provided project_id.
@@ -622,8 +786,6 @@ fmt.Printf("Delete result: %s\n", res.Message)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/keys/delete)
-
-[See The Example for more info](./examples/manage/keys/main.go).
 
 ## Members
 
@@ -644,8 +806,6 @@ fmt.Printf("Members: %+v\n", res.Members)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/members/list).
 
-[See The Example for more info](./examples/manage/members/main.go).
-
 ### Remove Member
 
 Removes member account for specified member_id.
@@ -662,8 +822,6 @@ fmt.Printf("Remove result: %s\n", res.Message)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/members/delete).
-
-[See The Example for more info](./examples/manage/members/main.go).
 
 ## Scopes
 
@@ -683,8 +841,6 @@ fmt.Printf("Scopes: %+v\n", res.Scopes)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/scopes/list).
-
-[See The Example for more info](./examples/manage/scopes/main.go).
 
 ### Update Scope
 
@@ -706,8 +862,6 @@ fmt.Printf("Update result: %s\n", res.Message)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/scopes/update).
 
-[See The Example for more info](./examples/manage/scopes/main.go).
-
 ## Invitations
 
 ### List Invites
@@ -726,8 +880,6 @@ fmt.Printf("Invitations: %+v\n", res.Invites)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/list).
-
-[See The Example for more info](./examples/manage/invitations/main.go).
 
 ### Send Invite
 
@@ -750,8 +902,6 @@ fmt.Printf("Invitation sent: %s\n", res.Message)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/create).
 
-[See The Example for more info](./examples/manage/invitations/main.go).
-
 ### Delete Invite
 
 Removes the specified invitation from the project.
@@ -769,8 +919,6 @@ fmt.Printf("Delete result: %s\n", res.Message)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/delete).
 
-[See The Example for more info](./examples/manage/invitations/main.go).
-
 ### Leave Project
 
 ```go
@@ -785,8 +933,6 @@ fmt.Printf("Leave result: %s\n", res.Message)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/invitations/leave).
-
-[See The Example for more info](./examples/manage/invitations/main.go).
 
 ## Usage
 
@@ -807,8 +953,6 @@ fmt.Printf("Requests: %+v\n", res.Requests)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/list-requests).
 
-[See The Example for more info](./examples/manage/usage/main.go).
-
 ### Get Request
 
 Retrieves a specific request associated with the provided project_id
@@ -825,8 +969,6 @@ fmt.Printf("Request: %+v\n", res.Request)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/get-request).
-
-[See The Example for more info](./examples/manage/usage/main.go).
 
 ### Get Fields
 
@@ -845,8 +987,6 @@ fmt.Printf("Fields: %+v\n", res.Fields)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/list-fields).
 
-[See The Example for more info](./examples/manage/usage/main.go).
-
 ### Summarize Usage
 
 `Deprecated` Retrieves the usage for a specific project. Use Get Project Usage Breakdown for a more comprehensive usage summary.
@@ -863,8 +1003,6 @@ fmt.Printf("Usage summary: %+v\n", res.Usage)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/get).
-
-[See The Example for more info](./examples/manage/usage/main.go).
 
 ## Billing
 
@@ -885,8 +1023,6 @@ fmt.Printf("Balances: %+v\n", res.Balances)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/balances/list).
 
-[See The Example for more info](./examples/manage/balances/main.go).
-
 ### Get Balance
 
 Retrieves the balance info for the specified project and balance_id.
@@ -903,8 +1039,6 @@ fmt.Printf("Balance: %+v\n", res.Balance)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/balances/get).
-
-[See The Example for more info](./examples/manage/balances/main.go).
 
 ## Models
 
@@ -925,8 +1059,6 @@ fmt.Printf("Models: %+v\n", res)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/list-models).
 
-[See The Example for more info](./examples/manage/models/main.go).
-
 ### Get Model
 
 Retrieves details of a specific model.
@@ -943,8 +1075,6 @@ fmt.Printf("Model: %+v\n", res.Model)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/get-model).
-
-[See The Example for more info](./examples/manage/models/main.go).
 
 ## On-Prem APIs
 

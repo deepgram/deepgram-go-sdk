@@ -11,7 +11,7 @@ import (
 	"github.com/dvonthenen/websocket"
 
 	commonv1interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
-	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 	restv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/rest/v1"
 )
 
