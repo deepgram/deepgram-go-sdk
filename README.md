@@ -320,11 +320,44 @@ options.Language = "en"
 options.Agent.Think.Provider.Type = "open_ai"
 options.Agent.Think.Provider.Model = "gpt-4o-mini"
 options.Agent.Think.Prompt = "You are a helpful AI assistant."
-options.Agent.Listen.Provider.Type = "deepgram"
-options.Agent.Listen.Provider.Model = "nova-3"
-options.Agent.Speak.Provider.Type = "deepgram"
-options.Agent.Speak.Provider.Model = "aura-2-thalia-en"
-options.Greeting = "Hello, I'm your AI assistant."
+options.Agent.Listen.Provider["type"] = "deepgram"
+options.Agent.Listen.Provider["model"] = "nova-3"
+// Set speak provider - supports both single and multiple providers for fallback
+// Option 1: Single provider (backward compatible)
+options.Agent.Speak = interfaces.Speak{
+	Provider: map[string]interface{}{
+		"type":  "deepgram",
+		"model": "aura-2-thalia-en",
+	},
+}
+
+// Option 2: Multiple providers for fallback (new feature)
+// Uncomment to use multiple providers with automatic fallback
+/*
+options.Agent.Speak = []interfaces.Speak{
+    {
+        Provider: map[string]interface{}{
+            "type":  "deepgram",
+            "model": "aura-2-zeus-en",
+        },
+    },
+    {
+        Provider: map[string]interface{}{
+            "type":  "open_ai",
+            "model": "tts-1",
+            "voice": "shimmer",
+        },
+        Endpoint: &interfaces.Endpoint{
+            URL: "https://api.openai.com/v1/audio/speech",
+            Headers: map[string]interface{}{
+                "authorization": "Bearer {{OPENAI_API_KEY}}",
+            },
+        },
+    },
+}
+*/
+
+options.Agent.Greeting = "Hello, I'm your AI assistant."
 
 // Create Deepgram client (uses default handler that prints to console)
 dgClient, err := client.NewWSUsingChanForDemo(ctx, options)

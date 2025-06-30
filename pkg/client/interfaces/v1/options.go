@@ -153,7 +153,7 @@ func (o *WSSpeakOptions) Check() error {
 }
 
 func NewSettingsOptions() *SettingsOptions {
-	return &SettingsOptions{
+	options := &SettingsOptions{
 		Type: TypeSettings,
 		Audio: Audio{
 			Input: &Input{
@@ -180,14 +180,18 @@ func NewSettingsOptions() *SettingsOptions {
 					"model": "gpt-4o-mini",
 				},
 			},
-			Speak: Speak{
-				Provider: map[string]interface{}{
-					"type":  "deepgram",
-					"model": "aura-2-thalia-en",
-				},
-			},
 		},
 	}
+
+	// Set the default speak provider using the new interface{} approach
+	options.Agent.Speak = Speak{
+		Provider: map[string]interface{}{
+			"type":  "deepgram",
+			"model": "aura-2-thalia-en",
+		},
+	}
+
+	return options
 }
 func (o *SettingsOptions) Check() error {
 	// checks
