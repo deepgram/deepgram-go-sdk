@@ -1181,7 +1181,7 @@ To run the tests, you can use the following commands:
 Run specific tests in a directory:
 
 ```bash
-go run filename
+go test filename
 ```
 
 ## Backwards Compatibility
