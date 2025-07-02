@@ -69,9 +69,9 @@ func TestInjectUserMessage_JSONMarshaling(t *testing.T) {
 
 func TestInjectUserMessage_JSONUnmarshaling(t *testing.T) {
 	t.Run("Test InjectUserMessage JSON unmarshaling", func(t *testing.T) {
-		// Create test JSON string
+		// Create test JSON string using the constant
 		testJSON := `{
-			"type": "InjectUserMessage",
+			"type": "` + msginterfaces.TypeInjectUserMessage + `",
 			"content": "Can you explain how this works?"
 		}`
 
@@ -83,8 +83,8 @@ func TestInjectUserMessage_JSONUnmarshaling(t *testing.T) {
 		}
 
 		// Verify the struct was populated correctly
-		if msg.Type != "InjectUserMessage" {
-			t.Errorf("Expected Type to be InjectUserMessage, got %s", msg.Type)
+		if msg.Type != msginterfaces.TypeInjectUserMessage {
+			t.Errorf("Expected Type to be %s, got %s", msginterfaces.TypeInjectUserMessage, msg.Type)
 		}
 
 		if msg.Content != "Can you explain how this works?" {
@@ -163,10 +163,8 @@ func TestInjectUserMessage_EmptyContent(t *testing.T) {
 		}
 
 		// With omitempty tag, empty content field should be omitted from JSON entirely
-		// So either the key doesn't exist (nil) or it's an empty string
-		content, exists := result["content"]
-		if exists && content != "" {
-			t.Errorf("Expected empty or omitted content, got %v", content)
+		if _, exists := result["content"]; exists {
+			t.Errorf("Expected content key to be omitted from JSON when empty, but it was present")
 		}
 
 		// Verify we can unmarshal back to the struct correctly
