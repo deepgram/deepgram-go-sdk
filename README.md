@@ -325,15 +325,14 @@ options.Agent.Listen.Provider["model"] = "nova-3"
 // Set speak provider - supports both single and multiple providers for fallback
 // Option 1: Single provider (backward compatible)
 options.Agent.Speak = interfaces.Speak{
-	Provider: map[string]interface{}{
-		"type":  "deepgram",
-		"model": "aura-2-thalia-en",
-	},
+    Provider: map[string]interface{}{
+        "type":  "deepgram",
+        "model": "aura-2-thalia-en",
+    },
 }
-
 // Option 2: Multiple providers for fallback (new feature)
 // Uncomment to use multiple providers with automatic fallback
-/*
+
 options.Agent.Speak = []interfaces.Speak{
     {
         Provider: map[string]interface{}{
