@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package deepgram
+package deepgram_test
 
 /* #nosec G101 */
 const MockAPIKey = "m0ckap1k3y0bbc125dac7f40ed3eb0ed232a2ff8"
