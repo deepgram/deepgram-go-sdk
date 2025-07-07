@@ -32,6 +32,12 @@ type InjectAgentMessage struct {
 	Content string `json:"content,omitempty"`
 }
 
+// InjectUserMessage is the request to interact with the agent using text.
+type InjectUserMessage struct {
+	Type    string `json:"type,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
 // FunctionCallResponse is the response from a function call
 type FunctionCallResponse struct {
 	Type           string `json:"type,omitempty"`

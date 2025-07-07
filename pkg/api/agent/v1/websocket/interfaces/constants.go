@@ -17,6 +17,7 @@ const (
 	TypeUpdatePrompt         = "UpdatePrompt"
 	TypeUpdateSpeak          = "UpdateSpeak"
 	TypeInjectAgentMessage   = "InjectAgentMessage"
+	TypeInjectUserMessage    = "InjectUserMessage"
 	TypeFunctionCallResponse = "FunctionCallResponse"
 	TypeKeepAlive            = "KeepAlive"
 	TypeClose                = "Close"

@@ -18,6 +18,7 @@ type SettingsOptions interfaces.SettingsOptions
 type UpdatePrompt msginterface.UpdatePrompt
 type UpdateSpeak msginterface.UpdateSpeak
 type InjectAgentMessage msginterface.InjectAgentMessage
+type InjectUserMessage msginterface.InjectUserMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
 type KeepAlive msginterface.KeepAlive
 
