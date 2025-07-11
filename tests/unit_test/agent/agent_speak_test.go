@@ -12,44 +12,31 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestAgentSpeakSingleProvider(t *testing.T) {
-	t.Run("Test single Speak provider assignment", func(t *testing.T) {
-		// Create agent with single speak provider
+func TestAgentSpeakBackwardCompatibility(t *testing.T) {
+	t.Run("Test backward compatibility - direct field access", func(t *testing.T) {
+		// This test ensures that existing code patterns still work without type assertions
 		agent := &interfacesv1.Agent{
 			Language: "en",
 		}
 
-		// Test assignment of single Speak struct
-		singleSpeak := interfacesv1.Speak{
+		// Old pattern - direct assignment (this should still work)
+		agent.Speak = interfacesv1.Speak{
 			Provider: map[string]interface{}{
 				"type":  "deepgram",
 				"model": "aura-2-thalia-en",
 			},
 		}
 
-		agent.Speak = singleSpeak
-
-		// Verify the assignment worked
-		if agent.Speak == nil {
-			t.Error("Agent.Speak should not be nil after assignment")
+		// Old pattern - direct field access (this should still work)
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Errorf("Expected provider type 'deepgram', got %v", agent.Speak.Provider["type"])
 		}
-
-		// Type assertion to verify it's still a Speak struct
-		speak, ok := agent.Speak.(interfacesv1.Speak)
-		if !ok {
-			t.Error("Agent.Speak should be of type Speak")
-		}
-
-		// Verify the provider data
-		if speak.Provider["type"] != "deepgram" {
-			t.Errorf("Expected provider type 'deepgram', got %v", speak.Provider["type"])
-		}
-		if speak.Provider["model"] != "aura-2-thalia-en" {
-			t.Errorf("Expected model 'aura-2-thalia-en', got %v", speak.Provider["model"])
+		if agent.Speak.Provider["model"] != "aura-2-thalia-en" {
+			t.Errorf("Expected model 'aura-2-thalia-en', got %v", agent.Speak.Provider["model"])
 		}
 	})
 
-	t.Run("Test single Speak provider JSON marshaling", func(t *testing.T) {
+	t.Run("Test backward compatibility - JSON marshaling", func(t *testing.T) {
 		agent := &interfacesv1.Agent{
 			Language: "en",
 			Speak: interfacesv1.Speak{
@@ -86,22 +73,41 @@ func TestAgentSpeakSingleProvider(t *testing.T) {
 			t.Errorf("JSON marshaling mismatch.\nExpected: %v\nActual: %v", expectedSpeak["provider"], actualSpeak["provider"])
 		}
 	})
-}
 
-func TestAgentSpeakMultipleProviders(t *testing.T) {
-	t.Run("Test multiple Speak providers assignment", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
+	t.Run("Test NewSettingsOptions backward compatibility", func(t *testing.T) {
+		// Test that the default options still work as expected
+		options := interfacesv1.NewSettingsOptions()
+
+		// Check that the primary speak provider is properly set
+		if options.Agent.Speak.Provider == nil {
+			t.Error("NewSettingsOptions should set a default Speak provider")
 		}
 
-		// Test assignment of multiple Speak providers
-		multipleSpeak := []interfacesv1.Speak{
-			{
+		// Direct field access should work (no type assertions needed)
+		if options.Agent.Speak.Provider["type"] != "deepgram" {
+			t.Errorf("Expected default provider type 'deepgram', got %v", options.Agent.Speak.Provider["type"])
+		}
+		if options.Agent.Speak.Provider["model"] != "aura-2-thalia-en" {
+			t.Errorf("Expected default model 'aura-2-thalia-en', got %v", options.Agent.Speak.Provider["model"])
+		}
+	})
+}
+
+func TestAgentSpeakFallbackProviders(t *testing.T) {
+	t.Run("Test fallback providers assignment", func(t *testing.T) {
+		agent := &interfacesv1.Agent{
+			Language: "en",
+			// Primary provider (backward compatible)
+			Speak: interfacesv1.Speak{
 				Provider: map[string]interface{}{
 					"type":  "deepgram",
 					"model": "aura-2-thalia-en",
 				},
 			},
+		}
+
+		// Test assignment of fallback providers
+		fallbackProviders := []interfacesv1.Speak{
 			{
 				Provider: map[string]interface{}{
 					"type":  "open_ai",
@@ -115,50 +121,58 @@ func TestAgentSpeakMultipleProviders(t *testing.T) {
 					},
 				},
 			},
+			{
+				Provider: map[string]interface{}{
+					"type":  "elevenlabs",
+					"model": "eleven_turbo_v2",
+					"voice": "alice",
+				},
+				Endpoint: &interfacesv1.Endpoint{
+					Url: "https://api.elevenlabs.io/v1/text-to-speech",
+					Headers: map[string]string{
+						"authorization": "Bearer {{ELEVENLABS_API_KEY}}",
+					},
+				},
+			},
 		}
 
-		agent.Speak = multipleSpeak
+		agent.SpeakFallback = &fallbackProviders
 
-		// Verify the assignment worked
-		if agent.Speak == nil {
-			t.Error("Agent.Speak should not be nil after assignment")
+		// Verify primary provider still works
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Errorf("Expected primary provider type 'deepgram', got %v", agent.Speak.Provider["type"])
 		}
 
-		// Type assertion to verify it's a slice of Speak
-		speakSlice, ok := agent.Speak.([]interfacesv1.Speak)
-		if !ok {
-			t.Error("Agent.Speak should be of type []Speak")
+		// Verify fallback providers are set
+		if agent.SpeakFallback == nil {
+			t.Error("SpeakFallback should not be nil after assignment")
 		}
 
-		// Verify we have 2 providers
-		if len(speakSlice) != 2 {
-			t.Errorf("Expected 2 providers, got %d", len(speakSlice))
+		if len(*agent.SpeakFallback) != 2 {
+			t.Errorf("Expected 2 fallback providers, got %d", len(*agent.SpeakFallback))
 		}
 
-		// Verify first provider (Deepgram)
-		if speakSlice[0].Provider["type"] != "deepgram" {
-			t.Errorf("Expected first provider type 'deepgram', got %v", speakSlice[0].Provider["type"])
+		// Verify first fallback provider (OpenAI)
+		if (*agent.SpeakFallback)[0].Provider["type"] != "open_ai" {
+			t.Errorf("Expected first fallback provider type 'open_ai', got %v", (*agent.SpeakFallback)[0].Provider["type"])
 		}
 
-		// Verify second provider (OpenAI)
-		if speakSlice[1].Provider["type"] != "open_ai" {
-			t.Errorf("Expected second provider type 'open_ai', got %v", speakSlice[1].Provider["type"])
-		}
-		if speakSlice[1].Endpoint == nil {
-			t.Error("Expected second provider to have endpoint")
+		// Verify second fallback provider (ElevenLabs)
+		if (*agent.SpeakFallback)[1].Provider["type"] != "elevenlabs" {
+			t.Errorf("Expected second fallback provider type 'elevenlabs', got %v", (*agent.SpeakFallback)[1].Provider["type"])
 		}
 	})
 
-	t.Run("Test multiple Speak providers JSON marshaling", func(t *testing.T) {
+	t.Run("Test fallback providers JSON marshaling", func(t *testing.T) {
 		agent := &interfacesv1.Agent{
 			Language: "en",
-			Speak: []interfacesv1.Speak{
-				{
-					Provider: map[string]interface{}{
-						"type":  "deepgram",
-						"model": "aura-2-thalia-en",
-					},
+			Speak: interfacesv1.Speak{
+				Provider: map[string]interface{}{
+					"type":  "deepgram",
+					"model": "aura-2-thalia-en",
 				},
+			},
+			SpeakFallback: &[]interfacesv1.Speak{
 				{
 					Provider: map[string]interface{}{
 						"type":  "open_ai",
@@ -187,33 +201,37 @@ func TestAgentSpeakMultipleProviders(t *testing.T) {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// Verify speak is an array
-		speak, ok := result["speak"].([]interface{})
+		// Verify primary speak provider is present
+		speak, ok := result["speak"].(map[string]interface{})
 		if !ok {
-			t.Error("speak field should be an array")
+			t.Error("speak field should be an object")
 		}
 
-		if len(speak) != 2 {
-			t.Errorf("Expected 2 speak providers, got %d", len(speak))
+		provider := speak["provider"].(map[string]interface{})
+		if provider["type"] != "deepgram" {
+			t.Errorf("Expected primary provider type 'deepgram', got %v", provider["type"])
 		}
 
-		// Verify first provider
-		firstProvider := speak[0].(map[string]interface{})
-		provider1 := firstProvider["provider"].(map[string]interface{})
-		if provider1["type"] != "deepgram" {
-			t.Errorf("Expected first provider type 'deepgram', got %v", provider1["type"])
+		// Verify fallback providers are present
+		speakFallback, ok := result["speak_fallback"].([]interface{})
+		if !ok {
+			t.Error("speak_fallback field should be an array")
 		}
 
-		// Verify second provider has endpoint
-		secondProvider := speak[1].(map[string]interface{})
-		if secondProvider["endpoint"] == nil {
-			t.Error("Second provider should have endpoint")
+		if len(speakFallback) != 1 {
+			t.Errorf("Expected 1 fallback provider, got %d", len(speakFallback))
+		}
+
+		// Verify fallback provider has endpoint
+		firstFallback := speakFallback[0].(map[string]interface{})
+		if firstFallback["endpoint"] == nil {
+			t.Error("Fallback provider should have endpoint")
 		}
 	})
 }
 
 func TestAgentSpeakJSONUnmarshaling(t *testing.T) {
-	t.Run("Test unmarshaling single provider JSON", func(t *testing.T) {
+	t.Run("Test unmarshaling backward compatible JSON", func(t *testing.T) {
 		jsonData := `{
 			"language": "en",
 			"speak": {
@@ -230,33 +248,25 @@ func TestAgentSpeakJSONUnmarshaling(t *testing.T) {
 			t.Fatalf("JSON unmarshaling failed: %v", err)
 		}
 
-		if agent.Speak == nil {
-			t.Error("Agent.Speak should not be nil after unmarshaling")
+		// Direct field access should work (no type assertions needed)
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Errorf("Expected provider type 'deepgram', got %v", agent.Speak.Provider["type"])
 		}
-
-		// The JSON unmarshaling will create a map[string]interface{} for the speak field
-		// We need to handle this in our application logic
-		speakMap, ok := agent.Speak.(map[string]interface{})
-		if !ok {
-			t.Error("Unmarshaled speak should be map[string]interface{}")
-		}
-
-		provider := speakMap["provider"].(map[string]interface{})
-		if provider["type"] != "deepgram" {
-			t.Errorf("Expected provider type 'deepgram', got %v", provider["type"])
+		if agent.Speak.Provider["model"] != "aura-2-thalia-en" {
+			t.Errorf("Expected model 'aura-2-thalia-en', got %v", agent.Speak.Provider["model"])
 		}
 	})
 
-	t.Run("Test unmarshaling multiple providers JSON", func(t *testing.T) {
+	t.Run("Test unmarshaling JSON with fallback providers", func(t *testing.T) {
 		jsonData := `{
 			"language": "en",
-			"speak": [
-				{
-					"provider": {
-						"type": "deepgram",
-						"model": "aura-2-thalia-en"
-					}
-				},
+			"speak": {
+				"provider": {
+					"type": "deepgram",
+					"model": "aura-2-thalia-en"
+				}
+			},
+			"speak_fallback": [
 				{
 					"provider": {
 						"type": "open_ai",
@@ -279,139 +289,106 @@ func TestAgentSpeakJSONUnmarshaling(t *testing.T) {
 			t.Fatalf("JSON unmarshaling failed: %v", err)
 		}
 
-		if agent.Speak == nil {
-			t.Error("Agent.Speak should not be nil after unmarshaling")
+		// Verify primary provider
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Errorf("Expected primary provider type 'deepgram', got %v", agent.Speak.Provider["type"])
 		}
 
-		// The JSON unmarshaling will create a []interface{} for the speak field
-		speakSlice, ok := agent.Speak.([]interface{})
-		if !ok {
-			t.Error("Unmarshaled speak should be []interface{}")
+		// Verify fallback providers
+		if agent.SpeakFallback == nil {
+			t.Error("SpeakFallback should not be nil after unmarshaling")
 		}
 
-		if len(speakSlice) != 2 {
-			t.Errorf("Expected 2 providers, got %d", len(speakSlice))
+		if len(*agent.SpeakFallback) != 1 {
+			t.Errorf("Expected 1 fallback provider, got %d", len(*agent.SpeakFallback))
 		}
 
-		// Check first provider
-		firstProvider := speakSlice[0].(map[string]interface{})
-		provider1 := firstProvider["provider"].(map[string]interface{})
-		if provider1["type"] != "deepgram" {
-			t.Errorf("Expected first provider type 'deepgram', got %v", provider1["type"])
+		// Check fallback provider
+		fallback := (*agent.SpeakFallback)[0]
+		if fallback.Provider["type"] != "open_ai" {
+			t.Errorf("Expected fallback provider type 'open_ai', got %v", fallback.Provider["type"])
 		}
 
-		// Check second provider
-		secondProvider := speakSlice[1].(map[string]interface{})
-		if secondProvider["endpoint"] == nil {
-			t.Error("Second provider should have endpoint")
+		if fallback.Endpoint == nil {
+			t.Error("Fallback provider should have endpoint")
 		}
 	})
 }
 
 func TestAgentSpeakEdgeCases(t *testing.T) {
-	t.Run("Test nil assignment", func(t *testing.T) {
+	t.Run("Test nil fallback providers", func(t *testing.T) {
 		agent := &interfacesv1.Agent{
 			Language: "en",
-		}
-
-		agent.Speak = nil
-
-		if agent.Speak != nil {
-			t.Error("Agent.Speak should be nil after nil assignment")
-		}
-	})
-
-	t.Run("Test empty slice assignment", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
-		}
-
-		agent.Speak = []interfacesv1.Speak{}
-
-		speakSlice, ok := agent.Speak.([]interfacesv1.Speak)
-		if !ok {
-			t.Error("Agent.Speak should be of type []Speak")
-		}
-
-		if len(speakSlice) != 0 {
-			t.Errorf("Expected empty slice, got length %d", len(speakSlice))
-		}
-	})
-
-	t.Run("Test single provider with endpoint", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
-		}
-
-		agent.Speak = interfacesv1.Speak{
-			Provider: map[string]interface{}{
-				"type":  "open_ai",
-				"model": "tts-1",
-				"voice": "alloy",
+			Speak: interfacesv1.Speak{
+				Provider: map[string]interface{}{
+					"type":  "deepgram",
+					"model": "aura-2-thalia-en",
+				},
 			},
-			Endpoint: &interfacesv1.Endpoint{
-				Url: "https://api.openai.com/v1/audio/speech",
-				Headers: map[string]string{
-					"authorization": "Bearer test-key",
+			SpeakFallback: nil,
+		}
+
+		// Primary provider should still work
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Error("Primary provider should work even with nil fallback")
+		}
+
+		if agent.SpeakFallback != nil {
+			t.Error("SpeakFallback should be nil when not set")
+		}
+	})
+
+	t.Run("Test empty fallback providers", func(t *testing.T) {
+		agent := &interfacesv1.Agent{
+			Language: "en",
+			Speak: interfacesv1.Speak{
+				Provider: map[string]interface{}{
+					"type":  "deepgram",
+					"model": "aura-2-thalia-en",
+				},
+			},
+			SpeakFallback: &[]interfacesv1.Speak{},
+		}
+
+		// Primary provider should still work
+		if agent.Speak.Provider["type"] != "deepgram" {
+			t.Error("Primary provider should work with empty fallback")
+		}
+
+		if len(*agent.SpeakFallback) != 0 {
+			t.Errorf("Expected empty fallback slice, got length %d", len(*agent.SpeakFallback))
+		}
+	})
+
+	t.Run("Test primary provider with endpoint", func(t *testing.T) {
+		agent := &interfacesv1.Agent{
+			Language: "en",
+			Speak: interfacesv1.Speak{
+				Provider: map[string]interface{}{
+					"type":  "open_ai",
+					"model": "tts-1",
+					"voice": "alloy",
+				},
+				Endpoint: &interfacesv1.Endpoint{
+					Url: "https://api.openai.com/v1/audio/speech",
+					Headers: map[string]string{
+						"authorization": "Bearer test-key",
+					},
 				},
 			},
 		}
 
-		speak, ok := agent.Speak.(interfacesv1.Speak)
-		if !ok {
-			t.Error("Agent.Speak should be of type Speak")
+		// Direct field access should work
+		if agent.Speak.Provider["type"] != "open_ai" {
+			t.Errorf("Expected provider type 'open_ai', got %v", agent.Speak.Provider["type"])
 		}
 
-		if speak.Endpoint == nil {
+		if agent.Speak.Endpoint == nil {
 			t.Error("Speak should have endpoint")
 		}
 
-		if speak.Endpoint.Url != "https://api.openai.com/v1/audio/speech" {
-			t.Errorf("Expected URL 'https://api.openai.com/v1/audio/speech', got %v", speak.Endpoint.Url)
-		}
-	})
-}
-
-func TestAgentSpeakBackwardCompatibility(t *testing.T) {
-	t.Run("Test backward compatibility with existing code patterns", func(t *testing.T) {
-		// This test ensures that existing code that assigns Speak struct still works
-		agent := &interfacesv1.Agent{}
-
-		// Old pattern - direct assignment
-		agent.Speak = interfacesv1.Speak{
-			Provider: map[string]interface{}{
-				"type":  "deepgram",
-				"model": "aura-2-thalia-en",
-			},
-		}
-
-		// Verify it still works
-		speak, ok := agent.Speak.(interfacesv1.Speak)
-		if !ok {
-			t.Error("Backward compatibility test failed: Agent.Speak should accept Speak struct")
-		}
-
-		if speak.Provider["type"] != "deepgram" {
-			t.Error("Backward compatibility test failed: Provider data should be preserved")
-		}
-	})
-
-	t.Run("Test NewSettingsOptions backward compatibility", func(t *testing.T) {
-		// Test that the default options still work as expected
-		options := interfacesv1.NewSettingsOptions()
-
-		if options.Agent.Speak == nil {
-			t.Error("NewSettingsOptions should set a default Speak provider")
-		}
-
-		// Check that it's a single Speak struct (backward compatible)
-		speak, ok := options.Agent.Speak.(interfacesv1.Speak)
-		if !ok {
-			t.Error("Default Speak should be a single Speak struct for backward compatibility")
-		}
-
-		if speak.Provider["type"] != "deepgram" {
-			t.Error("Default Speak provider should be deepgram")
+		if agent.Speak.Endpoint.Url != "https://api.openai.com/v1/audio/speech" {
+			t.Errorf("Expected URL 'https://api.openai.com/v1/audio/speech', got %v", agent.Speak.Endpoint.Url)
 		}
 	})
 }

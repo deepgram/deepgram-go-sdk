@@ -269,7 +269,10 @@ func main() {
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
 	tOptions.Agent.Listen.Provider["type"] = "deepgram"
 	tOptions.Agent.Listen.Provider["model"] = "nova-3"
-	// Set speak provider with arbitrary key (single provider)
+
+	// ========================================
+	// BACKWARD COMPATIBLE: Primary provider with arbitrary key (existing approach - still works!)
+	// ========================================
 	tOptions.Agent.Speak = interfacesv1.Speak{
 		Provider: map[string]interface{}{
 			"type":          "deepgram",
@@ -277,8 +280,25 @@ func main() {
 			"arbitrary_key": "test",
 		},
 	}
+
+	// ========================================
+	// NEW FEATURE: Fallback providers (optional - additive change)
+	// ========================================
+	// This is completely optional! The code above still works exactly as before.
+	// You can even add arbitrary keys to fallback providers too.
+	tOptions.Agent.SpeakFallback = &[]interfacesv1.Speak{
+		{
+			// Fallback with arbitrary key
+			Provider: map[string]interface{}{
+				"type":         "deepgram",
+				"model":        "aura-2-stella-en",
+				"fallback_key": "backup",
+			},
+		},
+	}
+
 	tOptions.Agent.Language = "en"
-	tOptions.Agent.Greeting = "Hello! How can I help you today?"
+	tOptions.Agent.Greeting = "Hello! I'm using arbitrary keys in both primary and fallback providers."
 	fmt.Printf("Transcription options set\n")
 
 	// Create handler

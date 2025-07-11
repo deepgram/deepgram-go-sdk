@@ -76,9 +76,10 @@ type Speak struct {
 	Endpoint *Endpoint              `json:"endpoint,omitempty"`
 }
 type Agent struct {
-	Language string      `json:"language,omitempty"`
-	Listen   Listen      `json:"listen,omitempty"`
-	Think    Think       `json:"think,omitempty"`
-	Speak    interface{} `json:"speak,omitempty"` // Can be Speak or []Speak for fallback providers
-	Greeting string      `json:"greeting,omitempty"`
+	Language      string   `json:"language,omitempty"`
+	Listen        Listen   `json:"listen,omitempty"`
+	Think         Think    `json:"think,omitempty"`
+	Speak         Speak    `json:"speak,omitempty"`          // Keep original for backward compatibility
+	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"` // New field for fallback providers (optional)
+	Greeting      string   `json:"greeting,omitempty"`
 }

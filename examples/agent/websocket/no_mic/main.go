@@ -472,15 +472,42 @@ func main() {
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
 	tOptions.Agent.Listen.Provider["type"] = "deepgram"
 	tOptions.Agent.Listen.Provider["model"] = "nova-3"
-	// Set speak provider (single provider)
+
+	// ========================================
+	// BACKWARD COMPATIBLE: Primary provider (existing approach - still works!)
+	// ========================================
 	tOptions.Agent.Speak = interfacesv1.Speak{
 		Provider: map[string]interface{}{
 			"type":  "deepgram",
 			"model": "aura-2-thalia-en",
 		},
 	}
+
+	// ========================================
+	// NEW FEATURE: Fallback providers (optional - additive change)
+	// ========================================
+	// This is completely optional! The code above still works exactly as before.
+	// Adding fallback providers gives you redundancy if the primary provider fails.
+	tOptions.Agent.SpeakFallback = &[]interfacesv1.Speak{
+		{
+			// First fallback: OpenAI TTS
+			Provider: map[string]interface{}{
+				"type":  "open_ai",
+				"model": "tts-1",
+				"voice": "nova",
+			},
+		},
+		{
+			// Second fallback: Another Deepgram model
+			Provider: map[string]interface{}{
+				"type":  "deepgram",
+				"model": "aura-2-stella-en",
+			},
+		},
+	}
+
 	tOptions.Agent.Language = "en"
-	tOptions.Agent.Greeting = "Hello! How can I help you today?"
+	tOptions.Agent.Greeting = "Hello! I'm using the backward-compatible primary provider with optional fallback providers."
 	fmt.Printf("Transcription options set\n")
 
 	// Create handler

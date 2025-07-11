@@ -330,16 +330,10 @@ options.Agent.Speak = interfaces.Speak{
         "model": "aura-2-thalia-en",
     },
 }
-// Option 2: Multiple providers for fallback (new feature)
-// Uncomment to use multiple providers with automatic fallback
 
-options.Agent.Speak = []interfaces.Speak{
-    {
-        Provider: map[string]interface{}{
-            "type":  "deepgram",
-            "model": "aura-2-zeus-en",
-        },
-    },
+// Option 2: Add fallback providers (new feature)
+// Primary provider is still configured above, fallback providers are additional
+options.Agent.SpeakFallback = &[]interfaces.Speak{
     {
         Provider: map[string]interface{}{
             "type":  "open_ai",
@@ -353,8 +347,23 @@ options.Agent.Speak = []interfaces.Speak{
             },
         },
     },
+    {
+        Provider: map[string]interface{}{
+            "type":  "elevenlabs",
+            "model": "eleven_turbo_v2",
+            "voice": "alice",
+        },
+        Endpoint: &interfaces.Endpoint{
+            URL: "https://api.elevenlabs.io/v1/text-to-speech",
+            Headers: map[string]interface{}{
+                "authorization": "Bearer {{ELEVENLABS_API_KEY}}",
+            },
+        },
+    },
 }
-*/
+
+// Note: The system will use the primary provider first, then fallback to
+// the providers in SpeakFallback if the primary fails
 
 options.Agent.Greeting = "Hello, I'm your AI assistant."
 
