@@ -17,6 +17,7 @@ import (
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent"
 	"github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 // MyHandler handles all websocket events
@@ -268,11 +269,36 @@ func main() {
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
 	tOptions.Agent.Listen.Provider["type"] = "deepgram"
 	tOptions.Agent.Listen.Provider["model"] = "nova-3"
-	tOptions.Agent.Speak.Provider["type"] = "deepgram"
-	tOptions.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
-	tOptions.Agent.Speak.Provider["arbitrary_key"] = "test"
+
+	// ========================================
+	// BACKWARD COMPATIBLE: Primary provider with arbitrary key (existing approach - still works!)
+	// ========================================
+	tOptions.Agent.Speak = interfacesv1.Speak{
+		Provider: map[string]interface{}{
+			"type":          "deepgram",
+			"model":         "aura-2-thalia-en",
+			"arbitrary_key": "test",
+		},
+	}
+
+	// ========================================
+	// NEW FEATURE: Fallback providers (optional - additive change)
+	// ========================================
+	// This is completely optional! The code above still works exactly as before.
+	// You can even add arbitrary keys to fallback providers too.
+	tOptions.Agent.SpeakFallback = &[]interfacesv1.Speak{
+		{
+			// Fallback with arbitrary key
+			Provider: map[string]interface{}{
+				"type":         "deepgram",
+				"model":        "aura-2-stella-en",
+				"fallback_key": "backup",
+			},
+		},
+	}
+
 	tOptions.Agent.Language = "en"
-	tOptions.Agent.Greeting = "Hello! How can I help you today?"
+	tOptions.Agent.Greeting = "Hello! I'm using arbitrary keys in both primary and fallback providers."
 	fmt.Printf("Transcription options set\n")
 
 	// Create handler
