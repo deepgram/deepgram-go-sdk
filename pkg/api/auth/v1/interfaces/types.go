@@ -10,6 +10,12 @@ package interfaces
 /***********************************/
 // shared/common structs
 /***********************************/
+
+// GrantTokenRequest represents the request body for the grant token endpoint
+type GrantTokenRequest struct {
+	TTLSeconds *int `json:"ttl_seconds,omitempty"`
+}
+
 // GrantToken provides a JWT
 type GrantToken struct {
 	AccessToken string  `json:"access_token,omitempty"`

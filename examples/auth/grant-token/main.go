@@ -10,6 +10,7 @@ import (
 	"os"
 
 	authAPI "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/auth/v1"
+	authInterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/auth/v1/interfaces"
 	authClient "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/auth"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
@@ -35,7 +36,7 @@ func main() {
 
 	// Grant a temporary access token using API key
 	fmt.Printf("   Requesting access token using API key...\n")
-	respToken, err := authAPIClient.GrantToken(ctx)
+	respToken, err := authAPIClient.GrantToken(ctx, nil)
 	if err != nil {
 		fmt.Printf("   ❌ GrantToken failed. Err: %v\n", err)
 		os.Exit(1)
@@ -46,6 +47,28 @@ func main() {
 	fmt.Printf("   ✅ Access token granted successfully!\n")
 	fmt.Printf("   Token: %s\n", accessToken[:16]+"...")
 	fmt.Printf("   TTL: %.0f seconds\n\n", ttl)
+
+	// ====================================
+	// Phase 1.5: API Key Authentication with custom TTL
+	// ====================================
+	fmt.Printf("1.5. Using API Key Authentication with custom TTL (60 seconds)\n")
+
+	// Grant a temporary access token with custom TTL
+	fmt.Printf("   Requesting access token with 60-second TTL...\n")
+	customTTL := 60
+	respTokenCustom, err := authAPIClient.GrantToken(ctx, &authInterfaces.GrantTokenRequest{
+		TTLSeconds: &customTTL,
+	})
+	if err != nil {
+		fmt.Printf("   ❌ GrantToken with custom TTL failed. Err: %v\n", err)
+		os.Exit(1)
+	}
+
+	accessTokenCustom := respTokenCustom.AccessToken
+	ttlCustom := respTokenCustom.ExpiresIn
+	fmt.Printf("   ✅ Access token with custom TTL granted successfully!\n")
+	fmt.Printf("   Token: %s\n", accessTokenCustom[:16]+"...")
+	fmt.Printf("   TTL: %.0f seconds\n\n", ttlCustom)
 
 	// ====================================
 	// Phase 2: Dual Authentication Features
