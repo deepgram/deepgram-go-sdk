@@ -79,7 +79,8 @@ type Agent struct {
 	Language      string   `json:"language,omitempty"`
 	Listen        Listen   `json:"listen,omitempty"`
 	Think         Think    `json:"think,omitempty"`
-	Speak         Speak    `json:"speak,omitempty"`          // Keep original for backward compatibility
-	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"` // New field for fallback providers (optional)
+	Speak         Speak    `json:"speak,omitempty"`
+	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"`
 	Greeting      string   `json:"greeting,omitempty"`
+	MipOptOut     bool     `json:"mip_opt_out,omitempty"`
 }
