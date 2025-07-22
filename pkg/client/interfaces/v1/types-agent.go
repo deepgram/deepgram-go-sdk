@@ -83,4 +83,5 @@ type Agent struct {
 	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"`
 	Greeting      string   `json:"greeting,omitempty"`
 	MipOptOut     bool     `json:"mip_opt_out,omitempty"`
+	Tags          []string `json:"tags,omitempty"`
 }
