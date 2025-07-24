@@ -17,11 +17,16 @@ type SettingsOptions struct {
 	MipOptOut    bool     `json:"mip_opt_out,omitempty"`
 	Audio        Audio    `json:"audio"`
 	Agent        Agent    `json:"agent"`
+	Flags        *Flags   `json:"flags,omitempty"`
 }
 
 /*
 Sub-structs in SettingsOptions
 */
+type Flags struct {
+	History bool `json:"history,omitempty"`
+}
+
 type Input struct {
 	Encoding   string `json:"encoding,omitempty"`
 	SampleRate int    `json:"sample_rate,omitempty"`
@@ -77,8 +82,45 @@ type Speak struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
 	Endpoint *Endpoint              `json:"endpoint,omitempty"`
 }
+
+type Context struct {
+	Messages []ContextMessage `json:"messages,omitempty"`
+}
+
+type ContextMessage interface {
+	GetType() string
+}
+
+type HistoryConversationText struct {
+	Type    string `json:"type,omitempty"`
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+func (h HistoryConversationText) GetType() string {
+	return h.Type
+}
+
+type FunctionCall struct {
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	ClientSide bool   `json:"client_side,omitempty"`
+	Arguments  string `json:"arguments,omitempty"`
+	Response   string `json:"response,omitempty"`
+}
+
+type HistoryFunctionCalls struct {
+	Type          string         `json:"type,omitempty"`
+	FunctionCalls []FunctionCall `json:"function_calls,omitempty"`
+}
+
+func (h HistoryFunctionCalls) GetType() string {
+	return h.Type
+}
+
 type Agent struct {
 	Language      string   `json:"language,omitempty"`
+	Context       *Context `json:"context,omitempty"`
 	Listen        Listen   `json:"listen,omitempty"`
 	Think         Think    `json:"think,omitempty"`
 	Speak         Speak    `json:"speak,omitempty"`
