@@ -155,6 +155,9 @@ func (o *WSSpeakOptions) Check() error {
 func NewSettingsOptions() *SettingsOptions {
 	options := &SettingsOptions{
 		Type: TypeSettings,
+		Flags: &Flags{
+			History: true,
+		},
 		Audio: Audio{
 			Input: &Input{
 				Encoding:   "linear16",

@@ -45,6 +45,28 @@ type FunctionCallResponse struct {
 	Output         string `json:"output,omitempty"`
 }
 
+// HistoryConversationText is the request to send conversation history
+type HistoryConversationText struct {
+	Type    string `json:"type,omitempty"`
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+// HistoryFunctionCalls is the request to send function call history
+type HistoryFunctionCalls struct {
+	Type          string         `json:"type,omitempty"`
+	FunctionCalls []FunctionCall `json:"function_calls,omitempty"`
+}
+
+// FunctionCall represents a single function call in history
+type FunctionCall struct {
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	ClientSide bool   `json:"client_side,omitempty"`
+	Arguments  string `json:"arguments,omitempty"`
+	Response   string `json:"response,omitempty"`
+}
+
 // KeepAlive is the request to keep the connection alive
 type KeepAlive struct {
 	Type string `json:"type,omitempty"`
