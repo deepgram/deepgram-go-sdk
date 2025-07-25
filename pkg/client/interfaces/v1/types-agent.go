@@ -13,6 +13,7 @@ XXXX
 type SettingsOptions struct {
 	Type         string `json:"type"`
 	Experimental bool   `json:"experimental,omitempty"`
+	MipOptOut    bool   `json:"mip_opt_out,omitempty"`
 	Audio        Audio  `json:"audio"`
 	Agent        Agent  `json:"agent"`
 }
@@ -82,5 +83,4 @@ type Agent struct {
 	Speak         Speak    `json:"speak,omitempty"`
 	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"`
 	Greeting      string   `json:"greeting,omitempty"`
-	MipOptOut     bool     `json:"mip_opt_out,omitempty"`
 }

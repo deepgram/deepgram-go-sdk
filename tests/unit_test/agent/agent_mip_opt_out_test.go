@@ -11,60 +11,71 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestAgentMipOptOut_StructCreation(t *testing.T) {
-	t.Run("Test Agent struct creation with mip_opt_out field", func(t *testing.T) {
-		// Test creating agent with mip_opt_out set to true
-		agent := &interfacesv1.Agent{
-			Language:  "en",
+func TestSettingsMipOptOut_StructCreation(t *testing.T) {
+	t.Run("Test SettingsOptions struct creation with mip_opt_out field", func(t *testing.T) {
+		// Test creating settings with mip_opt_out set to true
+		settings := &interfacesv1.SettingsOptions{
+			Type:      "Settings",
 			MipOptOut: true,
 		}
 
 		// Verify the field is set correctly
-		if agent.MipOptOut != true {
-			t.Errorf("Expected MipOptOut to be true, got %v", agent.MipOptOut)
+		if settings.MipOptOut != true {
+			t.Errorf("Expected MipOptOut to be true, got %v", settings.MipOptOut)
 		}
 
-		// Test creating agent with mip_opt_out set to false
-		agent2 := &interfacesv1.Agent{
-			Language:  "en",
+		// Test creating settings with mip_opt_out set to false
+		settings2 := &interfacesv1.SettingsOptions{
+			Type:      "Settings",
 			MipOptOut: false,
 		}
 
 		// Verify the field is set correctly
-		if agent2.MipOptOut != false {
-			t.Errorf("Expected MipOptOut to be false, got %v", agent2.MipOptOut)
+		if settings2.MipOptOut != false {
+			t.Errorf("Expected MipOptOut to be false, got %v", settings2.MipOptOut)
 		}
 	})
 
-	t.Run("Test Agent struct with default mip_opt_out value", func(t *testing.T) {
-		// Test creating agent without explicitly setting mip_opt_out
-		agent := &interfacesv1.Agent{
-			Language: "en",
+	t.Run("Test SettingsOptions struct with default mip_opt_out value", func(t *testing.T) {
+		// Test creating settings without explicitly setting mip_opt_out
+		settings := &interfacesv1.SettingsOptions{
+			Type: "Settings",
 		}
 
 		// Verify the field defaults to false (Go's zero value for bool)
-		if agent.MipOptOut != false {
-			t.Errorf("Expected MipOptOut to default to false, got %v", agent.MipOptOut)
+		if settings.MipOptOut != false {
+			t.Errorf("Expected MipOptOut to default to false, got %v", settings.MipOptOut)
 		}
 	})
 }
 
-func TestAgentMipOptOut_JSONMarshaling(t *testing.T) {
-	t.Run("Test Agent JSON marshaling with mip_opt_out set to true", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language:  "en",
+func TestSettingsMipOptOut_JSONMarshaling(t *testing.T) {
+	t.Run("Test SettingsOptions JSON marshaling with mip_opt_out set to true", func(t *testing.T) {
+		// Create settings with mip_opt_out set to true
+		settings := &interfacesv1.SettingsOptions{
+			Type:      "Settings",
 			MipOptOut: true,
+			Audio: interfacesv1.Audio{
+				Input: &interfacesv1.Input{
+					Encoding:   "linear16",
+					SampleRate: 16000,
+				},
+			},
+			Agent: interfacesv1.Agent{
+				Language: "en",
+			},
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
@@ -74,280 +85,279 @@ func TestAgentMipOptOut_JSONMarshaling(t *testing.T) {
 		}
 	})
 
-	t.Run("Test Agent JSON marshaling with mip_opt_out set to false", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language:  "en",
+	t.Run("Test SettingsOptions JSON marshaling with mip_opt_out set to false", func(t *testing.T) {
+		// Create settings with mip_opt_out set to false
+		settings := &interfacesv1.SettingsOptions{
+			Type:      "Settings",
 			MipOptOut: false,
+			Audio: interfacesv1.Audio{
+				Input: &interfacesv1.Input{
+					Encoding:   "linear16",
+					SampleRate: 16000,
+				},
+			},
+			Agent: interfacesv1.Agent{
+				Language: "en",
+			},
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// With omitempty tag, false value should be omitted from JSON
+		// With omitempty tag, mip_opt_out should be omitted when false
 		if _, exists := result["mip_opt_out"]; exists {
 			t.Errorf("Expected mip_opt_out to be omitted from JSON when false, but it was present with value %v", result["mip_opt_out"])
 		}
 	})
 
-	t.Run("Test Agent JSON marshaling with default mip_opt_out value", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
+	t.Run("Test SettingsOptions JSON marshaling with default mip_opt_out value", func(t *testing.T) {
+		// Create settings without explicitly setting mip_opt_out
+		settings := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Audio: interfacesv1.Audio{
+				Input: &interfacesv1.Input{
+					Encoding:   "linear16",
+					SampleRate: 16000,
+				},
+			},
+			Agent: interfacesv1.Agent{
+				Language: "en",
+			},
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// With omitempty tag, default false value should be omitted from JSON
+		// With omitempty tag and default false value, mip_opt_out should be omitted
 		if _, exists := result["mip_opt_out"]; exists {
 			t.Errorf("Expected mip_opt_out to be omitted from JSON when using default value, but it was present with value %v", result["mip_opt_out"])
 		}
 	})
 }
 
-func TestAgentMipOptOut_JSONUnmarshaling(t *testing.T) {
-	t.Run("Test Agent JSON unmarshaling with mip_opt_out set to true", func(t *testing.T) {
+func TestSettingsMipOptOut_JSONUnmarshaling(t *testing.T) {
+	t.Run("Test SettingsOptions JSON unmarshaling with mip_opt_out set to true", func(t *testing.T) {
+		// JSON with mip_opt_out set to true
 		jsonData := `{
-			"language": "en",
-			"mip_opt_out": true
+			"type": "Settings",
+			"mip_opt_out": true,
+			"audio": {
+				"input": {
+					"encoding": "linear16",
+					"sample_rate": 16000
+				}
+			},
+			"agent": {
+				"language": "en"
+			}
 		}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonData), &agent)
+		var settings interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonData), &settings)
 		if err != nil {
-			t.Fatalf("JSON unmarshaling failed: %v", err)
+			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
 		// Verify the field is set correctly
-		if agent.MipOptOut != true {
-			t.Errorf("Expected MipOptOut to be true, got %v", agent.MipOptOut)
+		if settings.MipOptOut != true {
+			t.Errorf("Expected MipOptOut to be true, got %v", settings.MipOptOut)
 		}
 	})
 
-	t.Run("Test Agent JSON unmarshaling with mip_opt_out set to false", func(t *testing.T) {
+	t.Run("Test SettingsOptions JSON unmarshaling with mip_opt_out set to false", func(t *testing.T) {
+		// JSON with mip_opt_out set to false
 		jsonData := `{
-			"language": "en",
-			"mip_opt_out": false
+			"type": "Settings",
+			"mip_opt_out": false,
+			"audio": {
+				"input": {
+					"encoding": "linear16",
+					"sample_rate": 16000
+				}
+			},
+			"agent": {
+				"language": "en"
+			}
 		}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonData), &agent)
+		var settings interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonData), &settings)
 		if err != nil {
-			t.Fatalf("JSON unmarshaling failed: %v", err)
+			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
 		// Verify the field is set correctly
-		if agent.MipOptOut != false {
-			t.Errorf("Expected MipOptOut to be false, got %v", agent.MipOptOut)
+		if settings.MipOptOut != false {
+			t.Errorf("Expected MipOptOut to be false, got %v", settings.MipOptOut)
 		}
 	})
 
-	t.Run("Test Agent JSON unmarshaling without mip_opt_out field", func(t *testing.T) {
+	t.Run("Test SettingsOptions JSON unmarshaling without mip_opt_out field", func(t *testing.T) {
+		// JSON without mip_opt_out field
 		jsonData := `{
-			"language": "en"
+			"type": "Settings",
+			"audio": {
+				"input": {
+					"encoding": "linear16",
+					"sample_rate": 16000
+				}
+			},
+			"agent": {
+				"language": "en"
+			}
 		}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonData), &agent)
+		var settings interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonData), &settings)
 		if err != nil {
-			t.Fatalf("JSON unmarshaling failed: %v", err)
+			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// Verify the field defaults to false when not present in JSON
-		if agent.MipOptOut != false {
-			t.Errorf("Expected MipOptOut to default to false, got %v", agent.MipOptOut)
+		// Verify the field defaults to false
+		if settings.MipOptOut != false {
+			t.Errorf("Expected MipOptOut to default to false, got %v", settings.MipOptOut)
 		}
 	})
 }
 
-func TestAgentMipOptOut_BackwardCompatibility(t *testing.T) {
-	t.Run("Test backward compatibility with existing Agent usage", func(t *testing.T) {
-		// This test ensures existing code patterns still work
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Listen: interfacesv1.Listen{
-				Provider: map[string]interface{}{
-					"type":  "deepgram",
-					"model": "nova-3",
-				},
-			},
-			Think: interfacesv1.Think{
-				Provider: map[string]interface{}{
-					"type":  "open_ai",
-					"model": "gpt-4o-mini",
-				},
-			},
-			Speak: interfacesv1.Speak{
-				Provider: map[string]interface{}{
-					"type":  "deepgram",
-					"model": "aura-2-thalia-en",
-				},
-			},
-			Greeting: "Hello!",
+func TestSettingsMipOptOut_NewSettingsOptions(t *testing.T) {
+	t.Run("Test NewSettingsOptions creates SettingsOptions with correct defaults", func(t *testing.T) {
+		// Create new settings using the constructor
+		settings := interfacesv1.NewSettingsOptions()
+
+		// Verify basic structure
+		if settings.Type != "Settings" {
+			t.Errorf("Expected Type to be 'Settings', got %v", settings.Type)
 		}
 
-		// Verify that existing functionality still works
-		if agent.Language != "en" {
-			t.Errorf("Expected language to be 'en', got %v", agent.Language)
+		// Verify audio defaults
+		if settings.Audio.Input == nil {
+			t.Error("Expected Audio.Input to be initialized")
+		}
+		if settings.Audio.Output == nil {
+			t.Error("Expected Audio.Output to be initialized")
 		}
 
-		if agent.Greeting != "Hello!" {
-			t.Errorf("Expected greeting to be 'Hello!', got %v", agent.Greeting)
+		// Verify agent defaults
+		if settings.Agent.Language != "en" {
+			t.Errorf("Expected Agent.Language to be 'en', got %v", settings.Agent.Language)
 		}
 
-		// Verify that mip_opt_out defaults to false
-		if agent.MipOptOut != false {
-			t.Errorf("Expected MipOptOut to default to false, got %v", agent.MipOptOut)
-		}
-
-		// Test JSON marshaling with existing fields
-		jsonData, err := json.Marshal(agent)
+		// Marshal to JSON to verify structure
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// Verify existing fields are present
-		if result["language"] != "en" {
-			t.Errorf("Expected language to be 'en', got %v", result["language"])
-		}
-
-		if result["greeting"] != "Hello!" {
-			t.Errorf("Expected greeting to be 'Hello!', got %v", result["greeting"])
-		}
-
-		// Verify mip_opt_out is omitted when false (default)
+		// Verify that mip_opt_out defaults to false and is omitted when false (due to omitempty)
 		if _, exists := result["mip_opt_out"]; exists {
 			t.Errorf("Expected mip_opt_out to be omitted from JSON when false, but it was present")
 		}
 	})
-}
 
-func TestAgentMipOptOut_SettingsOptions(t *testing.T) {
-	t.Run("Test mip_opt_out field in SettingsOptions", func(t *testing.T) {
-		// Test creating SettingsOptions with mip_opt_out
-		options := &interfacesv1.SettingsOptions{
-			Type: "Settings",
-			Agent: interfacesv1.Agent{
-				Language:  "en",
-				MipOptOut: true,
-			},
-		}
+	t.Run("Test setting mip_opt_out on NewSettingsOptions", func(t *testing.T) {
+		// Create new settings and set mip_opt_out
+		settings := interfacesv1.NewSettingsOptions()
+		settings.MipOptOut = true
 
-		// Verify the field is set correctly
-		if options.Agent.MipOptOut != true {
-			t.Errorf("Expected Agent.MipOptOut to be true, got %v", options.Agent.MipOptOut)
-		}
-
-		// Test JSON marshaling
-		jsonData, err := json.Marshal(options)
+		// Marshal to JSON to verify
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
-		// Verify nested structure
-		agent, ok := result["agent"].(map[string]interface{})
-		if !ok {
-			t.Error("agent field should be an object")
-		}
-
-		if agent["mip_opt_out"] != true {
-			t.Errorf("Expected agent.mip_opt_out to be true, got %v", agent["mip_opt_out"])
+		// Verify mip_opt_out is present when true
+		if result["mip_opt_out"] != true {
+			t.Errorf("Expected mip_opt_out to be true, got %v", result["mip_opt_out"])
 		}
 	})
 
-	t.Run("Test NewSettingsOptions with default mip_opt_out", func(t *testing.T) {
-		// Test that NewSettingsOptions creates proper defaults
-		options := interfacesv1.NewSettingsOptions()
-
-		// Verify the field defaults to false
-		if options.Agent.MipOptOut != false {
-			t.Errorf("Expected Agent.MipOptOut to default to false, got %v", options.Agent.MipOptOut)
-		}
-	})
-}
-
-func TestAgentMipOptOut_EdgeCases(t *testing.T) {
 	t.Run("Test mip_opt_out with all other fields", func(t *testing.T) {
-		// Test creating agent with all fields including mip_opt_out
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Listen: interfacesv1.Listen{
-				Provider: map[string]interface{}{
-					"type":  "deepgram",
-					"model": "nova-3",
+		// Create settings with all fields including mip_opt_out
+		settings := &interfacesv1.SettingsOptions{
+			Type:         "Settings",
+			Experimental: true,
+			MipOptOut:    true,
+			Audio: interfacesv1.Audio{
+				Input: &interfacesv1.Input{
+					Encoding:   "linear16",
+					SampleRate: 24000,
+				},
+				Output: &interfacesv1.Output{
+					Encoding:   "mp3",
+					SampleRate: 24000,
+					Bitrate:    48000,
+					Container:  "none",
 				},
 			},
-			Think: interfacesv1.Think{
-				Provider: map[string]interface{}{
-					"type":  "open_ai",
-					"model": "gpt-4o-mini",
-				},
-			},
-			Speak: interfacesv1.Speak{
-				Provider: map[string]interface{}{
-					"type":  "deepgram",
-					"model": "aura-2-thalia-en",
-				},
-			},
-			SpeakFallback: &[]interfacesv1.Speak{
-				{
+			Agent: interfacesv1.Agent{
+				Language: "en",
+				Listen: interfacesv1.Listen{
 					Provider: map[string]interface{}{
-						"type":  "open_ai",
-						"model": "tts-1",
+						"type":  "deepgram",
+						"model": "nova-3",
 					},
 				},
+				Think: interfacesv1.Think{
+					Provider: map[string]interface{}{
+						"type":  "open_ai",
+						"model": "gpt-4o-mini",
+					},
+				},
+				Speak: interfacesv1.Speak{
+					Provider: map[string]interface{}{
+						"type":  "deepgram",
+						"model": "aura-2-thalia-en",
+					},
+				},
+				Greeting: "Hello, I'm your AI assistant.",
 			},
-			Greeting:  "Hello!",
-			MipOptOut: true,
 		}
 
-		// Verify all fields are set correctly
-		if agent.Language != "en" {
-			t.Errorf("Expected language to be 'en', got %v", agent.Language)
-		}
-
-		if agent.MipOptOut != true {
-			t.Errorf("Expected MipOptOut to be true, got %v", agent.MipOptOut)
-		}
-
-		// Test JSON marshaling with all fields
-		jsonData, err := json.Marshal(agent)
+		// Marshal to JSON
+		jsonData, err := json.Marshal(settings)
 		if err != nil {
-			t.Fatalf("JSON marshaling failed: %v", err)
+			t.Fatalf("Failed to marshal settings to JSON: %v", err)
 		}
 
-		// Parse JSON to verify structure
+		// Parse back to verify
 		var result map[string]interface{}
-		if err := json.Unmarshal(jsonData, &result); err != nil {
+		err = json.Unmarshal(jsonData, &result)
+		if err != nil {
 			t.Fatalf("Failed to unmarshal JSON: %v", err)
 		}
 
@@ -356,13 +366,11 @@ func TestAgentMipOptOut_EdgeCases(t *testing.T) {
 			t.Errorf("Expected mip_opt_out to be true, got %v", result["mip_opt_out"])
 		}
 
-		// Verify other fields are still present
-		if result["language"] != "en" {
-			t.Errorf("Expected language to be 'en', got %v", result["language"])
-		}
-
-		if result["greeting"] != "Hello!" {
-			t.Errorf("Expected greeting to be 'Hello!', got %v", result["greeting"])
+		// Verify it's at the top level, not inside agent
+		if agent, ok := result["agent"].(map[string]interface{}); ok {
+			if _, exists := agent["mip_opt_out"]; exists {
+				t.Error("mip_opt_out should not be in agent, it should be at top level")
+			}
 		}
 	})
 }
