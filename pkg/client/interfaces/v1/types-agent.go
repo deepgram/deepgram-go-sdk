@@ -11,11 +11,12 @@ Please see the live/streaming documentation for more details:
 XXXX
 */
 type SettingsOptions struct {
-	Type         string `json:"type"`
-	Experimental bool   `json:"experimental,omitempty"`
-	MipOptOut    bool   `json:"mip_opt_out,omitempty"`
-	Audio        Audio  `json:"audio"`
-	Agent        Agent  `json:"agent"`
+	Type         string   `json:"type"`
+	Tags         []string `json:"tags,omitempty"`
+	Experimental bool     `json:"experimental,omitempty"`
+	MipOptOut    bool     `json:"mip_opt_out,omitempty"`
+	Audio        Audio    `json:"audio"`
+	Agent        Agent    `json:"agent"`
 }
 
 /*
@@ -83,5 +84,4 @@ type Agent struct {
 	Speak         Speak    `json:"speak,omitempty"`
 	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"`
 	Greeting      string   `json:"greeting,omitempty"`
-	Tags          []string `json:"tags,omitempty"`
 }

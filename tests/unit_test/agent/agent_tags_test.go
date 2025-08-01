@@ -12,69 +12,69 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestAgentTags_StructCreation(t *testing.T) {
-	t.Run("Test Agent struct creation with tags field", func(t *testing.T) {
-		// Test creating agent with tags
+func TestSettingsOptionsTags_StructCreation(t *testing.T) {
+	t.Run("Test SettingsOptions struct creation with tags field", func(t *testing.T) {
+		// Test creating SettingsOptions with tags
 		tags := []string{"tag1", "tag2", "production"}
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     tags,
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: tags,
 		}
 
 		// Verify the field is set correctly
-		if !reflect.DeepEqual(agent.Tags, tags) {
-			t.Errorf("Expected Tags to be %v, got %v", tags, agent.Tags)
+		if !reflect.DeepEqual(options.Tags, tags) {
+			t.Errorf("Expected Tags to be %v, got %v", tags, options.Tags)
 		}
 
-		// Test creating agent with single tag
+		// Test creating SettingsOptions with single tag
 		singleTag := []string{"test"}
-		agent2 := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     singleTag,
+		options2 := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: singleTag,
 		}
 
 		// Verify the single tag is set correctly
-		if !reflect.DeepEqual(agent2.Tags, singleTag) {
-			t.Errorf("Expected Tags to be %v, got %v", singleTag, agent2.Tags)
+		if !reflect.DeepEqual(options2.Tags, singleTag) {
+			t.Errorf("Expected Tags to be %v, got %v", singleTag, options2.Tags)
 		}
 	})
 
-	t.Run("Test Agent struct with empty tags array", func(t *testing.T) {
-		// Test creating agent with empty tags array
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     []string{},
+	t.Run("Test SettingsOptions struct with empty tags array", func(t *testing.T) {
+		// Test creating SettingsOptions with empty tags array
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: []string{},
 		}
 
 		// Verify the field is an empty array
-		if len(agent.Tags) != 0 {
-			t.Errorf("Expected Tags to be empty array, got %v", agent.Tags)
+		if len(options.Tags) != 0 {
+			t.Errorf("Expected Tags to be empty array, got %v", options.Tags)
 		}
 	})
 
-	t.Run("Test Agent struct with default tags value", func(t *testing.T) {
-		// Test creating agent without explicitly setting tags
-		agent := &interfacesv1.Agent{
-			Language: "en",
+	t.Run("Test SettingsOptions struct with default tags value", func(t *testing.T) {
+		// Test creating SettingsOptions without explicitly setting tags
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
 		}
 
 		// Verify the field defaults to nil (Go's zero value for slice)
-		if agent.Tags != nil {
-			t.Errorf("Expected Tags to default to nil, got %v", agent.Tags)
+		if options.Tags != nil {
+			t.Errorf("Expected Tags to default to nil, got %v", options.Tags)
 		}
 	})
 }
 
-func TestAgentTags_JSONMarshaling(t *testing.T) {
-	t.Run("Test Agent JSON marshaling with tags populated", func(t *testing.T) {
+func TestSettingsOptionsTags_JSONMarshaling(t *testing.T) {
+	t.Run("Test SettingsOptions JSON marshaling with tags populated", func(t *testing.T) {
 		tags := []string{"development", "test", "agent-v1"}
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     tags,
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: tags,
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(options)
 		if err != nil {
 			t.Fatalf("JSON marshaling failed: %v", err)
 		}
@@ -112,14 +112,14 @@ func TestAgentTags_JSONMarshaling(t *testing.T) {
 		}
 	})
 
-	t.Run("Test Agent JSON marshaling with empty tags array", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     []string{},
+	t.Run("Test SettingsOptions JSON marshaling with empty tags array", func(t *testing.T) {
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: []string{},
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(options)
 		if err != nil {
 			t.Fatalf("JSON marshaling failed: %v", err)
 		}
@@ -136,14 +136,14 @@ func TestAgentTags_JSONMarshaling(t *testing.T) {
 		}
 	})
 
-	t.Run("Test Agent JSON marshaling with nil tags", func(t *testing.T) {
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     nil,
+	t.Run("Test SettingsOptions JSON marshaling with nil tags", func(t *testing.T) {
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: nil,
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(options)
 		if err != nil {
 			t.Fatalf("JSON marshaling failed: %v", err)
 		}
@@ -160,15 +160,15 @@ func TestAgentTags_JSONMarshaling(t *testing.T) {
 		}
 	})
 
-	t.Run("Test Agent JSON marshaling with single tag", func(t *testing.T) {
+	t.Run("Test SettingsOptions JSON marshaling with single tag", func(t *testing.T) {
 		tags := []string{"production"}
-		agent := &interfacesv1.Agent{
-			Language: "en",
-			Tags:     tags,
+		options := &interfacesv1.SettingsOptions{
+			Type: "Settings",
+			Tags: tags,
 		}
 
 		// Marshal to JSON
-		jsonData, err := json.Marshal(agent)
+		jsonData, err := json.Marshal(options)
 		if err != nil {
 			t.Fatalf("JSON marshaling failed: %v", err)
 		}
@@ -200,67 +200,67 @@ func TestAgentTags_JSONMarshaling(t *testing.T) {
 	})
 }
 
-func TestAgentTags_JSONUnmarshaling(t *testing.T) {
-	t.Run("Test Agent JSON unmarshaling with tags", func(t *testing.T) {
-		jsonStr := `{"language":"en","tags":["development","test","agent-v1"]}`
+func TestSettingsOptionsTags_JSONUnmarshaling(t *testing.T) {
+	t.Run("Test SettingsOptions JSON unmarshaling with tags", func(t *testing.T) {
+		jsonStr := `{"type":"Settings","tags":["development","test","agent-v1"]}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonStr), &agent)
+		var options interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonStr), &options)
 		if err != nil {
 			t.Fatalf("JSON unmarshaling failed: %v", err)
 		}
 
 		expectedTags := []string{"development", "test", "agent-v1"}
-		if !reflect.DeepEqual(agent.Tags, expectedTags) {
-			t.Errorf("Expected Tags to be %v, got %v", expectedTags, agent.Tags)
+		if !reflect.DeepEqual(options.Tags, expectedTags) {
+			t.Errorf("Expected Tags to be %v, got %v", expectedTags, options.Tags)
 		}
 	})
 
-	t.Run("Test Agent JSON unmarshaling without tags field", func(t *testing.T) {
-		jsonStr := `{"language":"en"}`
+	t.Run("Test SettingsOptions JSON unmarshaling without tags field", func(t *testing.T) {
+		jsonStr := `{"type":"Settings"}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonStr), &agent)
+		var options interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonStr), &options)
 		if err != nil {
 			t.Fatalf("JSON unmarshaling failed: %v", err)
 		}
 
 		// Tags should be nil when not present in JSON
-		if agent.Tags != nil {
-			t.Errorf("Expected Tags to be nil when not in JSON, got %v", agent.Tags)
+		if options.Tags != nil {
+			t.Errorf("Expected Tags to be nil when not in JSON, got %v", options.Tags)
 		}
 	})
 
-	t.Run("Test Agent JSON unmarshaling with empty tags array", func(t *testing.T) {
-		jsonStr := `{"language":"en","tags":[]}`
+	t.Run("Test SettingsOptions JSON unmarshaling with empty tags array", func(t *testing.T) {
+		jsonStr := `{"type":"Settings","tags":[]}`
 
-		var agent interfacesv1.Agent
-		err := json.Unmarshal([]byte(jsonStr), &agent)
+		var options interfacesv1.SettingsOptions
+		err := json.Unmarshal([]byte(jsonStr), &options)
 		if err != nil {
 			t.Fatalf("JSON unmarshaling failed: %v", err)
 		}
 
 		// Tags should be empty slice when empty array in JSON
-		if agent.Tags == nil {
+		if options.Tags == nil {
 			t.Error("Expected Tags to be empty slice, got nil")
 		}
-		if len(agent.Tags) != 0 {
-			t.Errorf("Expected Tags to be empty slice, got %v", agent.Tags)
+		if len(options.Tags) != 0 {
+			t.Errorf("Expected Tags to be empty slice, got %v", options.Tags)
 		}
 	})
 }
 
-func TestAgentTags_SettingsOptions(t *testing.T) {
-	t.Run("Test SettingsOptions with tags in Agent", func(t *testing.T) {
+func TestSettingsOptionsTags_NewSettingsOptions(t *testing.T) {
+	t.Run("Test NewSettingsOptions with tags", func(t *testing.T) {
 		options := interfacesv1.NewSettingsOptions()
 
-		// Add tags to the agent
-		options.Agent.Tags = []string{"test", "schema-validation"}
+		// Add tags to the settings options
+		options.Tags = []string{"test", "schema-validation"}
 
 		// Verify tags are set correctly
 		expectedTags := []string{"test", "schema-validation"}
-		if !reflect.DeepEqual(options.Agent.Tags, expectedTags) {
-			t.Errorf("Expected Agent.Tags to be %v, got %v", expectedTags, options.Agent.Tags)
+		if !reflect.DeepEqual(options.Tags, expectedTags) {
+			t.Errorf("Expected Tags to be %v, got %v", expectedTags, options.Tags)
 		}
 
 		// Test JSON marshaling of complete SettingsOptions
@@ -275,20 +275,10 @@ func TestAgentTags_SettingsOptions(t *testing.T) {
 			t.Fatalf("Failed to unmarshal SettingsOptions JSON: %v", err)
 		}
 
-		// Navigate to agent.tags in the JSON structure
-		agentInterface, exists := result["agent"]
+		// Check that tags are at the root level of the JSON structure
+		tagsInterface, exists := result["tags"]
 		if !exists {
-			t.Error("Expected agent field to be present in SettingsOptions JSON")
-		}
-
-		agentObj, ok := agentInterface.(map[string]interface{})
-		if !ok {
-			t.Errorf("Expected agent to be object, got %T", agentInterface)
-		}
-
-		tagsInterface, exists := agentObj["tags"]
-		if !exists {
-			t.Error("Expected tags field to be present in agent JSON")
+			t.Error("Expected tags field to be present at root level in SettingsOptions JSON")
 		}
 
 		tagsArray, ok := tagsInterface.([]interface{})
