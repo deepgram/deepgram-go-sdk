@@ -47,14 +47,14 @@ type FunctionCallResponse struct {
 
 // HistoryConversationText is the request to send conversation history
 type HistoryConversationText struct {
-	Type    string `json:"type,omitempty"`
+	Type    string `json:"type"`
 	Role    string `json:"role,omitempty"`
 	Content string `json:"content,omitempty"`
 }
 
 // HistoryFunctionCalls is the request to send function call history
 type HistoryFunctionCalls struct {
-	Type          string         `json:"type,omitempty"`
+	Type          string         `json:"type"`
 	FunctionCalls []FunctionCall `json:"function_calls,omitempty"`
 }
 

@@ -24,7 +24,7 @@ type SettingsOptions struct {
 Sub-structs in SettingsOptions
 */
 type Flags struct {
-	History bool `json:"history,omitempty"`
+	History bool `json:"history"`
 }
 
 type Input struct {
@@ -92,7 +92,7 @@ type ContextMessage interface {
 }
 
 type HistoryConversationText struct {
-	Type    string `json:"type,omitempty"`
+	Type    string `json:"type"`
 	Role    string `json:"role,omitempty"`
 	Content string `json:"content,omitempty"`
 }
@@ -110,7 +110,7 @@ type FunctionCall struct {
 }
 
 type HistoryFunctionCalls struct {
-	Type          string         `json:"type,omitempty"`
+	Type          string         `json:"type"`
 	FunctionCalls []FunctionCall `json:"function_calls,omitempty"`
 }
 

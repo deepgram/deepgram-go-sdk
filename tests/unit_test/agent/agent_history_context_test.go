@@ -6,10 +6,30 @@ package deepgram_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	agentinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+)
+
+// Test constants for maintainability
+const (
+	testUserRole             = "user"
+	testAssistantRole        = "assistant"
+	testWeatherQuery         = "What's the weather like today?"
+	testAssistantResponse    = "Based on the current data, it's sunny with a temperature of 72°F (22°C). The forecast shows clear skies throughout the day."
+	testFunctionCallID       = "fc_12345678-90ab-cdef-1234-567890abcdef"
+	testFunctionName         = "check_order_status"
+	testFunctionArguments    = `{"order_id": "ORD-123456"}`
+	testFunctionResponse     = "Order #123456 status: Shipped - Expected delivery date: 2024-03-15"
+	testFunctionCallIDSimple = "fc_test"
+	testFunctionNameSimple   = "test_function"
+	testSimpleArguments      = `{"param": "value"}`
+	testSimpleResponse       = "Success"
+	testSimpleContent        = "test"
+	testHelloContent         = "Hello"
+	testTestMessage          = "Test message"
 )
 
 // TestHistoryFlags tests the new Flags struct with History field
@@ -43,6 +63,24 @@ func TestHistoryFlags(t *testing.T) {
 				}
 
 				expected := `{"history":true}`
+				if string(data) != expected {
+					t.Errorf("Expected JSON %s, got %s", expected, string(data))
+				}
+			},
+		},
+		{
+			name: "Test_Flags_JSON_marshaling_false",
+			test: func(t *testing.T) {
+				flags := interfaces.Flags{
+					History: false,
+				}
+
+				data, err := json.Marshal(flags)
+				if err != nil {
+					t.Fatalf("Failed to marshal Flags: %v", err)
+				}
+
+				expected := `{"history":false}`
 				if string(data) != expected {
 					t.Errorf("Expected JSON %s, got %s", expected, string(data))
 				}
@@ -127,18 +165,18 @@ func TestHistoryConversationText(t *testing.T) {
 			name: "Test_HistoryConversationText_struct_creation",
 			test: func(t *testing.T) {
 				history := agentinterfaces.HistoryConversationText{
-					Type:    "History",
-					Role:    "user",
-					Content: "What's the weather like today?",
+					Type:    agentinterfaces.TypeHistoryConversationText,
+					Role:    testUserRole,
+					Content: testWeatherQuery,
 				}
 
-				if history.Type != "History" {
-					t.Errorf("Expected Type to be 'History', got %s", history.Type)
+				if history.Type != agentinterfaces.TypeHistoryConversationText {
+					t.Errorf("Expected Type to be '%s', got %s", agentinterfaces.TypeHistoryConversationText, history.Type)
 				}
-				if history.Role != "user" {
-					t.Errorf("Expected Role to be 'user', got %s", history.Role)
+				if history.Role != testUserRole {
+					t.Errorf("Expected Role to be '%s', got %s", testUserRole, history.Role)
 				}
-				if history.Content != "What's the weather like today?" {
+				if history.Content != testWeatherQuery {
 					t.Errorf("Expected Content to match, got %s", history.Content)
 				}
 			},
@@ -147,9 +185,9 @@ func TestHistoryConversationText(t *testing.T) {
 			name: "Test_HistoryConversationText_JSON_marshaling",
 			test: func(t *testing.T) {
 				history := agentinterfaces.HistoryConversationText{
-					Type:    "History",
-					Role:    "assistant",
-					Content: "Based on the current data, it's sunny with a temperature of 72°F (22°C).",
+					Type:    agentinterfaces.TypeHistoryConversationText,
+					Role:    testAssistantRole,
+					Content: testAssistantResponse,
 				}
 
 				data, err := json.Marshal(history)
@@ -175,13 +213,34 @@ func TestHistoryConversationText(t *testing.T) {
 			},
 		},
 		{
+			name: "Test_HistoryConversationText_empty_type_included",
+			test: func(t *testing.T) {
+				// Test that empty Type field is included in JSON (not omitted)
+				history := agentinterfaces.HistoryConversationText{
+					Type:    "", // Empty type should still be included
+					Role:    testUserRole,
+					Content: testSimpleContent,
+				}
+
+				data, err := json.Marshal(history)
+				if err != nil {
+					t.Fatalf("Failed to marshal HistoryConversationText: %v", err)
+				}
+
+				jsonStr := string(data)
+				if !strings.Contains(jsonStr, "\"type\":\"\"") {
+					t.Errorf("Expected empty Type field to be included in JSON, got: %s", jsonStr)
+				}
+			},
+		},
+		{
 			name: "Test_HistoryConversationText_API_spec_compliance",
 			test: func(t *testing.T) {
 				// Test example from API spec
 				jsonData := `{
-					"type": "History",
-					"role": "user",
-					"content": "What's the weather like today?"
+					"type": "` + agentinterfaces.TypeHistoryConversationText + `",
+					"role": "` + testUserRole + `",
+					"content": "` + testWeatherQuery + `"
 				}`
 
 				var history agentinterfaces.HistoryConversationText
@@ -190,13 +249,13 @@ func TestHistoryConversationText(t *testing.T) {
 					t.Fatalf("Failed to unmarshal API spec example: %v", err)
 				}
 
-				if history.Type != "History" {
-					t.Errorf("Expected Type 'History', got %s", history.Type)
+				if history.Type != agentinterfaces.TypeHistoryConversationText {
+					t.Errorf("Expected Type '%s', got %s", agentinterfaces.TypeHistoryConversationText, history.Type)
 				}
-				if history.Role != "user" {
-					t.Errorf("Expected Role 'user', got %s", history.Role)
+				if history.Role != testUserRole {
+					t.Errorf("Expected Role '%s', got %s", testUserRole, history.Role)
 				}
-				if history.Content != "What's the weather like today?" {
+				if history.Content != testWeatherQuery {
 					t.Errorf("Expected Content to match API spec example")
 				}
 			},
@@ -218,31 +277,31 @@ func TestHistoryFunctionCalls(t *testing.T) {
 			name: "Test_HistoryFunctionCalls_struct_creation",
 			test: func(t *testing.T) {
 				functionCall := agentinterfaces.FunctionCall{
-					ID:         "fc_12345678-90ab-cdef-1234-567890abcdef",
-					Name:       "check_order_status",
+					ID:         testFunctionCallID,
+					Name:       testFunctionName,
 					ClientSide: true,
-					Arguments:  `{"order_id": "ORD-123456"}`,
-					Response:   "Order #123456 status: Shipped - Expected delivery date: 2024-03-15",
+					Arguments:  testFunctionArguments,
+					Response:   testFunctionResponse,
 				}
 
 				history := agentinterfaces.HistoryFunctionCalls{
-					Type:          "History",
+					Type:          agentinterfaces.TypeHistoryFunctionCalls,
 					FunctionCalls: []agentinterfaces.FunctionCall{functionCall},
 				}
 
-				if history.Type != "History" {
-					t.Errorf("Expected Type to be 'History', got %s", history.Type)
+				if history.Type != agentinterfaces.TypeHistoryFunctionCalls {
+					t.Errorf("Expected Type to be '%s', got %s", agentinterfaces.TypeHistoryFunctionCalls, history.Type)
 				}
 				if len(history.FunctionCalls) != 1 {
 					t.Errorf("Expected 1 function call, got %d", len(history.FunctionCalls))
 				}
 
 				fc := history.FunctionCalls[0]
-				if fc.ID != "fc_12345678-90ab-cdef-1234-567890abcdef" {
+				if fc.ID != testFunctionCallID {
 					t.Errorf("Expected ID to match, got %s", fc.ID)
 				}
-				if fc.Name != "check_order_status" {
-					t.Errorf("Expected Name to be 'check_order_status', got %s", fc.Name)
+				if fc.Name != testFunctionName {
+					t.Errorf("Expected Name to be '%s', got %s", testFunctionName, fc.Name)
 				}
 				if !fc.ClientSide {
 					t.Errorf("Expected ClientSide to be true, got %v", fc.ClientSide)
@@ -253,14 +312,14 @@ func TestHistoryFunctionCalls(t *testing.T) {
 			name: "Test_HistoryFunctionCalls_JSON_marshaling",
 			test: func(t *testing.T) {
 				history := agentinterfaces.HistoryFunctionCalls{
-					Type: "History",
+					Type: agentinterfaces.TypeHistoryFunctionCalls,
 					FunctionCalls: []agentinterfaces.FunctionCall{
 						{
-							ID:         "fc_test",
-							Name:       "test_function",
+							ID:         testFunctionCallIDSimple,
+							Name:       testFunctionNameSimple,
 							ClientSide: false,
-							Arguments:  `{"param": "value"}`,
-							Response:   "Success",
+							Arguments:  testSimpleArguments,
+							Response:   testSimpleResponse,
 						},
 					},
 				}
@@ -284,11 +343,36 @@ func TestHistoryFunctionCalls(t *testing.T) {
 				}
 
 				fc := unmarshaled.FunctionCalls[0]
-				if fc.ID != "fc_test" {
-					t.Errorf("Expected ID 'fc_test', got %s", fc.ID)
+				if fc.ID != testFunctionCallIDSimple {
+					t.Errorf("Expected ID '%s', got %s", testFunctionCallIDSimple, fc.ID)
 				}
 				if fc.ClientSide != false {
 					t.Errorf("Expected ClientSide false, got %v", fc.ClientSide)
+				}
+			},
+		},
+		{
+			name: "Test_HistoryFunctionCalls_empty_type_included",
+			test: func(t *testing.T) {
+				// Test that empty Type field is included in JSON (not omitted)
+				history := agentinterfaces.HistoryFunctionCalls{
+					Type: "", // Empty type should still be included
+					FunctionCalls: []agentinterfaces.FunctionCall{
+						{
+							ID:   testSimpleContent,
+							Name: testFunctionNameSimple,
+						},
+					},
+				}
+
+				data, err := json.Marshal(history)
+				if err != nil {
+					t.Fatalf("Failed to marshal HistoryFunctionCalls: %v", err)
+				}
+
+				jsonStr := string(data)
+				if !strings.Contains(jsonStr, "\"type\":\"\"") {
+					t.Errorf("Expected empty Type field to be included in JSON, got: %s", jsonStr)
 				}
 			},
 		},
@@ -297,14 +381,14 @@ func TestHistoryFunctionCalls(t *testing.T) {
 			test: func(t *testing.T) {
 				// Test example from API spec
 				jsonData := `{
-					"type": "History",
+					"type": "` + agentinterfaces.TypeHistoryFunctionCalls + `",
 					"function_calls": [
 						{
-							"id": "fc_12345678-90ab-cdef-1234-567890abcdef",
-							"name": "check_order_status",
+							"id": "` + testFunctionCallID + `",
+							"name": "` + testFunctionName + `",
 							"client_side": true,
 							"arguments": "{\"order_id\": \"ORD-123456\"}",
-							"response": "Order #123456 status: Shipped - Expected delivery date: 2024-03-15"
+							"response": "` + testFunctionResponse + `"
 						}
 					]
 				}`
@@ -315,19 +399,19 @@ func TestHistoryFunctionCalls(t *testing.T) {
 					t.Fatalf("Failed to unmarshal API spec example: %v", err)
 				}
 
-				if history.Type != "History" {
-					t.Errorf("Expected Type 'History', got %s", history.Type)
+				if history.Type != agentinterfaces.TypeHistoryFunctionCalls {
+					t.Errorf("Expected Type '%s', got %s", agentinterfaces.TypeHistoryFunctionCalls, history.Type)
 				}
 				if len(history.FunctionCalls) != 1 {
 					t.Errorf("Expected 1 function call, got %d", len(history.FunctionCalls))
 				}
 
 				fc := history.FunctionCalls[0]
-				if fc.ID != "fc_12345678-90ab-cdef-1234-567890abcdef" {
+				if fc.ID != testFunctionCallID {
 					t.Errorf("Expected ID from API spec, got %s", fc.ID)
 				}
-				if fc.Name != "check_order_status" {
-					t.Errorf("Expected Name 'check_order_status', got %s", fc.Name)
+				if fc.Name != testFunctionName {
+					t.Errorf("Expected Name '%s', got %s", testFunctionName, fc.Name)
 				}
 				if !fc.ClientSide {
 					t.Errorf("Expected ClientSide true, got %v", fc.ClientSide)
@@ -351,17 +435,17 @@ func TestAgentContext(t *testing.T) {
 			name: "Test_Agent_with_Context",
 			test: func(t *testing.T) {
 				conversationText := interfaces.HistoryConversationText{
-					Type:    "History",
-					Role:    "user",
-					Content: "Hello",
+					Type:    agentinterfaces.TypeHistoryConversationText,
+					Role:    testUserRole,
+					Content: testHelloContent,
 				}
 
 				functionCalls := interfaces.HistoryFunctionCalls{
-					Type: "History",
+					Type: agentinterfaces.TypeHistoryFunctionCalls,
 					FunctionCalls: []interfaces.FunctionCall{
 						{
-							ID:         "fc_test",
-							Name:       "test_func",
+							ID:         testFunctionCallIDSimple,
+							Name:       testFunctionNameSimple,
 							ClientSide: true,
 							Arguments:  "{}",
 							Response:   "OK",
@@ -388,13 +472,13 @@ func TestAgentContext(t *testing.T) {
 
 				// Verify the interface works
 				msg1 := agent.Context.Messages[0]
-				if msg1.GetType() != "History" {
-					t.Errorf("Expected first message type 'History', got %s", msg1.GetType())
+				if msg1.GetType() != agentinterfaces.TypeHistoryConversationText {
+					t.Errorf("Expected first message type '%s', got %s", agentinterfaces.TypeHistoryConversationText, msg1.GetType())
 				}
 
 				msg2 := agent.Context.Messages[1]
-				if msg2.GetType() != "History" {
-					t.Errorf("Expected second message type 'History', got %s", msg2.GetType())
+				if msg2.GetType() != agentinterfaces.TypeHistoryFunctionCalls {
+					t.Errorf("Expected second message type '%s', got %s", agentinterfaces.TypeHistoryFunctionCalls, msg2.GetType())
 				}
 			},
 		},
@@ -406,9 +490,9 @@ func TestAgentContext(t *testing.T) {
 					Context: &interfaces.Context{
 						Messages: []interfaces.ContextMessage{
 							interfaces.HistoryConversationText{
-								Type:    "History",
-								Role:    "user",
-								Content: "Test message",
+								Type:    agentinterfaces.TypeHistoryConversationText,
+								Role:    testUserRole,
+								Content: testTestMessage,
 							},
 						},
 					},
@@ -421,10 +505,10 @@ func TestAgentContext(t *testing.T) {
 
 				// Verify the JSON contains expected fields
 				jsonStr := string(data)
-				if !contains(jsonStr, "context") {
+				if !strings.Contains(jsonStr, "context") {
 					t.Error("Expected JSON to contain 'context' field")
 				}
-				if !contains(jsonStr, "messages") {
+				if !strings.Contains(jsonStr, "messages") {
 					t.Error("Expected JSON to contain 'messages' field")
 				}
 			},
@@ -434,9 +518,4 @@ func TestAgentContext(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, testCase.test)
 	}
-}
-
-// Helper function to check if string contains substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || contains(s[1:], substr) || s[:len(substr)] == substr)
 }
