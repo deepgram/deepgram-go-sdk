@@ -143,12 +143,33 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfaces.An
 	}
 
 	var buf bytes.Buffer
+	var tmp map[string]interface{}
+	isValidJSON := false
+
+	if err := json.Unmarshal([]byte(text), &tmp); err == nil {
+		// It's valid JSON, now check if it already contains a "text" field
+		if val, exists := tmp["text"]; exists && val != nil {
+			isValidJSON = true
+		}
+	}
+
+	if isValidJSON {
+		klog.V(6).Infof("Is Already JSON \n")
+		_,err = buf.WriteString(text)
+		if err != nil {
+			klog.V(1).Infof("JSON WriteString failed. Err: %v\n", err)
+			klog.V(6).Infof("speak.DoText() LEAVE\n")
+			return err
+		}
+
+	} else {
 	err = json.NewEncoder(&buf).Encode(textSource{Text: text})
 	if err != nil {
 		klog.V(1).Infof("json.NewEncoder().Encode() failed. Err: %v\n", err)
 		klog.V(6).Infof("speak.DoText() LEAVE\n")
 		return err
 	}
+}
 
 	// using the Common SetupRequest (c.SetupRequest vs c.RESTClient.SetupRequest) method which
 	// also sets the common headers including the content-type (for example)
