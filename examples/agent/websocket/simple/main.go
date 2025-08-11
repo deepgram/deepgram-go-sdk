@@ -373,12 +373,15 @@ func main() {
 
 	// set the Transcription options
 	tOptions := client.NewSettingsConfigurationOptions()
+	tOptions.Tags = []string{"live-agent-test", "go-example"}
 	tOptions.Agent.Think.Provider["type"] = "open_ai"
 	tOptions.Agent.Think.Provider["model"] = "gpt-4o-mini"
 	tOptions.Agent.Think.Prompt = "You are a helpful AI assistant."
 	tOptions.Agent.Listen.Provider["type"] = "deepgram"
 	tOptions.Agent.Listen.Provider["model"] = "nova-3"
 	tOptions.Agent.Listen.Provider["keyterms"] = []string{"Bueller"}
+	tOptions.Agent.Speak.Provider["type"] = "deepgram"
+	tOptions.Agent.Speak.Provider["model"] = "aura-2-thalia-en"
 	tOptions.Agent.Language = "en"
 	tOptions.Agent.Greeting = "Hello! How can I help you today?"
 
