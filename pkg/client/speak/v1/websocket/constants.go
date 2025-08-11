@@ -27,6 +27,9 @@ const (
 	// MessageTypeFlush flushes the audio from the server
 	MessageTypeFlush string = "Flush"
 
+	// MessageTypeClear clears the audio from the server
+	MessageTypeClear string = "Clear"
+
 	// MessageTypeReset resets the text buffer
 	MessageTypeReset string = "Reset"
 

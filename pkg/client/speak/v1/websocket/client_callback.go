@@ -169,6 +169,24 @@ func (c *WSCallback) Flush() error {
 	return err
 }
 
+// Clear will instruct the server to clear the current text buffer
+func (c *WSCallback) Clear() error {
+	klog.V(6).Infof("speak.Clear() ENTER\n")
+
+	err := c.WriteJSON(controlMessage{Type: MessageTypeClear})
+	if err != nil {
+		klog.V(1).Infof("Clear failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.Clear() LEAVE\n")
+
+		return err
+	}
+
+	klog.V(4).Infof("Clear Succeeded\n")
+	klog.V(6).Infof("speak.Clear() LEAVE\n")
+
+	return err
+}
+
 // Reset will instruct the server to reset the current buffer
 func (c *WSCallback) Reset() error {
 	klog.V(6).Infof("speak.Reset() ENTER\n")
