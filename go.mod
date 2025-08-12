@@ -1,6 +1,8 @@
 module github.com/deepgram/deepgram-go-sdk/v3
 
-go 1.19
+go 1.23.0
+
+toolchain go1.23.12
 
 require (
 	github.com/dvonthenen/websocket v1.5.1-dyv.2
@@ -11,7 +13,10 @@ require (
 	k8s.io/klog/v2 v2.110.1
 )
 
-require github.com/jarcoal/httpmock v1.3.0
+require (
+	github.com/jarcoal/httpmock v1.3.0
+	golang.org/x/text v0.28.0
+)
 
 require (
 	github.com/fatih/color v1.15.0 // indirect

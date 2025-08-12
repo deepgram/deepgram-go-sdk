@@ -40,4 +40,5 @@ const (
 	TypeErrorResponse                = commoninterfaces.TypeErrorResponse
 	TypeInjectionRefusedResponse     = "InjectionRefused"
 	TypeSettingsAppliedResponse      = "SettingsApplied"
+	TypeHistory                      = "History"
 )

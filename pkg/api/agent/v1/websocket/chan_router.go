@@ -435,7 +435,7 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processKeepAlive(byMsg)
 	case interfaces.TypeSettingsAppliedResponse:
 		err = r.processSettingsApplied(byMsg)
-	case "History":
+	case interfaces.TypeHistory:
 		err = r.processHistory(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)

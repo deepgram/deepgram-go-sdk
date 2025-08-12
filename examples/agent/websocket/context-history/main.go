@@ -13,6 +13,9 @@ import (
 	"strings"
 	"sync"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
 	microphone "github.com/deepgram/deepgram-go-sdk/v3/pkg/audio/microphone"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent"
@@ -52,7 +55,8 @@ type HistoryHandler struct {
 	historyConversationTextChan chan *msginterfaces.HistoryConversationText
 	historyFunctionCallsChan    chan *msginterfaces.HistoryFunctionCalls
 	// WebSocket client for sending function responses
-	dgClient *client.WSChannel
+	dgClient   *client.WSChannel
+	dgClientMu sync.RWMutex
 }
 
 func NewHistoryHandler() *HistoryHandler {
@@ -85,78 +89,80 @@ func NewHistoryHandler() *HistoryHandler {
 
 // SetClient sets the WebSocket client for sending function responses
 func (h *HistoryHandler) SetClient(client *client.WSChannel) {
+	h.dgClientMu.Lock()
+	defer h.dgClientMu.Unlock()
 	h.dgClient = client
 }
 
 // Implement all the required interface methods
-func (h HistoryHandler) GetBinary() []*chan *[]byte {
+func (h *HistoryHandler) GetBinary() []*chan *[]byte {
 	return []*chan *[]byte{&h.binaryChan}
 }
 
-func (h HistoryHandler) GetOpen() []*chan *msginterfaces.OpenResponse {
+func (h *HistoryHandler) GetOpen() []*chan *msginterfaces.OpenResponse {
 	return []*chan *msginterfaces.OpenResponse{&h.openChan}
 }
 
-func (h HistoryHandler) GetWelcome() []*chan *msginterfaces.WelcomeResponse {
+func (h *HistoryHandler) GetWelcome() []*chan *msginterfaces.WelcomeResponse {
 	return []*chan *msginterfaces.WelcomeResponse{&h.welcomeResponse}
 }
 
-func (h HistoryHandler) GetConversationText() []*chan *msginterfaces.ConversationTextResponse {
+func (h *HistoryHandler) GetConversationText() []*chan *msginterfaces.ConversationTextResponse {
 	return []*chan *msginterfaces.ConversationTextResponse{&h.conversationTextResponse}
 }
 
-func (h HistoryHandler) GetUserStartedSpeaking() []*chan *msginterfaces.UserStartedSpeakingResponse {
+func (h *HistoryHandler) GetUserStartedSpeaking() []*chan *msginterfaces.UserStartedSpeakingResponse {
 	return []*chan *msginterfaces.UserStartedSpeakingResponse{&h.userStartedSpeakingResponse}
 }
 
-func (h HistoryHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResponse {
+func (h *HistoryHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResponse {
 	return []*chan *msginterfaces.AgentThinkingResponse{&h.agentThinkingResponse}
 }
 
-func (h HistoryHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
+func (h *HistoryHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
 	return []*chan *msginterfaces.FunctionCallRequestResponse{&h.functionCallRequestResponse}
 }
 
-func (h HistoryHandler) GetAgentStartedSpeaking() []*chan *msginterfaces.AgentStartedSpeakingResponse {
+func (h *HistoryHandler) GetAgentStartedSpeaking() []*chan *msginterfaces.AgentStartedSpeakingResponse {
 	return []*chan *msginterfaces.AgentStartedSpeakingResponse{&h.agentStartedSpeakingResponse}
 }
 
-func (h HistoryHandler) GetAgentAudioDone() []*chan *msginterfaces.AgentAudioDoneResponse {
+func (h *HistoryHandler) GetAgentAudioDone() []*chan *msginterfaces.AgentAudioDoneResponse {
 	return []*chan *msginterfaces.AgentAudioDoneResponse{&h.agentAudioDoneResponse}
 }
 
-func (h HistoryHandler) GetClose() []*chan *msginterfaces.CloseResponse {
+func (h *HistoryHandler) GetClose() []*chan *msginterfaces.CloseResponse {
 	return []*chan *msginterfaces.CloseResponse{&h.closeChan}
 }
 
-func (h HistoryHandler) GetError() []*chan *msginterfaces.ErrorResponse {
+func (h *HistoryHandler) GetError() []*chan *msginterfaces.ErrorResponse {
 	return []*chan *msginterfaces.ErrorResponse{&h.errorChan}
 }
 
-func (h HistoryHandler) GetUnhandled() []*chan *[]byte {
+func (h *HistoryHandler) GetUnhandled() []*chan *[]byte {
 	return []*chan *[]byte{&h.unhandledChan}
 }
 
-func (h HistoryHandler) GetInjectionRefused() []*chan *msginterfaces.InjectionRefusedResponse {
+func (h *HistoryHandler) GetInjectionRefused() []*chan *msginterfaces.InjectionRefusedResponse {
 	return []*chan *msginterfaces.InjectionRefusedResponse{&h.injectionRefusedResponse}
 }
 
-func (h HistoryHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive {
+func (h *HistoryHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive {
 	return []*chan *msginterfaces.KeepAlive{&h.keepAliveResponse}
 }
 
-func (h HistoryHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
+func (h *HistoryHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
 	return []*chan *msginterfaces.SettingsAppliedResponse{&h.settingsAppliedResponse}
 }
 
 // OPTIONAL INTERFACE: HistoryMessageChan implementation
 // These methods enable History message support through interface segregation.
 // The router uses type assertion to detect these methods and route History messages accordingly.
-func (h HistoryHandler) GetHistoryConversationText() []*chan *msginterfaces.HistoryConversationText {
+func (h *HistoryHandler) GetHistoryConversationText() []*chan *msginterfaces.HistoryConversationText {
 	return []*chan *msginterfaces.HistoryConversationText{&h.historyConversationTextChan}
 }
 
-func (h HistoryHandler) GetHistoryFunctionCalls() []*chan *msginterfaces.HistoryFunctionCalls {
+func (h *HistoryHandler) GetHistoryFunctionCalls() []*chan *msginterfaces.HistoryFunctionCalls {
 	return []*chan *msginterfaces.HistoryFunctionCalls{&h.historyFunctionCallsChan}
 }
 
@@ -185,7 +191,7 @@ func (h *HistoryHandler) Run() {
 			fmt.Printf("👋 Welcome! Agent is ready (Request ID: %s)\n", welcome.RequestID)
 
 		case conv := <-h.conversationTextResponse:
-			fmt.Printf("\n💬 %s: %s\n", strings.Title(conv.Role), conv.Content)
+			fmt.Printf("\n💬 %s: %s\n", cases.Title(language.English).String(conv.Role), conv.Content)
 
 		case userSpeaking := <-h.userStartedSpeakingResponse:
 			_ = userSpeaking // suppress unused variable warning
@@ -203,8 +209,12 @@ func (h *HistoryHandler) Run() {
 				fmt.Printf("   ID: %s\n", fc.ID)
 				fmt.Printf("   Arguments: %s\n", fc.Arguments)
 			}
-			if h.dgClient != nil {
-				h.handleFunctionCall(functionCall, h.dgClient)
+			h.dgClientMu.RLock()
+			client := h.dgClient
+			h.dgClientMu.RUnlock()
+
+			if client != nil {
+				h.handleFunctionCall(functionCall, client)
 			} else {
 				fmt.Printf("❌ WebSocket client not set - cannot handle function call\n")
 			}
@@ -316,21 +326,34 @@ func (h *HistoryHandler) handleWeatherFunction(functionCall *msginterfaces.Funct
 		weatherData["humidity"])
 
 	// Convert weather data to JSON string for response
-	weatherJSON, _ := json.Marshal(weatherData)
+	weatherJSON, err := json.Marshal(weatherData)
+	if err != nil {
+		fmt.Printf("❌ Error marshaling weather data to JSON: %v\n", err)
+		// Send error response back to agent instead of proceeding with empty payload
+		response := &msginterfaces.FunctionCallResponse{
+			Type:    msginterfaces.TypeFunctionCallResponse,
+			ID:      functionCall.ID,
+			Name:    functionCall.Name,
+			Content: fmt.Sprintf(`{"error": "Failed to process weather data: %v"}`, err),
+		}
+		if writeErr := dgClient.WriteJSON(response); writeErr != nil {
+			fmt.Printf("❌ Error sending error response: %v\n", writeErr)
+		}
+		return
+	}
 
-	// Send the response back to the agent (matches Python SDK exactly)
+	// Send the response back to the agent
 	response := &msginterfaces.FunctionCallResponse{
 		Type:    msginterfaces.TypeFunctionCallResponse,
 		ID:      functionCall.ID,
 		Name:    functionCall.Name,   // Function name (required by API)
-		Content: string(weatherJSON), // Response content (matches Python SDK)
+		Content: string(weatherJSON), // Response content
 	}
 
 	// Send confirmation message
 	fmt.Printf("📞 Sending weather response for %s: %s\n", args.Location, weatherData["description"])
 
-	err := dgClient.WriteJSON(response)
-	if err != nil {
+	if err := dgClient.WriteJSON(response); err != nil {
 		fmt.Printf("❌ Error sending function response: %v\n", err)
 	} else {
 		fmt.Printf("✅ Weather response sent to agent\n")
@@ -472,7 +495,7 @@ func main() {
 	handler := NewHistoryHandler()
 
 	// Create callback interface
-	callback := msginterfaces.AgentMessageChan(*handler)
+	callback := msginterfaces.AgentMessageChan(handler)
 
 	// Create Deepgram client
 	fmt.Print("\n🚀 Connecting to Deepgram...")
@@ -533,15 +556,6 @@ func main() {
 	go func() {
 		defer wgReceivers.Done()
 		mic.Stream(dgClient)
-	}()
-
-	// Enable function call handling
-	wgReceivers.Add(1)
-	go func() {
-		defer wgReceivers.Done()
-		for functionCall := range handler.functionCallRequestResponse {
-			handler.handleFunctionCall(functionCall, dgClient)
-		}
 	}()
 
 	// Wait for user to press Enter to exit
