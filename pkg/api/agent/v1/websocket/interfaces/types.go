@@ -40,9 +40,32 @@ type InjectUserMessage struct {
 
 // FunctionCallResponse is the response from a function call
 type FunctionCallResponse struct {
-	Type           string `json:"type,omitempty"`
-	FunctionCallID string `json:"function_call_id,omitempty"`
-	Output         string `json:"output,omitempty"`
+	Type    string `json:"type,omitempty"`
+	ID      string `json:"id,omitempty"`      // Function call ID
+	Name    string `json:"name,omitempty"`    // Function name
+	Content string `json:"content,omitempty"` // Response content
+}
+
+// HistoryConversationText is the request to send conversation history
+type HistoryConversationText struct {
+	Type    string `json:"type"`
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content,omitempty"`
+}
+
+// HistoryFunctionCalls is the request to send function call history
+type HistoryFunctionCalls struct {
+	Type          string         `json:"type"`
+	FunctionCalls []FunctionCall `json:"function_calls,omitempty"`
+}
+
+// FunctionCall represents a single function call in history
+type FunctionCall struct {
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	ClientSide bool   `json:"client_side,omitempty"`
+	Arguments  string `json:"arguments,omitempty"`
+	Response   string `json:"response,omitempty"`
 }
 
 // KeepAlive is the request to keep the connection alive
@@ -108,10 +131,8 @@ type AgentThinkingResponse struct {
 
 // FunctionCallRequestResponse is the response from a function call request
 type FunctionCallRequestResponse struct {
-	Type           string            `json:"type,omitempty"`
-	FunctionName   string            `json:"function_name,omitempty"`
-	FunctionCallID string            `json:"function_call_id,omitempty"`
-	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
+	Type      string         `json:"type,omitempty"`
+	Functions []FunctionCall `json:"functions,omitempty"`
 }
 
 // AgentStartedSpeakingResponse is the response from the Agent starting to speak. You will ONLY get this if `experimental` is set to true.

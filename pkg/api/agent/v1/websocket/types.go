@@ -32,6 +32,8 @@ type DefaultChanHandler struct {
 	closeChan                    chan *interfaces.CloseResponse
 	errorChan                    chan *interfaces.ErrorResponse
 	unhandledChan                chan *[]byte
+	historyConversationTextChan  chan *interfaces.HistoryConversationText
+	historyFunctionCallsChan     chan *interfaces.HistoryFunctionCalls
 }
 
 // ChanRouter routes events
@@ -54,4 +56,6 @@ type ChanRouter struct {
 	closeChan                    []*chan *interfaces.CloseResponse
 	errorChan                    []*chan *interfaces.ErrorResponse
 	unhandledChan                []*chan *[]byte
+	historyConversationTextChan  []*chan *interfaces.HistoryConversationText
+	historyFunctionCallsChan     []*chan *interfaces.HistoryFunctionCalls
 }

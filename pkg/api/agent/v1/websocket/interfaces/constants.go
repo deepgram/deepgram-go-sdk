@@ -13,14 +13,16 @@ type TypeResponse commoninterfaces.TypeResponse
 
 // client message types
 const (
-	TypeSettings             = "Settings"
-	TypeUpdatePrompt         = "UpdatePrompt"
-	TypeUpdateSpeak          = "UpdateSpeak"
-	TypeInjectAgentMessage   = "InjectAgentMessage"
-	TypeInjectUserMessage    = "InjectUserMessage"
-	TypeFunctionCallResponse = "FunctionCallResponse"
-	TypeKeepAlive            = "KeepAlive"
-	TypeClose                = "Close"
+	TypeSettings                = "Settings"
+	TypeUpdatePrompt            = "UpdatePrompt"
+	TypeUpdateSpeak             = "UpdateSpeak"
+	TypeInjectAgentMessage      = "InjectAgentMessage"
+	TypeInjectUserMessage       = "InjectUserMessage"
+	TypeFunctionCallResponse    = "FunctionCallResponse"
+	TypeHistoryConversationText = "History"
+	TypeHistoryFunctionCalls    = "History"
+	TypeKeepAlive               = "KeepAlive"
+	TypeClose                   = "Close"
 )
 
 // server message types
@@ -38,4 +40,5 @@ const (
 	TypeErrorResponse                = commoninterfaces.TypeErrorResponse
 	TypeInjectionRefusedResponse     = "InjectionRefused"
 	TypeSettingsAppliedResponse      = "SettingsApplied"
+	TypeHistory                      = "History"
 )

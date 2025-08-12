@@ -55,9 +55,12 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		closeChan:                    make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                    make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:                make([]*chan *[]byte, 0),
+		historyConversationTextChan:  make([]*chan *interfaces.HistoryConversationText, 0),
+		historyFunctionCallsChan:     make([]*chan *interfaces.HistoryFunctionCalls, 0),
 	}
 
 	if chans != nil {
+		// CORE FUNCTIONALITY: Always available via AgentMessageChan interface
 		router.binaryChan = append(router.binaryChan, chans.GetBinary()...)
 		router.openChan = append(router.openChan, chans.GetOpen()...)
 		router.welcomeResponse = append(router.welcomeResponse, chans.GetWelcome()...)
@@ -73,6 +76,18 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.injectionRefusedResponse = append(router.injectionRefusedResponse, chans.GetInjectionRefused()...)
 		router.keepAliveResponse = append(router.keepAliveResponse, chans.GetKeepAlive()...)
 		router.settingsAppliedResponse = append(router.settingsAppliedResponse, chans.GetSettingsApplied()...)
+
+		// INTERFACE SEGREGATION: Optional History capability detection
+
+		if historyChan, hasHistory := chans.(interfaces.HistoryMessageChan); hasHistory {
+			klog.V(4).Infof("Handler supports History functionality - routing History messages\n")
+			router.historyConversationTextChan = append(router.historyConversationTextChan, historyChan.GetHistoryConversationText()...)
+			router.historyFunctionCallsChan = append(router.historyFunctionCallsChan, historyChan.GetHistoryFunctionCalls()...)
+		} else {
+			klog.V(4).Infof("Handler does not implement HistoryMessageChan - History messages will route to UnhandledMessage\n")
+		}
+		// Note: If handler doesn't implement HistoryMessageChan, History messages will
+		// be routed to UnhandledMessage, which is the expected fallback behavior.
 	}
 
 	return router
@@ -354,6 +369,43 @@ func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeSettingsAppliedResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processHistory(byMsg []byte) error {
+	// Try to parse as HistoryConversationText first
+	var convHistory interfaces.HistoryConversationText
+	if err := json.Unmarshal(byMsg, &convHistory); err == nil {
+		if convHistory.Role != "" && convHistory.Content != "" {
+			// Check if no conversation text listeners are available
+			if len(r.historyConversationTextChan) == 0 {
+				klog.V(4).Infof("processHistory: Valid HistoryConversationText but no listeners, routing to UnhandledMessage")
+				return r.UnhandledMessage(byMsg)
+			}
+			for _, ch := range r.historyConversationTextChan {
+				*ch <- &convHistory
+			}
+			return nil
+		}
+	}
+
+	// Try to parse as HistoryFunctionCalls
+	var funcHistory interfaces.HistoryFunctionCalls
+	if err := json.Unmarshal(byMsg, &funcHistory); err == nil {
+		if len(funcHistory.FunctionCalls) > 0 {
+			// Check if no function call listeners are available
+			if len(r.historyFunctionCallsChan) == 0 {
+				klog.V(4).Infof("processHistory: Valid HistoryFunctionCalls but no listeners, routing to UnhandledMessage")
+				return r.UnhandledMessage(byMsg)
+			}
+			for _, ch := range r.historyFunctionCallsChan {
+				*ch <- &funcHistory
+			}
+			return nil
+		}
+	}
+
+	klog.V(1).Infof("processHistory: Unable to parse History message")
+	return ErrInvalidMessageType
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -393,6 +445,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processKeepAlive(byMsg)
 	case interfaces.TypeSettingsAppliedResponse:
 		err = r.processSettingsApplied(byMsg)
+	case interfaces.TypeHistory:
+		err = r.processHistory(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
