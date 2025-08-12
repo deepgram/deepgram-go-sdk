@@ -370,16 +370,15 @@ func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
 }
 
 func (r *ChanRouter) processHistory(byMsg []byte) error {
-	// Check if there are no history listeners - route to unhandled if so
-	if len(r.historyConversationTextChan) == 0 && len(r.historyFunctionCallsChan) == 0 {
-		klog.V(4).Infof("processHistory: No history listeners available, routing to UnhandledMessage")
-		return r.UnhandledMessage(byMsg)
-	}
-
 	// Try to parse as HistoryConversationText first
 	var convHistory interfaces.HistoryConversationText
 	if err := json.Unmarshal(byMsg, &convHistory); err == nil {
 		if convHistory.Role != "" && convHistory.Content != "" {
+			// Check if no conversation text listeners are available
+			if len(r.historyConversationTextChan) == 0 {
+				klog.V(4).Infof("processHistory: Valid HistoryConversationText but no listeners, routing to UnhandledMessage")
+				return r.UnhandledMessage(byMsg)
+			}
 			for _, ch := range r.historyConversationTextChan {
 				*ch <- &convHistory
 			}
@@ -391,6 +390,11 @@ func (r *ChanRouter) processHistory(byMsg []byte) error {
 	var funcHistory interfaces.HistoryFunctionCalls
 	if err := json.Unmarshal(byMsg, &funcHistory); err == nil {
 		if len(funcHistory.FunctionCalls) > 0 {
+			// Check if no function call listeners are available
+			if len(r.historyFunctionCallsChan) == 0 {
+				klog.V(4).Infof("processHistory: Valid HistoryFunctionCalls but no listeners, routing to UnhandledMessage")
+				return r.UnhandledMessage(byMsg)
+			}
 			for _, ch := range r.historyFunctionCallsChan {
 				*ch <- &funcHistory
 			}
