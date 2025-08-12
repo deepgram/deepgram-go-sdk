@@ -13,9 +13,6 @@ import (
 	"strings"
 	"sync"
 
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
 	microphone "github.com/deepgram/deepgram-go-sdk/v3/pkg/audio/microphone"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent"
@@ -191,7 +188,7 @@ func (h *HistoryHandler) Run() {
 			fmt.Printf("👋 Welcome! Agent is ready (Request ID: %s)\n", welcome.RequestID)
 
 		case conv := <-h.conversationTextResponse:
-			fmt.Printf("\n💬 %s: %s\n", cases.Title(language.English).String(conv.Role), conv.Content)
+			fmt.Printf("\n💬 %s: %s\n", strings.Title(conv.Role), conv.Content)
 
 		case userSpeaking := <-h.userStartedSpeakingResponse:
 			_ = userSpeaking // suppress unused variable warning

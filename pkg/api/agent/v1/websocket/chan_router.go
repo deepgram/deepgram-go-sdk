@@ -370,6 +370,12 @@ func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
 }
 
 func (r *ChanRouter) processHistory(byMsg []byte) error {
+	// Check if there are no history listeners - route to unhandled if so
+	if len(r.historyConversationTextChan) == 0 && len(r.historyFunctionCallsChan) == 0 {
+		klog.V(4).Infof("processHistory: No history listeners available, routing to UnhandledMessage")
+		return r.UnhandledMessage(byMsg)
+	}
+
 	// Try to parse as HistoryConversationText first
 	var convHistory interfaces.HistoryConversationText
 	if err := json.Unmarshal(byMsg, &convHistory); err == nil {

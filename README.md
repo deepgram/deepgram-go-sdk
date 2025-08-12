@@ -97,7 +97,7 @@ V3 Introduced a generic object approach for Agent Providers to ease the maintena
 
 ## Requirements
 
-[Go](https://go.dev/doc/install) (version ^1.23)
+[Go](https://go.dev/doc/install) (version ^1.19)
 
 ## Installation
 
