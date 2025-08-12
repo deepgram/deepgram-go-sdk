@@ -31,9 +31,7 @@ import (
 // - Handlers that don't implement HistoryMessageChan continue to work unchanged
 // - This avoids breaking changes that would require a major version bump
 // - Follows Go stdlib patterns like http.ResponseWriter + http.Hijacker
-//
-// This example shows how new handlers can opt-in to History functionality
-// while maintaining backwards compatibility with existing implementations.
+
 type HistoryHandler struct {
 	binaryChan                   chan *[]byte
 	openChan                     chan *msginterfaces.OpenResponse
