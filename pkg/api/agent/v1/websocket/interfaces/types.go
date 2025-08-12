@@ -40,9 +40,10 @@ type InjectUserMessage struct {
 
 // FunctionCallResponse is the response from a function call
 type FunctionCallResponse struct {
-	Type           string `json:"type,omitempty"`
-	FunctionCallID string `json:"function_call_id,omitempty"`
-	Output         string `json:"output,omitempty"`
+	Type    string `json:"type,omitempty"`
+	ID      string `json:"id,omitempty"`      // Function call ID
+	Name    string `json:"name,omitempty"`    // Function name
+	Content string `json:"content,omitempty"` // Response content
 }
 
 // HistoryConversationText is the request to send conversation history
@@ -130,10 +131,8 @@ type AgentThinkingResponse struct {
 
 // FunctionCallRequestResponse is the response from a function call request
 type FunctionCallRequestResponse struct {
-	Type           string            `json:"type,omitempty"`
-	FunctionName   string            `json:"function_name,omitempty"`
-	FunctionCallID string            `json:"function_call_id,omitempty"`
-	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
+	Type      string         `json:"type,omitempty"`
+	Functions []FunctionCall `json:"functions,omitempty"`
 }
 
 // AgentStartedSpeakingResponse is the response from the Agent starting to speak. You will ONLY get this if `experimental` is set to true.

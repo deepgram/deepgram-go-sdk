@@ -46,17 +46,10 @@ type Endpoint struct {
 	Headers map[string]string `json:"headers,omitempty"`
 	Method  string            `json:"method,omitempty"`
 }
-type Item struct {
-	Type        string `json:"type,omitempty"`
-	Description string `json:"description,omitempty"`
-}
-type Properties struct {
-	Item Item `json:"item,omitempty"`
-}
 type Parameters struct {
-	Type       string     `json:"type,omitempty"`
-	Properties Properties `json:"properties,omitempty"`
-	Required   []string   `json:"required,omitempty"`
+	Type       string                 `json:"type,omitempty"`
+	Properties map[string]interface{} `json:"properties,omitempty"`
+	Required   []string               `json:"required,omitempty"`
 }
 type Headers struct {
 	Key   string `json:"key,omitempty"`
@@ -66,7 +59,7 @@ type Functions struct {
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description,omitempty"`
 	Parameters  Parameters `json:"parameters,omitempty"`
-	Endpoint    Endpoint   `json:"endpoint,omitempty"`
+	Endpoint    *Endpoint  `json:"endpoint,omitempty"` // Pointer allows nil/omitempty for client-side functions
 }
 type Listen struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`

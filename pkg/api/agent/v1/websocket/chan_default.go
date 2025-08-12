@@ -46,6 +46,8 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		closeChan:                    make(chan *interfaces.CloseResponse),
 		errorChan:                    make(chan *interfaces.ErrorResponse),
 		unhandledChan:                make(chan *[]byte),
+		historyConversationTextChan:  make(chan *interfaces.HistoryConversationText),
+		historyFunctionCallsChan:     make(chan *interfaces.HistoryFunctionCalls),
 	}
 
 	go func() {
@@ -131,6 +133,16 @@ func (dch DefaultChanHandler) GetUnhandled() []*chan *[]byte {
 // GetSettingsApplied returns the settings applied response channels
 func (dch DefaultChanHandler) GetSettingsApplied() []*chan *interfaces.SettingsAppliedResponse {
 	return []*chan *interfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
+}
+
+// GetHistoryConversationText returns the history conversation text channels
+func (dch DefaultChanHandler) GetHistoryConversationText() []*chan *interfaces.HistoryConversationText {
+	return []*chan *interfaces.HistoryConversationText{&dch.historyConversationTextChan}
+}
+
+// GetHistoryFunctionCalls returns the history function calls channels
+func (dch DefaultChanHandler) GetHistoryFunctionCalls() []*chan *interfaces.HistoryFunctionCalls {
+	return []*chan *interfaces.HistoryFunctionCalls{&dch.historyFunctionCallsChan}
 }
 
 // Open is the callback for when the connection opens

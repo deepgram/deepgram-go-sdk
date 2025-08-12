@@ -5,10 +5,8 @@
 // This package defines interfaces for the live API
 package interfacesv1
 
-/*
-Chan Interfaces
-*/
-// AgentMessageChan is a callback used to receive notifcations for platforms messages
+// AgentMessageChan is the core interface for receiving agent message notifications.
+// This interface should remain unchanged to maintain backwards compatibility.
 type AgentMessageChan interface {
 	GetBinary() []*chan *[]byte
 	GetOpen() []*chan *OpenResponse
@@ -25,4 +23,11 @@ type AgentMessageChan interface {
 	GetInjectionRefused() []*chan *InjectionRefusedResponse
 	GetKeepAlive() []*chan *KeepAlive
 	GetSettingsApplied() []*chan *SettingsAppliedResponse
+}
+
+// HistoryMessageChan is an optional interface for receiving History message notifications.
+// Implement this interface in addition to AgentMessageChan to be non-breaking.
+type HistoryMessageChan interface {
+	GetHistoryConversationText() []*chan *HistoryConversationText
+	GetHistoryFunctionCalls() []*chan *HistoryFunctionCalls
 }
