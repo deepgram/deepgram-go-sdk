@@ -118,11 +118,15 @@ func run() error {
 
 	conn.Start()
 
-	// The handler receives Open/Message/Metadata events.
-	// Write PCM/audio chunks from your mic or file reader, then finalize.
-	if err := conn.Finalize(); err != nil {
-		return err
-	}
+	// The handler receives Open/Message/Metadata/UtteranceEnd events.
+	// In a real app, stream PCM/audio chunks from your mic or file reader here.
+	// For example (pseudo-code):
+	//   for chunk := range audioChunks {
+	//       if err := conn.WriteBinary(chunk); err != nil { return err }
+	//   }
+	//
+	// When the input stream ends, flush any trailing audio and close cleanly:
+	//   if err := conn.Finalize(); err != nil { return err }
 
 	return nil
 }

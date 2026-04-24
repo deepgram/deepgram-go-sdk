@@ -89,7 +89,7 @@ When running examples, follow `examples/README.md` and use `go run main.go` from
 
 1. This repo is hand-maintained; do not apply Fern-specific regeneration guidance unless the repo adds that tooling later.
 2. Preserve the existing layering: package constructors in `pkg/client`, endpoint logic in `pkg/api`, shared plumbing in `pkg/client/common/v1`.
-3. Match Go idioms already used here: `context.Context`, explicit `error` returns, `defer conn.Close()`, goroutines/channels for streaming paths.
+3. Match Go idioms already used here: `context.Context`, explicit `error` returns, `defer conn.Stop()` for WebSocket sessions (the WS clients embed `*common.WSClient`, which exposes `Stop()`, not `Close()`), goroutines/channels for streaming paths.
 4. When adding a new endpoint, update examples and tests alongside the client wrapper instead of landing transport-only code.
 5. Check the nearest package docs and existing examples before renaming fields or reshaping public structs.
 
