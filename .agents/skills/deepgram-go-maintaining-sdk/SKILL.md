@@ -1,5 +1,5 @@
 ---
-name: maintaining-go-sdk
+name: deepgram-go-maintaining-sdk
 description: Use when changing, reviewing, or extending the Deepgram Go SDK itself, including package layout, examples, docs, tests, linting, dependency bootstrapping, and release-adjacent maintenance. Route product usage questions to the product skills instead of this maintainer workflow.
 ---
 
@@ -16,12 +16,12 @@ Use this skill when you are changing the SDK itself rather than consuming it.
 
 Use a different skill when the task is just product consumption:
 
-- STT: `using-speech-to-text`
-- TTS: `using-text-to-speech`
-- text intelligence: `using-text-intelligence`
-- audio intelligence: `using-audio-intelligence`
-- voice agent: `using-voice-agent`
-- management: `using-management-api`
+- STT: `deepgram-go-speech-to-text`
+- TTS: `deepgram-go-text-to-speech`
+- text intelligence: `deepgram-go-text-intelligence`
+- audio intelligence: `deepgram-go-audio-intelligence`
+- voice agent: `deepgram-go-voice-agent`
+- management: `deepgram-go-management-api`
 
 ## Authentication
 

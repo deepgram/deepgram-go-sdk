@@ -1,6 +1,6 @@
 ---
-name: using-conversational-stt
-description: Use when planning or reviewing Go SDK work for Deepgram conversational STT / Flux v2. This repo does not currently ship a first-class v2 listen client, so route supported v1 transcription to using-speech-to-text and document raw WebSocket fallback honestly when v2 is requested.
+name: deepgram-go-conversational-stt
+description: Use when planning or reviewing Go SDK work for Deepgram conversational STT / Flux v2. This repo does not currently ship a first-class v2 listen client, so route supported v1 transcription to deepgram-go-speech-to-text and document raw WebSocket fallback honestly when v2 is requested.
 ---
 
 # Using Deepgram Conversational STT from the Go SDK
@@ -13,8 +13,8 @@ Current repo status: this SDK snapshot does **not** implement a first-class `lis
 
 Use a different skill when:
 
-- v1 Listen is acceptable (`using-speech-to-text`)
-- voice-agent runtime is the real target (`using-voice-agent`)
+- v1 Listen is acceptable (`deepgram-go-speech-to-text`)
+- voice-agent runtime is the real target (`deepgram-go-voice-agent`)
 
 ## Authentication
 
@@ -30,7 +30,7 @@ There is no supported `pkg/client/listen/v2` constructor in this repo today.
 
 What you can do instead:
 
-- use `using-speech-to-text` for supported `listen` v1 flows
+- use `deepgram-go-speech-to-text` for supported `listen` v1 flows
 - if you must prototype v2, start from the low-level shared WebSocket plumbing and path/version hooks already in the repo:
   - `pkg/client/common/v1/websocket.go`
   - `pkg/client/interfaces/v1/types-client.go`

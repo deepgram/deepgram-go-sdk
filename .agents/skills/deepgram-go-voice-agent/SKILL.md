@@ -1,6 +1,6 @@
 ---
-name: using-voice-agent
-description: Use when writing or reviewing Go code in this repo that runs a Deepgram Voice Agent session over WebSockets, including runtime settings, prompt updates, speak updates, injected messages, and event handling. Route standalone STT/TTS work to using-speech-to-text or using-text-to-speech.
+name: deepgram-go-voice-agent
+description: Use when writing or reviewing Go code in this repo that runs a Deepgram Voice Agent session over WebSockets, including runtime settings, prompt updates, speak updates, injected messages, and event handling. Route standalone STT/TTS work to deepgram-go-speech-to-text or deepgram-go-text-to-speech.
 ---
 
 # Using Deepgram Voice Agent from the Go SDK
@@ -17,9 +17,9 @@ Use this skill for live Voice Agent runtime flows in `pkg/client/agent`.
 
 Use a different skill when:
 
-- you only need STT (`using-speech-to-text`)
-- you only need TTS (`using-text-to-speech`)
-- you need management/admin endpoints (`using-management-api`)
+- you only need STT (`deepgram-go-speech-to-text`)
+- you only need TTS (`deepgram-go-text-to-speech`)
+- you need management/admin endpoints (`deepgram-go-management-api`)
 
 ## Authentication
 

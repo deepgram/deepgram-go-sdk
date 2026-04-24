@@ -1,6 +1,6 @@
 ---
-name: using-management-api
-description: Use when writing or reviewing Go code in this repo that works with Deepgram management endpoints for projects, keys, members, scopes, invitations, usage, balances, or models. Route live voice runtime to using-voice-agent and repo workflow questions to maintaining-go-sdk.
+name: deepgram-go-management-api
+description: Use when writing or reviewing Go code in this repo that works with Deepgram management endpoints for projects, keys, members, scopes, invitations, usage, balances, or models. Route live voice runtime to deepgram-go-voice-agent and repo workflow questions to deepgram-go-maintaining-sdk.
 ---
 
 # Using Deepgram Management API from the Go SDK
@@ -19,8 +19,8 @@ Use this skill for admin and account operations in `pkg/client/manage` and `pkg/
 
 Use a different skill when:
 
-- you need live voice sessions (`using-voice-agent`)
-- you need SDK maintenance workflow (`maintaining-go-sdk`)
+- you need live voice sessions (`deepgram-go-voice-agent`)
+- you need SDK maintenance workflow (`deepgram-go-maintaining-sdk`)
 
 ## Authentication
 

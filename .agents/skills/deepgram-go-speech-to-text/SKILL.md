@@ -1,6 +1,6 @@
 ---
-name: using-speech-to-text
-description: Use when writing or reviewing Go code in this repo that transcribes prerecorded audio with Listen v1 REST or streams live audio with Listen v1 WebSockets. Route text generation to using-text-to-speech, text analysis to using-text-intelligence, audio analytics overlays to using-audio-intelligence, and Flux or other v2 conversational work to using-conversational-stt.
+name: deepgram-go-speech-to-text
+description: Use when writing or reviewing Go code in this repo that transcribes prerecorded audio with Listen v1 REST or streams live audio with Listen v1 WebSockets. Route text generation to deepgram-go-text-to-speech, text analysis to deepgram-go-text-intelligence, audio analytics overlays to deepgram-go-audio-intelligence, and Flux or other v2 conversational work to deepgram-go-conversational-stt.
 ---
 
 # Using Deepgram Speech-to-Text from the Go SDK
@@ -15,10 +15,10 @@ Use this skill for `pkg/client/listen` work:
 
 Use a different skill when:
 
-- you need TTS output (`using-text-to-speech`)
-- you need text analysis on plain text (`using-text-intelligence`)
-- you need analytics overlays like summaries, topics, or sentiments (`using-audio-intelligence`)
-- you need Flux / conversational STT v2 (`using-conversational-stt`)
+- you need TTS output (`deepgram-go-text-to-speech`)
+- you need text analysis on plain text (`deepgram-go-text-intelligence`)
+- you need analytics overlays like summaries, topics, or sentiments (`deepgram-go-audio-intelligence`)
+- you need Flux / conversational STT v2 (`deepgram-go-conversational-stt`)
 
 ## Authentication
 

@@ -1,6 +1,6 @@
 ---
-name: using-text-intelligence
-description: Use when writing or reviewing Go code in this repo that sends text to Deepgram Read via the analyze client. Route speech/audio inputs to using-speech-to-text or using-audio-intelligence, and management/admin work to using-management-api.
+name: deepgram-go-text-intelligence
+description: Use when writing or reviewing Go code in this repo that sends text to Deepgram Read via the analyze client. Route speech/audio inputs to deepgram-go-speech-to-text or deepgram-go-audio-intelligence, and management/admin work to deepgram-go-management-api.
 ---
 
 # Using Deepgram Text Intelligence from the Go SDK
@@ -15,9 +15,9 @@ Use this skill for plain-text analysis handled by `pkg/client/analyze`.
 
 Use a different skill when:
 
-- your source material is audio and should go through `/v1/listen` (`using-audio-intelligence`)
-- you need transcription first (`using-speech-to-text`)
-- you need admin endpoints (`using-management-api`)
+- your source material is audio and should go through `/v1/listen` (`deepgram-go-audio-intelligence`)
+- you need transcription first (`deepgram-go-speech-to-text`)
+- you need admin endpoints (`deepgram-go-management-api`)
 
 ## Authentication
 

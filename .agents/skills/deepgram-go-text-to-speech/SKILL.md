@@ -1,6 +1,6 @@
 ---
-name: using-text-to-speech
-description: Use when writing or reviewing Go code in this repo that synthesizes audio with Speak v1 REST or Speak WebSockets. Route transcription work to using-speech-to-text, voice conversation runtime work to using-voice-agent, and repository maintenance work to maintaining-go-sdk.
+name: deepgram-go-text-to-speech
+description: Use when writing or reviewing Go code in this repo that synthesizes audio with Speak v1 REST or Speak WebSockets. Route transcription work to deepgram-go-speech-to-text, voice conversation runtime work to deepgram-go-voice-agent, and repository maintenance work to deepgram-go-maintaining-sdk.
 ---
 
 # Using Deepgram Text-to-Speech from the Go SDK
@@ -15,9 +15,9 @@ Use this skill for `pkg/client/speak` work:
 
 Use a different skill when:
 
-- you need STT (`using-speech-to-text`)
-- you need live voice-agent orchestration (`using-voice-agent`)
-- you need repo workflow guidance (`maintaining-go-sdk`)
+- you need STT (`deepgram-go-speech-to-text`)
+- you need live voice-agent orchestration (`deepgram-go-voice-agent`)
+- you need repo workflow guidance (`deepgram-go-maintaining-sdk`)
 
 ## Authentication
 

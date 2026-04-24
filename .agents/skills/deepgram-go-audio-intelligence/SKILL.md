@@ -1,6 +1,6 @@
 ---
-name: using-audio-intelligence
-description: Use when writing or reviewing Go code in this repo that applies summaries, topics, intents, sentiment, language detection, diarization, redaction, or entity extraction to audio inputs through Listen v1 REST. Route plain transcription to using-speech-to-text and plain-text Read requests to using-text-intelligence.
+name: deepgram-go-audio-intelligence
+description: Use when writing or reviewing Go code in this repo that applies summaries, topics, intents, sentiment, language detection, diarization, redaction, or entity extraction to audio inputs through Listen v1 REST. Route plain transcription to deepgram-go-speech-to-text and plain-text Read requests to deepgram-go-text-intelligence.
 ---
 
 # Using Deepgram Audio Intelligence from the Go SDK
@@ -19,8 +19,8 @@ Use this skill for `/v1/listen` REST requests that combine transcription with an
 
 Use a different skill when:
 
-- you only need transcription (`using-speech-to-text`)
-- your input is already text (`using-text-intelligence`)
+- you only need transcription (`deepgram-go-speech-to-text`)
+- your input is already text (`deepgram-go-text-intelligence`)
 
 ## Authentication
 
