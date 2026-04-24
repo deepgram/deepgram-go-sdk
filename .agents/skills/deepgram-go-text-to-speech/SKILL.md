@@ -38,20 +38,26 @@ package main
 
 import (
 	"context"
+	"log"
 
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/rest"
 	speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 
-	client, err := speak.NewRESTWithDefaults()
-	if err != nil {
-		return err
-	}
+	client := speak.NewRESTWithDefaults()
+	dg := api.New(client)
 
-	if err := client.ToFile(
+	if _, err := dg.ToSave(
 		ctx,
 		"hello.wav",
 		"Hello from the Deepgram Go SDK.",
@@ -72,41 +78,44 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	speakws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/websocket"
 	speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
+	handler := speakws.NewDefaultChanHandler()
 
 	conn, err := speak.NewWSUsingChanWithDefaults(
 		ctx,
 		&interfaces.WSSpeakOptions{Model: "aura-2-thalia-en"},
+		handler,
 	)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer conn.Stop()
 
-	if err := conn.Connect(); err != nil {
-		return err
+	if ok := conn.Connect(); !ok {
+		return fmt.Errorf("connect failed")
 	}
 
-	go func() {
-		for msg := range conn.MessageChan() {
-			fmt.Println(msg)
-		}
-	}()
-
-	if err := conn.Start(); err != nil {
-		return err
-	}
+	conn.Start()
 
 	if err := conn.SpeakWithText("Streaming TTS from Go."); err != nil {
 		return err
 	}
 
+	// The handler receives binary audio and flow-control events.
 	if err := conn.Flush(); err != nil {
 		return err
 	}
@@ -120,15 +129,15 @@ func main() error {
 - `interfaces.SpeakOptions`
   - typical fields: `Model`, `Encoding`, `Container`, `SampleRate`
 - `interfaces.WSSpeakOptions`
-  - typical fields: `Model`, streaming audio format settings
+	- typical fields: `Model`, streaming audio format settings
 - REST methods
-  - `ToStream`, `ToFile`, `ToSave`
+	- via `pkg/api/speak/v1/rest`: `api.New(client).ToStream`, `ToFile`, `ToSave`
 - WS methods
-  - `SpeakWithText`, `Speak`, `Flush`, `Reset`, `KeepAlive`
+	- `SpeakWithText`, `Speak`, `Flush`, `Reset`
 - constructors
-  - `speak.NewRESTWithDefaults()` / `speak.NewREST(...)`
-  - `speak.NewWSUsingCallback...`
-  - `speak.NewWSUsingChan...`
+	- `speak.NewRESTWithDefaults()` / `speak.NewREST(...)`
+	- `speak.NewWSUsingCallback...`
+	- `speak.NewWSUsingChan...`
 
 ## API reference (layered)
 
@@ -154,13 +163,15 @@ func main() error {
 ## Gotchas
 
 1. REST and WebSocket Speak clients use different option structs.
-2. WebSocket flows usually need `Connect()`, `Start()`, one or more `Speak...` calls, then `Flush()` or `Reset()`.
-3. Keep the playback or message-consumer goroutine running while audio frames arrive.
-4. Follow the examples for file handling and output format selection instead of guessing encodings.
+2. REST methods live on `pkg/api/speak/v1/rest`; build them with `api.New(client)`.
+3. WebSocket flows use a handler passed at construction, `Connect()` returns `bool`, and shutdown is `Stop()`.
+4. Keep the playback or message-consumer goroutine running while audio frames arrive.
+5. Follow the examples for file handling and output format selection instead of guessing encodings.
 
 ## Example files in this repo
 
 - `examples/text-to-speech/rest/file/hello-world/main.go`
+- `examples/text-to-speech/websocket/simple_channel/main.go`
 - `examples/text-to-speech/websocket/simple_callback/main.go`
 
 ## Central product skills

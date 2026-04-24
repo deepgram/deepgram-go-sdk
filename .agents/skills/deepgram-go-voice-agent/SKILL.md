@@ -37,34 +37,36 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	agentws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket"
 	agent "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 	settings := agent.NewSettingsConfigurationOptions()
+	handler := agentws.NewDefaultChanHandler()
 
-	conn, err := agent.NewWSUsingChanWithDefaults(ctx, settings)
+	conn, err := agent.NewWSUsingChanWithDefaults(ctx, settings, handler)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer conn.Stop()
 
-	if err := conn.Connect(); err != nil {
-		return err
+	if ok := conn.Connect(); !ok {
+		return fmt.Errorf("connect failed")
 	}
 
-	go func() {
-		for msg := range conn.MessageChan() {
-			fmt.Println(msg)
-		}
-	}()
+	conn.Start()
 
-	if err := conn.Start(); err != nil {
-		return err
-	}
-
+	// The handler receives Welcome, ConversationText, FunctionCallRequest, and audio events.
 	// Stream audio frames, watch agent events, and respond to function calls as needed.
 	return nil
 }
@@ -73,12 +75,12 @@ func main() error {
 ## Key parameters
 
 - constructors
-  - `agent.NewSettingsConfigurationOptions()`
-  - `agent.NewWSUsingChanWithDefaults(...)`
-  - `agent.NewWSUsingChan(...)`
+	- `agent.NewSettingsConfigurationOptions()`
+	- `agent.NewWSUsingChanWithDefaults(...)`
+	- `agent.NewWSUsingChan(...)`
 - runtime methods
-  - `Connect`, `Start`, `ProcessMessage`, `Stream`, `Write`, `KeepAlive`
-  - reconnect helpers like `AttemptReconnect` and error handling helpers in the WS client
+	- `Connect`, `Start`, `ProcessMessage`, `Stream`, `Write`, `KeepAlive`
+	- reconnect helpers like `AttemptReconnect` and error handling helpers in the WS client
 - message and event payloads in `pkg/api/agent/v1/websocket/interfaces/types.go`
   - `UpdatePrompt`
   - `UpdateSpeak`
@@ -113,7 +115,8 @@ func main() error {
 1. This repo exposes live Voice Agent runtime over WebSockets, not a persisted configuration-management surface.
 2. Keep audio streaming, event handling, and any function-call response loop running concurrently.
 3. Follow the example session setup instead of inventing your own event names; the repo already defines concrete message structs.
-4. Use `defer conn.Close()` and keep keepalive/reconnect behavior consistent with the shared WS client.
+4. Channel-based constructors require an `AgentMessageChan` handler; events are routed there rather than pulled from the client.
+5. Use `defer conn.Stop()`, and remember that `Connect()` returns `bool` rather than `error`.
 
 ## Example files in this repo
 

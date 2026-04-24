@@ -40,20 +40,26 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
 	listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 
-	client, err := listen.NewRESTWithDefaults()
-	if err != nil {
-		return err
-	}
+	client := listen.NewRESTWithDefaults()
+	dg := api.New(client)
 
-	resp, err := client.FromURL(
+	resp, err := dg.FromURL(
 		ctx,
 		"https://dpgr.am/spacewalk.wav",
 		&interfaces.PreRecordedTranscriptionOptions{
@@ -79,37 +85,40 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	listenws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket"
 	listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
+	handler := listenws.NewDefaultChanHandler()
 
 	conn, err := listen.NewWSUsingChanWithDefaults(
 		ctx,
 		&interfaces.LiveTranscriptionOptions{Model: "nova-3", InterimResults: true},
+		handler,
 	)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer conn.Stop()
 
-	if err := conn.Connect(); err != nil {
-		return err
+	if ok := conn.Connect(); !ok {
+		return fmt.Errorf("connect failed")
 	}
 
-	go func() {
-		for msg := range conn.MessageChan() {
-			fmt.Println(msg)
-		}
-	}()
+	conn.Start()
 
-	if err := conn.Start(); err != nil {
-		return err
-	}
-
+	// The handler receives Open/Message/Metadata events.
 	// Write PCM/audio chunks from your mic or file reader, then finalize.
 	if err := conn.Finalize(); err != nil {
 		return err
@@ -122,16 +131,16 @@ func main() error {
 ## Key parameters
 
 - `interfaces.PreRecordedTranscriptionOptions`
-  - common fields: `Model`, `Language`, `Punctuate`, `SmartFormat`, `Diarize`, `Redact`, `Utterances`
-  - transport methods: `FromURL`, `FromFile`, `FromStream`
+	- common fields: `Model`, `Language`, `Punctuate`, `SmartFormat`, `Diarize`, `Redact`, `Utterances`
+	- use with `pkg/api/listen/v1/rest`: `api.New(client).FromURL`, `FromFile`, `FromStream`
 - `interfaces.LiveTranscriptionOptions`
-  - common fields: `Model`, `Language`, `Encoding`, `SampleRate`, `Channels`, `InterimResults`, `Endpointing`
+	- common fields: `Model`, `Language`, `Encoding`, `SampleRate`, `Channels`, `InterimResults`, `Endpointing`
 - constructor families
-  - REST: `listen.NewRESTWithDefaults()`, `listen.NewREST(apiKey, options)`
+	- REST: `listen.NewRESTWithDefaults()`, `listen.NewREST(apiKey, options)`
   - WS callbacks: `listen.NewWSUsingCallback...`
   - WS channels: `listen.NewWSUsingChan...`
 - lifecycle
-  - connect, start, stream/write audio, keepalive as needed, `Finalize()`, then `defer conn.Close()`
+	- `Connect()` returns `bool`; call `Start()`, stream/write audio, `KeepAlive()` as needed, `Finalize()`, then `defer conn.Stop()`
 
 ## API reference (layered)
 
@@ -159,7 +168,7 @@ func main() error {
 
 1. This repo uses `listen` package names for STT v1, not `transcription`.
 2. Streaming code is split into callback and channel variants; copy the style that matches the surrounding package.
-3. For WebSockets, keep `defer conn.Close()` near construction and finalize before shutdown.
+3. For WebSockets, pass a handler into `NewWSUsingChan...`, keep `defer conn.Stop()` near construction, and finalize before shutdown.
 4. Live and prerecorded option structs are different; do not assume analytics-only prerecorded fields exist in live mode.
 5. Use `context.Context` and return `error`; do not translate examples into exception-style control flow.
 

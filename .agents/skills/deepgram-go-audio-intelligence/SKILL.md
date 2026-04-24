@@ -38,25 +38,31 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
 	listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 
-	client, err := listen.NewRESTWithDefaults()
-	if err != nil {
-		return err
-	}
+	client := listen.NewRESTWithDefaults()
+	dg := api.New(client)
 
-	resp, err := client.FromURL(
+	resp, err := dg.FromURL(
 		ctx,
 		"https://dpgr.am/spacewalk.wav",
 		&interfaces.PreRecordedTranscriptionOptions{
 			Model:     "nova-3",
-			Summarize: true,
+			Summarize: "v2",
 			Topics:    true,
 			Sentiment: true,
 		},
@@ -65,7 +71,9 @@ func main() error {
 		return err
 	}
 
-	fmt.Println(resp.Results.Summary)
+	if resp.Results.Summary != nil {
+		fmt.Println(resp.Results.Summary.Result)
+	}
 	return nil
 }
 ```
@@ -73,10 +81,10 @@ func main() error {
 ## Key parameters
 
 - analytics live on `interfaces.PreRecordedTranscriptionOptions`
-  - `Summarize`
-  - `Topics`
-  - `Intents`
-  - `Sentiment`
+	- `Summarize` (for example, `"v2"`)
+	- `Topics`
+	- `Intents`
+	- `Sentiment`
   - `DetectLanguage`
   - `DetectEntities`
   - `Diarize`
@@ -118,7 +126,7 @@ func main() error {
 
 1. In this SDK snapshot, audio intelligence is effectively a prerecorded REST feature set.
 2. `LiveTranscriptionOptions` does not expose the same summarize/topic/intent/sentiment/entity surface.
-3. Start from the speech-to-text REST examples, then layer analytics flags onto `PreRecordedTranscriptionOptions`.
+3. REST helpers live on `pkg/api/listen/v1/rest`; start from `api.New(listen.NewRESTWithDefaults())`, then layer analytics flags onto `PreRecordedTranscriptionOptions`.
 
 ## Example files in this repo
 

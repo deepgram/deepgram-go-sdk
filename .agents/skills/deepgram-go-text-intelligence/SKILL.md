@@ -35,21 +35,27 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/analyze/v1"
 	analyze "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/analyze"
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 
-	client, err := analyze.NewWithDefaults()
-	if err != nil {
-		return err
-	}
+	client := analyze.NewWithDefaults()
+	dg := api.New(client)
 
-	resp, err := client.FromStream(
+	resp, err := dg.FromStream(
 		ctx,
 		strings.NewReader("Deepgram provides APIs for speech, voice, and media intelligence."),
 		&interfaces.AnalyzeOptions{Summarize: true, Sentiment: true},
@@ -58,7 +64,9 @@ func main() error {
 		return err
 	}
 
-	fmt.Println(resp)
+	if resp.Results.Summary != nil {
+		fmt.Println(resp.Results.Summary.Text)
+	}
 	return nil
 }
 ```
@@ -68,12 +76,10 @@ func main() error {
 - `interfaces.AnalyzeOptions`
   - common fields include `Summarize`, `Sentiment`, and other Read features exposed by the analyze client
 - request helpers
-  - `FromFile`
-  - `FromStream`
-  - `FromURL`
+	- on `pkg/api/analyze/v1`: `api.New(client).FromFile`, `FromStream`, `FromURL`
 - constructors
-  - `analyze.NewWithDefaults()`
-  - `analyze.New(apiKey, options)`
+	- `analyze.NewWithDefaults()`
+	- `analyze.New(apiKey, options)`
 
 ## API reference (layered)
 
@@ -99,7 +105,8 @@ func main() error {
 
 1. The Go package is named `analyze`, but the product route maps to Read / text intelligence.
 2. Do not send raw audio here; audio intelligence features live on the listen REST path.
-3. Reuse `context.Context` and stream readers for large inputs instead of materializing everything into one string.
+3. `FromFile`, `FromStream`, and `FromURL` live on the `pkg/api/analyze/v1` wrapper, not on the base client.
+4. Reuse `context.Context` and stream readers for large inputs instead of materializing everything into one string.
 
 ## Example files in this repo
 

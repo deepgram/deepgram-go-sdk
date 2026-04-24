@@ -38,19 +38,25 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"
 	manage "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/manage"
 )
 
-func main() error {
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	ctx := context.Background()
 
-	client, err := manage.NewWithDefaults()
-	if err != nil {
-		return err
-	}
+	client := manage.NewWithDefaults()
+	mg := api.New(client)
 
-	projects, err := client.ListProjects(ctx)
+	projects, err := mg.ListProjects(ctx)
 	if err != nil {
 		return err
 	}
@@ -63,11 +69,11 @@ func main() error {
 ## Key parameters
 
 - constructors
-  - `manage.NewWithDefaults()`
-  - `manage.New(apiKey, options)`
-- common API groups in `pkg/api/manage/v1`
-  - projects: `ListProjects`, `GetProject`, `UpdateProject`, `DeleteProject`
-  - keys: `ListKeys`, `GetKey`, `CreateKey`, `DeleteKey`
+	- `manage.NewWithDefaults()`
+	- `manage.New(apiKey, options)`
+- common API groups in `pkg/api/manage/v1`, usually via `api.New(client)`
+	- projects: `ListProjects`, `GetProject`, `UpdateProject`, `DeleteProject`
+	- keys: `ListKeys`, `GetKey`, `CreateKey`, `DeleteKey`
   - members: `ListMembers`, `RemoveMember`
   - scopes: `GetMemberScopes`, `UpdateMemberScopes`
   - invitations: `ListInvitations`, `SendInvitation`, `DeleteInvitation`, `LeaveProject`
@@ -105,7 +111,7 @@ func main() error {
 ## Gotchas
 
 1. The management client is for account/admin APIs, not live Voice Agent runtime.
-2. The repo exposes many management operations from `pkg/api/manage/v1`; check the right file before adding new wrappers.
+2. The repo exposes management operations from `pkg/api/manage/v1`; use `api.New(client)` before calling helpers like `ListProjects`.
 3. For unsupported convenience helpers, fall back to `APIRequest(...)` rather than inventing a new transport layer.
 
 ## Example files in this repo
