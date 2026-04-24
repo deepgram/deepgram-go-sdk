@@ -24,7 +24,7 @@ const (
 // ***************************
 // WSClient is a struct representing the websocket client connection
 type WSClient struct {
-	cOptions *clientinterfaces.ClientOptions
+	cOptions clientinterfaces.BaseClientOptions
 
 	sendBuf   chan []byte
 	ctx       context.Context
