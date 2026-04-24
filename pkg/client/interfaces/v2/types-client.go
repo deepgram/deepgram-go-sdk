@@ -2,20 +2,15 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-package interfacesv1
+package interfacesv2
 
 import (
 	"net/http"
 	"net/url"
 	"sync"
-
-	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/shared"
 )
 
 // ClientOptions defines any options for the client
-
-type BaseClientOptions = clientinterfaces.ClientOptions
-
 type ClientOptions struct {
 	APIKey            string
 	AccessToken       string                                // JWT access token for Bearer authentication
@@ -32,12 +27,8 @@ type ClientOptions struct {
 	// prerecorded client options
 
 	// speech-to-text client options
-	RedirectService     bool  // allows HTTP redirects to be followed
-	EnableKeepAlive     bool  // enables the keep alive feature
-	AutoFlushReplyDelta int64 // enables the auto flush feature based on the delta in milliseconds
-
-	// text-to-speech client options
-	AutoFlushSpeakDelta int64 // enables the auto flush feature based on the delta in milliseconds
+	RedirectService bool // allows HTTP redirects to be followed
+	EnableKeepAlive bool // enables the keep alive feature
 
 	// Thread safety for credential management
 	credentialsMutex sync.RWMutex // protects AccessToken and APIKey fields
@@ -69,8 +60,8 @@ func (o *ClientOptions) GetAuthToken() (token string, isBearer bool) {
 	return o.APIKey, false
 }
 
-func (o *ClientOptions) GetHost() string                                 { return o.Host }
-func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)         { return o.WSHeaderProcessor }
-func (o *ClientOptions) GetRedirectService() bool                        { return o.RedirectService }
-func (o *ClientOptions) GetSkipServerAuth() bool                         { return o.SkipServerAuth }
-func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error) { return o.Proxy }
+func (o *ClientOptions) GetHost() string                                        { return o.Host }
+func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)                { return o.WSHeaderProcessor }
+func (o *ClientOptions) GetRedirectService() bool                               { return o.RedirectService }
+func (o *ClientOptions) GetSkipServerAuth() bool                                { return o.SkipServerAuth }
+func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error)        { return o.Proxy }
