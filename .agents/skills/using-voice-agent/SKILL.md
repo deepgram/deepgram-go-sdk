@@ -121,3 +121,13 @@ func main() error {
 - `examples/agent/websocket/no_mic/main.go`
 - `examples/agent/websocket/arbitrary_keys/main.go`
 - `tests/unit_test/agent/agent_speak_test.go`
+
+## Central product skills
+
+For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
+
+```bash
+npx skills add deepgram/skills
+```
+
+This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).

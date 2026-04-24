@@ -76,3 +76,13 @@ Treat that path as a manual integration, not an SDK-supported product surface.
 
 - No dedicated conversational STT v2 examples exist in this repo.
 - For shared WS patterns, inspect `tests/edge_cases/keepalive/main.go` and `tests/edge_cases/reconnect_client/main.go`.
+
+## Central product skills
+
+For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
+
+```bash
+npx skills add deepgram/skills
+```
+
+This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).

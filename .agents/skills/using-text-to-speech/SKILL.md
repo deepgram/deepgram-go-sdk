@@ -162,3 +162,13 @@ func main() error {
 
 - `examples/text-to-speech/rest/file/hello-world/main.go`
 - `examples/text-to-speech/websocket/simple_callback/main.go`
+
+## Central product skills
+
+For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
+
+```bash
+npx skills add deepgram/skills
+```
+
+This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).

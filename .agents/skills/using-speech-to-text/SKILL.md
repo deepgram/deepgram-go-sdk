@@ -171,3 +171,13 @@ func main() error {
 - `examples/speech-to-text/websocket/microphone_callback/main.go`
 - `tests/edge_cases/keepalive/main.go`
 - `tests/edge_cases/reconnect_client/main.go`
+
+## Central product skills
+
+For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
+
+```bash
+npx skills add deepgram/skills
+```
+
+This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).
