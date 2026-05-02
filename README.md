@@ -1,6 +1,6 @@
 # Deepgram Go SDK
 
-[![Discord](https://dcbadge.vercel.app/api/server/xWRaCDBtW4?style=flat)](https://discord.gg/xWRaCDBtW4) [![Go Reference](https://pkg.go.dev/badge/github.com/deepgram/deepgram-go-sdk/v3.svg)](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk/v3) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg?style=flat-rounded)](./.github/CODE_OF_CONDUCT.md)
+[![Discord](https://img.shields.io/badge/Discord-Deepgram-5865F2?logo=discord&logoColor=white&style=flat)](https://discord.gg/deepgram) [![Go Reference](https://pkg.go.dev/badge/github.com/deepgram/deepgram-go-sdk/v3.svg)](https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk/v3) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg?style=flat-rounded)](./.github/CODE_OF_CONDUCT.md)
 
 Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with world-class speech and Language AI models.
 
