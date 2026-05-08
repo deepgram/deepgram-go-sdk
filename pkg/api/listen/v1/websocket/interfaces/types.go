@@ -52,6 +52,15 @@ type Alternative struct {
 	Languages  []string `json:"languages,omitempty"`
 }
 
+// Entity is a named entity recognized in the transcript
+type Entity struct {
+	Label      string  `json:"label,omitempty"`
+	Value      string  `json:"value,omitempty"`
+	Confidence float64 `json:"confidence,omitempty"`
+	StartWord  float64 `json:"start_word,omitempty"`
+	EndWord    float64 `json:"end_word,omitempty"`
+}
+
 // Channel is a single channel in a transcript
 type Channel struct {
 	Alternatives []Alternative `json:"alternatives,omitempty"`
@@ -94,6 +103,7 @@ type MessageResponse struct {
 	SpeechFinal  bool     `json:"speech_final,omitempty"`
 	Start        float64  `json:"start,omitempty"`
 	Type         string   `json:"type,omitempty"`
+	Entities     []Entity `json:"entities,omitempty"`
 }
 
 // MetadataResponse is the response from a live transcription
