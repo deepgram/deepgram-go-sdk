@@ -19,6 +19,7 @@ func NewHTTPClient(options *interfaces.ClientOptions) *HTTPClient {
 	/* #nosec G402 */
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: options.SkipServerAuth},
+		Proxy:           options.Proxy,
 	}
 
 	c := HTTPClient{
