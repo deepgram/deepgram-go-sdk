@@ -89,7 +89,7 @@ func (h DefaultCallbackHandler) TurnInfo(tr *interfaces.TurnInfoResponse) error 
 		fmt.Printf("\n[TurnInfo] event_type=%s turn_index=%d\n  transcript: %s\n", tr.EventType, tr.TurnIndex, strings.TrimSpace(tr.Transcript))
 	default:
 		fmt.Printf("\n[TurnInfo] event_type=%s turn_index=%d\n", tr.EventType, tr.TurnIndex)
-		if h.debugWebsocketVerbose && len(tr.Transcript) > 0 {
+		if h.debugWebsocketVerbose && tr.Transcript != "" {
 			fmt.Printf("  transcript: %s\n", strings.TrimSpace(tr.Transcript))
 		}
 	}

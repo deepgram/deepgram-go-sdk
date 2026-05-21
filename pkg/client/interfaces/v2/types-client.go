@@ -60,8 +60,8 @@ func (o *ClientOptions) GetAuthToken() (token string, isBearer bool) {
 	return o.APIKey, false
 }
 
-func (o *ClientOptions) GetHost() string                                        { return o.Host }
-func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)                { return o.WSHeaderProcessor }
-func (o *ClientOptions) GetRedirectService() bool                               { return o.RedirectService }
-func (o *ClientOptions) GetSkipServerAuth() bool                                { return o.SkipServerAuth }
-func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error)        { return o.Proxy }
+func (o *ClientOptions) GetHost() string                                 { return o.Host }
+func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)         { return o.WSHeaderProcessor }
+func (o *ClientOptions) GetRedirectService() bool                        { return o.RedirectService }
+func (o *ClientOptions) GetSkipServerAuth() bool                         { return o.SkipServerAuth }
+func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error) { return o.Proxy }

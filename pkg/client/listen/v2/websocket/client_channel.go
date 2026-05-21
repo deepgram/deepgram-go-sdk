@@ -144,7 +144,7 @@ func (c *WSChannel) Write(p []byte) (int, error) {
 }
 
 // Stream reads audio from r in ChunkSize chunks and writes each chunk to the WebSocket.
-// Blocks until r is exhausted or the context is cancelled.
+// Blocks until r is exhausted or the context is canceled.
 func (c *WSChannel) Stream(r io.Reader) error {
 	klog.V(6).Infof("flux.WSChannel.Stream() ENTER\n")
 
