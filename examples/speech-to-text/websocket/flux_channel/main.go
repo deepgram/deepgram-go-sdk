@@ -243,6 +243,11 @@ func main() {
 		EagerEotThreshold: 0.3,
 	}
 
+	if model == "flux-general-multi" && len(languageHints) > 0 {
+		fmt.Printf("Configuring language hints: %s\n", strings.Join(languageHints, ", "))
+		tOptions.LanguageHint = languageHints
+	}
+
 	handler := NewMyHandler()
 
 	dgClient, err := client.NewWSUsingChan(ctx, "", cOptions, tOptions, handler)
@@ -254,15 +259,6 @@ func main() {
 	if !dgClient.Connect() {
 		fmt.Println("ERROR: failed to connect to Deepgram Flux endpoint")
 		os.Exit(1)
-	}
-
-	if model == "flux-general-multi" && len(languageHints) > 0 {
-		fmt.Printf("Configuring language hints: %s\n", strings.Join(languageHints, ", "))
-		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{
-			LanguageHints: languageHints,
-		}); err != nil {
-			fmt.Printf("Configure error: %v\n", err)
-		}
 	}
 
 	mic, err := microphone.New(microphone.AudioConfig{

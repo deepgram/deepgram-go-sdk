@@ -29,7 +29,7 @@ type OpenResponse = commoninterfaces.OpenResponse
 //
 // JSON example:
 //
-//	{"type":"ListenV2Connected","request_id":"550e8400-e29b-41d4-a716-446655440000","sequence_id":"1"}
+//	{"type":"Connected","request_id":"550e8400-e29b-41d4-a716-446655440000","sequence_id":1}
 type ConnectedResponse struct {
 	Type       string `json:"type"`
 	RequestID  string `json:"request_id"`
@@ -50,27 +50,28 @@ type TurnWord struct {
 //   - "TurnResumed"    — speech resumed after EagerEndOfTurn; turn is not yet complete
 //   - "EndOfTurn"      — final, complete transcript for the turn
 type TurnInfoResponse struct {
-	Type               string     `json:"type"`
-	RequestID          string     `json:"request_id"`
-	SequenceID         int        `json:"sequence_id"`
-	EventType          string     `json:"event"`
-	TurnIndex          int        `json:"turn_index"`
-	AudioWindowStart   float64    `json:"audio_window_start,omitempty"`
-	AudioWindowEnd     float64    `json:"audio_window_end,omitempty"`
-	Transcript         string     `json:"transcript"`
-	Words              []TurnWord `json:"words,omitempty"`
-	EndOfTurnConfidence float64   `json:"end_of_turn_confidence,omitempty"`
-	Languages          []string   `json:"languages,omitempty"`
-	LanguagesHinted    []string   `json:"languages_hinted,omitempty"`
+	Type                string     `json:"type"`
+	RequestID           string     `json:"request_id"`
+	SequenceID          int        `json:"sequence_id"`
+	EventType           string     `json:"event"`
+	TurnIndex           int        `json:"turn_index"`
+	AudioWindowStart    float64    `json:"audio_window_start,omitempty"`
+	AudioWindowEnd      float64    `json:"audio_window_end,omitempty"`
+	Transcript          string     `json:"transcript"`
+	Words               []TurnWord `json:"words,omitempty"`
+	EndOfTurnConfidence float64    `json:"end_of_turn_confidence,omitempty"`
+	Languages           []string   `json:"languages,omitempty"`
+	LanguagesHinted     []string   `json:"languages_hinted,omitempty"`
 }
 
 // ConfigureSuccessResponse acknowledges that a mid-session Configure message was accepted.
 type ConfigureSuccessResponse struct {
-	Type       string                        `json:"type"`
-	RequestID  string                        `json:"request_id"`
-	SequenceID int                           `json:"sequence_id"`
-	Thresholds *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
-	Keyterms   []string                      `json:"keyterms,omitempty"`
+	Type          string                             `json:"type"`
+	RequestID     string                             `json:"request_id"`
+	SequenceID    int                                `json:"sequence_id"`
+	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
+	Keyterms      []string                           `json:"keyterms,omitempty"`
+	LanguageHints []string                           `json:"language_hints,omitempty"`
 }
 
 // ConfigureFailureResponse signals that a mid-session Configure message was rejected.

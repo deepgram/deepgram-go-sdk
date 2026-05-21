@@ -25,6 +25,9 @@ type FluxTranscriptionOptions struct {
 	Tag []string `json:"tag,omitempty" schema:"tag,omitempty"`
 	// MipOptOut opts the request out of Deepgram's model improvement program.
 	MipOptOut bool `json:"mip_opt_out,omitempty" schema:"mip_opt_out,omitempty"`
+	// LanguageHint constrains and prioritizes language detection for the
+	// flux-general-multi model. Only valid when Model is "flux-general-multi".
+	LanguageHint []string `json:"language_hint,omitempty" schema:"language_hint,omitempty"`
 }
 
 // FluxThresholds holds the turn-detection thresholds used in Configure messages
