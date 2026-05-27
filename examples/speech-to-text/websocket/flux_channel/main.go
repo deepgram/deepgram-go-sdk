@@ -244,7 +244,7 @@ func main() {
 	}
 
 	if model == "flux-general-multi" && len(languageHints) > 0 {
-		fmt.Printf("Configuring language hints: %s\n", strings.Join(languageHints, ", "))
+		fmt.Printf("Using language hints: %s\n", strings.Join(languageHints, ", "))
 		tOptions.LanguageHint = languageHints
 	}
 

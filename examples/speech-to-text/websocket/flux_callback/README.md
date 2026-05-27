@@ -24,7 +24,7 @@ go run main.go -model flux-general-en
 # Multilingual model — no language hints
 go run main.go -model flux-general-multi
 
-# Multilingual model with language hints (triggers a mid-session Configure)
+# Multilingual model with language hints (sent as connect-time query params)
 go run main.go -model flux-general-multi -language en -language es -language fr
 ```
 
@@ -38,7 +38,7 @@ go run main.go -model flux-general-multi -language en -language es -language fr
 ## Behaviour
 
 - **Single model** (`flux-general-en`): Transcribes English audio with server-side turn detection. Language hints are ignored.
-- **Multi model** (`flux-general-multi`): Transcribes multilingual audio. If `-language` flags are provided, a `Configure` message is sent immediately after connecting, passing the hints as `language_hints`. The server will include the detected and hinted languages in each `EndOfTurn` event.
+- **Multi model** (`flux-general-multi`): Transcribes multilingual audio. If `-language` flags are provided, the hints are passed as `language_hint` query parameters at connect time. The server will include the detected and hinted languages in each `EndOfTurn` event.
 
 ## Turn Events
 
