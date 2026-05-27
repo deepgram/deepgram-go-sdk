@@ -55,11 +55,11 @@ type TurnInfoResponse struct {
 	SequenceID          int        `json:"sequence_id"`
 	EventType           string     `json:"event"`
 	TurnIndex           int        `json:"turn_index"`
-	AudioWindowStart    float64    `json:"audio_window_start,omitempty"`
-	AudioWindowEnd      float64    `json:"audio_window_end,omitempty"`
+	AudioWindowStart    float64    `json:"audio_window_start"`
+	AudioWindowEnd      float64    `json:"audio_window_end"`
 	Transcript          string     `json:"transcript"`
-	Words               []TurnWord `json:"words,omitempty"`
-	EndOfTurnConfidence float64    `json:"end_of_turn_confidence,omitempty"`
+	Words               []TurnWord `json:"words"`
+	EndOfTurnConfidence float64    `json:"end_of_turn_confidence"`
 	Languages           []string   `json:"languages,omitempty"`
 	LanguagesHinted     []string   `json:"languages_hinted,omitempty"`
 }
