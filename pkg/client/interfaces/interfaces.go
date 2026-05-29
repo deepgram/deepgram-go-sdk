@@ -6,6 +6,7 @@ package interfaces
 
 import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 )
 
 const (
@@ -19,9 +20,13 @@ func NewSettingsConfigurationOptions() *interfacesv1.SettingsOptions {
 
 // options
 type ClientOptions = interfacesv1.ClientOptions
+type ClientOptionsV2 = interfacesv2.ClientOptions
 type SettingsOptions = interfacesv1.SettingsOptions
 type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOptions
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions
 type SpeakOptions = interfacesv1.SpeakOptions
 type WSSpeakOptions = interfacesv1.WSSpeakOptions
+type FluxTranscriptionOptions = interfacesv2.FluxTranscriptionOptions
+type FluxConfigureOptions = interfacesv2.FluxConfigureOptions
+type FluxThresholds = interfacesv2.FluxThresholds
