@@ -1,21 +1,11 @@
 ---
 name: deepgram-go-audio-intelligence
-description: Use when writing or reviewing Go code in this repo that applies summaries, topics, intents, sentiment, language detection, diarization, redaction, or entity extraction to audio inputs through Listen v1 REST. Route plain transcription to deepgram-go-speech-to-text and plain-text Read requests to deepgram-go-text-intelligence.
+description: "Use when writing or reviewing Go code in this repo that applies summaries, topics, intents, sentiment, language detection, diarization, redaction, or entity extraction to audio inputs through Listen v1 REST. Route plain transcription to deepgram-go-speech-to-text and plain-text Read requests to deepgram-go-text-intelligence."
 ---
 
 # Using Deepgram Audio Intelligence from the Go SDK
 
-## When to use this product
-
-Use this skill for `/v1/listen` REST requests that combine transcription with analytics overlays.
-
-- summaries
-- topics
-- intents
-- sentiments
-- entity extraction
-- language detection
-- diarization and redaction where supported
+Use this skill for `/v1/listen` REST requests that combine transcription with analytics overlays: summaries, topics, intents, sentiments, entity extraction, language detection, diarization, and redaction.
 
 Use a different skill when:
 
@@ -23,8 +13,6 @@ Use a different skill when:
 - your input is already text (`deepgram-go-text-intelligence`)
 
 ## Authentication
-
-Set `DEEPGRAM_API_KEY` before creating the listen REST client.
 
 ```bash
 export DEEPGRAM_API_KEY="your_api_key"
@@ -80,67 +68,36 @@ func run() error {
 
 ## Key parameters
 
-- analytics live on `interfaces.PreRecordedTranscriptionOptions`
-	- `Summarize` (for example, `"v2"`)
-	- `Topics`
-	- `Intents`
-	- `Sentiment`
-  - `DetectLanguage`
-  - `DetectEntities`
-  - `Diarize`
-  - `Redact`
-- response payloads are in `pkg/api/listen/v1/rest/interfaces/types.go`
-  - `Sentiments`
-  - `Topics`
-  - `Intents`
-  - `Entities`
-  - `SummaryV2`
-- this SDK is REST-first for audio intelligence; the live WS option struct does not expose the same analytics surface
+Analytics flags on `interfaces.PreRecordedTranscriptionOptions`:
+
+| Flag | Type | Notes |
+|------|------|-------|
+| `Summarize` | `string` | e.g. `"v2"` |
+| `Topics` | `bool` | |
+| `Intents` | `bool` | |
+| `Sentiment` | `bool` | |
+| `DetectLanguage` | `bool` | |
+| `DetectEntities` | `bool` | |
+| `Diarize` | `bool` | |
+| `Redact` | `[]string` | |
+
+Response payloads in `pkg/api/listen/v1/rest/interfaces/types.go`: `Sentiments`, `Topics`, `Intents`, `Entities`, `SummaryV2`.
 
 ## API reference (layered)
 
-1. In-repo reference
-   - `README.md`
-   - `docs.go`
-   - `pkg/client/listen/v1/rest/client.go`
-   - `pkg/client/interfaces/v1/types-prerecorded.go`
-   - `pkg/client/interfaces/v1/types-stream.go`
-   - `pkg/api/listen/v1/rest/interfaces/types.go`
-2. OpenAPI
-   - `https://developers.deepgram.com/openapi.yaml`
-3. AsyncAPI
-   - `https://developers.deepgram.com/asyncapi.yaml`
-4. Context7
-   - `/llmstxt/developers_deepgram_llms_txt`
-5. Product docs
-   - `https://developers.deepgram.com/docs/stt-intelligence-feature-overview`
-   - `https://developers.deepgram.com/docs/summarization`
-   - `https://developers.deepgram.com/docs/topic-detection`
-   - `https://developers.deepgram.com/docs/intent-recognition`
-   - `https://developers.deepgram.com/docs/sentiment-analysis`
-   - `https://developers.deepgram.com/docs/language-detection`
-   - `https://developers.deepgram.com/docs/redaction`
-   - `https://developers.deepgram.com/docs/diarization`
+1. In-repo: `pkg/client/listen/v1/rest/client.go`, `pkg/client/interfaces/v1/types-prerecorded.go`, `pkg/api/listen/v1/rest/interfaces/types.go`
+2. OpenAPI: `https://developers.deepgram.com/openapi.yaml`
+3. Product docs: `https://developers.deepgram.com/docs/stt-intelligence-feature-overview`, `https://developers.deepgram.com/docs/summarization`, `https://developers.deepgram.com/docs/sentiment-analysis`
 
 ## Gotchas
 
-1. In this SDK snapshot, audio intelligence is effectively a prerecorded REST feature set.
-2. `LiveTranscriptionOptions` does not expose the same summarize/topic/intent/sentiment/entity surface.
-3. REST helpers live on `pkg/api/listen/v1/rest`; start from `api.New(listen.NewRESTWithDefaults())`, then layer analytics flags onto `PreRecordedTranscriptionOptions`.
+1. Audio intelligence is a **prerecorded REST** feature set only; `LiveTranscriptionOptions` does not expose the same analytics surface.
+2. Build via `api.New(listen.NewRESTWithDefaults())`, then layer analytics flags onto `PreRecordedTranscriptionOptions`.
+3. Do not send raw text here; text analysis belongs in `deepgram-go-text-intelligence`.
 
-## Example files in this repo
+## Example files
 
 - `examples/speech-to-text/rest/summary/main.go`
 - `examples/speech-to-text/rest/sentiment/main.go`
 - `examples/speech-to-text/rest/topic/main.go`
 - `examples/speech-to-text/rest/intent/main.go`
-
-## Central product skills
-
-For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
-
-```bash
-npx skills add deepgram/skills
-```
-
-This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).
