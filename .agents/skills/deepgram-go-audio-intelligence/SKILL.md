@@ -88,6 +88,7 @@ func run() error {
   - `DetectLanguage`
   - `DetectEntities`
   - `Diarize`
+  - `DiarizeModel`
   - `Redact`
 - response payloads are in `pkg/api/listen/v1/rest/interfaces/types.go`
   - `Sentiments`

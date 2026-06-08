@@ -24,6 +24,7 @@ type PreRecordedTranscriptionOptions struct {
 	DetectLanguage   bool     `json:"detect_language,omitempty" schema:"detect_language,omitempty"`
 	DetectTopics     bool     `json:"detect_topics,omitempty" schema:"detect_topics,omitempty"`
 	Diarize          bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
+	DiarizeModel     string   `json:"diarize_model,omitempty" schema:"diarize_model,omitempty"`
 	DiarizeVersion   string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation        bool     `json:"dictation,omitempty" schema:"dictation,omitempty"`
 	Encoding         string   `json:"encoding,omitempty" schema:"encoding,omitempty"`

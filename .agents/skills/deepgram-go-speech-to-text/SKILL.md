@@ -135,7 +135,7 @@ func run() error {
 ## Key parameters
 
 - `interfaces.PreRecordedTranscriptionOptions`
-	- common fields: `Model`, `Language`, `Punctuate`, `SmartFormat`, `Diarize`, `Redact`, `Utterances`
+	- common fields: `Model`, `Language`, `Punctuate`, `SmartFormat`, `Diarize`, `DiarizeModel` (batch diarization version: `latest`/`v1`/`v2`), `Redact`, `Utterances`
 	- use with `pkg/api/listen/v1/rest`: `api.New(client).FromURL`, `FromFile`, `FromStream`
 - `interfaces.LiveTranscriptionOptions`
 	- common fields: `Model`, `Language`, `Encoding`, `SampleRate`, `Channels`, `InterimResults`, `Endpointing`
