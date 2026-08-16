@@ -91,7 +91,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 	err := c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
 		switch res.StatusCode {
 		case http.StatusOK, http.StatusCreated, http.StatusNoContent:
-			// Normal successful handling
 		default:
 			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
 			detail, err := io.ReadAll(res.Body)
@@ -101,7 +100,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 			}
 
 			var e interfaces.DeepgramError
-			if err := json.Unmarshal(detail, &e); err == nil && e.ErrCode != "" {
+			if err := json.Unmarshal(detail, &e); err == nil && (e.ErrCode != "" || e.ErrMsg != "") {
 				klog.V(6).Infof("Parsed Deepgram Specific Error\n")
 				return &interfaces.StatusError{
 					Resp:          res,

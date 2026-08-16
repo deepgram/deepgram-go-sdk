@@ -86,13 +86,13 @@ func (c *RESTClient) HandleResponse(res *http.Response, keys []string, resBody i
 		detail, err := io.ReadAll(res.Body)
 		if err != nil {
 			klog.V(1).Infof("io.ReadAll failed. Err: %v\n", err)
-			return &interfaces.StatusError{Resp: res}
+			return nil, &interfaces.StatusError{Resp: res}
 		}
 
 		var e interfaces.DeepgramError
-		if err := json.Unmarshal(detail, &e); err == nil && e.ErrCode != "" {
+		if err := json.Unmarshal(detail, &e); err == nil && (e.ErrCode != "" || e.ErrMsg != "") {
 			klog.V(6).Infof("Parsed Deepgram Specific Error\n")
-			return &interfaces.StatusError{
+			return nil, &interfaces.StatusError{
 				Resp:          res,
 				DeepgramError: &e,
 			}
@@ -100,7 +100,7 @@ func (c *RESTClient) HandleResponse(res *http.Response, keys []string, resBody i
 
 		byDetails := bytes.TrimSpace(detail)
 		klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
-		return fmt.Errorf("%s: %s", res.Status, byDetails)
+		return nil, fmt.Errorf("%s: %s", res.Status, byDetails)
 	}
 }
 
