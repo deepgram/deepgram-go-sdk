@@ -90,20 +90,18 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	err := c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
 		switch res.StatusCode {
-		case http.StatusOK:
-		case http.StatusCreated:
-		case http.StatusNoContent:
-		case http.StatusBadRequest:
+		case http.StatusOK, http.StatusCreated, http.StatusNoContent:
+			// Normal successful handling
+		default:
 			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
 			detail, err := io.ReadAll(res.Body)
 			if err != nil {
-				klog.V(4).Infof("io.ReadAll failed. Err: %v\n", err)
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", err)
 				return &interfaces.StatusError{Resp: res}
 			}
 
-			// attempt to parse out Deepgram error
 			var e interfaces.DeepgramError
-			if err := json.Unmarshal(detail, &e); err == nil {
+			if err := json.Unmarshal(detail, &e); err == nil && e.ErrCode != "" {
 				klog.V(6).Infof("Parsed Deepgram Specific Error\n")
 				return &interfaces.StatusError{
 					Resp:          res,
@@ -111,12 +109,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 				}
 			}
 
-			// give standard generic error
 			byDetails := bytes.TrimSpace(detail)
 			klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
 			return fmt.Errorf("%s: %s", res.Status, byDetails)
-		default:
-			return &interfaces.StatusError{Resp: res}
 		}
 
 		if resBody == nil {
