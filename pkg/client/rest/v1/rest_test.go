@@ -15,7 +15,7 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestDoReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
+func Test_DoReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
@@ -56,7 +56,7 @@ func TestDoReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
 	}
 }
 
-func TestDoReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
+func Test_DoReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		_, _ = w.Write([]byte("upstream unavailable"))

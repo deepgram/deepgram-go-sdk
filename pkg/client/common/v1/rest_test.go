@@ -15,7 +15,7 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestHandleResponseReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
+func Test_HandleResponseReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
 	client := NewREST("test-api-key", &interfaces.ClientOptions{})
 	if client == nil {
 		t.Fatal("NewREST returned nil")
@@ -53,7 +53,7 @@ func TestHandleResponseReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) 
 	}
 }
 
-func TestHandleResponseReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
+func Test_HandleResponseReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
 	client := NewREST("test-api-key", &interfaces.ClientOptions{})
 	if client == nil {
 		t.Fatal("NewREST returned nil")
