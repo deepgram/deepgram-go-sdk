@@ -35,20 +35,24 @@ type OpenResponse = commoninterfaces.OpenResponse
 
 // MetadataResponse is the response from the text-to-speech request which contains metadata about the request
 type MetadataResponse struct {
-	Type      string `json:"type,omitempty"`
-	RequestID string `json:"request_id,omitempty"`
+	Type                 string   `json:"type"`
+	RequestID            string   `json:"request_id"`
+	ModelName            string   `json:"model_name"`
+	ModelVersion         string   `json:"model_version"`
+	ModelUUID            string   `json:"model_uuid"`
+	AdditionalModelUUIDs []string `json:"additional_model_uuids,omitempty"`
 }
 
 // FlushedResponse is the response which indicates that the server has flushed the buffer and is ready to return audio
 type FlushedResponse struct {
-	Type       string `json:"type,omitempty"`
-	SequenceID int    `json:"sequence_id,omitempty"`
+	Type       string `json:"type"`
+	SequenceID int    `json:"sequence_id"`
 }
 
 // ClearedResponse is the response which indicates that the server has cleared the buffer
 type ClearedResponse struct {
-	Type       string `json:"type,omitempty"`
-	SequenceID int    `json:"sequence_id,omitempty"`
+	Type       string `json:"type"`
+	SequenceID int    `json:"sequence_id"`
 }
 
 // CloseResponse is the response from closing the connection
