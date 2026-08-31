@@ -16,6 +16,22 @@ func (o *FluxTranscriptionOptions) Check() error {
 	return nil
 }
 
+func (o *SpeakV2Options) Check() error {
+	// model is required on /v2/speak — unlike /v1/speak there is no default
+	if o.Model == "" {
+		return ErrModelRequired
+	}
+	return nil
+}
+
+func (o *SpeakV2WSOptions) Check() error {
+	// model is required on /v2/speak — unlike /v1/speak there is no default
+	if o.Model == "" {
+		return ErrModelRequired
+	}
+	return nil
+}
+
 func (o *ClientOptions) Parse() error {
 	// Priority-based credential resolution for authentication
 	// 1. Explicit AccessToken parameter (highest priority)
