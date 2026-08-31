@@ -4,7 +4,11 @@
 
 package interfacesv2
 
-import v1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+import (
+	"errors"
+
+	v1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+)
 
 const (
 	PackageVersion string = "v2.0"
@@ -18,4 +22,7 @@ const (
 var (
 	// ErrNoAPIKey no api key found
 	ErrNoAPIKey = v1.ErrNoAPIKey
+
+	// ErrModelRequired no model specified where one is required
+	ErrModelRequired = errors.New("model is required")
 )
