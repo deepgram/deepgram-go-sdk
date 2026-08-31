@@ -217,6 +217,29 @@ func (c *WSCallback) Configure(opts *clientinterfaces.FluxConfigureOptions) erro
 	return nil
 }
 
+// ForceEndTurn immediately ends the current turn, regardless of the model's
+// end-of-turn confidence. The server finalizes the turn and emits an "EndOfTurn"
+// TurnInfo with Trigger set to "manual". Use it when an external signal — a
+// push-to-talk release, DTMF input, a UI send action, or your own endpointing —
+// determines the turn boundary. Combine with EotThreshold 1.0 to suppress native
+// detection and drive every turn ending yourself.
+func (c *WSCallback) ForceEndTurn() error {
+	klog.V(7).Infof("flux.WSCallback.ForceEndTurn() ENTER\n")
+
+	msg := msginterfaces.ForceEndTurnMessage{
+		Type: MessageTypeForceEndTurn,
+	}
+	if err := c.WriteJSON(msg); err != nil {
+		klog.V(1).Infof("ForceEndTurn failed. Err: %v\n", err)
+		klog.V(7).Infof("flux.WSCallback.ForceEndTurn() LEAVE\n")
+		return err
+	}
+
+	klog.V(4).Infof("ForceEndTurn sent\n")
+	klog.V(7).Infof("flux.WSCallback.ForceEndTurn() LEAVE\n")
+	return nil
+}
+
 // GetCloseMsg returns the JSON bytes for the CloseStream control message.
 func (c *WSCallback) GetCloseMsg() []byte {
 	return []byte(`{"type":"CloseStream"}`)

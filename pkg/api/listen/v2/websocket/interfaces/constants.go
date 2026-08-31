@@ -33,3 +33,14 @@ const (
 	TurnEventTurnResumed    = "TurnResumed"
 	TurnEventEndOfTurn      = "EndOfTurn"
 )
+
+// TurnTrigger values for TurnInfoResponse.Trigger on "EndOfTurn" events.
+// The field is an open string: the server may add new values over time.
+const (
+	// TurnTriggerModel — the turn ended via Flux's native end-of-turn detection.
+	TurnTriggerModel = "model"
+	// TurnTriggerManual — the turn ended because the client sent ForceEndTurn.
+	TurnTriggerManual = "manual"
+	// TurnTriggerTimeout — the turn ended because eot_timeout_ms elapsed.
+	TurnTriggerTimeout = "timeout"
+)
