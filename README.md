@@ -64,6 +64,18 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Models](#models)
     - [Get All Project Models](#get-all-project-models)
     - [Get Model](#get-model)
+  - [Agent Configurations](#agent-configurations)
+    - [List Agents](#list-agents)
+    - [Get Agent](#get-agent)
+    - [Create Agent](#create-agent)
+    - [Update Agent Metadata](#update-agent-metadata)
+    - [Delete Agent](#delete-agent)
+  - [Agent Variables](#agent-variables)
+    - [List Agent Variables](#list-agent-variables)
+    - [Get Agent Variable](#get-agent-variable)
+    - [Create Agent Variable](#create-agent-variable)
+    - [Update Agent Variable](#update-agent-variable)
+    - [Delete Agent Variable](#delete-agent-variable)
   - [On-Prem APIs](#on-prem-apis)
     - [List On-Prem credentials](#list-on-prem-credentials)
     - [Get On-Prem credentials](#get-on-prem-credentials)
@@ -1116,6 +1128,201 @@ fmt.Printf("Model: %+v\n", res.Model)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/projects/get-model).
+
+## Agent Configurations
+
+### List Agents
+
+Retrieves all reusable agent configurations for the provided project_id. The API answers with a bare JSON array, which the SDK decodes into `res.Agents`. Configurations are returned in their uninterpolated form, so `DG_<VARIABLE_NAME>` placeholders appear as-is rather than with their substituted values.
+
+```go
+// List agent configurations
+res, err := dg.ListAgents(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("ListAgents failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Agents: %+v\n", res.Agents)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-configurations/list-agent-configurations).
+
+### Get Agent
+
+Retrieves a specific agent configuration, also in its uninterpolated form.
+
+```go
+// Get specific agent configuration
+res, err := dg.GetAgent(ctx, myProjectId, agentId)
+if err != nil {
+    fmt.Printf("GetAgent failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Agent: %s, Config: %s\n", res.AgentID, res.Config)
+```
+
+`res.Config` is the JSON **string** that was stored, echoed back verbatim, so it round-trips symmetrically with `AgentCreateRequest.Config`.
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-configurations/get-agent-configuration).
+
+### Create Agent
+
+Creates a reusable agent configuration and returns the `agent_uuid` you can pass in place of the full agent object on a Voice Agent connection. `Config` is a JSON **string** holding the `agent` block of a Settings message, not a nested object, and template variables are referenced bare (unquoted) inside it. The response carries the new UUID and nothing else, so only `res.AgentID` is populated.
+
+```go
+// Create agent configuration
+options := &interfaces.AgentCreateRequest{
+    Config: `{
+        "listen": {"provider": {"type": "deepgram", "model": "nova-3"}},
+        "think": {
+            "provider": {"type": "open_ai", "model": "gpt-4o-mini"},
+            "prompt": DG_EXAMPLE_ROLE
+        },
+        "speak": {"provider": {"type": "deepgram", "model": "aura-2-thalia-en"}}
+    }`,
+    Metadata: map[string]interface{}{"created_by": "go-sdk"},
+}
+res, err := dg.CreateAgent(ctx, myProjectId, options)
+if err != nil {
+    fmt.Printf("CreateAgent failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Created agent: %s\n", res.AgentID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-configurations/create-agent-configuration).
+
+### Update Agent Metadata
+
+Updates the metadata associated with an agent configuration. The config itself is immutable, so this request is metadata-only. To change a configuration, create a new agent and migrate traffic to its UUID. Metadata values are arbitrary JSON, not just strings. **This request replaces the entire metadata object: any key you omit is deleted, silently and with a `200`.** Call `GetAgent` first and resend every key you mean to keep. The API answers with an empty body, so the call returns only an `error`; read the stored metadata back with `GetAgent`.
+
+```go
+// Update agent metadata
+options := &interfaces.AgentMetadataUpdateRequest{
+    Metadata: map[string]interface{}{"created_by": "go-sdk", "env": "production", "revision": 2},
+}
+if err := dg.UpdateAgentMetadata(ctx, myProjectId, agentId, options); err != nil {
+    fmt.Printf("UpdateAgentMetadata failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Updated metadata for agent %s\n", agentId)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-configurations/update-agent-metadata).
+
+### Delete Agent
+
+Removes the specified agent configuration from the project. Live sessions that still reference the UUID will fail, so migrate them before deleting. The API answers with an empty body, so the call returns only an `error`.
+
+```go
+// Delete agent configuration
+err := dg.DeleteAgent(ctx, myProjectId, agentId)
+if err != nil {
+    fmt.Printf("DeleteAgent failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Deleted agent %s\n", agentId)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-configurations/delete-agent-configuration).
+
+## Agent Variables
+
+### List Agent Variables
+
+Retrieves all agent template variables associated with the provided project_id. As with agent configurations, the API answers with a bare JSON array, which the SDK decodes into `res.Variables`.
+
+```go
+// List agent variables
+res, err := dg.ListAgentVariables(ctx, myProjectId)
+if err != nil {
+    fmt.Printf("ListAgentVariables failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Variables: %+v\n", res.Variables)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-variables/list-agent-variables).
+
+### Get Agent Variable
+
+Retrieves a specific agent template variable.
+
+```go
+// Get specific agent variable
+res, err := dg.GetAgentVariable(ctx, myProjectId, variableId)
+if err != nil {
+    fmt.Printf("GetAgentVariable failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Variable: %s = %v\n", res.Key, res.Value)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-variables/get-agent-variable).
+
+### Create Agent Variable
+
+Creates an agent template variable. `Key` follows the `DG_<VARIABLE_NAME>` naming format, and `Value` can be any valid JSON type (string, number, boolean, object, or array), because a variable substitutes a whole JSON value in the config. `is_sensitive` is optional and defaults to `false`, which is also the only value the API accepts today; the SDK sends it explicitly, so leave `IsSensitive` at its zero value. The response carries the new UUID and nothing else, so only `res.VariableID` is populated.
+
+```go
+// Create agent variable
+options := &interfaces.AgentVariableCreateRequest{
+    Key:   "DG_EXAMPLE_ROLE",
+    Value: "a helpful weather assistant",
+}
+res, err := dg.CreateAgentVariable(ctx, myProjectId, options)
+if err != nil {
+    fmt.Printf("CreateAgentVariable failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Created variable: %s\n", res.VariableID)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-variables/create-agent-variable).
+
+### Update Agent Variable
+
+Updates the value of an existing agent template variable with a `PATCH`. The new value can be any valid JSON type. The API answers with an empty body, so the call returns only an `error`; read the stored value back with `GetAgentVariable`.
+
+```go
+// Update agent variable
+options := &interfaces.AgentVariableUpdateRequest{
+    Value: "a concise weather assistant",
+}
+if err := dg.UpdateAgentVariable(ctx, myProjectId, variableId, options); err != nil {
+    fmt.Printf("UpdateAgentVariable failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Updated variable %s\n", variableId)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-variables/update-agent-variable).
+
+### Delete Agent Variable
+
+Removes the specified agent template variable from the project. As with agent deletion, the API answers with an empty body, so the call returns only an `error`.
+
+```go
+// Delete agent variable
+err := dg.DeleteAgentVariable(ctx, myProjectId, variableId)
+if err != nil {
+    fmt.Printf("DeleteAgentVariable failed. Err: %v\n", err)
+    os.Exit(1)
+}
+
+fmt.Printf("Deleted variable %s\n", variableId)
+```
+
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/agent-variables/delete-agent-variable).
 
 ## On-Prem APIs
 

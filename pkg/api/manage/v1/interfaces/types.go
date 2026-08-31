@@ -8,6 +8,7 @@ This package provides the types for the Deepgram Manage API.
 package interfaces
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
@@ -264,6 +265,92 @@ type Usage struct {
 	Results    []Result   `json:"results,omitempty"`
 }
 
+// AgentConfiguration provides a reusable voice-agent configuration.
+//
+// Config is the "agent" block of a Settings message as a JSON *string*, not a
+// nested JSON object: the server stores the exact string the create request
+// sent and echoes it back verbatim, uninterpolated, so DG_<VARIABLE_NAME>
+// placeholders appear as-is. The round trip is therefore symmetric with
+// AgentCreateRequest.Config — what you send is what you read back.
+//
+// Metadata values are arbitrary JSON, not just strings: the API stores and
+// returns whatever a client wrote, so an agent whose metadata was set by the
+// console or another SDK can carry numbers, booleans, and nested objects.
+// Typing this as map[string]string fails the decode of the *entire* response,
+// not just the field.
+//
+// CreateAgent answers with the new UUID only, so AgentID is the single
+// populated field on a create result; GetAgent and ListAgents fill in the rest.
+type AgentConfiguration struct {
+	AgentID    string                 `json:"agent_uuid,omitempty"`
+	MemberID   string                 `json:"member_id,omitempty"`
+	APIVersion int                    `json:"api_version,omitempty"`
+	Config     string                 `json:"config,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// AgentsList provides a list of reusable voice-agent configurations.
+//
+// The list endpoint answers with a bare JSON array at the top level rather than
+// an object wrapping one, so this type encodes and decodes as that array while
+// still exposing the .Agents field every other list type in this package uses.
+type AgentsList struct {
+	Agents []AgentConfiguration
+}
+
+// UnmarshalJSON decodes the bare JSON array returned by the list agents endpoint.
+func (l *AgentsList) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &l.Agents)
+}
+
+// MarshalJSON re-encodes the list as the bare JSON array the API uses, so a
+// decode/encode round trip reproduces the wire format.
+func (l AgentsList) MarshalJSON() ([]byte, error) {
+	if l.Agents == nil {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(l.Agents)
+}
+
+// AgentVariable provides a template variable for agent configurations.
+//
+// Value can be any valid JSON type (string, number, boolean, object, or array),
+// and IsSensitive is reported on every read, so neither carries omitempty: a
+// variable holding false, 0, or "" must survive a decode/encode round trip.
+//
+// CreateAgentVariable answers with the new UUID only, so VariableID is the
+// single populated field on a create result.
+type AgentVariable struct {
+	VariableID  string      `json:"agent_variable_uuid,omitempty"`
+	MemberID    string      `json:"member_id,omitempty"`
+	APIVersion  int         `json:"api_version,omitempty"`
+	Key         string      `json:"key,omitempty"`
+	Value       interface{} `json:"value"`
+	IsSensitive bool        `json:"is_sensitive"`
+}
+
+// AgentVariablesList provides a list of agent template variables.
+//
+// Like the agents list, the endpoint answers with a bare JSON array at the top
+// level, so this type encodes and decodes as that array.
+type AgentVariablesList struct {
+	Variables []AgentVariable
+}
+
+// UnmarshalJSON decodes the bare JSON array returned by the list agent
+// variables endpoint.
+func (l *AgentVariablesList) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, &l.Variables)
+}
+
+// MarshalJSON re-encodes the list as the bare JSON array the API uses.
+func (l AgentVariablesList) MarshalJSON() ([]byte, error) {
+	if l.Variables == nil {
+		return []byte("[]"), nil
+	}
+	return json.Marshal(l.Variables)
+}
+
 /***********************************/
 // Request/Input structs
 /***********************************/
@@ -296,6 +383,52 @@ type KeyCreateRequest struct {
 // ScopeUpdateRequest provides a scope update request
 type ScopeUpdateRequest struct {
 	Scope string `json:"scope,omitempty" url:"scope,omitempty"`
+}
+
+// AgentCreateRequest provides an agent configuration create request.
+// Config is a JSON string holding the "agent" block of a Settings message, not
+// a nested JSON object. Template variables are referenced bare (unquoted)
+// inside it — "prompt": DG_SYSTEM_PROMPT — so a config that uses them is not
+// itself parseable JSON until the server substitutes their values.
+// Metadata values are arbitrary JSON, matching the read side, so a caller can
+// write back metadata it just read without losing non-string values.
+type AgentCreateRequest struct {
+	Config     string                 `json:"config"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
+	APIVersion int                    `json:"api_version,omitempty"`
+}
+
+// AgentMetadataUpdateRequest provides an agent metadata update request.
+// Only metadata can be updated; the config itself is immutable — to change the
+// configuration, delete the existing agent and create a new one.
+// Metadata values are arbitrary JSON, matching what GetAgent returns, so a
+// caller can round-trip metadata it did not author. The update REPLACES the
+// entire metadata object: any key absent from this map is deleted, silently and
+// with a 200. Read the current metadata with GetAgent first and resend every key
+// you mean to keep.
+type AgentMetadataUpdateRequest struct {
+	Metadata map[string]interface{} `json:"metadata"`
+}
+
+// AgentVariableCreateRequest provides an agent variable create request.
+// Key follows the DG_<VARIABLE_NAME> naming format; Value can be any valid
+// JSON type (string, number, boolean, object, or array).
+//
+// IsSensitive is optional on the wire — the API defaults it to false when the
+// field is absent — but false is the only value it accepts today. The field is
+// serialized unconditionally (no omitempty) so the request states that intent
+// explicitly rather than relying on a server-side default, and the Go zero
+// value is the value callers want.
+type AgentVariableCreateRequest struct {
+	Key         string      `json:"key"`
+	Value       interface{} `json:"value"`
+	IsSensitive bool        `json:"is_sensitive"`
+	APIVersion  int         `json:"api_version,omitempty"`
+}
+
+// AgentVariableUpdateRequest provides an agent variable update request
+type AgentVariableUpdateRequest struct {
+	Value interface{} `json:"value"`
 }
 
 // UsageListRequest provides a usage request
@@ -430,6 +563,26 @@ type UsageFieldResult struct {
 // UsageSummary provides a result with a list of usage
 type UsageResult struct {
 	Usage
+}
+
+// AgentsResult provides a result with a list of agent configurations
+type AgentsResult struct {
+	AgentsList
+}
+
+// AgentResult provides a result with a single agent configuration
+type AgentResult struct {
+	AgentConfiguration
+}
+
+// AgentVariablesResult provides a result with a list of agent variables
+type AgentVariablesResult struct {
+	AgentVariablesList
+}
+
+// AgentVariableResult provides a result with a single agent variable
+type AgentVariableResult struct {
+	AgentVariable
 }
 
 // ErrorResponse is the Deepgram specific response error

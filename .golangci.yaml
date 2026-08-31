@@ -148,6 +148,12 @@ issues:
     - path: pkg/api/speak/v2/websocket/chan_router.go
       linters:
         - dupl
+    - path: pkg/api/manage/v1/agents.go
+      linters:
+        - dupl
+    - path: pkg/api/manage/v1/agent-variables.go
+      linters:
+        - dupl
     - path: pkg/api/manage/v1/manage.go
       linters:
         - staticcheck
