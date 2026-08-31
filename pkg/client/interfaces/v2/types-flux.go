@@ -15,7 +15,10 @@ type FluxTranscriptionOptions struct {
 	SampleRate int `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
 	// EagerEotThreshold (0.3–0.9): triggers early end-of-turn signal before silence completes.
 	EagerEotThreshold float64 `json:"eager_eot_threshold,omitempty" schema:"eager_eot_threshold,omitempty"`
-	// EotThreshold (0.5–0.9, default 0.7): confidence threshold for declaring EndOfTurn.
+	// EotThreshold (0.5–1.0, default 0.7): confidence threshold for declaring EndOfTurn.
+	// Set to 1.0 to suppress native end-of-turn detection entirely and drive turn
+	// endings yourself with ForceEndTurn (turns then end only on ForceEndTurn or
+	// after EotTimeoutMs elapses).
 	EotThreshold float64 `json:"eot_threshold,omitempty" schema:"eot_threshold,omitempty"`
 	// EotTimeoutMs (500–10000, default 5000): silence duration in ms before forcing EndOfTurn.
 	EotTimeoutMs int `json:"eot_timeout_ms,omitempty" schema:"eot_timeout_ms,omitempty"`

@@ -62,6 +62,10 @@ type TurnInfoResponse struct {
 	EndOfTurnConfidence float64    `json:"end_of_turn_confidence"`
 	Languages           []string   `json:"languages,omitempty"`
 	LanguagesHinted     []string   `json:"languages_hinted,omitempty"`
+	// Trigger reports what ended the turn on "EndOfTurn" events. It is an open
+	// string; known values are the TurnTrigger* constants ("model", "manual",
+	// "timeout"), and new values may be added by the server over time.
+	Trigger string `json:"trigger,omitempty"`
 }
 
 // ConfigureSuccessResponse acknowledges that a mid-session Configure message was accepted.
@@ -111,4 +115,16 @@ type ConfigureMessage struct {
 	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
 	Keyterms      []string                           `json:"keyterms,omitempty"`
 	LanguageHints []string                           `json:"language_hints,omitempty"`
+}
+
+// ForceEndTurnMessage is the JSON payload that immediately ends the current turn.
+// Build via WSCallback.ForceEndTurn() or WSChannel.ForceEndTurn() — do not construct
+// directly. The server finalizes the current turn and emits an "EndOfTurn" TurnInfo
+// with Trigger set to "manual".
+//
+// JSON example:
+//
+//	{"type":"ForceEndTurn"}
+type ForceEndTurnMessage struct {
+	Type string `json:"type"` // always "ForceEndTurn"
 }
