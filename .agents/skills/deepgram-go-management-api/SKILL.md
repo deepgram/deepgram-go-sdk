@@ -1,6 +1,6 @@
 ---
 name: deepgram-go-management-api
-description: Use when writing or reviewing Go code in this repo that works with Deepgram management endpoints for projects, keys, members, scopes, invitations, usage, balances, or models. Route live voice runtime to deepgram-go-voice-agent and repo workflow questions to deepgram-go-maintaining-sdk.
+description: Use when writing or reviewing Go code in this repo that works with Deepgram management endpoints for projects, keys, members, scopes, invitations, usage, balances, models, reusable agent configurations, or agent variables. Route live voice runtime to deepgram-go-voice-agent and repo workflow questions to deepgram-go-maintaining-sdk.
 ---
 
 # Using Deepgram Management API from the Go SDK
@@ -16,6 +16,7 @@ Use this skill for admin and account operations in `pkg/client/manage` and `pkg/
 - usage and request history
 - balances
 - model discovery
+- reusable agent configurations and their template variables
 
 Use a different skill when:
 
@@ -98,8 +99,20 @@ func run() error {
    - `pkg/api/manage/v1/usage.go`
    - `pkg/api/manage/v1/balances.go`
    - `pkg/api/manage/v1/models.go`
+   - `pkg/api/manage/v1/agents.go`
+   - `pkg/api/manage/v1/agent-variables.go`
 2. OpenAPI
    - `https://developers.deepgram.com/openapi.yaml`
+   - Exception: for `agents.go` and `agent-variables.go`, the in-repo models
+     are the source of truth, not the spec. The spec and the published API
+     reference disagree with production on field names (`agent_uuid` /
+     `agent_variable_uuid`, not `agent_id` / `variable_id`), on list responses
+     (a bare JSON array, not `{"agents": [...]}`), and on the type of `config`
+     (a JSON string, not an object). Agent `metadata` values are arbitrary
+     JSON, so `Metadata` is `map[string]interface{}`, not
+     `map[string]string` — narrowing it fails the decode of the entire
+     response. The models here were captured from live responses; do not
+     "correct" them back toward the spec.
 3. AsyncAPI
    - `https://developers.deepgram.com/asyncapi.yaml`
 4. Context7
@@ -120,6 +133,7 @@ func run() error {
 - `examples/manage/keys/main.go`
 - `examples/manage/models/main.go`
 - `examples/manage/usage/main.go`
+- `examples/manage/agents/main.go`
 
 ## Central product skills
 
