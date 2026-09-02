@@ -5,6 +5,8 @@
 package websocketv2
 
 import (
+	"sync"
+
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
 )
 
@@ -43,11 +45,16 @@ type DefaultCallbackHandler struct {
 }
 
 // DefaultChanHandler is a FluxSpeakMessageChan that exposes all events as Go
-// channels and prints them to stdout via its Run() goroutine.
-// Used when no channel handler is provided to the factory functions.
+// channels and prints them to stdout via its Run() consumer goroutines.
+//
+// Ownership is explicit: the constructor only allocates channels. Whoever creates
+// the handler starts consumption exactly once with Run() (the factory paths that
+// build it for you do this), and ends it with Shutdown(), which closes every owned
+// channel and lets Run return.
 type DefaultChanHandler struct {
 	debugWebsocket        bool
 	debugWebsocketVerbose bool
+	shutdownOnce          sync.Once
 
 	openChan              chan *interfaces.OpenResponse
 	connectedChan         chan *interfaces.ConnectedResponse

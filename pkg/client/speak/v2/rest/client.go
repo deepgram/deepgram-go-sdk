@@ -9,6 +9,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
@@ -25,36 +27,43 @@ type textSource struct {
 }
 
 /*
-NewWithDefaults creates a new Flux TTS batch client with all default options
+NewWithDefaults creates a new Flux TTS batch client with all default options.
+It returns an error instead of a nil client when configuration fails (for example
+when no credentials are available), so callers cannot accidentally dereference a
+nil client.
 
 Notes:
   - The Deepgram API KEY is read from the environment variable DEEPGRAM_API_KEY
 */
-func NewWithDefaults() *Client {
+func NewWithDefaults() (*Client, error) {
 	return New("", &interfaces.ClientOptions{})
 }
 
 /*
-New creates a new Flux TTS batch client with the specified options
+New creates a new Flux TTS batch client with the specified options. It returns an
+error instead of a nil client when configuration fails (for example when no
+credentials are available).
 
 Input parameters:
 - apiKey: string containing the Deepgram API key. If empty, the DEEPGRAM_API_KEY environment variable is used.
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
-func New(apiKey string, options *interfaces.ClientOptions) *Client {
+func New(apiKey string, options *interfaces.ClientOptions) (*Client, error) {
+	if options == nil {
+		options = &interfaces.ClientOptions{}
+	}
 	if apiKey != "" {
 		options.APIKey = apiKey
 	}
-	err := options.Parse()
-	if err != nil {
+	if err := options.Parse(); err != nil {
 		klog.V(1).Infof("options.Parse() failed. Err: %v\n", err)
-		return nil
+		return nil, err
 	}
 
 	c := Client{
 		common.NewREST(apiKey, options),
 	}
-	return &c
+	return &c, nil
 }
 
 /*
@@ -97,10 +106,10 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfacesv2.
 		return nil, err
 	}
 
-	// use HTTPClient + HandleResponse to extract the response headers alongside the body
+	// use HTTPClient + handleResponse to extract the response headers alongside the body
 	var kv map[string]string
 	err = c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
-		kv, err = c.HandleResponse(res, keys, resBody)
+		kv, err = c.handleResponse(res, keys, resBody)
 		return err
 	})
 
@@ -113,4 +122,40 @@ func (c *Client) DoText(ctx context.Context, text string, options *interfacesv2.
 	klog.V(4).Infof("DoText successful\n")
 	klog.V(6).Infof("speakv2.DoText() LEAVE\n")
 	return kv, nil
+}
+
+// handleResponse delegates success responses to the shared handler and preserves
+// the Deepgram error payload for EVERY non-success status — the shared v1 handler
+// reads the body only for HTTP 400, which loses the details of authentication
+// failures (401/403), payload and rate limits (413/429), and 5xx responses.
+func (c *Client) handleResponse(res *http.Response, keys []string, resBody interface{}) (map[string]string, error) {
+	switch res.StatusCode {
+	case http.StatusOK, http.StatusCreated, http.StatusNoContent:
+		return c.HandleResponse(res, keys, resBody)
+	}
+
+	klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
+	detail, err := io.ReadAll(res.Body)
+	if err != nil {
+		klog.V(4).Infof("io.ReadAll failed. Err: %v\n", err)
+		return nil, &interfaces.StatusError{Resp: res}
+	}
+
+	// attempt to parse out a typed Deepgram error
+	var e interfaces.DeepgramError
+	if jsonErr := json.Unmarshal(detail, &e); jsonErr == nil && (e.ErrCode != "" || e.ErrMsg != "" || e.Description != "") {
+		klog.V(6).Infof("Parsed Deepgram Specific Error\n")
+		return nil, &interfaces.StatusError{
+			Resp:          res,
+			DeepgramError: &e,
+		}
+	}
+
+	// fall back to the raw body so no detail is lost
+	byDetails := bytes.TrimSpace(detail)
+	if len(byDetails) > 0 {
+		klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
+		return nil, fmt.Errorf("%s: %s", res.Status, byDetails)
+	}
+	return nil, &interfaces.StatusError{Resp: res}
 }

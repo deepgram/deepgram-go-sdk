@@ -24,8 +24,8 @@ type SpeakV2Options struct {
 	// BitRate in bits per second for compressed encodings. mp3: 8000, 16000, 24000,
 	// 32000, 40000, 48000 (default). opus: 4000-650000. aac: 4000-192000.
 	BitRate int `json:"bit_rate,omitempty" schema:"bit_rate,omitempty"`
-	// Speed is the speech-rate multiplier: 0.85, 0.9, 0.95, 1.0 (default), 1.05, 1.1,
-	// 1.15. Not supported by every model or language.
+	// Speed is the speech-rate multiplier: 0.5 to 1.5 in 0.05 increments,
+	// default 1.0. Not supported by every model or language.
 	Speed float64 `json:"speed,omitempty" schema:"speed,omitempty"`
 	// Expressivity of the generated speech on a calm-to-animated axis: -2, -1,
 	// 0 (default), 1, 2. Beta: non-default values increase the risk of hallucinations
@@ -61,8 +61,8 @@ type SpeakV2WSOptions struct {
 	// SampleRate in Hz. linear16: 8000, 16000, 24000, 32000, 44100, 48000.
 	// mulaw/alaw: 8000, 16000. Defaults to the model's native sample rate.
 	SampleRate int `json:"sample_rate,omitempty" schema:"sample_rate,omitempty"`
-	// Speed is the initial speech-rate multiplier: 0.85, 0.9, 0.95, 1.0 (default),
-	// 1.05, 1.1, 1.15. Can be changed mid-stream with Configure.
+	// Speed is the initial speech-rate multiplier: 0.5 to 1.5 in 0.05 increments,
+	// default 1.0. Can be changed mid-stream with Configure.
 	Speed float64 `json:"speed,omitempty" schema:"speed,omitempty"`
 	// Expressivity of the generated speech on a calm-to-animated axis: -2, -1,
 	// 0 (default), 1, 2. Fixed for the connection — not settable via Configure. Beta.
@@ -79,6 +79,9 @@ type SpeakV2WSOptions struct {
 // keep their current value; an accepted change takes effect at the next segment
 // boundary. The server answers with ConfigureSuccess or ConfigureFailure.
 type SpeakV2ConfigureOptions struct {
-	// Speed is the speech-rate multiplier: 0.85–1.15 in 0.05 increments.
-	Speed float64 `json:"speed,omitempty"`
+	// Speed is the speech-rate multiplier: 0.5 to 1.5 in 0.05 increments. It is a
+	// pointer so that "leave speed unchanged" (nil) is distinct from an explicit
+	// value; an explicit 0 is rejected as out of range rather than silently
+	// dropped from the wire message.
+	Speed *float64 `json:"speed,omitempty"`
 }

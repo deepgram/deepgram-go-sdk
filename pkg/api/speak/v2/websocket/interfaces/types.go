@@ -100,8 +100,11 @@ type SpeechInterruptedResponse struct {
 	Metadata      TurnMetadata `json:"metadata"`
 }
 
-// FlushedResponse is the immediate echo on receipt of a manual Flush, confirming
-// the server received it before synthesis completes. Not emitted for internal
+// FlushedResponse is emitted when the turn's buffer has actually been flushed —
+// not an immediate receipt echo. When earlier turns are still synthesizing, the
+// server holds the Flushed event behind them, so it can arrive well after the
+// Flush was sent. It confirms buffer completion only; SpeechMetadata is the signal
+// that all audio for the turn has been delivered. Not emitted for internal
 // auto-flush boundaries.
 type FlushedResponse struct {
 	Type     string `json:"type"`
@@ -228,13 +231,16 @@ type InterruptMessage struct {
 
 // ConfigureMessage updates synthesis configuration mid-session without
 // reconnecting. Build via WSCallback.Configure() or WSChannel.Configure().
+// Speed is a pointer so an explicit value is distinguishable from "leave
+// unchanged": nil omits the field, while a set value — including an invalid 0 —
+// is serialized and validated rather than silently dropped by omitempty.
 //
 // JSON example:
 //
 //	{"type":"Configure","speed":1.05}
 type ConfigureMessage struct {
-	Type  string  `json:"type"` // always "Configure"
-	Speed float64 `json:"speed,omitempty"`
+	Type  string   `json:"type"` // always "Configure"
+	Speed *float64 `json:"speed,omitempty"`
 }
 
 // CloseMessage gracefully closes the connection. The server drains all remaining

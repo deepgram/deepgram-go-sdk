@@ -29,7 +29,7 @@ func NewCallbackRouter(callback interfaces.FluxSpeakMessageCallback) *CallbackRo
 	}
 	return &CallbackRouter{
 		callback:       callback,
-		debugWebsocket: strings.EqualFold(strings.ToLower(debugStr), "true"),
+		debugWebsocket: strings.EqualFold(debugStr, "true"),
 	}
 }
 

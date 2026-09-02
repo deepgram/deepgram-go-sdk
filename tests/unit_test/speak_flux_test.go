@@ -23,6 +23,9 @@ import (
 	speakclientws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak/v2/websocket"
 )
 
+// float64Ptr returns a pointer to v, for optional message fields.
+func float64Ptr(v float64) *float64 { return &v }
+
 const (
 	testFluxModel  = "flux-haley-en"
 	testSpeechID   = "dg_sp_a1b2c3d4e5f6"
@@ -69,8 +72,20 @@ func Test_FluxSpeakClientMessageSerialization(t *testing.T) {
 		},
 		{
 			name: "Configure with speed",
-			msg:  speakmsg.ConfigureMessage{Type: speakclientws.MessageTypeConfigure, Speed: 1.05},
+			msg:  speakmsg.ConfigureMessage{Type: speakclientws.MessageTypeConfigure, Speed: float64Ptr(1.05)},
 			want: `{"type":"Configure","speed":1.05}`,
+		},
+		{
+			// Speed is a pointer precisely so an explicit zero is serialized (and
+			// rejected upstream) instead of being silently dropped by omitempty
+			name: "Configure with explicit zero speed keeps the field",
+			msg:  speakmsg.ConfigureMessage{Type: speakclientws.MessageTypeConfigure, Speed: float64Ptr(0)},
+			want: `{"type":"Configure","speed":0}`,
+		},
+		{
+			name: "Configure with nil speed omits the field",
+			msg:  speakmsg.ConfigureMessage{Type: speakclientws.MessageTypeConfigure},
+			want: `{"type":"Configure"}`,
 		},
 		{
 			name: "Close",
@@ -198,7 +213,7 @@ func Test_FluxSpeakServerEventParsing(t *testing.T) {
 	})
 
 	t.Run("ConfigureFailure", func(t *testing.T) {
-		raw := `{"type":"ConfigureFailure","code":"SPEED_OUT_OF_RANGE","field":"speed","value":3.5,"description":"speed must be between 0.85 and 1.15 in 0.05 increments"}`
+		raw := `{"type":"ConfigureFailure","code":"SPEED_OUT_OF_RANGE","field":"speed","value":3.5,"description":"speed must be between 0.5 and 1.5 in 0.05 increments"}`
 		var msg speakmsg.ConfigureFailureResponse
 		if err := json.Unmarshal([]byte(raw), &msg); err != nil {
 			t.Fatalf("unmarshal failed: %s", err)
@@ -312,7 +327,10 @@ func Test_FluxSpeakRESTBatch(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		dg := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		dg, err := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		if err != nil {
+			t.Fatalf("REST client constructor failed: %s", err)
+		}
 		client := speakrestv2.New(dg)
 
 		var buf bytes.Buffer
@@ -363,7 +381,10 @@ func Test_FluxSpeakRESTBatch(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		dg := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		dg, err := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		if err != nil {
+			t.Fatalf("REST client constructor failed: %s", err)
+		}
 		client := speakrestv2.New(dg)
 
 		var buf bytes.Buffer
@@ -393,7 +414,10 @@ func Test_FluxSpeakRESTBatch(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		dg := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		dg, err := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: srv.URL})
+		if err != nil {
+			t.Fatalf("REST client constructor failed: %s", err)
+		}
 		client := speakrestv2.New(dg)
 
 		var buf bytes.Buffer
@@ -404,7 +428,10 @@ func Test_FluxSpeakRESTBatch(t *testing.T) {
 	})
 
 	t.Run("missing model is rejected client-side", func(t *testing.T) {
-		dg := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: "http://127.0.0.1:1"})
+		dg, err := speakclientrest.New("testkey", &interfaces.ClientOptions{Host: "http://127.0.0.1:1"})
+		if err != nil {
+			t.Fatalf("REST client constructor failed: %s", err)
+		}
 		client := speakrestv2.New(dg)
 
 		var buf bytes.Buffer

@@ -7,14 +7,17 @@ package restv2
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	klog "k8s.io/klog/v2"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/rest/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 	speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak/v2/rest"
 )
 
@@ -28,17 +31,29 @@ func New(client *speak.Client) *Client {
 	return &Client{client}
 }
 
+// validate rejects the setup mistakes that would otherwise panic or corrupt
+// output: a nil transport client, nil options, and options that fail Check().
+func (c *Client) validate(options *interfaces.SpeakV2Options) error {
+	if c == nil || c.Client == nil {
+		return ErrNilClient
+	}
+	if options == nil {
+		return interfacesv2.ErrOptionsRequired
+	}
+	return options.Check()
+}
+
 // ToStream synthesizes text and streams the audio into buf.
 // When options.Callback is set, the request is processed asynchronously and buf
-// receives the JSON acknowledgement {"request_id":"..."} instead of audio bytes.
+// receives the JSON acknowledgement {"request_id":"..."} instead of audio bytes;
+// prefer ToAsync for a typed acknowledgement.
 func (c *Client) ToStream(ctx context.Context, text string, options *interfaces.SpeakV2Options, buf *interfaces.RawResponse) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speakv2.ToStream ENTER\n")
 
 	keys := initializeKeys()
 
-	err := options.Check()
-	if err != nil {
-		klog.V(1).Infof("SpeakV2Options.Check() failed. Err: %v\n", err)
+	if err := c.validate(options); err != nil {
+		klog.V(1).Infof("speakv2.ToStream validation failed. Err: %v\n", err)
 		klog.V(6).Infof("speakv2.ToStream LEAVE\n")
 		return nil, err
 	}
@@ -60,15 +75,15 @@ func (c *Client) ToStream(ctx context.Context, text string, options *interfaces.
 
 // ToFile synthesizes text and writes the audio to w.
 // When options.Callback is set, the request is processed asynchronously and w
-// receives the JSON acknowledgement {"request_id":"..."} instead of audio bytes.
+// receives the JSON acknowledgement {"request_id":"..."} instead of audio bytes;
+// prefer ToAsync for a typed acknowledgement.
 func (c *Client) ToFile(ctx context.Context, text string, options *interfaces.SpeakV2Options, w io.Writer) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speakv2.ToFile ENTER\n")
 
 	keys := initializeKeys()
 
-	err := options.Check()
-	if err != nil {
-		klog.V(1).Infof("SpeakV2Options.Check() failed. Err: %v\n", err)
+	if err := c.validate(options); err != nil {
+		klog.V(1).Infof("speakv2.ToFile validation failed. Err: %v\n", err)
 		klog.V(6).Infof("speakv2.ToFile LEAVE\n")
 		return nil, err
 	}
@@ -88,21 +103,59 @@ func (c *Client) ToFile(ctx context.Context, text string, options *interfaces.Sp
 	return result, err
 }
 
-// ToSave synthesizes text and saves the audio to the named file.
+// ToSave synthesizes text and saves the audio to the named file. The audio is
+// written to a temporary sibling file and renamed into place only on success, so
+// invalid options or a failed request never truncate or corrupt an existing file.
+//
+// Asynchronous (callback) requests are rejected: their response body is a JSON
+// acknowledgement, not audio, and saving it under an audio filename would be
+// misleading. Use ToAsync instead.
 func (c *Client) ToSave(ctx context.Context, filename, text string, options *interfaces.SpeakV2Options) (*api.SpeakResponse, error) {
 	klog.V(6).Infof("speakv2.ToSave ENTER\n")
 
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
-	if err != nil {
-		klog.V(1).Infof("os.OpenFile failed. Err: %v\n", err)
+	// validate everything before touching the destination
+	if err := c.validate(options); err != nil {
+		klog.V(1).Infof("speakv2.ToSave validation failed. Err: %v\n", err)
 		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
 		return nil, err
 	}
-	defer file.Close()
+	if options.Callback != "" {
+		klog.V(1).Infof("speakv2.ToSave rejected callback options\n")
+		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
+		return nil, ErrCallbackNotSupported
+	}
 
-	result, err := c.ToFile(ctx, text, options, file)
+	tmp, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename)+".*.tmp")
+	if err != nil {
+		klog.V(1).Infof("os.CreateTemp failed. Err: %v\n", err)
+		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
+		return nil, err
+	}
+	tmpName := tmp.Name()
+	cleanup := func() {
+		tmp.Close()
+		if rmErr := os.Remove(tmpName); rmErr != nil && !os.IsNotExist(rmErr) {
+			klog.V(1).Infof("os.Remove(%s) failed. Err: %v\n", tmpName, rmErr)
+		}
+	}
+
+	result, err := c.ToFile(ctx, text, options, tmp)
 	if err != nil {
 		klog.V(1).Infof("speakv2.ToFile failed. Err: %v\n", err)
+		cleanup()
+		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
+		return nil, err
+	}
+
+	if err := tmp.Close(); err != nil {
+		klog.V(1).Infof("tmp.Close failed. Err: %v\n", err)
+		cleanup()
+		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
+		return nil, err
+	}
+	if err := os.Rename(tmpName, filename); err != nil {
+		klog.V(1).Infof("os.Rename failed. Err: %v\n", err)
+		cleanup()
 		klog.V(6).Infof("speakv2.ToSave LEAVE\n")
 		return nil, err
 	}
@@ -113,6 +166,42 @@ func (c *Client) ToSave(ctx context.Context, filename, text string, options *int
 	klog.V(6).Infof("speakv2.ToSave LEAVE\n")
 
 	return result, nil
+}
+
+// ToAsync submits text for asynchronous synthesis. options.Callback must be set;
+// the server replies immediately with a JSON acknowledgement and delivers the
+// audio to the callback URL when synthesis completes. No local file is created.
+func (c *Client) ToAsync(ctx context.Context, text string, options *interfaces.SpeakV2Options) (*api.AsyncResponse, error) {
+	klog.V(6).Infof("speakv2.ToAsync ENTER\n")
+
+	if err := c.validate(options); err != nil {
+		klog.V(1).Infof("speakv2.ToAsync validation failed. Err: %v\n", err)
+		klog.V(6).Infof("speakv2.ToAsync LEAVE\n")
+		return nil, err
+	}
+	if options.Callback == "" {
+		klog.V(1).Infof("speakv2.ToAsync requires a callback URL\n")
+		klog.V(6).Infof("speakv2.ToAsync LEAVE\n")
+		return nil, ErrCallbackRequired
+	}
+
+	var buf interfaces.RawResponse
+	if _, err := c.Client.DoText(ctx, text, options, initializeKeys(), &buf); err != nil {
+		klog.V(1).Infof("speakv2.DoText failed. Err: %v\n", err)
+		klog.V(6).Infof("speakv2.ToAsync LEAVE\n")
+		return nil, err
+	}
+
+	var resp api.AsyncResponse
+	if err := json.Unmarshal(buf.Bytes(), &resp); err != nil {
+		klog.V(1).Infof("json.Unmarshal(AsyncResponse) failed. Err: %v\n", err)
+		klog.V(6).Infof("speakv2.ToAsync LEAVE\n")
+		return nil, err
+	}
+
+	klog.V(3).Infof("Asynchronous synthesis accepted: request_id=%s\n", resp.RequestID)
+	klog.V(6).Infof("speakv2.ToAsync LEAVE\n")
+	return &resp, nil
 }
 
 // helper function

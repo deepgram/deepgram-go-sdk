@@ -15,7 +15,10 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
 )
 
-// NewChanWithDefault creates a ChanRouter backed by the default channel handler.
+// NewChanWithDefault creates a ChanRouter backed by the default channel handler
+// and starts the handler's Run consumers (the constructor itself does not).
+// The handler's goroutines run until its Shutdown() is called; use NewChanRouter
+// with your own handler to manage the lifecycle yourself.
 func NewChanWithDefault() *ChanRouter {
 	chans := NewDefaultChanHandler()
 	go func() {
@@ -35,7 +38,7 @@ func NewChanRouter(chans interfaces.FluxSpeakMessageChan) *ChanRouter { //nolint
 	}
 
 	router := &ChanRouter{
-		debugWebsocket:        strings.EqualFold(strings.ToLower(debugStr), "true"),
+		debugWebsocket:        strings.EqualFold(debugStr, "true"),
 		openChan:              make([]*chan *interfaces.OpenResponse, 0),
 		connectedChan:         make([]*chan *interfaces.ConnectedResponse, 0),
 		binaryChan:            make([]*chan *[]byte, 0),

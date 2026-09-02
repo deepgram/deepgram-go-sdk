@@ -5,7 +5,13 @@
 // Package main demonstrates the Deepgram Flux TTS streaming WebSocket API
 // (wss://api.deepgram.com/v2/speak) with the callback-based client. Text is sent
 // with Speak, the turn is ended with Flush, and the synthesized audio arrives as
-// binary frames which are appended to output.wav.
+// binary frames which are streamed into output.wav.
+//
+// The session is closed gracefully with Finish: the server drains every queued
+// turn, sends all remaining audio, and reports the final SessionMetadata before
+// the socket closes — nothing is truncated. The WAV header's RIFF and data sizes
+// are patched once the byte count is known, so the finished file is a conforming
+// WAV that any player or parser accepts.
 //
 // Run:
 //
@@ -21,12 +27,16 @@ import (
 	"time"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
+	wav "github.com/deepgram/deepgram-go-sdk/v3/pkg/audio/wav"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
 	speakv2client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak/v2"
 )
 
-const audioFile = "output.wav"
+const (
+	audioFile  = "output.wav"
+	sampleRate = 48000
+)
 
 var (
 	model string
@@ -39,9 +49,9 @@ func init() {
 }
 
 // MyCallback implements api.FluxSpeakMessageCallback. Binary audio frames are
-// appended to the output file; turn completion is signaled on metadataDone.
+// streamed into the WAV writer; all events are printed.
 type MyCallback struct {
-	metadataDone chan struct{}
+	wavWriter *wav.Writer
 }
 
 func (c MyCallback) Open(or *api.OpenResponse) error {
@@ -57,14 +67,7 @@ func (c MyCallback) Connected(cr *api.ConnectedResponse) error {
 func (c MyCallback) Binary(byMsg []byte) error {
 	fmt.Printf("[Binary] %d bytes of audio received\n", len(byMsg))
 
-	file, err := os.OpenFile(audioFile, os.O_APPEND|os.O_WRONLY, 0o666)
-	if err != nil {
-		fmt.Printf("ERROR opening %s: %v\n", audioFile, err)
-		return err
-	}
-	defer file.Close()
-
-	if _, err := file.Write(byMsg); err != nil {
+	if _, err := c.wavWriter.Write(byMsg); err != nil {
 		fmt.Printf("ERROR writing audio to %s: %v\n", audioFile, err)
 		return err
 	}
@@ -79,8 +82,6 @@ func (c MyCallback) SpeechStarted(ss *api.SpeechStartedResponse) error {
 func (c MyCallback) SpeechMetadata(sm *api.SpeechMetadataResponse) error {
 	fmt.Printf("\n[SpeechMetadata] speech_id=%s duration_ms=%d billable_chars=%d\n",
 		sm.SpeechID, sm.AudioDurationMs, sm.BillableCharacterCount)
-	// SpeechMetadata arrives after all audio for the turn has been sent
-	close(c.metadataDone)
 	return nil
 }
 
@@ -152,41 +153,26 @@ func main() {
 	sOptions := &interfaces.SpeakV2WSOptions{
 		Model:      model,
 		Encoding:   "linear16",
-		SampleRate: 48000,
+		SampleRate: sampleRate,
 	}
 
-	// start the output file with a WAV container header so the raw linear16
-	// audio can be played with a standard media player. Sizes are left as
-	// placeholders, which most players accept for streamed WAV files.
-	header := []byte{
-		0x52, 0x49, 0x46, 0x46, // "RIFF"
-		0x00, 0x00, 0x00, 0x00, // Placeholder for file size
-		0x57, 0x41, 0x56, 0x45, // "WAVE"
-		0x66, 0x6d, 0x74, 0x20, // "fmt "
-		0x10, 0x00, 0x00, 0x00, // Chunk size (16)
-		0x01, 0x00, // Audio format (1 for PCM)
-		0x01, 0x00, // Number of channels (1)
-		0x80, 0xbb, 0x00, 0x00, // Sample rate (48000)
-		0x00, 0x77, 0x01, 0x00, // Byte rate (48000 * 2)
-		0x02, 0x00, // Block align (2)
-		0x10, 0x00, // Bits per sample (16)
-		0x64, 0x61, 0x74, 0x61, // "data"
-		0x00, 0x00, 0x00, 0x00, // Placeholder for data size
-	}
-	file, err := os.OpenFile(audioFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o666)
+	// one file handle for the whole session: the WAV writer streams the raw
+	// linear16 audio behind a standard header, and Finalize patches the RIFF and
+	// data sizes once the total byte count is known
+	file, err := os.OpenFile(audioFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
 	if err != nil {
 		fmt.Printf("ERROR creating %s: %v\n", audioFile, err)
 		os.Exit(1)
 	}
-	if _, err := file.Write(header); err != nil {
+	defer file.Close()
+
+	wavWriter, err := wav.NewWriter(file, 1, sampleRate, 16)
+	if err != nil {
 		fmt.Printf("ERROR writing WAV header: %v\n", err)
 		os.Exit(1)
 	}
-	file.Close()
 
-	callback := MyCallback{
-		metadataDone: make(chan struct{}),
-	}
+	callback := MyCallback{wavWriter: wavWriter}
 
 	dgClient, err := speakv2client.NewWSUsingCallback(ctx, "", cOptions, sOptions, callback)
 	if err != nil {
@@ -209,15 +195,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	// wait for the turn to complete (SpeechMetadata arrives after all audio)
-	select {
-	case <-callback.metadataDone:
-		fmt.Printf("\nTurn complete — audio saved to %s\n", audioFile)
-	case <-time.After(60 * time.Second):
-		fmt.Println("\nTimed out waiting for the turn to complete")
+	// close gracefully: Finish waits while the server drains all queued audio,
+	// sends the final SessionMetadata, and closes the socket — so every audio
+	// frame has reached the callback (and the WAV file) when it returns
+	finishCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+	if err := dgClient.Finish(finishCtx); err != nil {
+		fmt.Printf("ERROR closing session gracefully: %v\n", err)
+		os.Exit(1)
 	}
 
-	dgClient.Stop()
+	// a session that produced no audio is a failure, not an empty-but-valid WAV
+	if wavWriter.DataBytes() == 0 {
+		fmt.Println("ERROR: the session produced no audio")
+		file.Close()
+		os.Remove(audioFile)
+		os.Exit(1)
+	}
 
-	fmt.Printf("\nProgram exiting...\n")
+	// patch the WAV header's RIFF and data sizes now that the length is known
+	if err := wavWriter.Finalize(); err != nil {
+		fmt.Printf("ERROR finalizing %s: %v\n", audioFile, err)
+		os.Exit(1)
+	}
+	if err := file.Close(); err != nil {
+		fmt.Printf("ERROR closing %s: %v\n", audioFile, err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("\nSession complete — %d bytes of audio saved to %s\n", wavWriter.DataBytes(), audioFile)
 }
