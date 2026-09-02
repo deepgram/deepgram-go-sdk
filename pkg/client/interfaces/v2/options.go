@@ -5,6 +5,7 @@
 package interfacesv2
 
 import (
+	"math"
 	"os"
 	"strings"
 
@@ -28,6 +29,33 @@ func (o *SpeakV2WSOptions) Check() error {
 	// model is required on /v2/speak — unlike /v1/speak there is no default
 	if o.Model == "" {
 		return ErrModelRequired
+	}
+	// Connect-time Speed/Expressivity are deliberately left to server validation:
+	// a zero value simply means "use the default" there, so nothing can silently
+	// change meaning. Configure is different — see SpeakV2ConfigureOptions.Check.
+	return nil
+}
+
+// Check validates a mid-session Configure. A nil Speed means there is nothing to
+// change, which the server would accept as an empty update — reject it client-side
+// so a zero-value mistake (Speed dropped by omitempty) cannot masquerade as success.
+func (o *SpeakV2ConfigureOptions) Check() error {
+	if o.Speed == nil {
+		return ErrConfigureNoFields
+	}
+	return checkSpeakSpeed(*o.Speed)
+}
+
+// checkSpeakSpeed validates the /v2/speak speech-rate multiplier: 0.5 to 1.5 in
+// 0.05 increments per the current API contract.
+func checkSpeakSpeed(speed float64) error {
+	if speed < 0.5 || speed > 1.5 {
+		return ErrSpeedOutOfRange
+	}
+	// 0.05 increments: speed*20 must be a whole number (with float tolerance)
+	scaled := speed * 20
+	if math.Abs(scaled-math.Round(scaled)) > 1e-6 {
+		return ErrSpeedOutOfRange
 	}
 	return nil
 }

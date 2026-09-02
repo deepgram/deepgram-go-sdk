@@ -16,8 +16,11 @@ import (
 )
 
 // NewDefaultChanHandler creates a DefaultChanHandler with channels for all Flux TTS
-// events. The handler's Run() goroutine prints events to stdout; it is started
-// automatically. Binary audio frames are acknowledged but discarded.
+// events. Binary audio frames are acknowledged but discarded.
+//
+// The constructor does not start consuming: the owner starts Run() exactly once
+// (NewChanWithDefault and the client factory paths that build the default handler
+// do this for you) and calls Shutdown() to end it.
 func NewDefaultChanHandler() *DefaultChanHandler {
 	var debugStr string
 	if v := os.Getenv("DEEPGRAM_DEBUG"); v != "" {
@@ -49,13 +52,30 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		unhandledChan:         make(chan *[]byte),
 	}
 
-	go func() {
-		if err := handler.Run(); err != nil {
-			klog.V(1).Infof("DefaultChanHandler.Run failed. Err: %v\n", err)
-		}
-	}()
-
 	return handler
+}
+
+// Shutdown closes every channel the handler owns, terminating the Run consumer
+// goroutines and letting Run return. Safe to call more than once. Do not send on
+// the handler's channels after calling Shutdown.
+func (h *DefaultChanHandler) Shutdown() {
+	h.shutdownOnce.Do(func() {
+		close(h.openChan)
+		close(h.connectedChan)
+		close(h.binaryChan)
+		close(h.speechStartedChan)
+		close(h.speechMetadataChan)
+		close(h.speechInterruptedChan)
+		close(h.flushedChan)
+		close(h.sessionMetadataChan)
+		close(h.configureSuccessChan)
+		close(h.configureFailureChan)
+		close(h.warningChan)
+		close(h.fatalErrorChan)
+		close(h.closeChan)
+		close(h.errorChan)
+		close(h.unhandledChan)
+	})
 }
 
 func (h *DefaultChanHandler) GetOpen() []*chan *interfaces.OpenResponse {

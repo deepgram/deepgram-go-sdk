@@ -14,6 +14,7 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2/interfaces"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 )
 
 // NewUsingCallbackForDemo creates a Flux TTS WebSocket client with all default options.
@@ -45,6 +46,13 @@ func NewUsingCallback(ctx context.Context, apiKey string, cOptions *clientinterf
 func NewUsingCallbackWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptionsV2, sOptions *clientinterfaces.SpeakV2WSOptions, callback msginterfaces.FluxSpeakMessageCallback) (*WSCallback, error) {
 	klog.V(6).Infof("fluxspeak.NewUsingCallbackWithCancel() ENTER\n")
 
+	if cOptions == nil {
+		cOptions = &clientinterfaces.ClientOptionsV2{}
+	}
+	if sOptions == nil {
+		klog.V(1).Infof("SpeakV2WSOptions is nil\n")
+		return nil, interfacesv2.ErrOptionsRequired
+	}
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
 	}
@@ -62,20 +70,23 @@ func NewUsingCallbackWithCancel(ctx context.Context, ctxCancel context.CancelFun
 		callback = websocketv2api.NewDefaultCallbackHandler()
 	}
 
-	var router commoninterfaces.Router
-	router = websocketv2api.NewCallbackRouter(callback)
-
 	conn := WSCallback{
 		cOptions:  cOptions,
 		sOptions:  sOptions,
 		callback:  callback,
-		router:    &router,
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
+		finish:    newFinishState(),
 	}
 
+	// the observer forwards every event to the user callback and marks the
+	// graceful-close milestones Finish(ctx) waits on
+	var router commoninterfaces.Router
+	router = websocketv2api.NewCallbackRouter(&callbackFinishObserver{next: callback, marker: &conn})
+	conn.router = &router
+
 	var handler commoninterfaces.WebSocketHandler
-	handler = &conn
+	handler = &wsHandlerShim{core: &conn}
 	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler, &router)
 
 	klog.V(3).Infof("fluxspeak WSCallback created\n")

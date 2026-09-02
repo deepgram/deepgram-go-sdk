@@ -14,6 +14,7 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2/interfaces"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 )
 
 // NewUsingChanForDemo creates a Flux TTS WebSocket client with all default options.
@@ -45,6 +46,13 @@ func NewUsingChan(ctx context.Context, apiKey string, cOptions *clientinterfaces
 func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, cOptions *clientinterfaces.ClientOptionsV2, sOptions *clientinterfaces.SpeakV2WSOptions, chans msginterfaces.FluxSpeakMessageChan) (*WSChannel, error) {
 	klog.V(6).Infof("fluxspeak.NewUsingChanWithCancel() ENTER\n")
 
+	if cOptions == nil {
+		cOptions = &clientinterfaces.ClientOptionsV2{}
+	}
+	if sOptions == nil {
+		klog.V(1).Infof("SpeakV2WSOptions is nil\n")
+		return nil, interfacesv2.ErrOptionsRequired
+	}
 	if apiKey != "" {
 		cOptions.APIKey = apiKey
 	}
@@ -59,23 +67,34 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 
 	if chans == nil {
 		klog.V(2).Infof("Using DefaultChanHandler.\n")
-		chans = websocketv2api.NewDefaultChanHandler()
+		handler := websocketv2api.NewDefaultChanHandler()
+		go func() {
+			if err := handler.Run(); err != nil {
+				klog.V(1).Infof("DefaultChanHandler.Run failed. Err: %v\n", err)
+			}
+		}()
+		chans = handler
 	}
-
-	var router commoninterfaces.Router
-	router = websocketv2api.NewChanRouter(chans)
 
 	conn := WSChannel{
 		cOptions:  cOptions,
 		sOptions:  sOptions,
 		chans:     []*msginterfaces.FluxSpeakMessageChan{&chans},
-		router:    &router,
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
+		finish:    newFinishState(),
 	}
 
+	// the observer exposes the user channels unchanged and adds internal ones that
+	// mark the graceful-close milestones Finish(ctx) waits on
+	observer := newChanFinishObserver(chans)
+	observer.run(ctx, &conn)
+	var router commoninterfaces.Router
+	router = websocketv2api.NewChanRouter(observer)
+	conn.router = &router
+
 	var handler commoninterfaces.WebSocketHandler
-	handler = &conn
+	handler = &wsHandlerShim{core: &conn}
 	conn.WSClient = common.NewWS(ctx, ctxCancel, apiKey, cOptions, &handler, &router)
 
 	klog.V(3).Infof("fluxspeak WSChannel created\n")

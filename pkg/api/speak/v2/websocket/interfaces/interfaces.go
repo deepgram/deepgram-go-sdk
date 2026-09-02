@@ -31,7 +31,9 @@ type FluxSpeakMessageCallback interface {
 	// concluded and audio generation has stopped.
 	SpeechInterrupted(si *SpeechInterruptedResponse) error
 
-	// Flushed is called as the immediate echo on receipt of a manual Flush.
+	// Flushed is called when the turn's buffer has actually been flushed — it can
+	// be held behind turns still synthesizing, so it is not an immediate receipt
+	// echo. SpeechMetadata is the all-audio-delivered signal for the turn.
 	Flushed(fl *FlushedResponse) error
 
 	// SessionMetadata is called with the final server message before the WebSocket
@@ -84,7 +86,9 @@ type FluxSpeakMessageChan interface {
 	// GetSpeechInterrupted returns channels to receive SpeechInterrupted messages.
 	GetSpeechInterrupted() []*chan *SpeechInterruptedResponse
 
-	// GetFlushed returns channels to receive Flushed messages.
+	// GetFlushed returns channels to receive Flushed messages — emitted when the
+	// turn's buffer has actually been flushed, possibly held behind turns still
+	// synthesizing. SpeechMetadata is the all-audio-delivered signal for the turn.
 	GetFlushed() []*chan *FlushedResponse
 
 	// GetSessionMetadata returns channels to receive SessionMetadata messages.

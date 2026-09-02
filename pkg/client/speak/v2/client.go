@@ -37,14 +37,17 @@ type WSChannel = speakv2ws.WSChannel
 
 // NewRESTWithDefaults creates a Flux TTS batch client with all default options.
 // The Deepgram API key is read from the DEEPGRAM_API_KEY environment variable.
-func NewRESTWithDefaults() *RESTClient {
+// An error (never a nil client) is returned when configuration fails, e.g. when
+// no credentials are available.
+func NewRESTWithDefaults() (*RESTClient, error) {
 	return speakv2rest.NewWithDefaults()
 }
 
 // NewREST creates a Flux TTS batch client with the specified options.
+// An error (never a nil client) is returned when configuration fails.
 //
 // If apiKey is empty, it is read from the DEEPGRAM_API_KEY environment variable.
-func NewREST(apiKey string, options *interfacesv1.ClientOptions) *RESTClient {
+func NewREST(apiKey string, options *interfacesv1.ClientOptions) (*RESTClient, error) {
 	return speakv2rest.New(apiKey, options)
 }
 

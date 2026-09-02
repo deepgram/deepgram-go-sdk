@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+	"time"
 )
 
 // ClientOptions defines any options for the client
@@ -29,6 +30,12 @@ type ClientOptions struct {
 	// speech-to-text client options
 	RedirectService bool // allows HTTP redirects to be followed
 	EnableKeepAlive bool // enables the keep alive feature
+
+	// KeepAlivePeriod is the interval between WebSocket protocol-level keepalive
+	// pings when EnableKeepAlive is set. Zero means the client's default; clients
+	// choose a default comfortably below the server's idle timeout (the /v2/speak
+	// client pings every 30s against the server's 60s NET-0004 idle deadline).
+	KeepAlivePeriod time.Duration
 
 	// Thread safety for credential management
 	credentialsMutex sync.RWMutex // protects AccessToken and APIKey fields

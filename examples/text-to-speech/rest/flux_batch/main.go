@@ -49,7 +49,11 @@ func main() {
 	ctx := context.Background()
 
 	// create the Flux TTS batch (REST) client
-	dg := speakv2client.NewRESTWithDefaults()
+	dg, err := speakv2client.NewRESTWithDefaults()
+	if err != nil {
+		fmt.Printf("ERROR creating Flux TTS batch client: %v\n", err)
+		os.Exit(1)
+	}
 	speakClient := speakv2.New(dg)
 
 	options := &interfaces.SpeakV2Options{

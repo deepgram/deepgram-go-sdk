@@ -7,7 +7,6 @@ package websocketv2
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -19,6 +18,7 @@ import (
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 )
 
 // Connect performs a WebSocket connection with DefaultConnectRetry retries.
@@ -31,6 +31,7 @@ func (c *WSChannel) Connect() bool {
 func (c *WSChannel) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
+	c.resetFinishStateIfClosed()
 	return c.WSClient.ConnectWithCancel(ctx, ctxCancel, retryCnt)
 }
 
@@ -41,9 +42,11 @@ func (c *WSChannel) AttemptReconnect(ctx context.Context, retries int64) bool {
 }
 
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
+// The graceful-close milestones are reset so Finish waits on the new session.
 func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
+	c.resetFinishStateIfClosed()
 	return c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
 }
 
@@ -59,18 +62,21 @@ func (c *WSChannel) GetURL(host string) (string, error) {
 }
 
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
+// Start runs on every (re)connect; the guard ensures at most one ping goroutine
+// is alive at a time.
 func (c *WSChannel) Start() {
-	if c.cOptions.EnableKeepAlive {
-		go c.ping()
+	if c.cOptions.EnableKeepAlive && c.pingActive.CompareAndSwap(false, true) {
+		go c.ping(c.ctx)
 	}
 }
 
 // ping sends WebSocket protocol-level ping frames on a fixed interval to keep
-// the connection alive while the context is active.
-func (c *WSChannel) ping() {
+// the connection alive while ctx is active.
+func (c *WSChannel) ping(ctx context.Context) {
 	klog.V(6).Infof("fluxspeak.WSChannel.ping() ENTER\n")
 
 	defer func() {
+		c.pingActive.Store(false)
 		if r := recover(); r != nil {
 			klog.V(1).Infof("ping panic: %v\n%s\n", r, debug.Stack())
 			sendErr := c.ProcessError(common.ErrFatalPanicRecovered)
@@ -81,11 +87,15 @@ func (c *WSChannel) ping() {
 		klog.V(6).Infof("fluxspeak.WSChannel.ping() LEAVE\n")
 	}()
 
-	ticker := time.NewTicker(pingPeriod)
+	period := c.cOptions.KeepAlivePeriod
+	if period <= 0 {
+		period = DefaultKeepAlivePeriod
+	}
+	ticker := time.NewTicker(period)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("fluxspeak.WSChannel.ping() Exiting\n")
 			return
 		case <-ticker.C:
@@ -207,8 +217,24 @@ func (c *WSChannel) sendInterrupt(msg *msginterfaces.InterruptMessage) error {
 
 // Configure sends a mid-session configuration update to the server.
 // The server responds with ConfigureSuccess or ConfigureFailure.
+//
+// opts must be non-nil and name at least one field to change. Speed is validated
+// client-side against the documented contract (0.5 to 1.5 in 0.05 increments), so
+// an accidental zero value is rejected instead of being dropped from the wire
+// message and accepted as an empty update.
 func (c *WSChannel) Configure(opts *clientinterfaces.SpeakV2ConfigureOptions) error {
 	klog.V(7).Infof("fluxspeak.WSChannel.Configure() ENTER\n")
+
+	if opts == nil {
+		klog.V(1).Infof("Configure: nil options\n")
+		klog.V(7).Infof("fluxspeak.WSChannel.Configure() LEAVE\n")
+		return interfacesv2.ErrOptionsRequired
+	}
+	if err := opts.Check(); err != nil {
+		klog.V(1).Infof("Configure: invalid options. Err: %v\n", err)
+		klog.V(7).Infof("fluxspeak.WSChannel.Configure() LEAVE\n")
+		return err
+	}
 
 	msg := msginterfaces.ConfigureMessage{
 		Type:  MessageTypeConfigure,
@@ -231,15 +257,60 @@ func (c *WSChannel) GetCloseMsg() []byte {
 	return []byte(`{"type":"Close"}`)
 }
 
-// Finish is a no-op. Turn boundaries are driven explicitly with Flush.
-func (c *WSChannel) Finish() {}
+// Finish gracefully closes the session. It sends the Close control message, then
+// waits — bounded by ctx — while the server drains every queued turn: all remaining
+// audio frames, the final SessionMetadata, and the server's own socket closure.
+// When Finish returns nil, the handler has received every event the session
+// produced. If the connection closes before SessionMetadata arrives,
+// ErrGracefulCloseIncomplete is returned. On ctx expiry the connection is aborted
+// and ctx.Err() is returned; audio still queued server-side is discarded.
+//
+// Use Stop for an immediate abort that does not wait for queued synthesis.
+func (c *WSChannel) Finish(ctx context.Context) error {
+	klog.V(7).Infof("fluxspeak.WSChannel.Finish() ENTER\n")
+
+	fs := c.currentFinishState()
+
+	if err := c.WriteJSON(msginterfaces.CloseMessage{Type: MessageTypeClose}); err != nil {
+		klog.V(1).Infof("Finish: Close write failed. Err: %v\n", err)
+		klog.V(7).Infof("fluxspeak.WSChannel.Finish() LEAVE\n")
+		return err
+	}
+
+	select {
+	case <-fs.sessionMetaDone:
+	case <-fs.peerCloseDone:
+		klog.V(1).Infof("Finish: connection closed before SessionMetadata\n")
+		c.Stop()
+		klog.V(7).Infof("fluxspeak.WSChannel.Finish() LEAVE\n")
+		return ErrGracefulCloseIncomplete
+	case <-ctx.Done():
+		klog.V(1).Infof("Finish: context expired waiting for SessionMetadata\n")
+		c.Stop()
+		klog.V(7).Infof("fluxspeak.WSChannel.Finish() LEAVE\n")
+		return ctx.Err()
+	}
+
+	select {
+	case <-fs.peerCloseDone:
+	case <-ctx.Done():
+		klog.V(1).Infof("Finish: context expired waiting for server closure\n")
+		c.Stop()
+		klog.V(7).Infof("fluxspeak.WSChannel.Finish() LEAVE\n")
+		return ctx.Err()
+	}
+
+	// the peer already closed the socket; Stop only releases local resources
+	c.Stop()
+	klog.V(4).Infof("Finish: graceful close complete\n")
+	klog.V(7).Infof("fluxspeak.WSChannel.Finish() LEAVE\n")
+	return nil
+}
 
 // errorToResponse converts a Go error into a typed ErrorResponse.
 func (c *WSChannel) errorToResponse(err error) *msginterfaces.ErrorResponse {
-	r := regexp.MustCompile(`websocket: ([a-z]+) (\d+) .+: (.+)`)
-
 	var errorCode, errorNum, errorDesc string
-	matches := r.FindStringSubmatch(err.Error())
+	matches := wsErrorRegexp.FindStringSubmatch(err.Error())
 	if len(matches) > 3 {
 		errorCode = matches[1]
 		errorNum = matches[2]
