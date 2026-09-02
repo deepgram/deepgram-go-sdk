@@ -42,6 +42,7 @@ func NewChanRouter(chans interfaces.FluxMessageChan) *ChanRouter { //nolint:gocr
 		configureSuccessChan: make([]*chan *interfaces.ConfigureSuccessResponse, 0),
 		configureFailureChan: make([]*chan *interfaces.ConfigureFailureResponse, 0),
 		fatalErrorChan:       make([]*chan *interfaces.FatalErrorResponse, 0),
+		warningChan:          make([]*chan *interfaces.WarningResponse, 0),
 		closeChan:            make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:            make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:        make([]*chan *[]byte, 0),
@@ -54,6 +55,11 @@ func NewChanRouter(chans interfaces.FluxMessageChan) *ChanRouter { //nolint:gocr
 		router.configureSuccessChan = append(router.configureSuccessChan, chans.GetConfigureSuccess()...)
 		router.configureFailureChan = append(router.configureFailureChan, chans.GetConfigureFailure()...)
 		router.fatalErrorChan = append(router.fatalErrorChan, chans.GetFatalError()...)
+		// FluxWarningChan is an optional extension; register warning channels only
+		// when the handler provides them.
+		if wc, ok := chans.(interfaces.FluxWarningChan); ok {
+			router.warningChan = append(router.warningChan, wc.GetWarning()...)
+		}
 		router.closeChan = append(router.closeChan, chans.GetClose()...)
 		router.errorChan = append(router.errorChan, chans.GetError()...)
 		router.unhandledChan = append(router.unhandledChan, chans.GetUnhandled()...)
@@ -151,6 +157,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processConfigureFailure(byMsg)
 	case interfaces.TypeFatalError:
 		err = r.processFatalError(byMsg)
+	case interfaces.TypeWarningResponse:
+		err = r.processWarning(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
@@ -252,6 +260,35 @@ func (r *ChanRouter) processFatalError(byMsg []byte) error {
 		return nil
 	}
 	return r.processGeneric(string(interfaces.TypeFatalError), byMsg, action)
+}
+
+// processWarning routes a non-fatal {"type":"Warning"} server message. Handlers that
+// implement interfaces.FluxWarningChan receive it on their warning channels; other
+// handlers receive the raw bytes on the unhandled channels. Either way the warning
+// is non-fatal: unlike unknown message types, it never yields ErrInvalidMessageType.
+func (r *ChanRouter) processWarning(byMsg []byte) error {
+	if len(r.warningChan) == 0 {
+		klog.V(3).Infof("Flux warning received; handler does not implement FluxWarningChan, forwarding to unhandled channels\n")
+		action := func(data []byte) error {
+			for _, ch := range r.unhandledChan {
+				*ch <- &data
+			}
+			return nil
+		}
+		return r.processGeneric(string(interfaces.TypeWarningResponse), byMsg, action)
+	}
+
+	action := func(data []byte) error {
+		var msg interfaces.WarningResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		for _, ch := range r.warningChan {
+			*ch <- &msg
+		}
+		return nil
+	}
+	return r.processGeneric(string(interfaces.TypeWarningResponse), byMsg, action)
 }
 
 func (r *ChanRouter) processGeneric(msgType string, byMsg []byte, action func(data []byte) error) error {

@@ -111,6 +111,14 @@ func (h DefaultCallbackHandler) FatalError(fe *interfaces.FatalErrorResponse) er
 	return nil
 }
 
+// Warning implements the optional interfaces.FluxWarningCallback extension: non-fatal
+// server warnings (e.g. FORCE_END_TURN_NO_ACTIVE_TURN) are printed and the session
+// continues.
+func (h DefaultCallbackHandler) Warning(wr *interfaces.WarningResponse) error {
+	fmt.Printf("\n[Warning] code=%s description=%s\n", wr.Code, wr.Description)
+	return nil
+}
+
 func (h DefaultCallbackHandler) Close(cr *interfaces.CloseResponse) error {
 	if h.debugWebsocket {
 		data, err := json.Marshal(cr)

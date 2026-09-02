@@ -48,3 +48,7 @@ Every `EndOfTurn` event carries a `trigger` field reporting what ended the turn:
 | `timeout` | `eot_timeout_ms` elapsed |
 
 The field is an open string — the server may add new values over time.
+
+## Pressing ENTER with no active turn
+
+If you press **ENTER** before speaking (or twice in a row), the `ForceEndTurn` arrives when no turn is active. The server ignores it and sends a non-fatal `Warning` with code `FORCE_END_TURN_NO_ACTIVE_TURN` — the example prints it and the session continues. Timing races between an external end-of-turn signal and Flux's `StartOfTurn` are normal, so treat this warning as informational, not an error.

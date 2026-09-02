@@ -17,6 +17,10 @@ import (
 	listenv2ws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2/websocket"
 )
 
+// forceEndTurnWireFormat is the exact JSON text frame the SDK must emit for
+// a ForceEndTurn control message.
+const forceEndTurnWireFormat = `{"type":"ForceEndTurn"}`
+
 // Test_FluxForceEndTurnSerialization verifies the ForceEndTurn control message
 // serializes to the exact wire format {"type":"ForceEndTurn"}.
 func Test_FluxForceEndTurnSerialization(t *testing.T) {
@@ -29,7 +33,7 @@ func Test_FluxForceEndTurnSerialization(t *testing.T) {
 		t.Fatalf("marshal ForceEndTurnMessage failed: %s", err)
 	}
 
-	want := `{"type":"ForceEndTurn"}`
+	want := forceEndTurnWireFormat
 	if string(data) != want {
 		t.Errorf("ForceEndTurnMessage wire format mismatch: got %s, want %s", data, want)
 	}

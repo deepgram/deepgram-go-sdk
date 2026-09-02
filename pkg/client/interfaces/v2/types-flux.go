@@ -20,7 +20,7 @@ type FluxTranscriptionOptions struct {
 	// endings yourself with ForceEndTurn (turns then end only on ForceEndTurn or
 	// after EotTimeoutMs elapses).
 	EotThreshold float64 `json:"eot_threshold,omitempty" schema:"eot_threshold,omitempty"`
-	// EotTimeoutMs (500–10000, default 5000): silence duration in ms before forcing EndOfTurn.
+	// EotTimeoutMs (500–60000, default 5000): silence duration in ms before forcing EndOfTurn.
 	EotTimeoutMs int `json:"eot_timeout_ms,omitempty" schema:"eot_timeout_ms,omitempty"`
 	// Keyterm provides domain-specific vocabulary hints for improved recognition.
 	Keyterm []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
