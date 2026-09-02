@@ -217,12 +217,23 @@ func (c *WSCallback) Configure(opts *clientinterfaces.FluxConfigureOptions) erro
 	return nil
 }
 
-// ForceEndTurn immediately ends the current turn, regardless of the model's
-// end-of-turn confidence. The server finalizes the turn and emits an "EndOfTurn"
-// TurnInfo with Trigger set to "manual". Use it when an external signal — a
+// ForceEndTurn asks the server to end the current turn immediately, regardless of
+// the model's end-of-turn confidence. Use it when an external signal — a
 // push-to-talk release, DTMF input, a UI send action, or your own endpointing —
 // determines the turn boundary. Combine with EotThreshold 1.0 to suppress native
 // detection and drive every turn ending yourself.
+//
+// A nil return means only that the message was written to the WebSocket; the
+// server's response arrives asynchronously on the callback:
+//   - If a turn is active, the server emits an "EndOfTurn" TurnInfo with Trigger
+//     set to "manual".
+//   - If no turn is active (before StartOfTurn or after EndOfTurn), the message is
+//     ignored and the server sends a non-fatal Warning with code
+//     "FORCE_END_TURN_NO_ACTIVE_TURN". Timing races between an external signal and
+//     the server's turn state are normal — treat the warning as informational.
+//
+// ForceEndTurn is gated per deployment on the Deepgram side; contact Deepgram
+// support if your project does not have it enabled.
 func (c *WSCallback) ForceEndTurn() error {
 	klog.V(7).Infof("flux.WSCallback.ForceEndTurn() ENTER\n")
 

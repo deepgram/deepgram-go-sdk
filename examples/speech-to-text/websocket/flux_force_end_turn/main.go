@@ -93,6 +93,14 @@ func (c MyCallback) FatalError(fe *api.FatalErrorResponse) error {
 	return nil
 }
 
+// Warning handles non-fatal server warnings. Pressing ENTER between turns produces
+// FORCE_END_TURN_NO_ACTIVE_TURN — a normal timing race, not an error: the session
+// continues unaffected.
+func (c MyCallback) Warning(wr *api.WarningResponse) error {
+	fmt.Printf("[Warning] code=%s: %s\n", wr.Code, wr.Description)
+	return nil
+}
+
 func (c MyCallback) Close(cr *api.CloseResponse) error {
 	fmt.Printf("\n[Close] WebSocket connection closed\n")
 	return nil
@@ -135,7 +143,7 @@ func main() {
 	dgClient, err := client.NewWSUsingCallback(ctx, "", cOptions, tOptions, MyCallback{})
 	if err != nil {
 		fmt.Printf("ERROR creating Flux client: %v\n", err)
-		return
+		os.Exit(1)
 	}
 
 	if !dgClient.Connect() {
