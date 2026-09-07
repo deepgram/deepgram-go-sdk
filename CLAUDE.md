@@ -35,9 +35,9 @@ packages are deprecated; do not use them for new code.
 - Put version-specific protocol types in the matching `v1` or `v2` package.
   Do not reuse a model across REST and WebSocket protocols unless their wire
   formats are identical.
-- Use `context.Context` for request and connection lifetime. WebSocket clients
-  expose separate callback and channel variants; preserve both when changing
-  their behavior.
+- Use `context.Context` for request and connection lifetime. Listen and Speak
+  WebSocket clients expose separate callback and channel variants; preserve
+  both when changing their behavior. Voice Agent is channel-based.
 - Match JSON tags and optionality to the wire contract. Test fields whose zero
   value is meaningful when the model is re-marshaled.
 - Return errors to callers. Do not log credentials, and do not change global
@@ -47,10 +47,14 @@ packages are deprecated; do not use them for new code.
 
 ## Validation
 
+Follow `.github/CODE_CONTRIBUTIONS_GUIDE.md` when preparing a development
+environment. Run `make ensure-deps` after cloning to install project tools,
+including the PortAudio dependency required to compile audio packages.
+
 Run the narrowest relevant check first:
 
 ```bash
-go test ./tests/unit_test
+go test ./tests/unit_test/...
 go test -v -run Test_ ./...
 go vet ./...
 go mod verify
@@ -62,6 +66,20 @@ changes. Run `make mdlint` for Markdown changes.
 
 Use `go test ./...` deliberately: it includes `tests/daily_test`, which makes
 live service calls and can update tracked response fixtures.
+
+## Example: Add A Listen v1 Option
+
+For a new pre-recorded transcription query parameter:
+
+1. Add the typed field and its `schema` tag to
+   `pkg/client/interfaces/v1/types-prerecorded.go`.
+2. Add or update the corresponding typed response model under
+   `pkg/api/listen/v1/rest/interfaces` when the API returns new data.
+3. Add a focused unit test proving the query parameter or response field
+   reaches the wire contract.
+4. Update the closest runnable example under `examples/speech-to-text/rest`.
+5. Run the focused package test, `go test ./tests/unit_test/...`, and the CI
+   command `go test -v -run Test_ ./...`.
 
 ## Pull Requests
 
