@@ -328,7 +328,7 @@ func main() {
 			} else {
 				fmt.Println("Text sent successfully.")
 			}
-			fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+			fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 		}
 	}
 

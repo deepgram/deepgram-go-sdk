@@ -58,13 +58,13 @@ func (c MyCallback) Binary(byMsg []byte) error {
 
 func (c MyCallback) Flush(fl *msginterfaces.FlushedResponse) error {
 	fmt.Printf("\n[Flushed] Received\n")
-	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	return nil
 }
 
 func (c MyCallback) Clear(fl *msginterfaces.ClearedResponse) error {
 	fmt.Printf("\n[Cleared] Received\n")
-	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	return nil
 }
 
@@ -196,7 +196,7 @@ func main() {
 			} else {
 				fmt.Println("Text sent successfully.")
 			}
-			fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+			fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 		}
 	}
 
