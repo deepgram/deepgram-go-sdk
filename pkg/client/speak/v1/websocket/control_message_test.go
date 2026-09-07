@@ -16,7 +16,7 @@ import (
 	"github.com/dvonthenen/websocket"
 )
 
-func TestClearControlMessage(t *testing.T) {
+func Test_ClearControlMessage(t *testing.T) {
 	if MessageTypeReset != MessageTypeClear {
 		t.Fatalf("MessageTypeReset = %q, want %q", MessageTypeReset, MessageTypeClear)
 	}
