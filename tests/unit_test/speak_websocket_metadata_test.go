@@ -61,7 +61,7 @@ func Test_SpeakWebSocketMetadataResponse(t *testing.T) {
 		}
 	})
 
-	// The required fields must be emitted even when zero-valued so a re-marshalled
+	// The required fields must be emitted even when zero-valued so a re-marshaled
 	// struct stays contract-valid; additional_model_uuids is optional and stays omitted.
 	t.Run("required fields are emitted when zero-valued", func(t *testing.T) {
 		data, err := json.Marshal(msginterfaces.MetadataResponse{})
@@ -71,12 +71,12 @@ func Test_SpeakWebSocketMetadataResponse(t *testing.T) {
 
 		var got map[string]any
 		if err := json.Unmarshal(data, &got); err != nil {
-			t.Fatalf("failed to unmarshal marshalled Metadata: %s", err)
+			t.Fatalf("failed to unmarshal marshaled Metadata: %s", err)
 		}
 
 		for _, key := range []string{"type", "request_id", "model_name", "model_version", "model_uuid"} {
 			if _, ok := got[key]; !ok {
-				t.Errorf("expected required key %q in marshalled Metadata, got %s", key, data)
+			t.Errorf("expected required key %q in marshaled Metadata, got %s", key, data)
 			}
 		}
 		if _, ok := got["additional_model_uuids"]; ok {
