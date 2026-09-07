@@ -168,21 +168,27 @@ func (c *WSChannel) Flush() error {
 	return err
 }
 
-// Reset will instruct the server to reset the current buffer
-func (c *WSChannel) Reset() error {
-	klog.V(6).Infof("speak.Reset() ENTER\n")
+// Clear instructs the server to clear the current text buffer.
+func (c *WSChannel) Clear() error {
+	klog.V(6).Infof("speak.Clear() ENTER\n")
 
-	err := c.WriteJSON(controlMessage{Type: MessageTypeReset})
+	err := c.WriteJSON(controlMessage{Type: MessageTypeClear})
 	if err != nil {
-		klog.V(1).Infof("Reset failed. Err: %v\n", err)
-		klog.V(6).Infof("speak.Reset() LEAVE\n")
+		klog.V(1).Infof("Clear failed. Err: %v\n", err)
+		klog.V(6).Infof("speak.Clear() LEAVE\n")
 
 		return err
 	}
 
-	klog.V(4).Infof("Reset Succeeded\n")
-	klog.V(6).Infof("speak.Reset() LEAVE\n")
-	return nil
+	klog.V(4).Infof("Clear Succeeded\n")
+	klog.V(6).Infof("speak.Clear() LEAVE\n")
+	return err
+}
+
+// Reset is deprecated because Speak v1 accepts Clear, not Reset.
+// Deprecated: Use Clear instead.
+func (c *WSChannel) Reset() error {
+	return c.Clear()
 }
 
 // GetCloseMsg sends an application level message to Deepgram
