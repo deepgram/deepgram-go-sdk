@@ -88,53 +88,8 @@ In scenarios where urgent issues arise, the `hotfix` branch comes into play. A h
 This dual approach of leveraging both **GitHub Flow** and **Git Flow** ensures that the project can iterate quickly while maintaining high standards of code stability and release management.
 ### Creating a Release
 
-Since the latest stable code is contained on `main` in a typical **GitHub Flow**, to create a release someone with write access to the repository needs to simply just `git tag` the release and then create a (draft) release using that tag in the [repository's release page](https://github.com/deepgram/deepgram-go-sdk/releases).
+[Release Please](https://github.com/googleapis/release-please) manages releases from commits merged into `main`. It uses [Conventional Commits](https://www.conventionalcommits.org/): `fix:` creates a patch release, `feat:` creates a minor release, and a commit or footer marking a breaking change creates a major release.
 
-If you haven't done this before, these are the typicial commands to execute at the root of the repository assuming you are on your fork:
+After qualifying commits are merged, the workflow opens or updates a release PR. Review its generated `CHANGELOG.md` and version before merging it. Merging that PR creates the semver Git tag and publishes the GitHub release.
 
-```bash
-# get the latest everything and update your fork
-git checkout main
-git pull --rebase upstream main
-git push
-git fetch upstream --tags
-git push origin --tags
-
-# create a new tag following semver
-git tag -m <version> <version>
-git push upstream  <version>
-```
-
-If the release you want to create is `v3.9.0`, then this would look like:
-
-```bash
-# get the latest everything and update your fork
-git checkout main
-git pull --rebase upstream main
-git push
-git fetch upstream --tags
-git push origin --tags
-
-# create a new tag following semver
-git tag -m v3.9.0 v3.9.0
-git push upstream v3.9.0
-```
-
-#### Creating a Release from a Release Branch
-
-While we don't have a formal requirement for supporting past releases (ie currently on `v3` but need a patch on `v2`), there are times when you need to provide a patch release for things like security fixes. To create that patch releases, you do something similar as you would have done on main, but on the `release-v[0-9]+/*` branch.
-
-If this were the `release-v2` branch for version `v2.5.1` (note the `v2` matches the `release-v2`), this would look like (again, assuming you are on your fork):
-
-```bash
-# get the latest everything and update your fork
-git checkout release-v2
-git pull --rebase upstream release-v2
-git push origin release-v2
-git fetch upstream --tags
-git push origin --tags
-
-# create a new tag following semver
-git tag -m v2.5.1 v2.5.1
-git push upstream v2.5.1
-```
+Go modules are distributed by the Go module proxy from their Git tags; no separate package publishing step is required. Maintenance releases for older major versions must be made from their corresponding release branch and require a separate Release Please configuration.
