@@ -187,6 +187,7 @@ func (c *WSCallback) Clear() error {
 }
 
 // Reset is deprecated because Speak v1 accepts Clear, not Reset.
+//
 // Deprecated: Use Clear instead.
 func (c *WSCallback) Reset() error {
 	return c.Clear()

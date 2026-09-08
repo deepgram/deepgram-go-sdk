@@ -31,6 +31,7 @@ const (
 	MessageTypeClear string = "Clear"
 
 	// MessageTypeReset is kept for compatibility but emits the supported Clear message.
+	//
 	// Deprecated: Use MessageTypeClear instead.
 	MessageTypeReset = MessageTypeClear
 
