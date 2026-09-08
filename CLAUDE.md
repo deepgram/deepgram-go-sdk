@@ -78,7 +78,9 @@ For a new pre-recorded transcription query parameter:
 3. Add a focused unit test proving the query parameter or response field
    reaches the wire contract.
 4. Update the closest runnable example under `examples/speech-to-text/rest`.
-5. Run the focused package test, `go test ./tests/unit_test/...`, and the CI
+5. Run a focused test, such as
+   `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel`, then run the
+   full deterministic suite with `go test ./tests/unit_test/...` and the CI
    command `go test -v -run Test_ ./...`.
 
 ## Pull Requests
