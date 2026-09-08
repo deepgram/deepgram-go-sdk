@@ -21,14 +21,19 @@ const (
 )
 
 const (
-	// MessageTypeFlush flushes the audio from the server
+	// MessageTypeSpeak adds text to the server's synthesis buffer.
 	MessageTypeSpeak string = "Speak"
 
-	// MessageTypeFlush flushes the audio from the server
+	// MessageTypeFlush flushes the server's synthesis buffer.
 	MessageTypeFlush string = "Flush"
 
-	// MessageTypeReset resets the text buffer
-	MessageTypeReset string = "Reset"
+	// MessageTypeClear clears the server's synthesis buffer.
+	MessageTypeClear string = "Clear"
+
+	// MessageTypeReset is kept for compatibility but emits the supported Clear message.
+	//
+	// Deprecated: Use MessageTypeClear instead.
+	MessageTypeReset = MessageTypeClear
 
 	// MessageTypeClose closes the stream
 	MessageTypeClose string = "Close"
