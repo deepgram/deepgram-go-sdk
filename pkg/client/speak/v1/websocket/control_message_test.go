@@ -12,8 +12,9 @@ import (
 	"testing"
 	"time"
 
-	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 	"github.com/dvonthenen/websocket"
+
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 func Test_ClearControlMessage(t *testing.T) {
