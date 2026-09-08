@@ -16,7 +16,9 @@ SDK's environment-backed client defaults.
   routers, and callbacks.
 - `pkg/client/<product>/<version>`: REST and WebSocket transport clients.
 - `pkg/client/interfaces`: shared public option types. Versioned types live in
-  `v1` and `v2` and are re-exported here when appropriate.
+  `v1` (Nova REST and WebSocket, Speak, Agent, Analyze) and `v2` (the Flux
+  conversational speech-to-text WebSocket client in `pkg/client/listen/v2`,
+  options in `types-flux.go`) and are re-exported here when appropriate.
 - `pkg/client/common`: shared REST and WebSocket behavior.
 - `pkg/api/version`: endpoint URL and query-parameter construction.
 - `examples`: runnable, product-specific usage.
@@ -40,8 +42,11 @@ packages are deprecated; do not use them for new code.
   both when changing their behavior. Voice Agent is channel-based.
 - Match JSON tags and optionality to the wire contract. Test fields whose zero
   value is meaningful when the model is re-marshaled.
-- Return errors to callers. Do not log credentials, and do not change global
-  logging or process flag behavior from ordinary client code.
+- Return errors to callers. Existing `pkg/api/manage/v1` methods (all but
+  `invitations.go`) return `&resp, nil` after a failed request; that is a known
+  defect, so do not copy it into new code and do not change it without a
+  tracked issue. Do not log credentials, and do not change global logging or
+  process flag behavior from ordinary client code.
 - Keep examples idiomatic and runnable. Update affected examples and public
   documentation with every API change.
 
@@ -62,7 +67,8 @@ go mod verify
 
 CI uses Go 1.19 and runs `go test -v -run Test_ ./...`. Name unit tests with
 the `Test_` prefix so CI executes them. Run `make lint` with Go 1.19 for Go
-changes. Run `make mdlint` for Markdown changes.
+changes and read its output: it currently exits 0 even when golangci-lint
+reports issues. Run `make mdlint` for Markdown changes.
 
 Use `go test ./...` deliberately: it includes `tests/daily_test`, which makes
 live service calls and can update tracked response fixtures.
@@ -76,7 +82,10 @@ For a new pre-recorded transcription query parameter:
 2. Add or update the corresponding typed response model under
    `pkg/api/listen/v1/rest/interfaces` when the API returns new data.
 3. Add a focused unit test proving the query parameter or response field
-   reaches the wire contract.
+   reaches the wire contract. Files in `tests/unit_test` use
+   `package deepgram_test` and must sort alphabetically after `mocks.go`; a
+   name that sorts before it fails the build with
+   `found packages deepgram ... and deepgram_test`.
 4. Update the closest runnable example under `examples/speech-to-text/rest`.
 5. Run a focused test, such as
    `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel`, then run the
