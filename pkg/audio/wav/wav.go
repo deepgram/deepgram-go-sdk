@@ -17,6 +17,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"reflect"
 )
 
 // header layout constants
@@ -60,7 +61,7 @@ type Writer struct {
 // mulaw and alaw would need format codes 7 and 6, and a PCM-labeled file of
 // companded bytes plays as noise.
 func NewWriter(w io.WriteSeeker, channels uint16, sampleRate uint32, bitsPerSample uint16) (*Writer, error) {
-	if w == nil || channels == 0 || sampleRate == 0 || bitsPerSample == 0 || bitsPerSample%8 != 0 {
+	if isNilWriter(w) || channels == 0 || sampleRate == 0 || bitsPerSample == 0 || bitsPerSample%8 != 0 {
 		return nil, ErrInvalidFormat
 	}
 
@@ -90,6 +91,20 @@ func NewWriter(w io.WriteSeeker, channels uint16, sampleRate uint32, bitsPerSamp
 		return nil, err
 	}
 	return &Writer{w: w}, nil
+}
+
+func isNilWriter(w io.WriteSeeker) bool {
+	if w == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(w)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
 }
 
 // Write appends PCM audio bytes to the data chunk.

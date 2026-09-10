@@ -108,6 +108,13 @@ func Test_WAVWriterDeclaresRealSizes(t *testing.T) {
 }
 
 func Test_WAVWriterRejectsInvalidFormat(t *testing.T) {
+	t.Run("typed nil writer", func(t *testing.T) {
+		var file *os.File
+		if _, err := wav.NewWriter(file, 1, 48000, 16); !errors.Is(err, wav.ErrInvalidFormat) {
+			t.Errorf("expected ErrInvalidFormat, got: %v", err)
+		}
+	})
+
 	for _, test := range []struct {
 		name          string
 		channels      uint16
