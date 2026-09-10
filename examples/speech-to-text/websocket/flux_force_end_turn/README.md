@@ -4,12 +4,12 @@ Streams microphone audio to the [Deepgram Flux (v2/listen)](https://developers.d
 
 By default the example connects with `eot_threshold=1.0`, which suppresses Flux's native end-of-turn detection entirely, so turns end only when you press **ENTER** (which sends `{"type":"ForceEndTurn"}`) or when `eot_timeout_ms` elapses. Each `EndOfTurn` event prints its `trigger` field so you can see what ended the turn.
 
-> **Note:** `ForceEndTurn` is gated per deployment on the Deepgram side. If your project does not have it enabled yet, contact Deepgram support.
+> **Note:** `ForceEndTurn` is available on hosted Flux `/v2/listen`. Self-hosted support has not shipped.
 
 ## Prerequisites
 
 - Go 1.19+
-- A Deepgram API key with access to the Flux endpoint (and `ForceEndTurn` enabled for your deployment)
+- A Deepgram API key with access to the hosted Flux endpoint
 - A working microphone (ALSA/PulseAudio on Linux, Core Audio on macOS)
 
 ## Usage
