@@ -7,11 +7,11 @@
 // with Speak, the turn is ended with Flush, and the synthesized audio arrives as
 // binary frames which are streamed into output.wav.
 //
-// The session is closed gracefully with Finish: the server drains every queued
-// turn, sends all remaining audio, and reports the final SessionMetadata before
+// When Finish completes before its context deadline, the server drains every
+// queued turn, sends all remaining audio, and reports the final SessionMetadata before
 // the socket closes — nothing is truncated. The WAV header's RIFF and data sizes
-// are patched once the byte count is known, so the finished file is a conforming
-// WAV that any player or parser accepts.
+// are then patched, so the finished file is a conforming WAV that any player or
+// parser accepts. If Finish times out or fails, no output file is written.
 //
 // Run:
 //
@@ -24,6 +24,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
@@ -174,12 +175,13 @@ func run() (err error) {
 		return fmt.Errorf("connecting to Deepgram Flux TTS endpoint")
 	}
 
-	// Create output only after the client is ready. Any later failure removes this
-	// partial file, so users never mistake a placeholder WAV header for audio.
-	file, err := os.OpenFile(audioFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
+	// Write to a sibling file until the full WAV is finalized. A failed run cannot
+	// corrupt an existing output.wav.
+	file, err := os.CreateTemp(filepath.Dir(audioFile), filepath.Base(audioFile)+".*.tmp")
 	if err != nil {
 		return fmt.Errorf("creating %s: %w", audioFile, err)
 	}
+	temporaryFile := file.Name()
 	completed := false
 	closed := false
 	defer func() {
@@ -189,7 +191,7 @@ func run() (err error) {
 			}
 		}
 		if !completed {
-			_ = os.Remove(audioFile)
+			_ = os.Remove(temporaryFile)
 		}
 	}()
 
@@ -229,6 +231,9 @@ func run() (err error) {
 		return fmt.Errorf("closing %s: %w", audioFile, err)
 	}
 	closed = true
+	if err := os.Rename(temporaryFile, audioFile); err != nil {
+		return fmt.Errorf("saving %s: %w", audioFile, err)
+	}
 	completed = true
 
 	fmt.Printf("\nSession complete — %d bytes of audio saved to %s\n", wavWriter.DataBytes(), audioFile)

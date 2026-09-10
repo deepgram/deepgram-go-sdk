@@ -2,7 +2,7 @@
 
 Synthesizes text with the [Deepgram Flux TTS streaming WebSocket](https://developers.deepgram.com/docs/flux-tts/quickstart) — `wss://api.deepgram.com/v2/speak` — using the **callback** client, and saves the audio to `output.wav`.
 
-The streaming transport is the conversational path: text streams in (`Speak`), turns end explicitly (`Flush`), audio streams back as binary frames, and turns are interruptible (`Interrupt`). This example sends one turn and closes the session gracefully with `Finish`, which waits while the server drains every remaining audio frame and reports the final `SessionMetadata` — nothing is truncated, no matter how long the turn runs.
+The streaming transport is the conversational path: text streams in (`Speak`), turns end explicitly (`Flush`), audio streams back as binary frames, and turns are interruptible (`Interrupt`). This example sends one turn and closes the session gracefully with `Finish`. When `Finish` completes before its context deadline, the server drains every remaining audio frame and reports the final `SessionMetadata`.
 
 ## Prerequisites
 
