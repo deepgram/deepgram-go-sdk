@@ -139,8 +139,8 @@ type ConfigureMessage struct {
 // — do not construct directly. Acceptance is asynchronous: with an active turn the
 // server emits an "EndOfTurn" TurnInfo with Trigger set to "manual"; with no active
 // turn it ignores the message and sends a non-fatal Warning with code
-// "FORCE_END_TURN_NO_ACTIVE_TURN". The feature is gated per deployment on the
-// Deepgram side.
+// "FORCE_END_TURN_NO_ACTIVE_TURN". It is available on the hosted Flux
+// /v2/listen endpoint; self-hosted support has not shipped.
 //
 // JSON example:
 //

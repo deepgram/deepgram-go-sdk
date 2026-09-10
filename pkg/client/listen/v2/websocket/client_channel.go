@@ -231,8 +231,8 @@ func (c *WSChannel) Configure(opts *clientinterfaces.FluxConfigureOptions) error
 //     "FORCE_END_TURN_NO_ACTIVE_TURN". Timing races between an external signal and
 //     the server's turn state are normal — treat the warning as informational.
 //
-// ForceEndTurn is gated per deployment on the Deepgram side; contact Deepgram
-// support if your project does not have it enabled.
+// ForceEndTurn is available on the hosted Flux /v2/listen endpoint. Self-hosted
+// ForceEndTurn support has not shipped.
 func (c *WSChannel) ForceEndTurn() error {
 	klog.V(7).Infof("flux.WSChannel.ForceEndTurn() ENTER\n")
 

@@ -12,8 +12,8 @@
 // ENTER, "timeout" if eot_timeout_ms elapsed first, and "model" for turns ended by
 // native detection (only when -eot-threshold is set below 1.0).
 //
-// NOTE: ForceEndTurn is gated per deployment on the Deepgram side. If your project
-// does not have it enabled yet, contact Deepgram support.
+// NOTE: ForceEndTurn is available on hosted Flux /v2/listen. Self-hosted support
+// has not shipped.
 //
 // Run:
 //
