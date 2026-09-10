@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -196,6 +197,19 @@ func Test_FluxSpeakNilGuards(t *testing.T) {
 		if _, err := client.ToStream(context.Background(), "Hello.",
 			&interfaces.SpeakV2Options{Model: testFluxModel}, &buf); !errors.Is(err, speakrestv2.ErrNilClient) {
 			t.Errorf("expected ErrNilClient, got: %v", err)
+		}
+	})
+
+	t.Run("REST methods reject nil output destinations", func(t *testing.T) {
+		client := newFluxRESTClient(t, "http://127.0.0.1:1")
+		options := &interfaces.SpeakV2Options{Model: testFluxModel}
+		if _, err := client.ToStream(context.Background(), "Hello.", options, nil); !errors.Is(err, speakrestv2.ErrOutputRequired) {
+			t.Errorf("ToStream: expected ErrOutputRequired, got: %v", err)
+		}
+
+		var writer *bytes.Buffer
+		if _, err := client.ToFile(context.Background(), "Hello.", options, io.Writer(writer)); !errors.Is(err, speakrestv2.ErrOutputRequired) {
+			t.Errorf("ToFile: expected ErrOutputRequired, got: %v", err)
 		}
 	})
 

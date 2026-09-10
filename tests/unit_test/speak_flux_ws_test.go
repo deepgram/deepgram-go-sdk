@@ -647,3 +647,83 @@ func Test_FluxSpeakFinishAfterReconnect(t *testing.T) {
 		t.Fatal("the second session's SessionMetadata was not delivered before Finish returned")
 	}
 }
+
+// Test_FluxSpeakChannelFinishAfterContextReplacement ensures the channel
+// observer follows the context installed by ConnectWithCancel, rather than
+// stopping with the construction context.
+func Test_FluxSpeakChannelFinishAfterContextReplacement(t *testing.T) {
+	host, _, _, shutdown := newFluxSpeakTestServer(t, drainAndClose(100*time.Millisecond))
+	defer shutdown()
+
+	constructionCtx, constructionCancel := context.WithCancel(context.Background())
+	defer constructionCancel()
+	handler := newSpeakWireChanHandler()
+	dgClient, err := speakv2.NewWSUsingChan(
+		constructionCtx, MockAPIKey, speakWireClientOptions(host), speakWireOptions(), handler)
+	if err != nil {
+		t.Fatalf("NewWSUsingChan failed: %s", err)
+	}
+
+	activeCtx, activeCancel := context.WithCancel(context.Background())
+	defer activeCancel()
+	if !dgClient.ConnectWithCancel(activeCtx, activeCancel, 3) {
+		t.Fatal("ConnectWithCancel to the test server failed")
+	}
+	constructionCancel()
+
+	finishCtx, cancel := context.WithTimeout(context.Background(), wireWaitTimeout)
+	defer cancel()
+	if err := dgClient.Finish(finishCtx); err != nil {
+		t.Fatalf("Finish after context replacement failed: %s", err)
+	}
+	select {
+	case <-handler.sessionMetaCh:
+	default:
+		t.Fatal("SessionMetadata was not dispatched before Finish returned")
+	}
+}
+
+// Test_FluxSpeakChannelFinishAfterReconnectContextReplacement ensures a
+// reconnect starts an observer for its replacement context and ignores the
+// completed session's queued observer events.
+func Test_FluxSpeakChannelFinishAfterReconnectContextReplacement(t *testing.T) {
+	host, _, _, shutdown := newFluxSpeakTestServer(t, drainAndClose(100*time.Millisecond))
+	defer shutdown()
+
+	constructionCtx, constructionCancel := context.WithCancel(context.Background())
+	defer constructionCancel()
+	handler := newSpeakWireChanHandler()
+	dgClient, err := speakv2.NewWSUsingChan(
+		constructionCtx, MockAPIKey, speakWireClientOptions(host), speakWireOptions(), handler)
+	if err != nil {
+		t.Fatalf("NewWSUsingChan failed: %s", err)
+	}
+	if !dgClient.Connect() {
+		t.Fatal("Connect failed")
+	}
+
+	finishCtx, cancel := context.WithTimeout(context.Background(), wireWaitTimeout)
+	defer cancel()
+	if err := dgClient.Finish(finishCtx); err != nil {
+		t.Fatalf("first Finish failed: %s", err)
+	}
+	<-handler.sessionMetaCh
+	constructionCancel()
+
+	activeCtx, activeCancel := context.WithCancel(context.Background())
+	defer activeCancel()
+	if !dgClient.AttemptReconnectWithCancel(activeCtx, activeCancel, 3) {
+		t.Fatal("AttemptReconnectWithCancel failed")
+	}
+
+	finishCtx2, cancel2 := context.WithTimeout(context.Background(), wireWaitTimeout)
+	defer cancel2()
+	if err := dgClient.Finish(finishCtx2); err != nil {
+		t.Fatalf("Finish after reconnect context replacement failed: %s", err)
+	}
+	select {
+	case <-handler.sessionMetaCh:
+	default:
+		t.Fatal("second SessionMetadata was not dispatched before Finish returned")
+	}
+}

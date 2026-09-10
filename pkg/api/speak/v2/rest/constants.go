@@ -19,4 +19,7 @@ var (
 
 	// ErrCallbackRequired ToAsync was called without a callback URL
 	ErrCallbackRequired = errors.New("ToAsync requires options.Callback to be set")
+
+	// ErrOutputRequired a nil output destination was passed to ToStream or ToFile
+	ErrOutputRequired = errors.New("an output destination is required")
 )

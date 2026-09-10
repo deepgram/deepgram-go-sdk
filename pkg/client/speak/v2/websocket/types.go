@@ -47,6 +47,7 @@ type wsHandlerCore interface {
 	ProcessMessage(wsType int, byMsg []byte) error
 	ProcessError(err error) error
 	Start()
+	onFinish()
 	GetCloseMsg() []byte
 }
 
@@ -63,7 +64,7 @@ func (s *wsHandlerShim) ProcessMessage(wsType int, byMsg []byte) error {
 }
 func (s *wsHandlerShim) ProcessError(err error) error { return s.core.ProcessError(err) }
 func (s *wsHandlerShim) Start()                       { s.core.Start() }
-func (s *wsHandlerShim) Finish()                      {}
+func (s *wsHandlerShim) Finish()                      { s.core.onFinish() }
 func (s *wsHandlerShim) GetCloseMsg() []byte          { return s.core.GetCloseMsg() }
 
 // WSCallback is a Flux TTS WebSocket client that delivers server events via a
@@ -94,18 +95,21 @@ func (c *WSCallback) currentFinishState() *finishState {
 // resetFinishStateIfClosed installs a fresh finishState when the previous
 // session already ended (its peer-close milestone fired), so Finish works on a
 // reconnected session. A live session's milestones are never discarded.
-func (c *WSCallback) resetFinishStateIfClosed() {
+func (c *WSCallback) resetFinishStateIfClosed() bool {
 	c.finishMu.Lock()
 	defer c.finishMu.Unlock()
 	select {
 	case <-c.finish.peerCloseDone:
 		c.finish = newFinishState()
+		return true
 	default:
+		return false
 	}
 }
 
 func (c *WSCallback) markSessionMetadataEvent() { c.currentFinishState().markSessionMetadata() }
 func (c *WSCallback) markPeerCloseEvent()       { c.currentFinishState().markPeerClose() }
+func (c *WSCallback) onFinish()                 {}
 
 // WSChannel is a Flux TTS WebSocket client that delivers server events via Go channels.
 type WSChannel struct {
@@ -118,6 +122,13 @@ type WSChannel struct {
 
 	chans  []*msginterface.FluxSpeakMessageChan
 	router *commoninterfaces.Router
+
+	observer *chanFinishObserver
+
+	defaultHandlerMu       sync.RWMutex
+	usesDefaultHandler     bool
+	defaultHandlerShutdown func()
+	defaultHandlerDone     chan struct{}
 
 	finishMu   sync.Mutex
 	finish     *finishState
@@ -134,15 +145,31 @@ func (c *WSChannel) currentFinishState() *finishState {
 // resetFinishStateIfClosed installs a fresh finishState when the previous
 // session already ended (its peer-close milestone fired), so Finish works on a
 // reconnected session. A live session's milestones are never discarded.
-func (c *WSChannel) resetFinishStateIfClosed() {
+func (c *WSChannel) resetFinishStateIfClosed() bool {
 	c.finishMu.Lock()
 	defer c.finishMu.Unlock()
 	select {
 	case <-c.finish.peerCloseDone:
 		c.finish = newFinishState()
+		return true
 	default:
+		return false
 	}
 }
 
 func (c *WSChannel) markSessionMetadataEvent() { c.currentFinishState().markSessionMetadata() }
 func (c *WSChannel) markPeerCloseEvent()       { c.currentFinishState().markPeerClose() }
+
+func (c *WSChannel) onFinish() {
+	if c.observer != nil {
+		c.observer.finish()
+	}
+
+	c.defaultHandlerMu.Lock()
+	shutdown := c.defaultHandlerShutdown
+	c.defaultHandlerShutdown = nil
+	if shutdown != nil {
+		shutdown()
+	}
+	c.defaultHandlerMu.Unlock()
+}

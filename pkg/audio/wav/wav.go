@@ -37,6 +37,10 @@ var ErrFinalized = errors.New("wav: writer already finalized")
 // 32-bit size fields.
 var ErrTooLarge = errors.New("wav: PCM data exceeds the maximum WAV file size")
 
+// ErrInvalidFormat is returned when PCM format values cannot be represented in
+// a standard WAV header.
+var ErrInvalidFormat = errors.New("wav: invalid PCM format")
+
 // Writer streams PCM audio into w as a WAV file. Create it with NewWriter, call
 // Write for each audio chunk, and call Finalize once at the end to patch the
 // header's size fields. Writer is not safe for concurrent use.
@@ -56,8 +60,17 @@ type Writer struct {
 // mulaw and alaw would need format codes 7 and 6, and a PCM-labeled file of
 // companded bytes plays as noise.
 func NewWriter(w io.WriteSeeker, channels uint16, sampleRate uint32, bitsPerSample uint16) (*Writer, error) {
-	blockAlign := channels * bitsPerSample / 8
-	byteRate := sampleRate * uint32(blockAlign)
+	if w == nil || channels == 0 || sampleRate == 0 || bitsPerSample == 0 || bitsPerSample%8 != 0 {
+		return nil, ErrInvalidFormat
+	}
+
+	blockAlign64 := uint64(channels) * uint64(bitsPerSample) / 8
+	byteRate64 := uint64(sampleRate) * blockAlign64
+	if blockAlign64 > 1<<16-1 || byteRate64 > 1<<32-1 {
+		return nil, ErrInvalidFormat
+	}
+	blockAlign := uint16(blockAlign64)
+	byteRate := uint32(byteRate64)
 
 	header := make([]byte, 0, headerSize)
 	header = append(header, 'R', 'I', 'F', 'F')
