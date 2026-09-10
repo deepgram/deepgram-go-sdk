@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestRunWithoutCredentialsLeavesNoOutput(t *testing.T) {
+func TestRunWithoutCredentialsPreservesExistingOutput(t *testing.T) {
 	t.Setenv("DEEPGRAM_API_KEY", "")
 	t.Setenv("DEEPGRAM_ACCESS_TOKEN", "")
 
@@ -21,11 +21,19 @@ func TestRunWithoutCredentialsLeavesNoOutput(t *testing.T) {
 	if err := os.Chdir(t.TempDir()); err != nil {
 		t.Fatalf("switching to temporary directory: %v", err)
 	}
+	const existingAudio = "existing audio"
+	if err := os.WriteFile(audioFile, []byte(existingAudio), 0o600); err != nil {
+		t.Fatalf("creating existing output file: %v", err)
+	}
 
 	if err := run(); err == nil {
 		t.Fatal("expected client construction to fail without credentials")
 	}
-	if _, err := os.Stat(audioFile); !os.IsNotExist(err) {
-		t.Errorf("expected no partial output file, got stat error %v", err)
+	output, err := os.ReadFile(audioFile)
+	if err != nil {
+		t.Fatalf("reading existing output file: %v", err)
+	}
+	if string(output) != existingAudio {
+		t.Errorf("existing output was modified: got %q, want %q", output, existingAudio)
 	}
 }
