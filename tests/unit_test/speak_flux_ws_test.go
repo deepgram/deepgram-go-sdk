@@ -303,6 +303,7 @@ func Test_FluxSpeakWireCallback(t *testing.T) {
 	if err := dgClient.Finish(finishCtx); err != nil {
 		t.Fatalf("Finish failed: %s", err)
 	}
+	awaitFrame(t, frames, `{"type":"Close"}`)
 	awaitedTail := false
 	for !awaitedTail {
 		select {
@@ -318,6 +319,11 @@ func Test_FluxSpeakWireCallback(t *testing.T) {
 	case <-handler.sessionMeta:
 	default:
 		t.Fatal("SessionMetadata was not delivered before Finish returned")
+	}
+	select {
+	case frame := <-frames:
+		t.Errorf("Finish sent an unexpected second frame after the peer closed: %s", frame)
+	case <-time.After(100 * time.Millisecond):
 	}
 
 	// write errors propagate after shutdown

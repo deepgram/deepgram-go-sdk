@@ -54,17 +54,17 @@ type MyCallback struct {
 	wavWriter *wav.Writer
 }
 
-func (c MyCallback) Open(or *api.OpenResponse) error {
+func (c *MyCallback) Open(or *api.OpenResponse) error {
 	fmt.Printf("\n[Open] WebSocket connection established\n")
 	return nil
 }
 
-func (c MyCallback) Connected(cr *api.ConnectedResponse) error {
+func (c *MyCallback) Connected(cr *api.ConnectedResponse) error {
 	fmt.Printf("\n[Connected] request_id=%s model=%s version=%s\n", cr.RequestID, cr.ModelName, cr.ModelVersion)
 	return nil
 }
 
-func (c MyCallback) Binary(byMsg []byte) error {
+func (c *MyCallback) Binary(byMsg []byte) error {
 	fmt.Printf("[Binary] %d bytes of audio received\n", len(byMsg))
 
 	if _, err := c.wavWriter.Write(byMsg); err != nil {
@@ -74,69 +74,76 @@ func (c MyCallback) Binary(byMsg []byte) error {
 	return nil
 }
 
-func (c MyCallback) SpeechStarted(ss *api.SpeechStartedResponse) error {
+func (c *MyCallback) SpeechStarted(ss *api.SpeechStartedResponse) error {
 	fmt.Printf("\n[SpeechStarted] speech_id=%s\n", ss.SpeechID)
 	return nil
 }
 
-func (c MyCallback) SpeechMetadata(sm *api.SpeechMetadataResponse) error {
+func (c *MyCallback) SpeechMetadata(sm *api.SpeechMetadataResponse) error {
 	fmt.Printf("\n[SpeechMetadata] speech_id=%s duration_ms=%d billable_chars=%d\n",
 		sm.SpeechID, sm.AudioDurationMs, sm.BillableCharacterCount)
 	return nil
 }
 
-func (c MyCallback) SpeechInterrupted(si *api.SpeechInterruptedResponse) error {
+func (c *MyCallback) SpeechInterrupted(si *api.SpeechInterruptedResponse) error {
 	fmt.Printf("\n[SpeechInterrupted] audio_played_ms=%d\n", si.AudioPlayedMs)
 	return nil
 }
 
-func (c MyCallback) Flushed(fl *api.FlushedResponse) error {
+func (c *MyCallback) Flushed(fl *api.FlushedResponse) error {
 	fmt.Printf("\n[Flushed] speech_id=%s\n", fl.SpeechID)
 	return nil
 }
 
-func (c MyCallback) SessionMetadata(sm *api.SessionMetadataResponse) error {
+func (c *MyCallback) SessionMetadata(sm *api.SessionMetadataResponse) error {
 	fmt.Printf("\n[SessionMetadata] total_duration_ms=%d total_billable_chars=%d\n",
 		sm.TotalAudioDurationMs, sm.TotalBillableCharacterCount)
 	return nil
 }
 
-func (c MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
+func (c *MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
 	fmt.Printf("\n[ConfigureSuccess] Received\n")
 	return nil
 }
 
-func (c MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
+func (c *MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
 	fmt.Printf("\n[ConfigureFailure] code=%s description=%s\n", cf.Code, cf.Description)
 	return nil
 }
 
-func (c MyCallback) Warning(wr *api.WarningResponse) error {
+func (c *MyCallback) Warning(wr *api.WarningResponse) error {
 	fmt.Printf("\n[Warning] code=%s description=%s\n", wr.Code, wr.Description)
 	return nil
 }
 
-func (c MyCallback) FatalError(fe *api.FatalErrorResponse) error {
+func (c *MyCallback) FatalError(fe *api.FatalErrorResponse) error {
 	fmt.Printf("\n[FatalError] code=%s description=%s\n", fe.Code, fe.Description)
 	return nil
 }
 
-func (c MyCallback) Close(cr *api.CloseResponse) error {
+func (c *MyCallback) Close(cr *api.CloseResponse) error {
 	fmt.Printf("\n[Close] WebSocket connection closed\n")
 	return nil
 }
 
-func (c MyCallback) Error(er *api.ErrorResponse) error {
+func (c *MyCallback) Error(er *api.ErrorResponse) error {
 	fmt.Printf("\n[Error] type=%s message=%s description=%s\n", er.ErrCode, er.ErrMsg, er.Description)
 	return nil
 }
 
-func (c MyCallback) UnhandledEvent(byData []byte) error {
+func (c *MyCallback) UnhandledEvent(byData []byte) error {
 	fmt.Printf("\n[UnhandledEvent] %s\n", string(byData))
 	return nil
 }
 
 func main() {
+	if err := run(); err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func run() (err error) {
 	flag.Parse()
 
 	// init library
@@ -156,43 +163,48 @@ func main() {
 		SampleRate: sampleRate,
 	}
 
-	// one file handle for the whole session: the WAV writer streams the raw
-	// linear16 audio behind a standard header, and Finalize patches the RIFF and
-	// data sizes once the total byte count is known
-	file, err := os.OpenFile(audioFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
-	if err != nil {
-		fmt.Printf("ERROR creating %s: %v\n", audioFile, err)
-		os.Exit(1)
-	}
-	defer file.Close()
-
-	wavWriter, err := wav.NewWriter(file, 1, sampleRate, 16)
-	if err != nil {
-		fmt.Printf("ERROR writing WAV header: %v\n", err)
-		os.Exit(1)
-	}
-
-	callback := MyCallback{wavWriter: wavWriter}
+	callback := &MyCallback{}
 
 	dgClient, err := speakv2client.NewWSUsingCallback(ctx, "", cOptions, sOptions, callback)
 	if err != nil {
-		fmt.Printf("ERROR creating Flux TTS client: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("creating Flux TTS client: %w", err)
 	}
 
 	if !dgClient.Connect() {
-		fmt.Println("ERROR: failed to connect to Deepgram Flux TTS endpoint")
-		os.Exit(1)
+		return fmt.Errorf("connecting to Deepgram Flux TTS endpoint")
 	}
+
+	// Create output only after the client is ready. Any later failure removes this
+	// partial file, so users never mistake a placeholder WAV header for audio.
+	file, err := os.OpenFile(audioFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0o666)
+	if err != nil {
+		return fmt.Errorf("creating %s: %w", audioFile, err)
+	}
+	completed := false
+	closed := false
+	defer func() {
+		if !closed {
+			if closeErr := file.Close(); err == nil && closeErr != nil {
+				err = fmt.Errorf("closing %s: %w", audioFile, closeErr)
+			}
+		}
+		if !completed {
+			_ = os.Remove(audioFile)
+		}
+	}()
+
+	wavWriter, err := wav.NewWriter(file, 1, sampleRate, 16)
+	if err != nil {
+		return fmt.Errorf("writing WAV header: %w", err)
+	}
+	callback.wavWriter = wavWriter
 
 	// send the text and end the turn
 	if err := dgClient.Speak(text); err != nil {
-		fmt.Printf("ERROR sending Speak: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("sending Speak: %w", err)
 	}
 	if err := dgClient.Flush(); err != nil {
-		fmt.Printf("ERROR sending Flush: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("sending Flush: %w", err)
 	}
 
 	// close gracefully: Finish waits while the server drains all queued audio,
@@ -201,27 +213,24 @@ func main() {
 	finishCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	if err := dgClient.Finish(finishCtx); err != nil {
-		fmt.Printf("ERROR closing session gracefully: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("closing session gracefully: %w", err)
 	}
 
 	// a session that produced no audio is a failure, not an empty-but-valid WAV
 	if wavWriter.DataBytes() == 0 {
-		fmt.Println("ERROR: the session produced no audio")
-		file.Close()
-		os.Remove(audioFile)
-		os.Exit(1)
+		return fmt.Errorf("the session produced no audio")
 	}
 
 	// patch the WAV header's RIFF and data sizes now that the length is known
 	if err := wavWriter.Finalize(); err != nil {
-		fmt.Printf("ERROR finalizing %s: %v\n", audioFile, err)
-		os.Exit(1)
+		return fmt.Errorf("finalizing %s: %w", audioFile, err)
 	}
 	if err := file.Close(); err != nil {
-		fmt.Printf("ERROR closing %s: %v\n", audioFile, err)
-		os.Exit(1)
+		return fmt.Errorf("closing %s: %w", audioFile, err)
 	}
+	closed = true
+	completed = true
 
 	fmt.Printf("\nSession complete — %d bytes of audio saved to %s\n", wavWriter.DataBytes(), audioFile)
+	return nil
 }
