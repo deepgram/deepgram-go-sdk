@@ -6,6 +6,7 @@ package websocketv2
 
 import (
 	"context"
+	"sync"
 
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
 )
@@ -99,6 +100,10 @@ type chanFinishObserver struct {
 	next          msginterfaces.FluxSpeakMessageChan
 	sessionMetaCh chan *msginterfaces.SessionMetadataResponse
 	closeCh       chan *msginterfaces.CloseResponse
+
+	mu     sync.Mutex
+	cancel context.CancelFunc
+	done   chan struct{}
 }
 
 func newChanFinishObserver(next msginterfaces.FluxSpeakMessageChan) *chanFinishObserver {
@@ -111,21 +116,59 @@ func newChanFinishObserver(next msginterfaces.FluxSpeakMessageChan) *chanFinishO
 	}
 }
 
-// run consumes the internal channels and marks the client's current-session
-// milestones until the client context is canceled.
-func (o *chanFinishObserver) run(ctx context.Context, marker finishMarker) {
-	go func() {
+// run replaces the observer for the previous connection context and waits for
+// it to exit before observing this session. This prevents an old observer from
+// consuming a new session's milestones after a reconnect.
+func (o *chanFinishObserver) run(ctx context.Context, state *finishState, discardPending bool) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if o.cancel != nil {
+		o.cancel()
+		<-o.done
+	}
+	if discardPending {
+	drain:
 		for {
 			select {
-			case <-ctx.Done():
+			case <-o.sessionMetaCh:
+			case <-o.closeCh:
+			default:
+				break drain
+			}
+		}
+	}
+
+	observerCtx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	o.cancel = cancel
+	o.done = done
+
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case <-observerCtx.Done():
 				return
 			case <-o.sessionMetaCh:
-				marker.markSessionMetadataEvent()
+				state.markSessionMetadata()
 			case <-o.closeCh:
-				marker.markPeerCloseEvent()
+				state.markPeerClose()
+				return
 			}
 		}
 	}()
+}
+
+// finish waits for the Close event queued by the common WebSocket lifecycle.
+// If no connection was ever opened, Stop cancels the active context first.
+func (o *chanFinishObserver) finish() {
+	o.mu.Lock()
+	done := o.done
+	o.mu.Unlock()
+	if done != nil {
+		<-done
+	}
 }
 
 func (o *chanFinishObserver) GetOpen() []*chan *msginterfaces.OpenResponse {

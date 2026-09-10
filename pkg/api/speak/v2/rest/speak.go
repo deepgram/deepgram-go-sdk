@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strconv"
 
 	klog "k8s.io/klog/v2"
@@ -43,6 +44,21 @@ func (c *Client) validate(options *interfaces.SpeakV2Options) error {
 	return options.Check()
 }
 
+func validateOutput(output any) error {
+	if output == nil {
+		return ErrOutputRequired
+	}
+
+	value := reflect.ValueOf(output)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		if value.IsNil() {
+			return ErrOutputRequired
+		}
+	}
+	return nil
+}
+
 // ToStream synthesizes text and streams the audio into buf.
 // When options.Callback is set, the request is processed asynchronously and buf
 // receives the JSON acknowledgement {"request_id":"..."} instead of audio bytes;
@@ -55,6 +71,9 @@ func (c *Client) ToStream(ctx context.Context, text string, options *interfaces.
 	if err := c.validate(options); err != nil {
 		klog.V(1).Infof("speakv2.ToStream validation failed. Err: %v\n", err)
 		klog.V(6).Infof("speakv2.ToStream LEAVE\n")
+		return nil, err
+	}
+	if err := validateOutput(buf); err != nil {
 		return nil, err
 	}
 
@@ -85,6 +104,9 @@ func (c *Client) ToFile(ctx context.Context, text string, options *interfaces.Sp
 	if err := c.validate(options); err != nil {
 		klog.V(1).Infof("speakv2.ToFile validation failed. Err: %v\n", err)
 		klog.V(6).Infof("speakv2.ToFile LEAVE\n")
+		return nil, err
+	}
+	if err := validateOutput(w); err != nil {
 		return nil, err
 	}
 

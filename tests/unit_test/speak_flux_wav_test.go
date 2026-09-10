@@ -7,6 +7,7 @@ package deepgram_test
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -104,4 +105,32 @@ func Test_WAVWriterDeclaresRealSizes(t *testing.T) {
 			t.Error("expected an error writing after Finalize")
 		}
 	})
+}
+
+func Test_WAVWriterRejectsInvalidFormat(t *testing.T) {
+	for _, test := range []struct {
+		name          string
+		channels      uint16
+		sampleRate    uint32
+		bitsPerSample uint16
+	}{
+		{"zero channels", 0, 48000, 16},
+		{"zero sample rate", 1, 0, 16},
+		{"zero bit depth", 1, 48000, 0},
+		{"non-byte-aligned bit depth", 1, 48000, 12},
+		{"block alignment overflow", 65535, 48000, 16},
+		{"byte rate overflow", 1, ^uint32(0), 16},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			file, err := os.CreateTemp(t.TempDir(), "invalid.wav")
+			if err != nil {
+				t.Fatalf("creating output file failed: %s", err)
+			}
+			defer file.Close()
+
+			if _, err := wav.NewWriter(file, test.channels, test.sampleRate, test.bitsPerSample); !errors.Is(err, wav.ErrInvalidFormat) {
+				t.Errorf("expected ErrInvalidFormat, got: %v", err)
+			}
+		})
+	}
 }

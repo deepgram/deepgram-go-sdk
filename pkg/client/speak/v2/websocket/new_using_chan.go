@@ -65,15 +65,21 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 		return nil, err
 	}
 
-	if chans == nil {
+	usesDefaultHandler := chans == nil
+	var defaultHandlerShutdown func()
+	var defaultHandlerDone chan struct{}
+	if usesDefaultHandler {
 		klog.V(2).Infof("Using DefaultChanHandler.\n")
 		handler := websocketv2api.NewDefaultChanHandler()
+		defaultHandlerDone = make(chan struct{})
 		go func() {
+			defer close(defaultHandlerDone)
 			if err := handler.Run(); err != nil {
 				klog.V(1).Infof("DefaultChanHandler.Run failed. Err: %v\n", err)
 			}
 		}()
 		chans = handler
+		defaultHandlerShutdown = handler.Shutdown
 	}
 
 	conn := WSChannel{
@@ -83,12 +89,17 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 		ctx:       ctx,
 		ctxCancel: ctxCancel,
 		finish:    newFinishState(),
+
+		usesDefaultHandler:     usesDefaultHandler,
+		defaultHandlerShutdown: defaultHandlerShutdown,
+		defaultHandlerDone:     defaultHandlerDone,
 	}
 
 	// the observer exposes the user channels unchanged and adds internal ones that
 	// mark the graceful-close milestones Finish(ctx) waits on
 	observer := newChanFinishObserver(chans)
-	observer.run(ctx, &conn)
+	observer.run(ctx, conn.currentFinishState(), false)
+	conn.observer = observer
 	var router commoninterfaces.Router
 	router = websocketv2api.NewChanRouter(observer)
 	conn.router = &router
@@ -100,4 +111,33 @@ func NewUsingChanWithCancel(ctx context.Context, ctxCancel context.CancelFunc, a
 	klog.V(3).Infof("fluxspeak WSChannel created\n")
 	klog.V(6).Infof("fluxspeak.NewUsingChanWithCancel() LEAVE\n")
 	return &conn, nil
+}
+
+// restartDefaultHandler replaces a factory-owned handler that was closed for a
+// previous session, so reconnects never route messages to closed channels.
+func (c *WSChannel) restartDefaultHandler() {
+	c.defaultHandlerMu.Lock()
+	defer c.defaultHandlerMu.Unlock()
+
+	if !c.usesDefaultHandler || c.defaultHandlerShutdown != nil {
+		return
+	}
+
+	handler := websocketv2api.NewDefaultChanHandler()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if err := handler.Run(); err != nil {
+			klog.V(1).Infof("DefaultChanHandler.Run failed. Err: %v\n", err)
+		}
+	}()
+
+	chans := msginterfaces.FluxSpeakMessageChan(handler)
+	*c.chans[0] = chans
+	c.observer = newChanFinishObserver(chans)
+	var router commoninterfaces.Router
+	router = websocketv2api.NewChanRouter(c.observer)
+	*c.router = router
+	c.defaultHandlerShutdown = handler.Shutdown
+	c.defaultHandlerDone = done
 }

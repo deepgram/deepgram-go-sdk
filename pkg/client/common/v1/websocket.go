@@ -608,9 +608,6 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 	}
 
 	if fatal || c.wsconn != nil {
-		// process WS specific items
-		(*c.processMessages).Finish()
-
 		// fire off close connection
 		err := (*c.router).Close(&commonv1interfaces.CloseResponse{
 			Type: string(commonv1interfaces.TypeCloseResponse),
@@ -618,6 +615,10 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 		if err != nil {
 			klog.V(1).Infof("router.CloseHelper failed. Err: %v\n", err)
 		}
+
+		// Let routers deliver the terminal event before protocol cleanup closes
+		// any handler-owned channels.
+		(*c.processMessages).Finish()
 	}
 
 	// cancel the context because we are permanently closing the connection

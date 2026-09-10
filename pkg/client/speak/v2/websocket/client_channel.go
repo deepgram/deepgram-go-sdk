@@ -31,7 +31,9 @@ func (c *WSChannel) Connect() bool {
 func (c *WSChannel) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
-	c.resetFinishStateIfClosed()
+	discardPending := c.resetFinishStateIfClosed()
+	c.restartDefaultHandler()
+	c.observer.run(ctx, c.currentFinishState(), discardPending)
 	return c.WSClient.ConnectWithCancel(ctx, ctxCancel, retryCnt)
 }
 
@@ -46,8 +48,17 @@ func (c *WSChannel) AttemptReconnect(ctx context.Context, retries int64) bool {
 func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
-	c.resetFinishStateIfClosed()
+	discardPending := c.resetFinishStateIfClosed()
+	c.restartDefaultHandler()
+	c.observer.run(ctx, c.currentFinishState(), discardPending)
 	return c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
+}
+
+// Stop immediately closes the transport and always releases a factory-owned
+// default channel handler, including when no connection was established.
+func (c *WSChannel) Stop() {
+	c.WSClient.Stop()
+	c.onFinish()
 }
 
 // GetURL builds the Flux TTS WebSocket URL: wss://host/v2/speak?<SpeakV2WSOptions>
@@ -112,6 +123,12 @@ func (c *WSChannel) ping(ctx context.Context) {
 func (c *WSChannel) ProcessMessage(wsType int, byMsg []byte) error {
 	klog.V(6).Infof("fluxspeak.WSChannel.ProcessMessage() ENTER\n")
 
+	c.defaultHandlerMu.RLock()
+	defer c.defaultHandlerMu.RUnlock()
+	if c.usesDefaultHandler && c.defaultHandlerShutdown == nil {
+		return nil
+	}
+
 	var err error
 	switch wsType {
 	case websocket.TextMessage:
@@ -131,6 +148,12 @@ func (c *WSChannel) ProcessMessage(wsType int, byMsg []byte) error {
 
 // ProcessError converts a transport error into an ErrorResponse and routes it.
 func (c *WSChannel) ProcessError(err error) error {
+	c.defaultHandlerMu.RLock()
+	defer c.defaultHandlerMu.RUnlock()
+	if c.usesDefaultHandler && c.defaultHandlerShutdown == nil {
+		return err
+	}
+
 	response := c.errorToResponse(err)
 	sendErr := (*c.router).Error(response)
 	if sendErr != nil {
