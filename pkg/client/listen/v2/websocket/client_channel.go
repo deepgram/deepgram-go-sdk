@@ -216,6 +216,40 @@ func (c *WSChannel) Configure(opts *clientinterfaces.FluxConfigureOptions) error
 	return nil
 }
 
+// ForceEndTurn asks the server to end the current turn immediately, regardless of
+// the model's end-of-turn confidence. Use it when an external signal — a
+// push-to-talk release, DTMF input, a UI send action, or your own endpointing —
+// determines the turn boundary. Combine with EotThreshold 1.0 to suppress native
+// detection and drive every turn ending yourself.
+//
+// A nil return means only that the message was written to the WebSocket; the
+// server's response arrives asynchronously on the handler channels:
+//   - If a turn is active, the server emits an "EndOfTurn" TurnInfo with Trigger
+//     set to "manual".
+//   - If no turn is active (before StartOfTurn or after EndOfTurn), the message is
+//     ignored and the server sends a non-fatal Warning with code
+//     "FORCE_END_TURN_NO_ACTIVE_TURN". Timing races between an external signal and
+//     the server's turn state are normal — treat the warning as informational.
+//
+// ForceEndTurn is available on the hosted Flux /v2/listen endpoint. Self-hosted
+// ForceEndTurn support has not shipped.
+func (c *WSChannel) ForceEndTurn() error {
+	klog.V(7).Infof("flux.WSChannel.ForceEndTurn() ENTER\n")
+
+	msg := msginterfaces.ForceEndTurnMessage{
+		Type: MessageTypeForceEndTurn,
+	}
+	if err := c.WriteJSON(msg); err != nil {
+		klog.V(1).Infof("ForceEndTurn failed. Err: %v\n", err)
+		klog.V(7).Infof("flux.WSChannel.ForceEndTurn() LEAVE\n")
+		return err
+	}
+
+	klog.V(4).Infof("ForceEndTurn sent\n")
+	klog.V(7).Infof("flux.WSChannel.ForceEndTurn() LEAVE\n")
+	return nil
+}
+
 // GetCloseMsg returns the JSON bytes for the CloseStream control message.
 func (c *WSChannel) GetCloseMsg() []byte {
 	return []byte(`{"type":"CloseStream"}`)

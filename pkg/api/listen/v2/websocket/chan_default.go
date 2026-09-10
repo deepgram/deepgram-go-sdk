@@ -39,6 +39,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		configureSuccessChan:  make(chan *interfaces.ConfigureSuccessResponse),
 		configureFailureChan:  make(chan *interfaces.ConfigureFailureResponse),
 		fatalErrorChan:        make(chan *interfaces.FatalErrorResponse),
+		warningChan:           make(chan *interfaces.WarningResponse),
 		closeChan:             make(chan *interfaces.CloseResponse),
 		errorChan:             make(chan *interfaces.ErrorResponse),
 		unhandledChan:         make(chan *[]byte),
@@ -75,6 +76,12 @@ func (h DefaultChanHandler) GetConfigureFailure() []*chan *interfaces.ConfigureF
 
 func (h DefaultChanHandler) GetFatalError() []*chan *interfaces.FatalErrorResponse {
 	return []*chan *interfaces.FatalErrorResponse{&h.fatalErrorChan}
+}
+
+// GetWarning implements the optional interfaces.FluxWarningChan extension so the
+// default handler receives non-fatal server warnings on a dedicated channel.
+func (h *DefaultChanHandler) GetWarning() []*chan *interfaces.WarningResponse {
+	return []*chan *interfaces.WarningResponse{&h.warningChan}
 }
 
 func (h DefaultChanHandler) GetClose() []*chan *interfaces.CloseResponse {
@@ -165,6 +172,14 @@ func (h DefaultChanHandler) Run() error { //nolint:funlen,gocyclo
 		defer wg.Done()
 		for fe := range h.fatalErrorChan {
 			fmt.Printf("\n[FatalError] code=%s description=%s\n", fe.Code, fe.Description)
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for wr := range h.warningChan {
+			fmt.Printf("\n[Warning] code=%s description=%s\n", wr.Code, wr.Description)
 		}
 	}()
 
