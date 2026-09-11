@@ -8,8 +8,6 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-const replaceFileWriteThrough = 0x00000001
-
 var replaceFileW = windows.NewLazySystemDLL("kernel32.dll").NewProc("ReplaceFileW")
 
 // replaceOutput uses ReplaceFileW for an existing destination. MoveFileEx is
@@ -43,7 +41,7 @@ func replaceExistingFile(target, temporary *uint16) error {
 		uintptr(unsafe.Pointer(target)),
 		uintptr(unsafe.Pointer(temporary)),
 		0,
-		replaceFileWriteThrough,
+		0,
 		0,
 		0,
 	)
