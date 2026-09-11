@@ -25,7 +25,7 @@ jobs:
           node-version: "20"
 
       - name: Install commitlint
-        run: npm install --no-save @commitlint/config-conventional @commitlint/cli
+        run: npm install --no-save @commitlint/config-conventional@19.8.1 @commitlint/cli@19.8.1
 
       - name: Validate PR title
         env:
