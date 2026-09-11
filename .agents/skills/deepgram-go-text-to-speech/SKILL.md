@@ -133,7 +133,8 @@ func run() error {
 - REST methods
 	- via `pkg/api/speak/v1/rest`: `api.New(client).ToStream`, `ToFile`, `ToSave`
 - WS methods
-	- `SpeakWithText`, `Speak`, `Flush`, `Reset`
+	- `SpeakWithText`, `Speak`, `Flush`, `Clear`
+	- `Reset` is deprecated; use `Clear` instead
 - constructors
 	- `speak.NewRESTWithDefaults()` / `speak.NewREST(...)`
 	- `speak.NewWSUsingCallback...`
