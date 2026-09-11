@@ -24,12 +24,29 @@ jobs:
         with:
           go-version: "1.19"
 
-      - name: Verify dependencies
+      - name: Ensure dependencies installed
+        shell: bash
+        run: make ensure-deps
+
+      - name: Verify module dependencies
+        shell: bash
         run: |
+          go mod tidy
           go mod download
           go mod verify
 
+      - name: Verify self-imports use module path
+        shell: bash
+        run: |
+          module_path="$(go list -m -f '{{.Path}}')"
+          unexpected_imports="$(git grep -nE '"github\.com/deepgram/deepgram-go-sdk/v[0-9]+(/[^" ]*)?"' -- '*.go' | grep -v "\"${module_path}" || true)"
+          if [[ -n "${unexpected_imports}" ]]; then
+            printf 'Self-imports must use the module path %s:\n%s\n' "${module_path}" "${unexpected_imports}"
+            exit 1
+          fi
+
       - name: Run tests
+        shell: bash
         run: go test -v -run Test_ ./...
 
   release-please:

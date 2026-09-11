@@ -52,6 +52,6 @@ jobs:
           git add -A ./tests/response_data
           git commit -s -m "chore(daily): update response shapes"
           git push origin "$BRANCH_NAME"
-          gh pr create --title "chore(daily): update API response shapes" --body "auto-generated - update API spec" --base "main"
+          gh pr create --title "chore(daily): update API response shapes" --body "Automated update of API response shapes." --base "main"
           sleep 30
           gh pr merge "$BRANCH_NAME" --delete-branch --squash --admin
