@@ -7,7 +7,7 @@
 // with Speak, the turn is ended with Flush, and the synthesized audio arrives as
 // binary frames which are streamed into output.wav.
 //
-// When Finish completes before its context deadline, the server drains every
+// When Finish returns nil before its context deadline, the server drains every
 // queued turn, sends all remaining audio, and reports the final SessionMetadata before
 // the socket closes — nothing is truncated. The WAV header's RIFF and data sizes
 // are then patched, so the finished file is a conforming WAV that any player or
@@ -144,7 +144,40 @@ func main() {
 	}
 }
 
-func run() (err error) {
+type temporaryOutput struct {
+	file      *os.File
+	temporary string
+	target    string
+	closed    bool
+}
+
+func newTemporaryOutput(target string) (*temporaryOutput, error) {
+	file, err := os.CreateTemp(filepath.Dir(target), filepath.Base(target)+".*.tmp")
+	if err != nil {
+		return nil, err
+	}
+	return &temporaryOutput{file: file, temporary: file.Name(), target: target}, nil
+}
+
+func (o *temporaryOutput) discard() {
+	if !o.closed {
+		_ = o.file.Close()
+		o.closed = true
+	}
+	_ = os.Remove(o.temporary)
+}
+
+func (o *temporaryOutput) commit() error {
+	if !o.closed {
+		if err := o.file.Close(); err != nil {
+			return err
+		}
+		o.closed = true
+	}
+	return replaceOutput(o.temporary, o.target)
+}
+
+func run() error {
 	flag.Parse()
 
 	// init library
@@ -177,25 +210,18 @@ func run() (err error) {
 
 	// Write to a sibling file until the full WAV is finalized. A failed run cannot
 	// corrupt an existing output.wav.
-	file, err := os.CreateTemp(filepath.Dir(audioFile), filepath.Base(audioFile)+".*.tmp")
+	output, err := newTemporaryOutput(audioFile)
 	if err != nil {
 		return fmt.Errorf("creating %s: %w", audioFile, err)
 	}
-	temporaryFile := file.Name()
 	completed := false
-	closed := false
 	defer func() {
-		if !closed {
-			if closeErr := file.Close(); err == nil && closeErr != nil {
-				err = fmt.Errorf("closing %s: %w", audioFile, closeErr)
-			}
-		}
 		if !completed {
-			_ = os.Remove(temporaryFile)
+			output.discard()
 		}
 	}()
 
-	wavWriter, err := wav.NewWriter(file, 1, sampleRate, 16)
+	wavWriter, err := wav.NewWriter(output.file, 1, sampleRate, 16)
 	if err != nil {
 		return fmt.Errorf("writing WAV header: %w", err)
 	}
@@ -227,11 +253,7 @@ func run() (err error) {
 	if err := wavWriter.Finalize(); err != nil {
 		return fmt.Errorf("finalizing %s: %w", audioFile, err)
 	}
-	if err := file.Close(); err != nil {
-		return fmt.Errorf("closing %s: %w", audioFile, err)
-	}
-	closed = true
-	if err := os.Rename(temporaryFile, audioFile); err != nil {
+	if err := output.commit(); err != nil {
 		return fmt.Errorf("saving %s: %w", audioFile, err)
 	}
 	completed = true
