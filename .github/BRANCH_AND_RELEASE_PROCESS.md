@@ -90,6 +90,6 @@ This dual approach of leveraging both **GitHub Flow** and **Git Flow** ensures t
 
 [Release Please](https://github.com/googleapis/release-please) manages releases from commits merged into `main`. It uses [Conventional Commits](https://www.conventionalcommits.org/): `fix:` creates a patch release, `feat:` creates a minor release, and a commit or footer marking a breaking change creates a major release.
 
-After qualifying commits are merged, the workflow opens or updates a release PR. Review its generated `CHANGELOG.md` and version before merging it. Merging that PR creates the semver Git tag and publishes the GitHub release.
+After qualifying commits are merged, the workflow opens or updates a release PR. Review its generated `CHANGELOG.md` and version before merging it. For a major Go release, update the module path in `go.mod` to its new major suffix (for example, `/v4` for v4.0.0) before merging the release PR. Merging that PR creates the semver Git tag and publishes the GitHub release.
 
 Go modules are distributed by the Go module proxy from their Git tags; no separate package publishing step is required. Maintenance releases for older major versions must be made from their corresponding release branch and require a separate Release Please configuration.

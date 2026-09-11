@@ -6,6 +6,7 @@ on:
       - main
 
 permissions:
+  actions: write
   contents: write
   issues: write
   pull-requests: write
@@ -42,3 +43,9 @@ jobs:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
           target-branch: ${{ github.ref_name }}
+
+      - name: Refresh Context7 documentation
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run context7.yml --ref "${{ github.ref_name }}"
