@@ -32,22 +32,21 @@ jobs:
         shell: bash
         run: |
           go mod tidy
+          git diff --exit-code -- go.mod go.sum
           go mod download
           go mod verify
 
-      - name: Verify self-imports use module path
+      - name: Verify SDK version and self-imports use module path
         shell: bash
-        run: |
-          module_path="$(go list -m -f '{{.Path}}')"
-          unexpected_imports="$(git grep -nE '"github\.com/deepgram/deepgram-go-sdk/v[0-9]+(/[^" ]*)?"' -- '*.go' | grep -v "\"${module_path}" || true)"
-          if [[ -n "${unexpected_imports}" ]]; then
-            printf 'Self-imports must use the module path %s:\n%s\n' "${module_path}" "${unexpected_imports}"
-            exit 1
-          fi
+        run: bash hack/check/check-module-major.sh
 
-      - name: Run tests
+      - name: Compile all packages
         shell: bash
-        run: go test -v -run Test_ ./...
+        run: go test -run '^$' ./...
+
+      - name: Run unit tests
+        shell: bash
+        run: go test -v ./tests/unit_test/...
 
   release-please:
     runs-on: ubuntu-latest
@@ -60,6 +59,16 @@ jobs:
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
           target-branch: ${{ github.ref_name }}
+
+      - name: Test release PR
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+        shell: bash
+        run: |
+          release_branch="$(jq -r '.headBranchName' <<< "${RELEASE_PR}")"
+          gh workflow run tests-unit.yaml --ref "${release_branch}"
 
       - name: Refresh Context7 documentation
         if: steps.release.outputs.release_created == 'true'
