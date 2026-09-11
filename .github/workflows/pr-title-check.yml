@@ -25,9 +25,9 @@ jobs:
           node-version: "20"
 
       - name: Install commitlint
-        run: npm ci --ignore-scripts
+        run: npm ci --prefix .github --ignore-scripts
 
       - name: Validate PR title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: echo "$PR_TITLE" | npx commitlint -g .github/.commitlintrc.json
+        run: echo "$PR_TITLE" | npx --prefix .github commitlint -g .github/.commitlintrc.json

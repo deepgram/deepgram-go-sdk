@@ -46,7 +46,7 @@ jobs:
 
       - name: Run unit tests
         shell: bash
-        run: go test -v ./tests/unit_test/...
+        run: go test -v -run Test_ ./...
 
   release-please:
     runs-on: ubuntu-latest
