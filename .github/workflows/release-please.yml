@@ -1,0 +1,77 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  test:
+    name: Go Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.19"
+
+      - name: Ensure dependencies installed
+        shell: bash
+        run: make ensure-deps
+
+      - name: Verify module dependencies
+        shell: bash
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go mod download
+          go mod verify
+
+      - name: Verify SDK version and self-imports use module path
+        shell: bash
+        run: bash hack/check/check-module-major.sh
+
+      - name: Compile all packages
+        shell: bash
+        run: go test -run '^$' ./...
+
+      - name: Run unit tests
+        shell: bash
+        run: go test -v -run Test_ ./...
+
+  release-please:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Create release PR or GitHub release
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          config-file: .github/release-please-config.json
+          manifest-file: .github/.release-please-manifest.json
+          target-branch: ${{ github.ref_name }}
+
+      - name: Test release PR
+        if: steps.release.outputs.prs_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+        shell: bash
+        run: |
+          release_branch="$(jq -r '.headBranchName' <<< "${RELEASE_PR}")"
+          gh workflow run tests-unit.yaml --ref "${release_branch}"
+
+      - name: Refresh Context7 documentation
+        if: steps.release.outputs.release_created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run context7.yml --ref "${{ github.ref_name }}"
