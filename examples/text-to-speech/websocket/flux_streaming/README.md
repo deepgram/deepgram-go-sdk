@@ -2,7 +2,7 @@
 
 Synthesizes text with the [Deepgram Flux TTS streaming WebSocket](https://developers.deepgram.com/docs/flux-tts/quickstart) — `wss://api.deepgram.com/v2/speak` — using the **callback** client, and saves the audio to `output.wav`.
 
-The streaming transport is the conversational path: text streams in (`Speak`), turns end explicitly (`Flush`), audio streams back as binary frames, and turns are interruptible (`Interrupt`). This example sends one turn and closes the session gracefully with `Finish`. When `Finish` completes before its context deadline, the server drains every remaining audio frame and reports the final `SessionMetadata`.
+The streaming transport is the conversational path: text streams in (`Speak`), turns end explicitly (`Flush`), audio streams back as binary frames, and turns are interruptible (`Interrupt`). This example sends one turn and closes the session gracefully with `Finish`. When `Finish` returns `nil` before its context deadline, the server drains every remaining audio frame and reports the final `SessionMetadata`.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ go run main.go -model flux-alexis-en -text "Hello from Flux."
 | `Flush()` | `{"type":"Flush"}` | End the active turn; the server drains the buffer and reports `SpeechMetadata` |
 | `Interrupt()` / `InterruptWithOffset(ms)` | `{"type":"Interrupt", ...}` | Report a user barge-in; with an offset the reply splits text into spoken/remaining |
 | `Configure(opts)` | `{"type":"Configure","speed":1.05}` | Adjust the speech rate mid-session (`0.5`–`1.5` in `0.05` steps) |
-| `Finish(ctx)` | `{"type":"Close"}` | Graceful close: wait (bounded by `ctx`) while the server drains all queued audio, sends `SessionMetadata`, and closes |
+| `Finish(ctx)` | `{"type":"Close"}` | Graceful close: a `nil` return means the server drained all queued audio, sent `SessionMetadata`, and closed before `ctx` expired |
 | `Stop()` | — | Immediate abort: tears down the connection without waiting; queued synthesis is discarded |
 
 ## Notes
