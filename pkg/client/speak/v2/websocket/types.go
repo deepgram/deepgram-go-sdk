@@ -7,13 +7,54 @@ package websocketv2
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 
 	msginterface "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v2/websocket/interfaces"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
+
+// keepaliveState owns one session's pinger. Reconnects synchronously replace
+// it; peer-close callbacks only cancel because they run under the WS lock.
+type keepaliveState struct {
+	mu     sync.Mutex
+	cancel context.CancelFunc
+	done   chan struct{}
+}
+
+func (s *keepaliveState) restart(parent context.Context, run func(context.Context)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cancel != nil {
+		s.cancel()
+		<-s.done
+	}
+
+	ctx, cancel := context.WithCancel(parent)
+	done := make(chan struct{})
+	s.cancel = cancel
+	s.done = done
+	go func() {
+		defer close(done)
+		run(ctx)
+	}()
+}
+
+func (s *keepaliveState) stop(wait bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.cancel == nil {
+		return
+	}
+	s.cancel()
+	if wait {
+		<-s.done
+		s.cancel = nil
+		s.done = nil
+	}
+}
 
 // finishState tracks the two milestones a graceful close waits on: the final
 // SessionMetadata event and the peer's socket closure. Both clients embed a
@@ -80,9 +121,9 @@ type WSCallback struct {
 	callback msginterface.FluxSpeakMessageCallback
 	router   *commoninterfaces.Router
 
-	finishMu   sync.Mutex
-	finish     *finishState
-	pingActive atomic.Bool
+	finishMu  sync.Mutex
+	finish    *finishState
+	keepalive keepaliveState
 }
 
 // currentFinishState returns the finishState for the session in progress.
@@ -95,21 +136,19 @@ func (c *WSCallback) currentFinishState() *finishState {
 // resetFinishStateIfClosed installs a fresh finishState when the previous
 // session already ended (its peer-close milestone fired), so Finish works on a
 // reconnected session. A live session's milestones are never discarded.
-func (c *WSCallback) resetFinishStateIfClosed() bool {
+func (c *WSCallback) resetFinishStateIfClosed() {
 	c.finishMu.Lock()
 	defer c.finishMu.Unlock()
 	select {
 	case <-c.finish.peerCloseDone:
 		c.finish = newFinishState()
-		return true
 	default:
-		return false
 	}
 }
 
 func (c *WSCallback) markSessionMetadataEvent() { c.currentFinishState().markSessionMetadata() }
 func (c *WSCallback) markPeerCloseEvent()       { c.currentFinishState().markPeerClose() }
-func (c *WSCallback) onFinish()                 {}
+func (c *WSCallback) onFinish()                 { c.keepalive.stop(false) }
 
 // WSChannel is a Flux TTS WebSocket client that delivers server events via Go channels.
 type WSChannel struct {
@@ -130,9 +169,9 @@ type WSChannel struct {
 	defaultHandlerShutdown func()
 	defaultHandlerDone     chan struct{}
 
-	finishMu   sync.Mutex
-	finish     *finishState
-	pingActive atomic.Bool
+	finishMu  sync.Mutex
+	finish    *finishState
+	keepalive keepaliveState
 }
 
 // currentFinishState returns the finishState for the session in progress.
@@ -161,6 +200,7 @@ func (c *WSChannel) markSessionMetadataEvent() { c.currentFinishState().markSess
 func (c *WSChannel) markPeerCloseEvent()       { c.currentFinishState().markPeerClose() }
 
 func (c *WSChannel) onFinish() {
+	c.keepalive.stop(false)
 	if c.observer != nil {
 		c.observer.finish()
 	}

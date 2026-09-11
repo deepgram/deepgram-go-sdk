@@ -68,6 +68,36 @@ func awaitDefaultHandlerStopped(t *testing.T, client *WSChannel) {
 	}
 }
 
+func TestKeepaliveStateReplacesAndStopsPingers(t *testing.T) {
+	var keepalive keepaliveState
+	firstStarted := make(chan struct{})
+	firstStopped := make(chan struct{})
+	secondStarted := make(chan struct{})
+	secondStopped := make(chan struct{})
+
+	keepalive.restart(context.Background(), func(ctx context.Context) {
+		close(firstStarted)
+		<-ctx.Done()
+		close(firstStopped)
+	})
+	<-firstStarted
+
+	keepalive.restart(context.Background(), func(ctx context.Context) {
+		close(secondStarted)
+		<-ctx.Done()
+		close(secondStopped)
+	})
+	<-firstStopped
+	<-secondStarted
+
+	keepalive.stop(true)
+	select {
+	case <-secondStopped:
+	case <-time.After(time.Second):
+		t.Fatal("active keepalive did not stop")
+	}
+}
+
 func TestWSChannelDefaultHandlerStopsWithLifecycle(t *testing.T) {
 	t.Run("Stop", func(t *testing.T) {
 		client := newDefaultHandlerLifecycleClient(t, nil, nil)
