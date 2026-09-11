@@ -29,6 +29,7 @@ func (c *WSChannel) Connect() bool {
 
 // ConnectWithCancel performs a WebSocket connection with a caller-supplied context.
 func (c *WSChannel) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
+	c.keepalive.stop(true)
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
 	discardPending := c.resetFinishStateIfClosed()
@@ -46,6 +47,7 @@ func (c *WSChannel) AttemptReconnect(ctx context.Context, retries int64) bool {
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 // The graceful-close milestones are reset so Finish waits on the new session.
 func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	c.keepalive.stop(true)
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
 	discardPending := c.resetFinishStateIfClosed()
@@ -57,6 +59,7 @@ func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel co
 // Stop immediately closes the transport and always releases a factory-owned
 // default channel handler, including when no connection was established.
 func (c *WSChannel) Stop() {
+	c.keepalive.stop(true)
 	c.WSClient.Stop()
 	c.onFinish()
 }
@@ -73,11 +76,10 @@ func (c *WSChannel) GetURL(host string) (string, error) {
 }
 
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
-// Start runs on every (re)connect; the guard ensures at most one ping goroutine
-// is alive at a time.
+// Each successful connection replaces any pinger from the prior session.
 func (c *WSChannel) Start() {
-	if c.cOptions.EnableKeepAlive && c.pingActive.CompareAndSwap(false, true) {
-		go c.ping(c.ctx)
+	if c.cOptions.EnableKeepAlive {
+		c.keepalive.restart(c.ctx, c.ping)
 	}
 }
 
@@ -87,7 +89,6 @@ func (c *WSChannel) ping(ctx context.Context) {
 	klog.V(6).Infof("fluxspeak.WSChannel.ping() ENTER\n")
 
 	defer func() {
-		c.pingActive.Store(false)
 		if r := recover(); r != nil {
 			klog.V(1).Infof("ping panic: %v\n%s\n", r, debug.Stack())
 			sendErr := c.ProcessError(common.ErrFatalPanicRecovered)

@@ -30,6 +30,7 @@ func (c *WSCallback) Connect() bool {
 
 // ConnectWithCancel performs a WebSocket connection with a caller-supplied context.
 func (c *WSCallback) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
+	c.keepalive.stop(true)
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
 	c.resetFinishStateIfClosed()
@@ -45,6 +46,7 @@ func (c *WSCallback) AttemptReconnect(ctx context.Context, retries int64) bool {
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 // The graceful-close milestones are reset so Finish waits on the new session.
 func (c *WSCallback) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	c.keepalive.stop(true)
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
 	c.resetFinishStateIfClosed()
@@ -62,12 +64,17 @@ func (c *WSCallback) GetURL(host string) (string, error) {
 	return url, nil
 }
 
+// Stop immediately closes the transport and terminates the session's keepalive.
+func (c *WSCallback) Stop() {
+	c.keepalive.stop(true)
+	c.WSClient.Stop()
+}
+
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
-// Start runs on every (re)connect; the guard ensures at most one ping goroutine
-// is alive at a time.
+// Each successful connection replaces any pinger from the prior session.
 func (c *WSCallback) Start() {
-	if c.cOptions.EnableKeepAlive && c.pingActive.CompareAndSwap(false, true) {
-		go c.ping(c.ctx)
+	if c.cOptions.EnableKeepAlive {
+		c.keepalive.restart(c.ctx, c.ping)
 	}
 }
 
@@ -77,7 +84,6 @@ func (c *WSCallback) ping(ctx context.Context) {
 	klog.V(6).Infof("fluxspeak.WSCallback.ping() ENTER\n")
 
 	defer func() {
-		c.pingActive.Store(false)
 		if r := recover(); r != nil {
 			klog.V(1).Infof("ping panic: %v\n%s\n", r, debug.Stack())
 			sendErr := c.ProcessError(common.ErrFatalPanicRecovered)
