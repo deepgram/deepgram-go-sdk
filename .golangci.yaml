@@ -130,6 +130,18 @@ issues:
     - path: pkg/client/listen/v1/websocket/client_channel.go
       linters:
         - dupl
+    - path: pkg/client/speak/v2/websocket/client_callback.go
+      linters:
+        - dupl
+    - path: pkg/client/speak/v2/websocket/client_channel.go
+      linters:
+        - dupl
+    - path: pkg/api/speak/v2/websocket/callback_router.go
+      linters:
+        - dupl
+    - path: pkg/api/speak/v2/websocket/chan_router.go
+      linters:
+        - dupl
     - path: pkg/api/manage/v1/manage.go
       linters:
         - staticcheck

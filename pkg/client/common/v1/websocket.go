@@ -324,16 +324,16 @@ func (c *WSClient) listen() {
 			case strings.Contains(errStr, SuccessfulSocketErr):
 				klog.V(3).Infof("Graceful websocket close\n")
 
-				// graceful close
-				c.closeWs(false, false)
+				// The peer has already completed its WebSocket close handshake. Do
+				// not send another application Close frame while releasing resources.
+				c.closeAfterPeerClose()
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
 
-				// fatal close
-				c.closeWs(false, false)
+				c.closeAfterPeerClose()
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -589,15 +589,26 @@ func (c *WSClient) Stop() {
 	c.closeWs(false, true)
 }
 
+// closeAfterPeerClose releases local state after the server has already closed
+// the WebSocket. It still delivers the terminal router event, but skips outbound
+// application and protocol Close frames that would otherwise fail with ErrCloseSent.
+func (c *WSClient) closeAfterPeerClose() {
+	c.closeWsWithState(false, false, true)
+}
+
 // closeWs closes the websocket connection
 func (c *WSClient) closeWs(fatal bool, perm bool) {
+	c.closeWsWithState(fatal, perm, false)
+}
+
+func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 	klog.V(6).Infof("common.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
-	if c.wsconn != nil && !fatal {
+	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
 		_ = c.closeStream(false)
 		time.Sleep(TerminationSleep) // allow time for server to register closure
@@ -608,9 +619,6 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 	}
 
 	if fatal || c.wsconn != nil {
-		// process WS specific items
-		(*c.processMessages).Finish()
-
 		// fire off close connection
 		err := (*c.router).Close(&commonv1interfaces.CloseResponse{
 			Type: string(commonv1interfaces.TypeCloseResponse),
@@ -618,6 +626,10 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 		if err != nil {
 			klog.V(1).Infof("router.CloseHelper failed. Err: %v\n", err)
 		}
+
+		// Let routers deliver the terminal event before protocol cleanup closes
+		// any handler-owned channels.
+		(*c.processMessages).Finish()
 	}
 
 	// cancel the context because we are permanently closing the connection
