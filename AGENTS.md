@@ -50,7 +50,7 @@ When you add a surface, add its path to the appropriate `pkg/api/version` helper
 ## Prerequisites
 
 - Go 1.19. The Go build, test, and lint workflows pin `go-version: "1.19"`. Newer toolchains compile and test the module (verified with Go 1.27.1), but `golangci-lint` v1.48.0 (the version `hack/check/tools` builds) panics while loading packages under Go 1.27, so run `make lint` with Go 1.19.
-- PortAudio development headers. `pkg/audio/microphone` imports `github.com/gordonklaus/portaudio`, which needs `pkg-config --cflags portaudio-2.0` to succeed. Without it `go build ./...`, `go vet ./...`, and `go test ./...` fail on `pkg/audio/*` and on every microphone example. Install with `apt-get install -y portaudio19-dev pkg-config` (Debian and Ubuntu) or `brew install portaudio` (macOS), or run `make ensure-deps`, which also installs actionlint, shellcheck, jq, and the GitHub CLI.
+- PortAudio development headers. `pkg/audio/microphone` imports `github.com/gordonklaus/portaudio`, which needs `pkg-config --cflags portaudio-2.0` to succeed. Without it `go build ./...`, `go vet ./...`, and `go test ./...` fail on `pkg/audio/*` and on every microphone example. Install with `apt-get install -y portaudio19-dev pkg-config` (Debian and Ubuntu) or `brew install portaudio` (macOS). On Ubuntu or macOS, `make ensure-deps` also provisions actionlint, shellcheck, jq, and the GitHub CLI; on Debian, install `portaudio19-dev` and `pkg-config` with the command above.
 - Docker, for `make mdlint` (it runs `ghcr.io/igorshubovych/markdownlint-cli` against `*.md`).
 
 ## Build, test, lint, format
