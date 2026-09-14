@@ -142,7 +142,8 @@ Releases are typically tags on `main`; patch releases for older majors are tagge
 ## Documentation
 
 - API reference and product guides: <https://developers.deepgram.com/docs>
-- Product guides: <https://developers.deepgram.com/docs/pre-recorded-audio>, <https://developers.deepgram.com/docs/live-streaming-audio>, <https://developers.deepgram.com/reference/speech-to-text/listen-flux>, <https://developers.deepgram.com/docs/text-to-speech>, <https://developers.deepgram.com/docs/tts-websocket-streaming>, <https://developers.deepgram.com/docs/voice-agent>
+- Product guides: <https://developers.deepgram.com/docs/pre-recorded-audio>, <https://developers.deepgram.com/docs/live-streaming-audio>, <https://developers.deepgram.com/docs/text-to-speech>, <https://developers.deepgram.com/docs/tts-websocket-streaming>, <https://developers.deepgram.com/docs/voice-agent>
+- Flux STT API reference: <https://developers.deepgram.com/reference/speech-to-text/listen-flux>
 - SDK feature matrix: <https://developers.deepgram.com/sdks/sdk-features>
 - Package docs: <https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk/v3>
 - Agent skills that teach this SDK: `.agents/skills/` (install with `npx skills add deepgram/deepgram-go-sdk`)
