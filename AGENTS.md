@@ -6,7 +6,7 @@ Instructions for AI coding agents (Claude Code, Cursor, Codex, Copilot) and for 
 
 This is the official Go SDK for the Deepgram API. The module path is `github.com/deepgram/deepgram-go-sdk/v3`, `go.mod` declares `go 1.19`, and the latest release tag is `v3.7.0`. The SDK is hand-written: there is no code generator, no `fern/` folder, and no `.fernignore`. Edit the source directly.
 
-Read `README.md` and `.github/CONTRIBUTING.md` before changing public behavior. Never hardcode API keys or access tokens; examples and tests use the SDK's environment-backed client defaults (`DEEPGRAM_API_KEY`, or `DEEPGRAM_ACCESS_TOKEN` for a bearer token).
+Read `README.md` and `.github/CONTRIBUTING.md` before changing public behavior. Never hardcode real API keys or access tokens; live examples and daily tests use the SDK's environment-backed client defaults (`DEEPGRAM_API_KEY`, or `DEEPGRAM_ACCESS_TOKEN` for a bearer token), while unit tests use synthetic credentials and mocked transports.
 
 ## Repository map
 
@@ -65,7 +65,7 @@ Run the narrowest check first, then the CI command. Every command in this table 
 | Unit tests, CI command | `go test -v -run Test_ ./...` | What `.github/workflows/tests-unit.yaml` runs on every pull request, with a 5 minute job timeout. Only functions named `Test_*` execute, so name unit tests with the `Test_` prefix |
 | Unit tests, fastest | `go test ./tests/unit_test/...` | Deterministic, no network, about 1 second |
 | One test | `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel` | |
-| Lint | `make lint` | Builds `golangci-lint` v1.48.0 from `hack/check/tools` and runs it with `.golangci.yaml`. It exits 0 even when the linter reports issues or panics, so read the output. At `v3.7.0` it reports 18 pre-existing findings (`deadcode`, `goconst`, `gocritic` hugeParam); fix only the ones in files you touch. In a container, pass `ROOT_DIR=/work` because the `Makefile` derives the root from `git rev-parse` |
+| Lint | `make lint` | Builds `golangci-lint` v1.48.0 from `hack/check/tools` and runs it with `.golangci.yaml`. It exits 0 even when the linter reports issues or panics, so read the output. The repository has pre-existing findings; fix only the ones in files you touch. In a container, pass `ROOT_DIR=/work` because the `Makefile` derives the root from `git rev-parse` |
 | Format | `gofmt -l ./pkg ./tests ./examples` | Prints unformatted files; `gofmt` is also a `golangci-lint` linter here. As of 2026-09-13, `tests/unit_test/speak_websocket_metadata_test.go` is listed; format it only in a change that touches that file |
 | Markdown lint | `make mdlint` | Rules in `.markdownlintrc` (line length off, fenced code blocks, `MD024` allows duplicate headings at different nesting) |
 | Shell, YAML, Actions lint | `make shellcheck`, `make yamllint`, `make actionlint` | `make check` runs all five linters; `check-all.yaml` runs it on every push to `main` and `release-*` |
