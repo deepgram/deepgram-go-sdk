@@ -100,7 +100,7 @@ Microphone examples (`microphone_callback`, `microphone_channel`, `flux_callback
 - Match JSON tags and optionality to the wire contract. Add a test for any field whose zero value is meaningful when the model is re-marshaled.
 - Return errors to callers. Existing `pkg/api/manage/v1` methods (all but `invitations.go`) return `&resp, nil` after a failed request; that is a known defect. Do not copy it into new code and do not change it without a tracked issue.
 - Do not log credentials, and do not change global logging (`klog`) or process flag behavior from ordinary client code.
-- Every `.go` file starts with the MIT license header that the `goheader` linter checks. Use the current year or a year range accepted by `.golangci.yaml`:
+- New `.go` files in the root module must start with the MIT license header that the `goheader` linter checks. Use the current year or a year range accepted by `.golangci.yaml`:
 
   ```go
   // Copyright <year or year range> Deepgram SDK contributors. All Rights Reserved.
@@ -142,8 +142,8 @@ Releases are typically tags on `main`; patch releases for older majors are tagge
 ## Documentation
 
 - API reference and product guides: <https://developers.deepgram.com/docs>
-- Go build pages: <https://developers.deepgram.com/docs/speech-to-text/build/go>, <https://developers.deepgram.com/docs/speech-to-text/streaming/build/go>, <https://developers.deepgram.com/docs/speech-to-text/flux/build/go>, <https://developers.deepgram.com/docs/text-to-speech/build/go>, <https://developers.deepgram.com/docs/text-to-speech/streaming/build/go>, <https://developers.deepgram.com/docs/voice-agent/build/go>
-- SDK feature matrix: <https://developers.deepgram.com/docs/sdks/sdk-features>
+- Product guides: <https://developers.deepgram.com/docs/pre-recorded-audio>, <https://developers.deepgram.com/docs/live-streaming-audio>, <https://developers.deepgram.com/reference/speech-to-text/listen-flux>, <https://developers.deepgram.com/docs/text-to-speech>, <https://developers.deepgram.com/docs/tts-websocket-streaming>, <https://developers.deepgram.com/docs/voice-agent>
+- SDK feature matrix: <https://developers.deepgram.com/sdks/sdk-features>
 - Package docs: <https://pkg.go.dev/github.com/deepgram/deepgram-go-sdk/v3>
 - Agent skills that teach this SDK: `.agents/skills/` (install with `npx skills add deepgram/deepgram-go-sdk`)
 
