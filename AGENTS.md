@@ -66,7 +66,7 @@ Run the narrowest check first, then the CI command. Every command in this table 
 | Unit tests, fastest | `go test ./tests/unit_test/...` | Deterministic, no network, about 1 second |
 | One test | `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel` | |
 | Lint | `make lint` | Builds `golangci-lint` v1.48.0 from `hack/check/tools` and runs it with `.golangci.yaml`. It exits 0 even when the linter reports issues or panics, so read the output. At `v3.7.0` it reports 18 pre-existing findings (`deadcode`, `goconst`, `gocritic` hugeParam); fix only the ones in files you touch. In a container, pass `ROOT_DIR=/work` because the `Makefile` derives the root from `git rev-parse` |
-| Format | `gofmt -l ./pkg ./tests ./examples` | Prints unformatted files; `gofmt` is also a `golangci-lint` linter here. `tests/unit_test/speak_websocket_metadata_test.go` is listed at `v3.7.0`; format it only in a change that touches that file |
+| Format | `gofmt -l ./pkg ./tests ./examples` | Prints unformatted files; `gofmt` is also a `golangci-lint` linter here. As of 2026-09-13, `tests/unit_test/speak_websocket_metadata_test.go` is listed; format it only in a change that touches that file |
 | Markdown lint | `make mdlint` | Rules in `.markdownlintrc` (line length off, fenced code blocks, `MD024` allows duplicate headings at different nesting) |
 | Shell, YAML, Actions lint | `make shellcheck`, `make yamllint`, `make actionlint` | `make check` runs all five linters; `check-all.yaml` runs it on every push to `main` and `release-*` |
 
@@ -74,7 +74,7 @@ Use `go test ./...` deliberately. It includes `tests/daily_test`, which calls th
 
 ## Run an example against the live API
 
-Examples that call the Deepgram API read credentials from the environment through `client.InitWithDefault()` and the `*WithDefaults` constructors, so nothing needs editing.
+Examples that call the Deepgram API resolve credentials from the environment when they construct a client with a `*WithDefaults` constructor, so nothing needs editing.
 
 ```bash
 # The SDK resolves DEEPGRAM_API_KEY from the environment.
