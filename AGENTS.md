@@ -36,7 +36,7 @@ Every row below was checked against the source tree on 2026-09-13.
 | --- | --- | --- | --- |
 | Speech-to-text, pre-recorded | `POST /v1/listen` | `pkg/client/listen` (`NewREST`, `NewRESTWithDefaults`) with `pkg/api/listen/v1/rest` | Shipped |
 | Speech-to-text, streaming (Nova) | `wss /v1/listen` | `pkg/client/listen` (`NewWSUsingCallback*`, `NewWSUsingChan*`) with `pkg/api/listen/v1/websocket` | Shipped; callback and channel variants |
-| Flux STT (conversational speech-to-text) | `wss /v2/listen` | `pkg/client/listen/v2/websocket` with `pkg/api/listen/v2/websocket`; options in `pkg/client/interfaces/v2/types-flux.go` | Shipped; callback and channel variants, `Configure` for mid-session changes |
+| Flux STT (conversational speech-to-text) | `wss /v2/listen` | `pkg/client/listen/v2` (`NewWSUsingCallback*`, `NewWSUsingChan*`) with `pkg/api/listen/v2/websocket`; implementation in `pkg/client/listen/v2/websocket`; options in `pkg/client/interfaces/v2/types-flux.go` | Shipped; callback and channel variants, `Configure` for mid-session changes |
 | Text-to-speech, batch (Aura) | `POST /v1/speak` | `pkg/client/speak` (`NewREST`) with `pkg/api/speak/v1/rest` | Shipped |
 | Text-to-speech, streaming (Aura) | `wss /v1/speak` | `pkg/client/speak` (`NewWSUsingCallback*`, `NewWSUsingChan*`) with `pkg/api/speak/v1/websocket` | Shipped |
 | Flux TTS | `/v2/speak` REST and WebSocket | none | Not shipped. No first-class Flux TTS client or typed v2 Speak options are available; existing client URL overrides are not Flux TTS support |
