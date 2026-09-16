@@ -5,7 +5,7 @@ set -o nounset
 set -o pipefail
 
 read_sdk_major() {
-  local sdk_version_file="${1:-pkg/client/interfaces/v1/utils.go}"
+  local sdk_version_file="$1"
   local sdk_major
 
   sdk_major="$(grep -Eo 'sdkVersion[[:space:]]+string[[:space:]]*=[[:space:]]*"v[0-9]+' "${sdk_version_file}" | grep -Eo '[0-9]+$' || true)"
@@ -19,7 +19,7 @@ main() {
   local unexpected_imports
 
   module_path="$(go list -m -f '{{.Path}}')"
-  if ! sdk_major="$(read_sdk_major)"; then
+  if ! sdk_major="$(read_sdk_major pkg/client/interfaces/v1/utils.go)"; then
     printf 'Could not read sdkVersion from pkg/client/interfaces/v1/utils.go\n'
     exit 1
   fi
