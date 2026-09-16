@@ -6,6 +6,8 @@
     - [Branch Process for This Project](#branch-process-for-this-project)
       - [Why Pick This Strategy?](#why-pick-this-strategy)
   - [Release Process](#release-process)
+    - [Creating a Release](#creating-a-release)
+      - [Creating a Release from a Release Branch](#creating-a-release-from-a-release-branch)
 
 ## Branching Process
 
@@ -90,12 +92,33 @@ This dual approach of leveraging both **GitHub Flow** and **Git Flow** ensures t
 
 [Release Please](https://github.com/googleapis/release-please) manages releases from commits merged into `main`. It uses [Conventional Commits](https://www.conventionalcommits.org/): `fix:` creates a patch release, `feat:` creates a minor release, and a commit or footer marking a breaking change creates a major release.
 
-After qualifying commits are merged, the workflow opens or updates a release PR. Review its generated `CHANGELOG.md` and version before merging it. For a major Go release, complete the module-major migration in the release PR before merging:
+After qualifying commits are merged, the workflow opens or updates a release PR. Review its generated `CHANGELOG.md` and version before merging it. For a major Go release, complete the module-major migration in a normal PR to `main` before the release PR is merged:
 
 1. Update the module path in `go.mod` to its new major suffix (for example, `/v4` for v4.0.0).
-2. Update all `github.com/deepgram/deepgram-go-sdk/vN` self-imports in source, tests, and examples to the new module path.
-3. Run `go mod tidy`, `go test -run '^$' ./...`, and `go test -v ./tests/unit_test/...`.
+2. Update all `github.com/deepgram/deepgram-go-sdk/vN` self-imports in source, tests, examples, documentation, and repository instructions to the new module path.
+3. Run `go mod tidy`, `go test -run '^$' ./...`, and `go test -v -run Test_ ./...`.
+
+Release Please force-pushes its release branch every time it updates the release PR. Do not commit the module-major migration directly to that branch: freeze merges to `main` while the migration is in the release PR, or complete the migration in a normal PR to `main` before merging the release PR.
 
 The release workflow verifies that the SDK version, Go module path, and self-imports use the same major version before tagging. When Release Please creates or updates a release PR, it dispatches the unit-test workflow against that branch so the same check runs before merge. Merging the release PR creates the semver Git tag and publishes the GitHub release.
 
-Go modules are distributed by the Go module proxy from their Git tags; no separate package publishing step is required. Maintenance releases for older major versions must be made from their corresponding release branch and require a separate Release Please configuration.
+Go modules are distributed by the Go module proxy from their Git tags; no separate package publishing step is required. Release Please runs on `main` only. Maintenance releases for older major versions must be made from their corresponding release branch as described below.
+
+#### Creating a Release from a Release Branch
+
+While we don't have a formal requirement for supporting past releases (ie currently on `v3` but need a patch on `v2`), there are times when you need to provide a patch release for things like security fixes. To create that patch releases, you do something similar as you would have done on main, but on the `release-v[0-9]+/*` branch.
+
+If this were the `release-v2` branch for version `v2.5.1` (note the `v2` matches the `release-v2`), this would look like (again, assuming you are on your fork):
+
+```bash
+# get the latest everything and update your fork
+git checkout release-v2
+git pull --rebase upstream release-v2
+git push origin release-v2
+git fetch upstream --tags
+git push origin --tags
+
+# create a new tag following semver
+git tag -m v2.5.1 v2.5.1
+git push upstream v2.5.1
+```

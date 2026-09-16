@@ -47,6 +47,6 @@ Here are a few types of contributions that we would be interested in hearing abo
 
 ## Making Code Contributions
 
-Pull request titles and squash-merge commit titles must use [Conventional Commits](https://www.conventionalcommits.org/). The repository enforces this format and uses the PR title as the squash commit title so Release Please can determine the correct release version.
+Pull request titles and squash-merge commit titles must use [Conventional Commits](https://www.conventionalcommits.org/). The repository checks this format in branch protection and the Title Check workflow, and uses the PR title as the squash commit title so Release Please can determine the correct release version.
 
 for those interested in contributing code to the project, please review the [Code Contribution Guide](https://github.com/deepgram/deepgram-go-sdk/blob/main/.github/CODE_CONTRIBUTIONS_GUIDE.md) for more details.

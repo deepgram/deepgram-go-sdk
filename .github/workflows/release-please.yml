@@ -6,15 +6,18 @@ on:
       - main
 
 permissions:
-  actions: write
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
 
 jobs:
   test:
     name: Go Tests
+    if: github.repository == 'deepgram/deepgram-go-sdk'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,6 +54,11 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - name: Create release PR or GitHub release
         uses: googleapis/release-please-action@v4
