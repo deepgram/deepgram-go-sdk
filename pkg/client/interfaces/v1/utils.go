@@ -15,7 +15,7 @@ import (
 
 // constants
 const (
-	sdkVersion string = "v1.4.0"
+	sdkVersion string = "v3.7.0" // x-release-please-version
 )
 
 // DgAgent is the user agent string for the SDK

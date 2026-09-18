@@ -2,11 +2,12 @@ name: Tests - Unit
 
 on:
   pull_request:
-      types:
-        - assigned
-        - opened
-        - synchronize
-        - reopened
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
 jobs:
   build:
     name: Go Tests
@@ -31,7 +32,9 @@ jobs:
 
       - name: Go Tidy
         shell: bash
-        run: go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
 
       - name: Go Mod
         shell: bash
@@ -41,7 +44,14 @@ jobs:
         shell: bash
         run: go mod verify
 
-      - name: Run Tests
+      - name: Verify SDK version and self-imports use module path
         shell: bash
-        run: |
-          go test -v -run Test_ ./...
+        run: bash hack/check/check-module-major.sh
+
+      - name: Compile all packages
+        shell: bash
+        run: go test -run '^$' ./...
+
+      - name: Run unit tests
+        shell: bash
+        run: go test -v -run Test_ ./...
