@@ -98,7 +98,7 @@ After qualifying commits are merged, the workflow opens or updates a release PR.
 2. Update all `github.com/deepgram/deepgram-go-sdk/vN` self-imports in source, tests, examples, documentation, and repository instructions to the new module path.
 3. Run `go mod tidy`, `go test -run '^$' ./...`, and `go test -v -run Test_ ./...`.
 
-Release Please force-pushes its release branch every time it updates the release PR. Do not commit the module-major migration directly to that branch: freeze merges to `main` while the migration is in the release PR, or complete the migration in a normal PR to `main` before merging the release PR.
+Release Please force-pushes its release branch every time it updates the release PR. Do not commit the module-major migration directly to that branch: freeze merges to `main` while the migration is in the release PR, or complete the migration in a normal PR to `main` before merging the release PR. Because `main` dismisses stale reviews on push, each force-push also discards any approval the release PR already has, so re-approve it after the final update.
 
 The release workflow verifies that the SDK version, Go module path, and self-imports use the same major version before tagging. When Release Please creates or updates a release PR, it dispatches the unit-test workflow against that branch so the same check runs before merge. Merging the release PR creates the semver Git tag and publishes the GitHub release.
 

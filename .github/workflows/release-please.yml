@@ -72,6 +72,7 @@ jobs:
         if: steps.release.outputs.prs_created == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           RELEASE_PR: ${{ steps.release.outputs.pr }}
         shell: bash
         run: |
@@ -82,4 +83,7 @@ jobs:
         if: steps.release.outputs.release_created == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run context7.yml --ref "${{ github.ref_name }}"
+          GH_REPO: ${{ github.repository }}
+          TARGET_REF: ${{ github.ref_name }}
+        shell: bash
+        run: gh workflow run context7.yml --ref "${TARGET_REF}"
