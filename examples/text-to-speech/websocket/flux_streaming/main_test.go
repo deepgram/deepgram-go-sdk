@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestRunWithoutCredentialsPreservesExistingOutput(t *testing.T) {
+func Test_RunWithoutCredentialsPreservesExistingOutput(t *testing.T) {
 	t.Setenv("DEEPGRAM_API_KEY", "")
 	t.Setenv("DEEPGRAM_ACCESS_TOKEN", "")
 
@@ -39,7 +39,7 @@ func TestRunWithoutCredentialsPreservesExistingOutput(t *testing.T) {
 	}
 }
 
-func TestTemporaryOutputPreservesOrReplacesDestination(t *testing.T) {
+func Test_TemporaryOutputPreservesOrReplacesDestination(t *testing.T) {
 	destination := filepath.Join(t.TempDir(), audioFile)
 	const existingAudio = "existing audio"
 	if err := os.WriteFile(destination, []byte(existingAudio), 0o600); err != nil {
