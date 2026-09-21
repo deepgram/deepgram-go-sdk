@@ -234,6 +234,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 		// set the object to allow threads to function
 		c.wsconn = ws
+		c.terminalCloseStarted = false
 		c.retry = true
 
 		// kick off threads to listen for messages and ping/keepalive
@@ -607,6 +608,10 @@ func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
+	if c.terminalCloseStarted {
+		return
+	}
+	c.terminalCloseStarted = true
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
