@@ -34,6 +34,9 @@ type WSClient struct {
 	wsconn   *websocket.Conn
 	retry    bool
 	retryCnt int64
+	// terminalCloseStarted prevents concurrent local and peer-close paths from
+	// routing a second close event after handler-owned channels are released.
+	terminalCloseStarted bool
 
 	processMessages *commonv1interfaces.WebSocketHandler
 	router          *commonv1interfaces.Router
