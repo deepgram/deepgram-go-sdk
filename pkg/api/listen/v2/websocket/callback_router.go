@@ -81,6 +81,8 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 		err = r.processConfigureFailure(byMsg)
 	case interfaces.TypeFatalError:
 		err = r.processFatalError(byMsg)
+	case interfaces.TypeWarningResponse:
+		err = r.processWarning(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
@@ -145,6 +147,27 @@ func (r *CallbackRouter) processConfigureFailure(byMsg []byte) error {
 	return r.processGeneric("ConfigureFailureResponse", byMsg, func(data *interface{}) error {
 		return r.callback.ConfigureFailure(&msg)
 	}, msg)
+}
+
+// processWarning routes a non-fatal {"type":"Warning"} server message. Handlers that
+// implement interfaces.FluxWarningCallback receive it via Warning(); other handlers
+// receive the raw bytes via UnhandledEvent(). Either way the warning is non-fatal:
+// unlike unknown message types, it never yields ErrInvalidMessageType.
+func (r *CallbackRouter) processWarning(byMsg []byte) error {
+	var msg interfaces.WarningResponse
+	if err := json.Unmarshal(byMsg, &msg); err != nil {
+		return err
+	}
+
+	if wc, ok := r.callback.(interfaces.FluxWarningCallback); ok {
+		return r.processGeneric("WarningResponse", byMsg, func(data *interface{}) error {
+			return wc.Warning(&msg)
+		}, msg)
+	}
+
+	klog.V(3).Infof("Flux warning (code=%s) received; callback does not implement FluxWarningCallback, forwarding to UnhandledEvent\n", msg.Code)
+	r.printDebugMessages(5, "WarningResponse", byMsg)
+	return r.callback.UnhandledEvent(byMsg)
 }
 
 func (r *CallbackRouter) processFatalError(byMsg []byte) error {

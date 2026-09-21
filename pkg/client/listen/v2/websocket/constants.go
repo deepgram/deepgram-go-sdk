@@ -23,6 +23,9 @@ const (
 
 	// MessageTypeConfigure sends a mid-session configuration update
 	MessageTypeConfigure string = "Configure"
+
+	// MessageTypeForceEndTurn immediately ends the current turn
+	MessageTypeForceEndTurn string = "ForceEndTurn"
 )
 
 const (
