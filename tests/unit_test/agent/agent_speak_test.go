@@ -12,7 +12,7 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestAgentSpeakBackwardCompatibility(t *testing.T) {
+func Test_AgentSpeakBackwardCompatibility(t *testing.T) {
 	t.Run("Test backward compatibility - direct field access", func(t *testing.T) {
 		// This test ensures that existing code patterns still work without type assertions
 		agent := &interfacesv1.Agent{
@@ -93,7 +93,7 @@ func TestAgentSpeakBackwardCompatibility(t *testing.T) {
 	})
 }
 
-func TestAgentSpeakFallbackProviders(t *testing.T) {
+func Test_AgentSpeakFallbackProviders(t *testing.T) {
 	t.Run("Test fallback providers assignment", func(t *testing.T) {
 		agent := &interfacesv1.Agent{
 			Language: "en",
@@ -230,7 +230,7 @@ func TestAgentSpeakFallbackProviders(t *testing.T) {
 	})
 }
 
-func TestAgentSpeakJSONUnmarshaling(t *testing.T) {
+func Test_AgentSpeakJSONUnmarshaling(t *testing.T) {
 	t.Run("Test unmarshaling backward compatible JSON", func(t *testing.T) {
 		jsonData := `{
 			"language": "en",
@@ -315,7 +315,7 @@ func TestAgentSpeakJSONUnmarshaling(t *testing.T) {
 	})
 }
 
-func TestAgentSpeakEdgeCases(t *testing.T) {
+func Test_AgentSpeakEdgeCases(t *testing.T) {
 	t.Run("Test nil fallback providers", func(t *testing.T) {
 		agent := &interfacesv1.Agent{
 			Language: "en",
