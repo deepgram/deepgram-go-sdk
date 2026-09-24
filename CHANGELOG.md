@@ -2,7 +2,6 @@
 
 ## [3.8.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.7.1...v3.8.0) (2026-09-21)
 
-
 ### Features
 
 * **listen:** add ForceEndTurn and TurnInfo trigger to Flux v2 websocket clients ([#350](https://github.com/deepgram/deepgram-go-sdk/issues/350)) ([b295dfc](https://github.com/deepgram/deepgram-go-sdk/commit/b295dfc76d6e6f923e5c3547060301ec28f44614))
