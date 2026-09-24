@@ -11,8 +11,8 @@ import (
 	authInterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/auth/v1/interfaces"
 )
 
-// TestGrantTokenRequest tests the GrantTokenRequest struct
-func TestGrantTokenRequest(t *testing.T) {
+// Test_GrantTokenRequest tests the GrantTokenRequest struct
+func Test_GrantTokenRequest(t *testing.T) {
 	t.Run("Test_GrantTokenRequest_struct_creation", func(t *testing.T) {
 		ttlSeconds := 60
 		req := authInterfaces.GrantTokenRequest{
@@ -69,8 +69,8 @@ func TestGrantTokenRequest(t *testing.T) {
 	})
 }
 
-// TestGrantTokenRequestJSON tests JSON marshaling and unmarshaling
-func TestGrantTokenRequestJSON(t *testing.T) {
+// Test_GrantTokenRequestJSON tests JSON marshaling and unmarshaling
+func Test_GrantTokenRequestJSON(t *testing.T) {
 	t.Run("Test_GrantTokenRequest_JSON_marshaling", func(t *testing.T) {
 		ttlSeconds := 60
 		req := authInterfaces.GrantTokenRequest{
@@ -137,8 +137,8 @@ func TestGrantTokenRequestJSON(t *testing.T) {
 	})
 }
 
-// TestGrantTokenRequestValidation tests validation scenarios
-func TestGrantTokenRequestValidation(t *testing.T) {
+// Test_GrantTokenRequestValidation tests validation scenarios
+func Test_GrantTokenRequestValidation(t *testing.T) {
 	t.Run("Test_GrantTokenRequest_minimum_value", func(t *testing.T) {
 		ttlSeconds := 1
 		req := authInterfaces.GrantTokenRequest{

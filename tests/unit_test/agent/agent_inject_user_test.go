@@ -12,7 +12,7 @@ import (
 	websocketv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent/v1/websocket"
 )
 
-func TestInjectUserMessage_StructCreation(t *testing.T) {
+func Test_InjectUserMessageStructCreation(t *testing.T) {
 	t.Run("Test InjectUserMessage struct creation", func(t *testing.T) {
 		testContent := "Hello, how can you help me today?"
 
@@ -33,7 +33,7 @@ func TestInjectUserMessage_StructCreation(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_JSONMarshaling(t *testing.T) {
+func Test_InjectUserMessageJSONMarshaling(t *testing.T) {
 	t.Run("Test InjectUserMessage JSON marshaling", func(t *testing.T) {
 		testContent := "What services do you offer?"
 
@@ -67,7 +67,7 @@ func TestInjectUserMessage_JSONMarshaling(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_JSONUnmarshaling(t *testing.T) {
+func Test_InjectUserMessageJSONUnmarshaling(t *testing.T) {
 	t.Run("Test InjectUserMessage JSON unmarshaling", func(t *testing.T) {
 		// Create test JSON string using the constant
 		testJSON := `{
@@ -93,7 +93,7 @@ func TestInjectUserMessage_JSONUnmarshaling(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_TypeAlias(t *testing.T) {
+func Test_InjectUserMessageTypeAlias(t *testing.T) {
 	t.Run("Test InjectUserMessage type alias works correctly", func(t *testing.T) {
 		testContent := "I need assistance with my account"
 
@@ -131,7 +131,7 @@ func TestInjectUserMessage_TypeAlias(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_Constants(t *testing.T) {
+func Test_InjectUserMessageConstants(t *testing.T) {
 	t.Run("Test InjectUserMessage constants are properly defined", func(t *testing.T) {
 		// Verify the constant is defined and has the expected value
 		expectedType := "InjectUserMessage"
@@ -141,7 +141,7 @@ func TestInjectUserMessage_Constants(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_EmptyContent(t *testing.T) {
+func Test_InjectUserMessageEmptyContent(t *testing.T) {
 	t.Run("Test InjectUserMessage with empty content", func(t *testing.T) {
 		// Test creating message with empty content
 		msg := msginterfaces.InjectUserMessage{
@@ -184,7 +184,7 @@ func TestInjectUserMessage_EmptyContent(t *testing.T) {
 	})
 }
 
-func TestInjectUserMessage_SpecialCharacters(t *testing.T) {
+func Test_InjectUserMessageSpecialCharacters(t *testing.T) {
 	t.Run("Test InjectUserMessage with special characters", func(t *testing.T) {
 		// Test with various special characters and unicode
 		testContent := "Hello! How do you handle émojis 🚀 and special chars like @#$%?"
