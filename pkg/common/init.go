@@ -30,20 +30,25 @@ func Init(init InitLib) {
 		init.LogLevel = LogLevelStandard
 	}
 
-	klog.InitFlags(nil)
-	err := flag.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
+	fs := flag.NewFlagSet("deepgram-go-sdk", flag.ContinueOnError)
+
+	klog.InitFlags(fs)
+
+	err := fs.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
 	if err != nil {
 		fmt.Printf("Error setting log level: %v", err)
 	}
+
 	if init.DebugFilePath != "" {
-		err = flag.Set("logtostderr", "false")
+		err = fs.Set("logtostderr", "false")
 		if err != nil {
 			fmt.Printf("Error setting logtostderr: %v", err)
 		}
-		err = flag.Set("log_file", init.DebugFilePath)
+		err = fs.Set("log_file", init.DebugFilePath)
 		if err != nil {
 			fmt.Printf("Error setting log_file: %v", err)
 		}
 	}
-	flag.Parse()
+
+	_ = fs.Parse([]string{})
 }
