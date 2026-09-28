@@ -41,6 +41,8 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 	return &c
 }
 
+// APIRequest issues a request against the Manage API and decodes the response
+// into resBody. Pass a nil resBody for endpoints that answer with an empty body.
 func (c *Client) APIRequest(ctx context.Context, method, apiPath string, body io.Reader, resBody interface{}, params ...interface{}) error {
 	klog.V(6).Infof("manage.%s() ENTER\n", method+apiPath) // Dynamic entry log based on method and path
 
@@ -68,8 +70,14 @@ func (c *Client) APIRequest(ctx context.Context, method, apiPath string, body io
 	// 	_, err := c.HandleResponse(res, nil, resBody)
 	// 	return err
 	// })
-	// This uses the RESTClient Do method
-	err = c.Do(ctx, req, &resBody)
+	// This uses the RESTClient Do method.
+	// A nil resBody means the endpoint answers with no body at all; handing the
+	// decoder an empty reader would fail with io.EOF, so skip decoding entirely.
+	if resBody == nil {
+		err = c.Do(ctx, req, nil)
+	} else {
+		err = c.Do(ctx, req, &resBody)
+	}
 	if err != nil {
 		klog.V(6).Infof("manage.%s() LEAVE\n", method+apiPath)
 		return err
