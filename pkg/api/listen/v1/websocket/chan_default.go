@@ -144,9 +144,13 @@ func (dch DefaultChanHandler) Run() error {
 				klog.V(2).Infof("\n\nMessage Object:\n%s\n\n", prettyJSON)
 			}
 
-			sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+			if len(mr.Channel.Alternatives) == 0 {
+				klog.V(7).Infof("DEEPGRAM - no transcript")
+				continue
+			}
 
-			if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+			sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+			if sentence == "" {
 				klog.V(7).Infof("DEEPGRAM - no transcript")
 				continue
 			}
