@@ -79,9 +79,13 @@ func (dch DefaultCallbackHandler) Message(mr *interfaces.MessageResponse) error 
 	}
 
 	// handle the message
-	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+	if len(mr.Channel.Alternatives) == 0 {
+		klog.V(7).Infof("DEEPGRAM - no transcript")
+		return nil
+	}
 
-	if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+	sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+	if sentence == "" {
 		klog.V(7).Infof("DEEPGRAM - no transcript")
 		return nil
 	}
