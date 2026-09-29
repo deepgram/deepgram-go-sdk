@@ -63,11 +63,13 @@ func (c *WSChannel) GetURL(host string) (string, error) {
 
 // Start the keepalive and flush threads
 func (c *WSChannel) Start() {
+	// Stop the workers of a previous connection so a reconnect does not duplicate them.
+	workerCtx := c.workers.Start(c.ctx)
 	if c.cOptions.EnableKeepAlive {
-		go c.ping()
+		go c.ping(workerCtx)
 	}
 	if c.cOptions.AutoFlushReplyDelta != 0 {
-		go c.flush()
+		go c.flush(workerCtx)
 	}
 }
 
@@ -226,7 +228,7 @@ func (c *WSChannel) GetCloseMsg() []byte {
 
 // Finish the websocket connection
 func (c *WSChannel) Finish() {
-	// NA
+	c.workers.Stop()
 }
 
 // ProcessError processes the error and sends it to the callback
@@ -241,7 +243,7 @@ func (c *WSChannel) ProcessError(err error) error {
 }
 
 // ping thread
-func (c *WSChannel) ping() {
+func (c *WSChannel) ping(ctx context.Context) {
 	klog.V(6).Infof("live.ping() ENTER\n")
 
 	defer func() {
@@ -266,7 +268,7 @@ func (c *WSChannel) ping() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("live.ping() Exiting\n")
 			klog.V(6).Infof("live.ping() LEAVE\n")
 			return
@@ -286,7 +288,7 @@ func (c *WSChannel) ping() {
 }
 
 // flush thread
-func (c *WSChannel) flush() {
+func (c *WSChannel) flush(ctx context.Context) {
 	klog.V(6).Infof("live.flush() ENTER\n")
 
 	defer func() {
@@ -311,7 +313,7 @@ func (c *WSChannel) flush() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("live.flush() Exiting\n")
 			klog.V(6).Infof("live.flush() LEAVE\n")
 			return
