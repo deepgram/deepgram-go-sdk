@@ -74,6 +74,8 @@ func (c *WSChannel) GetURL(host string) (string, error) {
 
 // Start the keepalive and flush threads
 func (c *WSChannel) Start() {
+	// Stop the workers of a previous connection so a reconnect does not duplicate them.
+	workerCtx := c.workers.Start(c.ctx)
 	// send ConfigurationOptions to server
 	if c.tOptions != nil {
 		// send the configuration settings to the server
@@ -119,7 +121,7 @@ func (c *WSChannel) Start() {
 	}
 
 	if c.cOptions.EnableKeepAlive {
-		go c.ping()
+		go c.ping(workerCtx)
 	}
 }
 
@@ -266,7 +268,7 @@ func (c *WSChannel) GetCloseMsg() []byte {
 
 // Finish the websocket connection
 func (c *WSChannel) Finish() {
-	// NA
+	c.workers.Stop()
 }
 
 // ProcessError processes the error and sends it to the callback
@@ -281,7 +283,7 @@ func (c *WSChannel) ProcessError(err error) error {
 }
 
 // ping thread
-func (c *WSChannel) ping() {
+func (c *WSChannel) ping(ctx context.Context) {
 	klog.V(6).Infof("agent.ping() ENTER\n")
 
 	defer func() {
@@ -304,7 +306,7 @@ func (c *WSChannel) ping() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("agent.ping() Exiting\n")
 			klog.V(6).Infof("agent.ping() LEAVE\n")
 			return

@@ -27,6 +27,7 @@ type WSChannel struct {
 	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	workers   common.Workers
 
 	cOptions *interfaces.ClientOptions
 	tOptions *interfaces.SettingsOptions

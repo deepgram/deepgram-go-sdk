@@ -62,8 +62,10 @@ func (c *WSCallback) GetURL(host string) (string, error) {
 
 // Start the callback
 func (c *WSCallback) Start() {
+	// Stop the workers of a previous connection so a reconnect does not duplicate them.
+	workerCtx := c.workers.Start(c.ctx)
 	if c.cOptions.AutoFlushSpeakDelta != 0 {
-		go c.flush()
+		go c.flush(workerCtx)
 	}
 }
 
@@ -200,7 +202,7 @@ func (c *WSCallback) GetCloseMsg() []byte {
 
 // Finish the callback
 func (c *WSCallback) Finish() {
-	// NA
+	c.workers.Stop()
 }
 
 // ProcessError sends an error message to the callback handler
@@ -215,7 +217,7 @@ func (c *WSCallback) ProcessError(err error) error {
 }
 
 // flush thread
-func (c *WSCallback) flush() {
+func (c *WSCallback) flush(ctx context.Context) {
 	klog.V(6).Infof("speak.flush() ENTER\n")
 
 	defer func() {
@@ -240,7 +242,7 @@ func (c *WSCallback) flush() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("speak.flush() Exiting\n")
 			klog.V(6).Infof("speak.flush() LEAVE\n")
 			return
