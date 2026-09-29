@@ -106,12 +106,24 @@ type AgentThinkingResponse struct {
 	Content string `json:"content,omitempty"`
 }
 
-// FunctionCallRequestResponse is the response from a function call request
+// FunctionCall is a single function the Agent asks the client to run
+type FunctionCall struct {
+	ID         string `json:"id,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Arguments  string `json:"arguments,omitempty"` // JSON-encoded object
+	ClientSide bool   `json:"client_side,omitempty"`
+}
+
+// FunctionCallRequestResponse is the response from a function call request.
+// The Agent API sends the requested calls in Functions. FunctionName,
+// FunctionCallID and Input model an older wire shape and are kept for
+// compatibility; the API no longer populates them.
 type FunctionCallRequestResponse struct {
 	Type           string            `json:"type,omitempty"`
+	Functions      []FunctionCall    `json:"functions,omitempty"`
 	FunctionName   string            `json:"function_name,omitempty"`
 	FunctionCallID string            `json:"function_call_id,omitempty"`
-	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
+	Input          map[string]string `json:"input,omitempty"`
 }
 
 // AgentStartedSpeakingResponse is the response from the Agent starting to speak. You will ONLY get this if `experimental` is set to true.
