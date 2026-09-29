@@ -5,6 +5,7 @@
 package commonv1
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -72,5 +73,27 @@ func Test_WSClientTerminalCloseRunsOnce(t *testing.T) {
 	}
 	if handler.finishes != 1 {
 		t.Fatalf("handler Finish calls = %d, want 1", handler.finishes)
+	}
+}
+
+func Test_WSClientStopAfterPeerCloseCancelsContext(t *testing.T) {
+	var routerInterface commoninterfaces.Router = &closeCountingRouter{}
+	var handlerInterface commoninterfaces.WebSocketHandler = &closeCountingHandler{}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	client := WSClient{
+		ctx:             ctx,
+		ctxCancel:       cancel,
+		retry:           true,
+		router:          &routerInterface,
+		processMessages: &handlerInterface,
+	}
+
+	// the server closes the socket first, then the application calls Stop()
+	client.closeAfterPeerClose()
+	client.Stop()
+
+	if ctx.Err() == nil {
+		t.Fatal("Stop() after a peer close did not cancel the client context, so keepalive and flush goroutines keep running")
 	}
 }

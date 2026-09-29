@@ -609,6 +609,10 @@ func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 	if c.terminalCloseStarted {
+		// the connection is already closed, but Stop() still has to cancel the context
+		if perm {
+			c.ctxCancel()
+		}
 		return
 	}
 	c.terminalCloseStarted = true
