@@ -12,37 +12,41 @@ import (
 	"testing"
 )
 
+var helperApplicationFlag *string
+
+func init() {
+	if os.Getenv("DEEPGRAM_COMMON_INIT_HELPER") != "1" {
+		return
+	}
+
+	// This matches a consumer defining flags and initializing the SDK during
+	// package initialization, before the Go test runner defines its own flags.
+	helperApplicationFlag = flag.String("custom", "", "application flag")
+	Init(InitLib{LogLevel: LogLevelStandard})
+}
+
 func Test_InitLeavesApplicationFlagsAlone(t *testing.T) {
 	if os.Getenv("DEEPGRAM_COMMON_INIT_HELPER") == "1" {
-		applicationFlags := flag.NewFlagSet("application", flag.ContinueOnError)
-		flag.CommandLine = applicationFlags
-
-		Init(InitLib{LogLevel: LogLevelStandard})
-		if applicationFlags.Parsed() {
-			t.Fatal("Init must not parse application flags")
+		if helperApplicationFlag == nil {
+			t.Fatal("helper application flag was not initialized")
 		}
-		if applicationFlags.Lookup("v") != nil {
+		if *helperApplicationFlag != "expected" {
+			t.Fatalf("expected custom flag value %q, got %q", "expected", *helperApplicationFlag)
+		}
+		if flag.CommandLine.Lookup("v") != nil {
 			t.Fatal("Init must not register klog flags on the application flag set")
-		}
-
-		custom := applicationFlags.String("custom", "", "application flag")
-		if err := applicationFlags.Parse([]string{"-custom=expected"}); err != nil {
-			t.Fatalf("parse application flags: %v", err)
-		}
-		if *custom != "expected" {
-			t.Fatalf("expected custom flag value %q, got %q", "expected", *custom)
 		}
 
 		// klog supports distinct flag sets, so repeated SDK initialization must also
 		// leave the consumer's global flag set untouched.
 		Init(InitLib{LogLevel: LogLevelFull})
-		if applicationFlags.Lookup("v") != nil {
+		if flag.CommandLine.Lookup("v") != nil {
 			t.Fatal("repeated Init must not register klog flags on the application flag set")
 		}
 		return
 	}
 
-	command := exec.Command(os.Args[0], "-test.run=^Test_InitLeavesApplicationFlagsAlone$")
+	command := exec.Command(os.Args[0], "-test.run=^Test_InitLeavesApplicationFlagsAlone$", "-custom=expected")
 	command.Env = append(os.Environ(), "DEEPGRAM_COMMON_INIT_HELPER=1")
 	output, err := command.CombinedOutput()
 	if err != nil {
