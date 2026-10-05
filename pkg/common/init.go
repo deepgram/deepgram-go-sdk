@@ -30,8 +30,8 @@ func Init(init InitLib) {
 		init.LogLevel = LogLevelStandard
 	}
 
+	// Keep klog flags isolated from the application's global flag set.
 	fs := flag.NewFlagSet("deepgram-go-sdk", flag.ContinueOnError)
-
 	klog.InitFlags(fs)
 
 	err := fs.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
@@ -49,6 +49,7 @@ func Init(init InitLib) {
 			fmt.Printf("Error setting log_file: %v", err)
 		}
 	}
-
-	_ = fs.Parse([]string{})
+	if err := fs.Parse([]string{}); err != nil {
+		fmt.Printf("Error parsing klog flags: %v", err)
+	}
 }
