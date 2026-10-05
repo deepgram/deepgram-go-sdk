@@ -407,8 +407,10 @@ For a complete implementation, you would need to:
 
 1. Add your audio input source (e.g., microphone)
 2. Implement audio playback for the agent's responses
-3. Handle any function calls if your agent uses them
+3. Handle any function calls if your agent uses them. Each `FunctionCallRequest` contains a `Functions` slice; each call's `Arguments` field is JSON-encoded and can be decoded for the function implementation. Send the result with `FunctionCallResponse` using the call's `ID`, `Name`, and a `Content` string. Implement `FunctionCallCancelledChan` to stop work and avoid replying when the server cancels a client-side call.
 4. Add proper error handling and connection management
+
+See [`examples/agent/websocket/function_call`](./examples/agent/websocket/function_call) for a runnable client-side function call.
 
 [See our API reference for more info](https://developers.deepgram.com/reference/voice-agent-api/agent).
 

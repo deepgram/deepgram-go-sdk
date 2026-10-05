@@ -30,22 +30,23 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		debugExtStr = v
 	}
 	handler := &DefaultChanHandler{
-		debugWebsocket:               strings.EqualFold(debugStr, "true"),
-		debugWebsocketVerbose:        strings.EqualFold(debugExtStr, "true"),
-		binaryChan:                   make(chan *[]byte),
-		openChan:                     make(chan *interfaces.OpenResponse),
-		welcomeResponse:              make(chan *interfaces.WelcomeResponse),
-		conversationTextResponse:     make(chan *interfaces.ConversationTextResponse),
-		userStartedSpeakingResponse:  make(chan *interfaces.UserStartedSpeakingResponse),
-		agentThinkingResponse:        make(chan *interfaces.AgentThinkingResponse),
-		functionCallRequestResponse:  make(chan *interfaces.FunctionCallRequestResponse),
-		agentStartedSpeakingResponse: make(chan *interfaces.AgentStartedSpeakingResponse),
-		agentAudioDoneResponse:       make(chan *interfaces.AgentAudioDoneResponse),
-		injectionRefusedResponse:     make(chan *interfaces.InjectionRefusedResponse),
-		keepAliveResponse:            make(chan *interfaces.KeepAlive),
-		closeChan:                    make(chan *interfaces.CloseResponse),
-		errorChan:                    make(chan *interfaces.ErrorResponse),
-		unhandledChan:                make(chan *[]byte),
+		debugWebsocket:                strings.EqualFold(debugStr, "true"),
+		debugWebsocketVerbose:         strings.EqualFold(debugExtStr, "true"),
+		binaryChan:                    make(chan *[]byte),
+		openChan:                      make(chan *interfaces.OpenResponse),
+		welcomeResponse:               make(chan *interfaces.WelcomeResponse),
+		conversationTextResponse:      make(chan *interfaces.ConversationTextResponse),
+		userStartedSpeakingResponse:   make(chan *interfaces.UserStartedSpeakingResponse),
+		agentThinkingResponse:         make(chan *interfaces.AgentThinkingResponse),
+		functionCallRequestResponse:   make(chan *interfaces.FunctionCallRequestResponse),
+		functionCallCancelledResponse: make(chan *interfaces.FunctionCallCancelledResponse),
+		agentStartedSpeakingResponse:  make(chan *interfaces.AgentStartedSpeakingResponse),
+		agentAudioDoneResponse:        make(chan *interfaces.AgentAudioDoneResponse),
+		injectionRefusedResponse:      make(chan *interfaces.InjectionRefusedResponse),
+		keepAliveResponse:             make(chan *interfaces.KeepAlive),
+		closeChan:                     make(chan *interfaces.CloseResponse),
+		errorChan:                     make(chan *interfaces.ErrorResponse),
+		unhandledChan:                 make(chan *[]byte),
 	}
 
 	go func() {
@@ -91,6 +92,11 @@ func (dch DefaultChanHandler) GetAgentThinking() []*chan *interfaces.AgentThinki
 // GetFunctionCallRequestResponse returns the function call request response channels
 func (dch DefaultChanHandler) GetFunctionCallRequest() []*chan *interfaces.FunctionCallRequestResponse {
 	return []*chan *interfaces.FunctionCallRequestResponse{&dch.functionCallRequestResponse}
+}
+
+// GetFunctionCallCancelled returns the function call cancellation response channels.
+func (dch DefaultChanHandler) GetFunctionCallCancelled() []*chan *interfaces.FunctionCallCancelledResponse {
+	return []*chan *interfaces.FunctionCallCancelledResponse{&dch.functionCallCancelledResponse}
 }
 
 // GetAgentStartedSpeakingResponse returns the agent started speaking response channels
@@ -317,6 +323,19 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
+		}
+	}()
+
+	// function call cancellation response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for fccr := range dch.functionCallCancelledResponse {
+			fmt.Printf("\n\n[FunctionCallCancelledResponse]\n\n")
+			for _, function := range fccr.Functions {
+				fmt.Printf("Function: %s\n", function.Name)
+			}
 		}
 	}()
 

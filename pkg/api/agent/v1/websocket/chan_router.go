@@ -39,22 +39,23 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 	}
 
 	router := &ChanRouter{
-		debugWebsocket:               strings.EqualFold(strings.ToLower(debugStr), "true"),
-		binaryChan:                   make([]*chan *[]byte, 0),
-		openChan:                     make([]*chan *interfaces.OpenResponse, 0),
-		welcomeResponse:              make([]*chan *interfaces.WelcomeResponse, 0),
-		conversationTextResponse:     make([]*chan *interfaces.ConversationTextResponse, 0),
-		userStartedSpeakingResponse:  make([]*chan *interfaces.UserStartedSpeakingResponse, 0),
-		agentThinkingResponse:        make([]*chan *interfaces.AgentThinkingResponse, 0),
-		functionCallRequestResponse:  make([]*chan *interfaces.FunctionCallRequestResponse, 0),
-		agentStartedSpeakingResponse: make([]*chan *interfaces.AgentStartedSpeakingResponse, 0),
-		agentAudioDoneResponse:       make([]*chan *interfaces.AgentAudioDoneResponse, 0),
-		injectionRefusedResponse:     make([]*chan *interfaces.InjectionRefusedResponse, 0),
-		keepAliveResponse:            make([]*chan *interfaces.KeepAlive, 0),
-		settingsAppliedResponse:      make([]*chan *interfaces.SettingsAppliedResponse, 0),
-		closeChan:                    make([]*chan *interfaces.CloseResponse, 0),
-		errorChan:                    make([]*chan *interfaces.ErrorResponse, 0),
-		unhandledChan:                make([]*chan *[]byte, 0),
+		debugWebsocket:                strings.EqualFold(strings.ToLower(debugStr), "true"),
+		binaryChan:                    make([]*chan *[]byte, 0),
+		openChan:                      make([]*chan *interfaces.OpenResponse, 0),
+		welcomeResponse:               make([]*chan *interfaces.WelcomeResponse, 0),
+		conversationTextResponse:      make([]*chan *interfaces.ConversationTextResponse, 0),
+		userStartedSpeakingResponse:   make([]*chan *interfaces.UserStartedSpeakingResponse, 0),
+		agentThinkingResponse:         make([]*chan *interfaces.AgentThinkingResponse, 0),
+		functionCallRequestResponse:   make([]*chan *interfaces.FunctionCallRequestResponse, 0),
+		functionCallCancelledResponse: make([]*chan *interfaces.FunctionCallCancelledResponse, 0),
+		agentStartedSpeakingResponse:  make([]*chan *interfaces.AgentStartedSpeakingResponse, 0),
+		agentAudioDoneResponse:        make([]*chan *interfaces.AgentAudioDoneResponse, 0),
+		injectionRefusedResponse:      make([]*chan *interfaces.InjectionRefusedResponse, 0),
+		keepAliveResponse:             make([]*chan *interfaces.KeepAlive, 0),
+		settingsAppliedResponse:       make([]*chan *interfaces.SettingsAppliedResponse, 0),
+		closeChan:                     make([]*chan *interfaces.CloseResponse, 0),
+		errorChan:                     make([]*chan *interfaces.ErrorResponse, 0),
+		unhandledChan:                 make([]*chan *[]byte, 0),
 	}
 
 	if chans != nil {
@@ -65,6 +66,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.userStartedSpeakingResponse = append(router.userStartedSpeakingResponse, chans.GetUserStartedSpeaking()...)
 		router.agentThinkingResponse = append(router.agentThinkingResponse, chans.GetAgentThinking()...)
 		router.functionCallRequestResponse = append(router.functionCallRequestResponse, chans.GetFunctionCallRequest()...)
+		if functionCallCancelled, ok := chans.(interfaces.FunctionCallCancelledChan); ok {
+			router.functionCallCancelledResponse = append(router.functionCallCancelledResponse, functionCallCancelled.GetFunctionCallCancelled()...)
+		}
 		router.agentStartedSpeakingResponse = append(router.agentStartedSpeakingResponse, chans.GetAgentStartedSpeaking()...)
 		router.agentAudioDoneResponse = append(router.agentAudioDoneResponse, chans.GetAgentAudioDone()...)
 		router.closeChan = append(router.closeChan, chans.GetClose()...)
@@ -252,6 +256,30 @@ func (r *ChanRouter) processFunctionCallRequest(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeFunctionCallRequestResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processFunctionCallCancelled(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.FunctionCallCancelledResponse
+		if err := json.Unmarshal(byMsg, &msg); err != nil {
+			klog.V(1).Infof("json.Unmarshal(FunctionCallCancelledResponse) failed. Err: %v\n", err)
+			return err
+		}
+
+		if len(r.functionCallCancelledResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+
+		for _, ch := range r.functionCallCancelledResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeFunctionCallCancelledResponse), byMsg, action)
+}
+
 func (r *ChanRouter) processAgentStartedSpeaking(byMsg []byte) error {
 	action := func(data []byte) error {
 		var msg interfaces.AgentStartedSpeakingResponse
@@ -381,6 +409,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processAgentThinking(byMsg)
 	case interfaces.TypeFunctionCallRequestResponse:
 		err = r.processFunctionCallRequest(byMsg)
+	case interfaces.TypeFunctionCallCancelledResponse:
+		err = r.processFunctionCallCancelled(byMsg)
 	case interfaces.TypeAgentStartedSpeakingResponse:
 		err = r.processAgentStartedSpeaking(byMsg)
 	case interfaces.TypeAgentAudioDoneResponse:

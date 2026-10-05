@@ -4,6 +4,8 @@
 
 package interfacesv1
 
+import "encoding/json"
+
 /*
 SettingsOptions contain all of the knobs and dials to control the Agent API
 
@@ -49,20 +51,47 @@ type Properties struct {
 	Item Item `json:"item,omitempty"`
 }
 type Parameters struct {
-	Type       string     `json:"type,omitempty"`
-	Properties Properties `json:"properties,omitempty"`
-	Required   []string   `json:"required,omitempty"`
+	Type       string      `json:"type,omitempty"`
+	Properties interface{} `json:"properties,omitempty"`
+	Required   []string    `json:"required,omitempty"`
 }
 type Headers struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
 }
 type Functions struct {
-	Name        string     `json:"name,omitempty"`
-	Description string     `json:"description,omitempty"`
-	Parameters  Parameters `json:"parameters,omitempty"`
-	Endpoint    Endpoint   `json:"endpoint,omitempty"`
+	Name          string     `json:"name,omitempty"`
+	Description   string     `json:"description,omitempty"`
+	Parameters    Parameters `json:"parameters,omitempty"`
+	Endpoint      Endpoint   `json:"endpoint,omitempty"`
+	DeferUntilEOT bool       `json:"defer_until_eot,omitempty"`
 }
+
+// MarshalJSON omits an unset endpoint so functions without a server endpoint
+// are correctly registered as client-side functions.
+func (f Functions) MarshalJSON() ([]byte, error) {
+	type functionJSON struct {
+		Name          string     `json:"name,omitempty"`
+		Description   string     `json:"description,omitempty"`
+		Parameters    Parameters `json:"parameters,omitempty"`
+		Endpoint      *Endpoint  `json:"endpoint,omitempty"`
+		DeferUntilEOT bool       `json:"defer_until_eot,omitempty"`
+	}
+
+	var endpoint *Endpoint
+	if f.Endpoint.Url != "" || len(f.Endpoint.Headers) != 0 || f.Endpoint.Method != "" {
+		endpoint = &f.Endpoint
+	}
+
+	return json.Marshal(functionJSON{
+		Name:          f.Name,
+		Description:   f.Description,
+		Parameters:    f.Parameters,
+		Endpoint:      endpoint,
+		DeferUntilEOT: f.DeferUntilEOT,
+	})
+}
+
 type Listen struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
 }
