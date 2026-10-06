@@ -422,8 +422,11 @@ func (dch MyHandler) Run() error {
 	wgReceivers.Add(1)
 	go func() {
 		defer wgReceivers.Done()
-		for range dch.functionCallRequestResponse {
+		for request := range dch.functionCallRequestResponse {
 			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
+			for _, function := range request.Functions {
+				fmt.Printf("Function: %s\nArguments: %s\n", function.Name, function.Arguments)
+			}
 		}
 	}()
 
