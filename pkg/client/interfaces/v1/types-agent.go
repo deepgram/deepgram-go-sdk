@@ -100,6 +100,8 @@ type Functions struct {
 //
 //nolint:gocritic // A value receiver preserves marshaling for value fields.
 func (f Functions) MarshalJSON() ([]byte, error) {
+	// functionJSON mirrors Functions. Add any new Functions field here too, or it
+	// is silently dropped from the wire.
 	type functionJSON struct {
 		Name          string     `json:"name,omitempty"`
 		Description   string     `json:"description,omitempty"`

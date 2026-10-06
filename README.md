@@ -407,7 +407,7 @@ For a complete implementation, you would need to:
 
 1. Add your audio input source (e.g., microphone)
 2. Implement audio playback for the agent's responses
-3. Handle function calls where `ClientSide` is true if your agent uses them. Each `FunctionCallRequest` contains a `Functions` slice; each call's `Arguments` field is JSON-encoded and can be decoded for the function implementation. Send the result with `FunctionCallResponse` using the call's `ID`, `Name`, and a `Content` string; echo `ThoughtSignature` unchanged when it is present. Implement `FunctionCallCancelledChan` to stop work and avoid replying when the server cancels a client-side call.
+3. Handle function calls where `ClientSide` is true if your agent uses them. Each `FunctionCallRequest` contains a `Functions` slice; each call's `Arguments` field is JSON-encoded and can be decoded for the function implementation. Send the result with `conn.WriteJSON(FunctionCallResponse{...})`, setting `Type` to `TypeFunctionCallResponse` and using the call's `ID`, `Name`, and a `Content` string; echo `ThoughtSignature` unchanged when it is present. Implement `FunctionCallCancelledChan` to stop work and avoid replying when the server cancels a client-side call. If your handler embeds `DefaultChanHandler`, override `GetFunctionCallCancelled` too; otherwise cancellations go to the default handler, which only prints them.
 4. Add proper error handling and connection management
 
 See [`examples/agent/websocket/function_call`](./examples/agent/websocket/function_call) for a runnable client-side function call.

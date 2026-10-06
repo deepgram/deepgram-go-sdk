@@ -83,7 +83,7 @@ func executeFunction(ctx context.Context, function msginterfaces.FunctionCall, r
 	default:
 	}
 
-	var arguments map[string]string
+	var arguments map[string]interface{}
 	if err := json.Unmarshal([]byte(function.Arguments), &arguments); err != nil {
 		select {
 		case failures <- functionCallError{id: function.ID, err: err}:
