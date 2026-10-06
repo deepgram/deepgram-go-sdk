@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.9.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.8.0...v3.9.0) (2026-10-06)
+
+
+### Features
+
+* **agent:** support current function call protocol ([#372](https://github.com/deepgram/deepgram-go-sdk/issues/372)) ([c5e3b5c](https://github.com/deepgram/deepgram-go-sdk/commit/c5e3b5c329cec32e5edaa940e5062d44bbdd3f72))
+* **manage:** add reusable agent configurations and agent variables REST endpoints ([#362](https://github.com/deepgram/deepgram-go-sdk/issues/362)) ([4d2996a](https://github.com/deepgram/deepgram-go-sdk/commit/4d2996a661869c5657ce3d7219f721137ca6fdc8))
+
 ## [3.8.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.7.1...v3.8.0) (2026-09-21)
 
 ### Features
