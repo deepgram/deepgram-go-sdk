@@ -22,6 +22,7 @@ import (
 type functionCallHandler struct {
 	*agentws.DefaultChanHandler
 	functionCallRequests chan *msginterfaces.FunctionCallRequestResponse
+	functionCallCanceled chan *msginterfaces.FunctionCallCancelledResponse
 	conversationText     chan *msginterfaces.ConversationTextResponse
 	errors               chan *msginterfaces.ErrorResponse
 	settingsApplied      chan *msginterfaces.SettingsAppliedResponse
@@ -31,10 +32,21 @@ func newFunctionCallHandler() *functionCallHandler {
 	return &functionCallHandler{
 		DefaultChanHandler:   agentws.NewDefaultChanHandler(),
 		functionCallRequests: make(chan *msginterfaces.FunctionCallRequestResponse, 1),
+		functionCallCanceled: make(chan *msginterfaces.FunctionCallCancelledResponse, 1),
 		conversationText:     make(chan *msginterfaces.ConversationTextResponse, 4),
 		errors:               make(chan *msginterfaces.ErrorResponse, 1),
 		settingsApplied:      make(chan *msginterfaces.SettingsAppliedResponse, 1),
 	}
+}
+
+type functionCallResult struct {
+	function msginterfaces.FunctionCall
+	content  string
+}
+
+type functionCallError struct {
+	id  string
+	err error
 }
 
 func (h *functionCallHandler) GetConversationText() []*chan *msginterfaces.ConversationTextResponse {
@@ -43,6 +55,10 @@ func (h *functionCallHandler) GetConversationText() []*chan *msginterfaces.Conve
 
 func (h *functionCallHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
 	return []*chan *msginterfaces.FunctionCallRequestResponse{&h.functionCallRequests}
+}
+
+func (h *functionCallHandler) GetFunctionCallCancelled() []*chan *msginterfaces.FunctionCallCancelledResponse {
+	return []*chan *msginterfaces.FunctionCallCancelledResponse{&h.functionCallCanceled}
 }
 
 func (h *functionCallHandler) GetError() []*chan *msginterfaces.ErrorResponse {
@@ -57,6 +73,29 @@ func main() {
 	if err := run(); err != nil {
 		log.Print(err)
 		os.Exit(1)
+	}
+}
+
+func executeFunction(ctx context.Context, function msginterfaces.FunctionCall, results chan<- functionCallResult, failures chan<- functionCallError) {
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
+
+	var arguments map[string]string
+	if err := json.Unmarshal([]byte(function.Arguments), &arguments); err != nil {
+		select {
+		case failures <- functionCallError{id: function.ID, err: err}:
+		case <-ctx.Done():
+		}
+		return
+	}
+	fmt.Printf("Calling %s with %v\n", function.Name, arguments)
+
+	select {
+	case results <- functionCallResult{function: function, content: `{"weather":"sunny"}`}:
+	case <-ctx.Done():
 	}
 }
 
@@ -111,6 +150,15 @@ func run() error {
 	}
 
 	responseSent := false
+	results := make(chan functionCallResult)
+	failures := make(chan functionCallError)
+	inFlight := make(map[string]context.CancelFunc)
+	defer func() {
+		for _, cancel := range inFlight {
+			cancel()
+		}
+	}()
+
 	for {
 		select {
 		case request := <-handler.functionCallRequests:
@@ -119,22 +167,43 @@ func run() error {
 					continue
 				}
 
-				var arguments map[string]string
-				if err := json.Unmarshal([]byte(function.Arguments), &arguments); err != nil {
-					return fmt.Errorf("decode function arguments %q: %w", function.Arguments, err)
+				if cancel, ok := inFlight[function.ID]; ok {
+					cancel()
 				}
-				fmt.Printf("Calling %s with %v\n", function.Name, arguments)
+				functionCtx, cancel := context.WithCancel(ctx)
+				inFlight[function.ID] = cancel
+				go executeFunction(functionCtx, function, results, failures)
+			}
+		case cancellation := <-handler.functionCallCanceled:
+			for _, function := range cancellation.Functions {
+				if cancel, ok := inFlight[function.ID]; ok {
+					cancel()
+					delete(inFlight, function.ID)
+				}
+			}
+		case result := <-results:
+			cancel, ok := inFlight[result.function.ID]
+			if !ok {
+				continue
+			}
+			cancel()
+			delete(inFlight, result.function.ID)
 
-				if err := conn.WriteJSON(msginterfaces.FunctionCallResponse{
-					Type:             msginterfaces.TypeFunctionCallResponse,
-					ID:               function.ID,
-					Name:             function.Name,
-					Content:          `{"weather":"sunny"}`,
-					ThoughtSignature: function.ThoughtSignature,
-				}); err != nil {
-					return fmt.Errorf("send FunctionCallResponse: %w", err)
-				}
-				responseSent = true
+			if err := conn.WriteJSON(msginterfaces.FunctionCallResponse{
+				Type:             msginterfaces.TypeFunctionCallResponse,
+				ID:               result.function.ID,
+				Name:             result.function.Name,
+				Content:          result.content,
+				ThoughtSignature: result.function.ThoughtSignature,
+			}); err != nil {
+				return fmt.Errorf("send FunctionCallResponse: %w", err)
+			}
+			responseSent = true
+		case failure := <-failures:
+			if cancel, ok := inFlight[failure.id]; ok {
+				cancel()
+				delete(inFlight, failure.id)
+				return fmt.Errorf("decode function arguments for %q: %w", failure.id, failure.err)
 			}
 		case conversation := <-handler.conversationText:
 			if responseSent && conversation.Role == "assistant" {
