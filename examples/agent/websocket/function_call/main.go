@@ -99,6 +99,50 @@ func executeFunction(ctx context.Context, function msginterfaces.FunctionCall, r
 	}
 }
 
+func cancelFunctionCalls(inFlight map[string]context.CancelFunc, cancellation *msginterfaces.FunctionCallCancelledResponse) {
+	for _, function := range cancellation.Functions {
+		if cancel, ok := inFlight[function.ID]; ok {
+			cancel()
+			delete(inFlight, function.ID)
+		}
+	}
+}
+
+func drainFunctionCallCancellations(cancellations <-chan *msginterfaces.FunctionCallCancelledResponse, inFlight map[string]context.CancelFunc) {
+	for {
+		select {
+		case cancellation := <-cancellations:
+			cancelFunctionCalls(inFlight, cancellation)
+		default:
+			return
+		}
+	}
+}
+
+func sendFunctionResult(cancellations <-chan *msginterfaces.FunctionCallCancelledResponse, inFlight map[string]context.CancelFunc, result functionCallResult, send func(msginterfaces.FunctionCallResponse) error) (bool, error) {
+	drainFunctionCallCancellations(cancellations, inFlight)
+	if _, ok := inFlight[result.function.ID]; !ok {
+		return false, nil
+	}
+
+	response := msginterfaces.FunctionCallResponse{
+		Type:             msginterfaces.TypeFunctionCallResponse,
+		ID:               result.function.ID,
+		Name:             result.function.Name,
+		Content:          result.content,
+		ThoughtSignature: result.function.ThoughtSignature,
+	}
+	drainFunctionCallCancellations(cancellations, inFlight)
+	cancel, ok := inFlight[result.function.ID]
+	if !ok {
+		return false, nil
+	}
+	cancel()
+	delete(inFlight, result.function.ID)
+
+	return true, send(response)
+}
+
 func run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
 	defer cancel()
@@ -175,30 +219,15 @@ func run() error {
 				go executeFunction(functionCtx, function, results, failures)
 			}
 		case cancellation := <-handler.functionCallCanceled:
-			for _, function := range cancellation.Functions {
-				if cancel, ok := inFlight[function.ID]; ok {
-					cancel()
-					delete(inFlight, function.ID)
-				}
-			}
+			cancelFunctionCalls(inFlight, cancellation)
 		case result := <-results:
-			cancel, ok := inFlight[result.function.ID]
-			if !ok {
-				continue
-			}
-			cancel()
-			delete(inFlight, result.function.ID)
-
-			if err := conn.WriteJSON(msginterfaces.FunctionCallResponse{
-				Type:             msginterfaces.TypeFunctionCallResponse,
-				ID:               result.function.ID,
-				Name:             result.function.Name,
-				Content:          result.content,
-				ThoughtSignature: result.function.ThoughtSignature,
-			}); err != nil {
+			sent, err := sendFunctionResult(handler.functionCallCanceled, inFlight, result, func(response msginterfaces.FunctionCallResponse) error {
+				return conn.WriteJSON(response)
+			})
+			if err != nil {
 				return fmt.Errorf("send FunctionCallResponse: %w", err)
 			}
-			responseSent = true
+			responseSent = responseSent || sent
 		case failure := <-failures:
 			if cancel, ok := inFlight[failure.id]; ok {
 				cancel()

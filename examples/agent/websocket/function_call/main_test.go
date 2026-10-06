@@ -35,3 +35,35 @@ func Test_ExecuteFunctionCanceledDoesNotReturnResult(t *testing.T) {
 	default:
 	}
 }
+
+func Test_SendFunctionResultPrefersQueuedCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	inFlight := map[string]context.CancelFunc{"fc_123": cancel}
+	cancellations := make(chan *msginterfaces.FunctionCallCancelledResponse, 1)
+	cancellations <- &msginterfaces.FunctionCallCancelledResponse{
+		Functions: []msginterfaces.FunctionCallCancelled{{ID: "fc_123"}},
+	}
+
+	sent := false
+	resultSent, err := sendFunctionResult(cancellations, inFlight, functionCallResult{
+		function: msginterfaces.FunctionCall{ID: "fc_123", Name: "get_weather"},
+		content:  `{"weather":"sunny"}`,
+	}, func(msginterfaces.FunctionCallResponse) error {
+		sent = true
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("send function result: %v", err)
+	}
+	if resultSent || sent {
+		t.Fatal("canceled function sent a response")
+	}
+	if _, ok := inFlight["fc_123"]; ok {
+		t.Fatal("canceled function remained in flight")
+	}
+	select {
+	case <-ctx.Done():
+	default:
+		t.Fatal("canceled function context remained active")
+	}
+}
