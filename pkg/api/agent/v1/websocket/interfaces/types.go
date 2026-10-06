@@ -42,8 +42,10 @@ type InjectUserMessage struct {
 type FunctionCallResponse struct {
 	Type    string `json:"type,omitempty"`
 	ID      string `json:"id,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Content string `json:"content,omitempty"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	// ThoughtSignature must be echoed unchanged when provided by a Gemini function call.
+	ThoughtSignature string `json:"thought_signature,omitempty"`
 
 	// Deprecated: use ID.
 	FunctionCallID string `json:"function_call_id,omitempty"`

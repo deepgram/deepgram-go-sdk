@@ -39,6 +39,7 @@ type Audio struct {
 	Output *Output `json:"output,omitempty"`
 }
 type Endpoint struct {
+	//nolint:stylecheck // Url is preserved for backwards compatibility.
 	Url     string            `json:"url,omitempty"`
 	Headers map[string]string `json:"headers,omitempty"`
 	Method  string            `json:"method,omitempty"`
@@ -48,13 +49,40 @@ type Item struct {
 	Description string `json:"description,omitempty"`
 }
 type Properties struct {
+	// Deprecated: use Parameters.PropertySchemas for arbitrary JSON Schema properties.
 	Item Item `json:"item,omitempty"`
 }
 type Parameters struct {
-	Type       string      `json:"type,omitempty"`
-	Properties interface{} `json:"properties,omitempty"`
-	Required   []string    `json:"required,omitempty"`
+	Type string `json:"type,omitempty"`
+	// Deprecated: use PropertySchemas for arbitrary JSON Schema properties.
+	Properties      Properties             `json:"properties,omitempty"`
+	PropertySchemas map[string]interface{} `json:"-"`
+	Required        []string               `json:"required,omitempty"`
 }
+
+// MarshalJSON sends arbitrary property schemas when provided while preserving
+// the legacy Properties representation for existing callers.
+//
+//nolint:gocritic // A value receiver preserves marshaling for value fields.
+func (p Parameters) MarshalJSON() ([]byte, error) {
+	type parametersJSON struct {
+		Type       string      `json:"type,omitempty"`
+		Properties interface{} `json:"properties,omitempty"`
+		Required   []string    `json:"required,omitempty"`
+	}
+
+	properties := interface{}(p.Properties)
+	if p.PropertySchemas != nil {
+		properties = p.PropertySchemas
+	}
+
+	return json.Marshal(parametersJSON{
+		Type:       p.Type,
+		Properties: properties,
+		Required:   p.Required,
+	})
+}
+
 type Headers struct {
 	Key   string `json:"key,omitempty"`
 	Value string `json:"value,omitempty"`
@@ -69,6 +97,8 @@ type Functions struct {
 
 // MarshalJSON omits an unset endpoint so functions without a server endpoint
 // are correctly registered as client-side functions.
+//
+//nolint:gocritic // A value receiver preserves marshaling for value fields.
 func (f Functions) MarshalJSON() ([]byte, error) {
 	type functionJSON struct {
 		Name          string     `json:"name,omitempty"`

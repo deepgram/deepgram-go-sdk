@@ -34,58 +34,74 @@ const functionCallCancelledPayload = `{
 	}]
 }`
 
+const (
+	functionCallID               = "fc_12345678-90ab-cdef-1234-567890abcdef"
+	functionCallName             = "get_weather"
+	functionCallThoughtSignature = "abc123"
+)
+
+type legacyFunctionCallHandler struct {
+	functionCallRequests chan *msginterfaces.FunctionCallRequestResponse
+	unhandled            chan *[]byte
+}
+
+func newLegacyFunctionCallHandler() *legacyFunctionCallHandler {
+	return &legacyFunctionCallHandler{
+		functionCallRequests: make(chan *msginterfaces.FunctionCallRequestResponse, 1),
+		unhandled:            make(chan *[]byte, 1),
+	}
+}
+
 type functionCallHandler struct {
-	functionCallRequests  chan *msginterfaces.FunctionCallRequestResponse
+	*legacyFunctionCallHandler
 	functionCallCancelled chan *msginterfaces.FunctionCallCancelledResponse
-	unhandled             chan *[]byte
 }
 
 func newFunctionCallHandler() *functionCallHandler {
 	return &functionCallHandler{
-		functionCallRequests:  make(chan *msginterfaces.FunctionCallRequestResponse, 1),
-		functionCallCancelled: make(chan *msginterfaces.FunctionCallCancelledResponse, 1),
-		unhandled:             make(chan *[]byte, 1),
+		legacyFunctionCallHandler: newLegacyFunctionCallHandler(),
+		functionCallCancelled:     make(chan *msginterfaces.FunctionCallCancelledResponse, 1),
 	}
 }
 
-func (h *functionCallHandler) GetBinary() []*chan *[]byte { return nil }
-func (h *functionCallHandler) GetOpen() []*chan *msginterfaces.OpenResponse {
+func (h *legacyFunctionCallHandler) GetBinary() []*chan *[]byte { return nil }
+func (h *legacyFunctionCallHandler) GetOpen() []*chan *msginterfaces.OpenResponse {
 	return nil
 }
-func (h *functionCallHandler) GetWelcome() []*chan *msginterfaces.WelcomeResponse {
+func (h *legacyFunctionCallHandler) GetWelcome() []*chan *msginterfaces.WelcomeResponse {
 	return nil
 }
-func (h *functionCallHandler) GetConversationText() []*chan *msginterfaces.ConversationTextResponse {
+func (h *legacyFunctionCallHandler) GetConversationText() []*chan *msginterfaces.ConversationTextResponse {
 	return nil
 }
-func (h *functionCallHandler) GetUserStartedSpeaking() []*chan *msginterfaces.UserStartedSpeakingResponse {
+func (h *legacyFunctionCallHandler) GetUserStartedSpeaking() []*chan *msginterfaces.UserStartedSpeakingResponse {
 	return nil
 }
-func (h *functionCallHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResponse {
+func (h *legacyFunctionCallHandler) GetAgentThinking() []*chan *msginterfaces.AgentThinkingResponse {
 	return nil
 }
-func (h *functionCallHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
+func (h *legacyFunctionCallHandler) GetFunctionCallRequest() []*chan *msginterfaces.FunctionCallRequestResponse {
 	return []*chan *msginterfaces.FunctionCallRequestResponse{&h.functionCallRequests}
 }
 func (h *functionCallHandler) GetFunctionCallCancelled() []*chan *msginterfaces.FunctionCallCancelledResponse {
 	return []*chan *msginterfaces.FunctionCallCancelledResponse{&h.functionCallCancelled}
 }
-func (h *functionCallHandler) GetAgentStartedSpeaking() []*chan *msginterfaces.AgentStartedSpeakingResponse {
+func (h *legacyFunctionCallHandler) GetAgentStartedSpeaking() []*chan *msginterfaces.AgentStartedSpeakingResponse {
 	return nil
 }
-func (h *functionCallHandler) GetAgentAudioDone() []*chan *msginterfaces.AgentAudioDoneResponse {
+func (h *legacyFunctionCallHandler) GetAgentAudioDone() []*chan *msginterfaces.AgentAudioDoneResponse {
 	return nil
 }
-func (h *functionCallHandler) GetClose() []*chan *msginterfaces.CloseResponse { return nil }
-func (h *functionCallHandler) GetError() []*chan *msginterfaces.ErrorResponse { return nil }
-func (h *functionCallHandler) GetUnhandled() []*chan *[]byte {
+func (h *legacyFunctionCallHandler) GetClose() []*chan *msginterfaces.CloseResponse { return nil }
+func (h *legacyFunctionCallHandler) GetError() []*chan *msginterfaces.ErrorResponse { return nil }
+func (h *legacyFunctionCallHandler) GetUnhandled() []*chan *[]byte {
 	return []*chan *[]byte{&h.unhandled}
 }
-func (h *functionCallHandler) GetInjectionRefused() []*chan *msginterfaces.InjectionRefusedResponse {
+func (h *legacyFunctionCallHandler) GetInjectionRefused() []*chan *msginterfaces.InjectionRefusedResponse {
 	return nil
 }
-func (h *functionCallHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive { return nil }
-func (h *functionCallHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
+func (h *legacyFunctionCallHandler) GetKeepAlive() []*chan *msginterfaces.KeepAlive { return nil }
+func (h *legacyFunctionCallHandler) GetSettingsApplied() []*chan *msginterfaces.SettingsAppliedResponse {
 	return nil
 }
 
@@ -107,10 +123,10 @@ func Test_FunctionCallRequestRouting(t *testing.T) {
 		}
 
 		function := request.Functions[0]
-		if function.ID != "fc_12345678-90ab-cdef-1234-567890abcdef" {
+		if function.ID != functionCallID {
 			t.Errorf("unexpected function ID: %q", function.ID)
 		}
-		if function.Name != "get_weather" {
+		if function.Name != functionCallName {
 			t.Errorf("unexpected function name: %q", function.Name)
 		}
 		if function.Arguments != `{"location":"Fremont, CA 94539"}` {
@@ -119,7 +135,7 @@ func Test_FunctionCallRequestRouting(t *testing.T) {
 		if !function.ClientSide {
 			t.Error("expected client-side function call")
 		}
-		if function.ThoughtSignature != "abc123" {
+		if function.ThoughtSignature != functionCallThoughtSignature {
 			t.Errorf("unexpected thought signature: %q", function.ThoughtSignature)
 		}
 	case <-time.After(time.Second):
@@ -129,10 +145,11 @@ func Test_FunctionCallRequestRouting(t *testing.T) {
 
 func Test_FunctionCallResponseMarshaling(t *testing.T) {
 	response := clientws.FunctionCallResponse{
-		Type:    msginterfaces.TypeFunctionCallResponse,
-		ID:      "fc_12345678-90ab-cdef-1234-567890abcdef",
-		Name:    "get_weather",
-		Content: `{"temperature_c":21}`,
+		Type:             msginterfaces.TypeFunctionCallResponse,
+		ID:               functionCallID,
+		Name:             functionCallName,
+		Content:          `{"temperature_c":21}`,
+		ThoughtSignature: functionCallThoughtSignature,
 	}
 
 	data, err := json.Marshal(response)
@@ -144,7 +161,7 @@ func Test_FunctionCallResponseMarshaling(t *testing.T) {
 	if err := json.Unmarshal(data, &payload); err != nil {
 		t.Fatalf("unmarshal FunctionCallResponse: %v", err)
 	}
-	if payload["id"] != response.ID || payload["name"] != response.Name || payload["content"] != response.Content {
+	if payload["type"] != response.Type || payload["id"] != response.ID || payload["name"] != response.Name || payload["content"] != response.Content || payload["thought_signature"] != response.ThoughtSignature {
 		t.Errorf("unexpected FunctionCallResponse payload: %s", data)
 	}
 	if _, found := payload["function_call_id"]; found {
@@ -152,6 +169,17 @@ func Test_FunctionCallResponseMarshaling(t *testing.T) {
 	}
 	if _, found := payload["output"]; found {
 		t.Errorf("obsolete output field present in payload: %s", data)
+	}
+
+	emptyContent, err := json.Marshal(clientws.FunctionCallResponse{Name: functionCallName})
+	if err != nil {
+		t.Fatalf("marshal FunctionCallResponse with empty content: %v", err)
+	}
+	if err := json.Unmarshal(emptyContent, &payload); err != nil {
+		t.Fatalf("unmarshal FunctionCallResponse with empty content: %v", err)
+	}
+	if _, found := payload["content"]; !found {
+		t.Errorf("empty FunctionCallResponse content must be present: %s", emptyContent)
 	}
 }
 
@@ -169,27 +197,45 @@ func Test_FunctionCallCancelledRouting(t *testing.T) {
 			t.Errorf("expected type %q, got %q", msginterfaces.TypeFunctionCallCancelledResponse, cancellation.Type)
 		}
 		if len(cancellation.Functions) != 1 {
-			t.Fatalf("expected 1 cancelled function call, got %d", len(cancellation.Functions))
+			t.Fatalf("expected 1 canceled function call, got %d", len(cancellation.Functions))
 		}
-		if cancellation.Functions[0].ID != "fc_12345678-90ab-cdef-1234-567890abcdef" {
-			t.Errorf("unexpected cancelled function ID: %q", cancellation.Functions[0].ID)
+		if cancellation.Functions[0].ID != functionCallID {
+			t.Errorf("unexpected canceled function ID: %q", cancellation.Functions[0].ID)
 		}
-		if cancellation.Functions[0].Name != "get_weather" {
-			t.Errorf("unexpected cancelled function name: %q", cancellation.Functions[0].Name)
+		if cancellation.Functions[0].Name != functionCallName {
+			t.Errorf("unexpected canceled function name: %q", cancellation.Functions[0].Name)
 		}
 	case <-time.After(time.Second):
 		t.Fatal("FunctionCallCancelled was not delivered to the handler")
 	}
 }
 
+func Test_FunctionCallCancelledFallsBackToUnhandled(t *testing.T) {
+	handler := newLegacyFunctionCallHandler()
+	router := agentws.NewChanRouter(handler)
+
+	if err := router.Message([]byte(functionCallCancelledPayload)); err != nil {
+		t.Fatalf("FunctionCallCancelled must fall back successfully: %v", err)
+	}
+
+	select {
+	case message := <-handler.unhandled:
+		if string(*message) != functionCallCancelledPayload {
+			t.Errorf("unexpected unhandled message: %s", *message)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("FunctionCallCancelled was not delivered to the unhandled handler")
+	}
+}
+
 func Test_FunctionDefinitionMarshaling(t *testing.T) {
 	clientSideFunction := interfacesv1.Functions{
-		Name:          "get_weather",
+		Name:          functionCallName,
 		Description:   "Get the current weather for a location.",
 		DeferUntilEOT: true,
 		Parameters: interfacesv1.Parameters{
 			Type: "object",
-			Properties: map[string]interface{}{
+			PropertySchemas: map[string]interface{}{
 				"location": map[string]string{
 					"type":        "string",
 					"description": "The city or location to get weather for.",
@@ -224,7 +270,7 @@ func Test_FunctionDefinitionMarshaling(t *testing.T) {
 	}
 
 	serverSideFunction := interfacesv1.Functions{
-		Name: "get_weather",
+		Name: functionCallName,
 		Endpoint: interfacesv1.Endpoint{
 			Url:    "https://example.com/weather",
 			Method: "POST",
@@ -240,6 +286,27 @@ func Test_FunctionDefinitionMarshaling(t *testing.T) {
 	endpoint, ok := payload["endpoint"].(map[string]interface{})
 	if !ok || endpoint["url"] != "https://example.com/weather" || endpoint["method"] != "POST" {
 		t.Errorf("unexpected server-side endpoint: %s", data)
+	}
+}
+
+func Test_LegacyFunctionPropertiesMarshaling(t *testing.T) {
+	data, err := json.Marshal(interfacesv1.Parameters{
+		Type: "object",
+		Properties: interfacesv1.Properties{
+			Item: interfacesv1.Item{
+				Type:        "string",
+				Description: "The city or location to get weather for.",
+			},
+		},
+		Required: []string{"location"},
+	})
+	if err != nil {
+		t.Fatalf("marshal legacy function parameters: %v", err)
+	}
+
+	const expected = `{"type":"object","properties":{"item":{"type":"string","description":"The city or location to get weather for."}},"required":["location"]}`
+	if string(data) != expected {
+		t.Errorf("legacy parameters changed:\nexpected: %s\nactual:   %s", expected, data)
 	}
 }
 

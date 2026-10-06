@@ -90,7 +90,7 @@ func TestDaily_AgentFunctionCall(t *testing.T) {
 			Description: "Return a fixed weather result for the requested location.",
 			Parameters: interfacesv1.Parameters{
 				Type: "object",
-				Properties: map[string]interface{}{
+				PropertySchemas: map[string]interface{}{
 					"location": map[string]string{
 						"type": "string",
 					},
@@ -151,16 +151,17 @@ func TestDaily_AgentFunctionCall(t *testing.T) {
 			}
 
 			if err := conn.WriteJSON(msginterfaces.FunctionCallResponse{
-				Type:    msginterfaces.TypeFunctionCallResponse,
-				ID:      function.ID,
-				Name:    function.Name,
-				Content: `{"weather":"sunny"}`,
+				Type:             msginterfaces.TypeFunctionCallResponse,
+				ID:               function.ID,
+				Name:             function.Name,
+				Content:          `{"weather":"sunny"}`,
+				ThoughtSignature: function.ThoughtSignature,
 			}); err != nil {
 				t.Fatalf("send FunctionCallResponse: %v", err)
 			}
 			responseSent = true
 		case cancellation := <-handler.functionCallCancelled:
-			t.Fatalf("function call was cancelled: %+v", cancellation.Functions)
+			t.Fatalf("function call was canceled: %+v", cancellation.Functions)
 		case conversation := <-handler.conversationText:
 			if responseSent && conversation.Role == "assistant" {
 				return
