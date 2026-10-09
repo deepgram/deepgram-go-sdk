@@ -12,7 +12,7 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestSettingsOptionsTags_StructCreation(t *testing.T) {
+func Test_SettingsOptionsTagsStructCreation(t *testing.T) {
 	t.Run("Test SettingsOptions struct creation with tags field", func(t *testing.T) {
 		// Test creating SettingsOptions with tags
 		tags := []string{"tag1", "tag2", "production"}
@@ -65,7 +65,7 @@ func TestSettingsOptionsTags_StructCreation(t *testing.T) {
 	})
 }
 
-func TestSettingsOptionsTags_JSONMarshaling(t *testing.T) {
+func Test_SettingsOptionsTagsJSONMarshaling(t *testing.T) {
 	t.Run("Test SettingsOptions JSON marshaling with tags populated", func(t *testing.T) {
 		tags := []string{"development", "test", "agent-v1"}
 		options := &interfacesv1.SettingsOptions{
@@ -200,7 +200,7 @@ func TestSettingsOptionsTags_JSONMarshaling(t *testing.T) {
 	})
 }
 
-func TestSettingsOptionsTags_JSONUnmarshaling(t *testing.T) {
+func Test_SettingsOptionsTagsJSONUnmarshaling(t *testing.T) {
 	t.Run("Test SettingsOptions JSON unmarshaling with tags", func(t *testing.T) {
 		jsonStr := `{"type":"Settings","tags":["development","test","agent-v1"]}`
 
@@ -250,7 +250,7 @@ func TestSettingsOptionsTags_JSONUnmarshaling(t *testing.T) {
 	})
 }
 
-func TestSettingsOptionsTags_NewSettingsOptions(t *testing.T) {
+func Test_SettingsOptionsTagsNewSettingsOptions(t *testing.T) {
 	t.Run("Test NewSettingsOptions with tags", func(t *testing.T) {
 		options := interfacesv1.NewSettingsOptions()
 

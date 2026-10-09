@@ -11,7 +11,7 @@ import (
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
-func TestSettingsMipOptOut_StructCreation(t *testing.T) {
+func Test_SettingsMipOptOutStructCreation(t *testing.T) {
 	t.Run("Test SettingsOptions struct creation with mip_opt_out field", func(t *testing.T) {
 		// Test creating settings with mip_opt_out set to true
 		settings := &interfacesv1.SettingsOptions{
@@ -49,7 +49,7 @@ func TestSettingsMipOptOut_StructCreation(t *testing.T) {
 	})
 }
 
-func TestSettingsMipOptOut_JSONMarshaling(t *testing.T) {
+func Test_SettingsMipOptOutJSONMarshaling(t *testing.T) {
 	t.Run("Test SettingsOptions JSON marshaling with mip_opt_out set to true", func(t *testing.T) {
 		// Create settings with mip_opt_out set to true
 		settings := &interfacesv1.SettingsOptions{
@@ -155,7 +155,7 @@ func TestSettingsMipOptOut_JSONMarshaling(t *testing.T) {
 	})
 }
 
-func TestSettingsMipOptOut_JSONUnmarshaling(t *testing.T) {
+func Test_SettingsMipOptOutJSONUnmarshaling(t *testing.T) {
 	t.Run("Test SettingsOptions JSON unmarshaling with mip_opt_out set to true", func(t *testing.T) {
 		// JSON with mip_opt_out set to true
 		jsonData := `{
@@ -240,7 +240,7 @@ func TestSettingsMipOptOut_JSONUnmarshaling(t *testing.T) {
 	})
 }
 
-func TestSettingsMipOptOut_NewSettingsOptions(t *testing.T) {
+func Test_SettingsMipOptOutNewSettingsOptions(t *testing.T) {
 	t.Run("Test NewSettingsOptions creates SettingsOptions with correct defaults", func(t *testing.T) {
 		// Create new settings using the constructor
 		settings := interfacesv1.NewSettingsOptions()
