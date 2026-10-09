@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.9.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.8.0...v3.9.0) (2026-10-06)
+
+
+### Features
+
+* **Voice Agent:** Support the current function-call protocol with typed function requests, responses, and cancellation events. Function settings accept arbitrary JSON Schema properties, and client-side functions can omit an endpoint. See the runnable function-call example for the response and cancellation flow. ([#372](https://github.com/deepgram/deepgram-go-sdk/issues/372)) ([c5e3b5c](https://github.com/deepgram/deepgram-go-sdk/commit/c5e3b5c329cec32e5edaa940e5062d44bbdd3f72))
+* **Management:** Add CRUD endpoints for reusable Voice Agent configurations and Agent template variables. Agent configuration is stored and returned as a JSON string; configuration updates replace metadata only, while variable values accept any JSON type. ([#362](https://github.com/deepgram/deepgram-go-sdk/issues/362)) ([4d2996a](https://github.com/deepgram/deepgram-go-sdk/commit/4d2996a661869c5657ce3d7219f721137ca6fdc8))
+
 ## [3.8.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.7.1...v3.8.0) (2026-09-21)
 
 ### Features
