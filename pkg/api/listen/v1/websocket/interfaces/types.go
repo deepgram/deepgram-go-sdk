@@ -112,9 +112,10 @@ type MetadataResponse struct {
 
 // UtteranceEndResponse is the response from a live transcription
 type UtteranceEndResponse struct {
-	Type        string  `json:"type,omitempty"`
-	Channel     []int   `json:"channel,omitempty"`
-	LastWordEnd float64 `json:"last_word_end,omitempty"`
+	Type        string            `json:"type,omitempty"`
+	Channel     []int             `json:"channel,omitempty"`
+	LastWordEnd float64           `json:"last_word_end,omitempty"`
+	Extra       map[string]string `json:"extra,omitempty"`
 }
 
 type SpeechStartedResponse struct {
