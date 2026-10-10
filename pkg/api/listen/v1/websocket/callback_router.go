@@ -83,6 +83,8 @@ func (r *CallbackRouter) processMessage(byMsg []byte) error {
 		return err
 	}
 
+	r.extraMetadata.store(msg.Metadata.Extra)
+
 	action := func(data *interface{}) error {
 		return r.callback.Message(&msg)
 	}
@@ -95,6 +97,8 @@ func (r *CallbackRouter) processMetadata(byMsg []byte) error {
 	if err := json.Unmarshal(byMsg, &msg); err != nil {
 		return err
 	}
+
+	r.extraMetadata.store(msg.Extra)
 
 	action := func(data *interface{}) error {
 		return r.callback.Metadata(&msg)
@@ -120,6 +124,10 @@ func (r *CallbackRouter) processUtteranceEndResponse(byMsg []byte) error {
 	var msg interfaces.UtteranceEndResponse
 	if err := json.Unmarshal(byMsg, &msg); err != nil {
 		return err
+	}
+
+	if len(msg.Extra) == 0 {
+		msg.Extra = r.extraMetadata.load()
 	}
 
 	action := func(data *interface{}) error {
