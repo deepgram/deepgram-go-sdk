@@ -160,6 +160,8 @@ func (r *ChanRouter) processMessage(byMsg []byte) error {
 			return err
 		}
 
+		r.extraMetadata.store(msg.Metadata.Extra)
+
 		for _, ch := range r.messageChan {
 			*ch <- &msg
 		}
@@ -176,6 +178,8 @@ func (r *ChanRouter) processMetadata(byMsg []byte) error {
 			klog.V(1).Infof("json.Unmarshal(MessageResponse) failed. Err: %v\n", err)
 			return err
 		}
+
+		r.extraMetadata.store(msg.Extra)
 
 		for _, ch := range r.metadataChan {
 			*ch <- &msg
@@ -209,6 +213,10 @@ func (r *ChanRouter) processUtteranceEndResponse(byMsg []byte) error {
 		if err := json.Unmarshal(data, &msg); err != nil {
 			klog.V(1).Infof("json.Unmarshal(UtteranceEndResponse) failed. Err: %v\n", err)
 			return err
+		}
+
+		if len(msg.Extra) == 0 {
+			msg.Extra = r.extraMetadata.load()
 		}
 
 		for _, ch := range r.utteranceEndChan {
