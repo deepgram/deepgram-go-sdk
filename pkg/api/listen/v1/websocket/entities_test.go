@@ -44,6 +44,7 @@ func Test_LiveDetectEntities(t *testing.T) {
 			"entities":[{
 				"label":"PERSON",
 				"value":"Ada Lovelace",
+				"raw_value":"ada lovelace",
 				"confidence":0.98,
 				"start_word":2,
 				"end_word":4
@@ -56,7 +57,7 @@ func Test_LiveDetectEntities(t *testing.T) {
 			t.Fatalf("expected one entity, got %d", len(response.Entities))
 		}
 		entity := response.Entities[0]
-		if entity.Label != "PERSON" || entity.Value != "Ada Lovelace" {
+		if entity.Label != "PERSON" || entity.Value != "Ada Lovelace" || entity.RawValue != "ada lovelace" {
 			t.Fatalf("unexpected entity: %#v", entity)
 		}
 		if entity.Confidence != 0.98 || entity.StartWord != 2 || entity.EndWord != 4 {

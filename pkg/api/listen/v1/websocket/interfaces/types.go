@@ -56,9 +56,10 @@ type Alternative struct {
 type Entity struct {
 	Label      string  `json:"label,omitempty"`
 	Value      string  `json:"value,omitempty"`
+	RawValue   string  `json:"raw_value,omitempty"`
 	Confidence float64 `json:"confidence,omitempty"`
-	StartWord  float64 `json:"start_word,omitempty"`
-	EndWord    float64 `json:"end_word,omitempty"`
+	StartWord  int     `json:"start_word,omitempty"`
+	EndWord    int     `json:"end_word,omitempty"`
 }
 
 // Channel is a single channel in a transcript
