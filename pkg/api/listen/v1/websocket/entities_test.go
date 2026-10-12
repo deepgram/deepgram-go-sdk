@@ -45,8 +45,8 @@ func Test_LiveDetectEntities(t *testing.T) {
 				"label":"PERSON",
 				"value":"Ada Lovelace",
 				"raw_value":"ada lovelace",
-				"confidence":0.98,
-				"start_word":2,
+				"confidence":0,
+				"start_word":0,
 				"end_word":4
 			}]
 		}`), &response); err != nil {
@@ -60,8 +60,23 @@ func Test_LiveDetectEntities(t *testing.T) {
 		if entity.Label != "PERSON" || entity.Value != "Ada Lovelace" || entity.RawValue != "ada lovelace" {
 			t.Fatalf("unexpected entity: %#v", entity)
 		}
-		if entity.Confidence != 0.98 || entity.StartWord != 2 || entity.EndWord != 4 {
+		if entity.Confidence != 0 || entity.StartWord != 0 || entity.EndWord != 4 {
 			t.Fatalf("unexpected entity metadata: %#v", entity)
+		}
+
+		encoded, err := json.Marshal(entity)
+		if err != nil {
+			t.Fatalf("re-marshal entity: %v", err)
+		}
+		var roundTrip map[string]any
+		if err := json.Unmarshal(encoded, &roundTrip); err != nil {
+			t.Fatalf("decode re-marshaled entity: %v", err)
+		}
+		if got, ok := roundTrip["confidence"].(float64); !ok || got != 0 {
+			t.Fatalf("expected confidence to remain 0, got %#v", roundTrip["confidence"])
+		}
+		if got, ok := roundTrip["start_word"].(float64); !ok || got != 0 {
+			t.Fatalf("expected start_word to remain 0, got %#v", roundTrip["start_word"])
 		}
 	})
 }

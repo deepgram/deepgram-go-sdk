@@ -54,12 +54,12 @@ type Alternative struct {
 
 // Entity is a named entity recognized in the transcript
 type Entity struct {
-	Label      string  `json:"label,omitempty"`
-	Value      string  `json:"value,omitempty"`
-	RawValue   string  `json:"raw_value,omitempty"`
-	Confidence float64 `json:"confidence,omitempty"`
-	StartWord  int     `json:"start_word,omitempty"`
-	EndWord    int     `json:"end_word,omitempty"`
+	Label      string  `json:"label"`
+	Value      string  `json:"value"`
+	RawValue   string  `json:"raw_value"`
+	Confidence float64 `json:"confidence"`
+	StartWord  int     `json:"start_word"`
+	EndWord    int     `json:"end_word"`
 }
 
 // Channel is a single channel in a transcript

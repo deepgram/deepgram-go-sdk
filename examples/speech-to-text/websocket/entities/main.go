@@ -7,10 +7,11 @@ package main
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"reflect"
 
 	listenws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
@@ -19,7 +20,9 @@ import (
 
 const streamURL = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 
-type entityHandler struct{}
+type entityHandler struct {
+	errorChan chan<- error
+}
 
 func (h *entityHandler) Open(*listenws.OpenResponse) error { return nil }
 
@@ -53,11 +56,31 @@ func (h *entityHandler) UtteranceEnd(*listenws.UtteranceEndResponse) error { ret
 
 func (h *entityHandler) Close(*listenws.CloseResponse) error { return nil }
 
-func (h *entityHandler) Error(*listenws.ErrorResponse) error { return nil }
+func (h *entityHandler) Error(response *listenws.ErrorResponse) error {
+	message := response.ErrMsg
+	if message == "" {
+		message = response.Description
+	}
+	if message == "" {
+		message = "received a Deepgram streaming error"
+	}
+
+	select {
+	case h.errorChan <- errors.New(message):
+	default:
+	}
+	return nil
+}
 
 func (h *entityHandler) UnhandledEvent([]byte) error { return nil }
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	client.InitWithDefault()
 	ctx := context.Background()
 
@@ -67,27 +90,47 @@ func main() {
 		Language:       "en-US",
 		Punctuate:      true,
 	}
-	dgClient, err := client.NewWSUsingCallbackWithDefaults(ctx, options, &entityHandler{})
+	errorChan := make(chan error, 1)
+	dgClient, err := client.NewWSUsingCallbackWithDefaults(ctx, options, &entityHandler{errorChan: errorChan})
 	if err != nil {
-		fmt.Printf("ERROR creating LiveTranscription connection: %v\n", err)
-		return
+		return fmt.Errorf("create LiveTranscription connection: %w", err)
 	}
 	defer dgClient.Stop()
 
 	response, err := http.Get(streamURL)
 	if err != nil {
-		fmt.Printf("http.Get failed: %v\n", err)
-		return
+		return fmt.Errorf("get audio stream: %w", err)
 	}
 	defer response.Body.Close()
-	fmt.Printf("Stream is up and running %s\n", reflect.TypeOf(response))
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("get audio stream: %s", response.Status)
+	}
+	fmt.Printf("Stream is up and running: %s\n", response.Status)
 
 	if !dgClient.Connect() {
-		fmt.Println("Client.Connect failed")
-		return
+		return errors.New("connect LiveTranscription client")
 	}
-	go dgClient.Stream(bufio.NewReader(response.Body))
+	streamErr := make(chan error, 1)
+	go func() {
+		streamErr <- dgClient.Stream(bufio.NewReader(response.Body))
+	}()
 
 	fmt.Print("Press ENTER to exit!\n\n")
-	bufio.NewScanner(os.Stdin).Scan()
+	inputDone := make(chan struct{})
+	go func() {
+		bufio.NewScanner(os.Stdin).Scan()
+		close(inputDone)
+	}()
+
+	select {
+	case err := <-errorChan:
+		return err
+	case err := <-streamErr:
+		if err != nil {
+			return fmt.Errorf("stream audio: %w", err)
+		}
+		return errors.New("audio stream ended")
+	case <-inputDone:
+		return nil
+	}
 }
