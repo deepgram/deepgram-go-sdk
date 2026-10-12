@@ -35,7 +35,7 @@ import (
   "context"
   "log"
 
-  api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
+  api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket"
   interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
   listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2"
 )
