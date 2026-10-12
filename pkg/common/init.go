@@ -59,7 +59,8 @@ func isGoTest() bool {
 	}
 
 	for _, arg := range os.Args[1:] {
-		if strings.HasPrefix(strings.TrimLeft(arg, "-"), "test.") {
+		name, _, _ := strings.Cut(strings.TrimLeft(arg, "-"), "=")
+		if strings.HasPrefix(name, "test.") && flag.CommandLine.Lookup(name) == nil {
 			return true
 		}
 	}
