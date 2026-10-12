@@ -24,7 +24,7 @@ Flux constructors with defaults resolve credentials from `DEEPGRAM_API_KEY` or `
 export DEEPGRAM_API_KEY="your_api_key"
 ```
 
-## Quick start
+## Connection setup
 
 Use the versioned v2 package and typed options:
 
@@ -57,6 +57,8 @@ func main() {
 }
 ```
 
+This establishes the session only. Send audio with `Write` or `Stream`; use a runnable example for the complete capture and event-handling flow.
+
 ## Key parameters
 
 - `interfaces.FluxTranscriptionOptions`
@@ -85,7 +87,7 @@ func main() {
 4. Context7
    - `/llmstxt/developers_deepgram_llms_txt`
 5. Product docs
-   - `https://developers.deepgram.com/docs/conversational-speech-recognition`
+   - `https://developers.deepgram.com/reference/speech-to-text/listen-flux`
 
 ## Gotchas
 
