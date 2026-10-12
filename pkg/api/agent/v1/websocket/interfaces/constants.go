@@ -26,16 +26,17 @@ const (
 // server message types
 const (
 	// message types
-	TypeOpenResponse                 = commoninterfaces.TypeOpenResponse
-	TypeWelcomeResponse              = "Welcome"
-	TypeConversationTextResponse     = "ConversationText"
-	TypeUserStartedSpeakingResponse  = "UserStartedSpeaking"
-	TypeAgentThinkingResponse        = "AgentThinking"
-	TypeFunctionCallRequestResponse  = "FunctionCallRequest"
-	TypeAgentStartedSpeakingResponse = "AgentStartedSpeaking"
-	TypeAgentAudioDoneResponse       = "AgentAudioDone"
-	TypeCloseResponse                = commoninterfaces.TypeCloseResponse
-	TypeErrorResponse                = commoninterfaces.TypeErrorResponse
-	TypeInjectionRefusedResponse     = "InjectionRefused"
-	TypeSettingsAppliedResponse      = "SettingsApplied"
+	TypeOpenResponse                  = commoninterfaces.TypeOpenResponse
+	TypeWelcomeResponse               = "Welcome"
+	TypeConversationTextResponse      = "ConversationText"
+	TypeUserStartedSpeakingResponse   = "UserStartedSpeaking"
+	TypeAgentThinkingResponse         = "AgentThinking"
+	TypeFunctionCallRequestResponse   = "FunctionCallRequest"
+	TypeFunctionCallCancelledResponse = "FunctionCallCancelled"
+	TypeAgentStartedSpeakingResponse  = "AgentStartedSpeaking"
+	TypeAgentAudioDoneResponse        = "AgentAudioDone"
+	TypeCloseResponse                 = commoninterfaces.TypeCloseResponse
+	TypeErrorResponse                 = commoninterfaces.TypeErrorResponse
+	TypeInjectionRefusedResponse      = "InjectionRefused"
+	TypeSettingsAppliedResponse       = "SettingsApplied"
 )

@@ -30,3 +30,6 @@ type WSSpeakOptions = interfacesv1.WSSpeakOptions
 type FluxTranscriptionOptions = interfacesv2.FluxTranscriptionOptions
 type FluxConfigureOptions = interfacesv2.FluxConfigureOptions
 type FluxThresholds = interfacesv2.FluxThresholds
+type SpeakV2Options = interfacesv2.SpeakV2Options
+type SpeakV2WSOptions = interfacesv2.SpeakV2WSOptions
+type SpeakV2ConfigureOptions = interfacesv2.SpeakV2ConfigureOptions

@@ -23,6 +23,7 @@ type ChanRouter struct {
 	configureSuccessChan []*chan *interfaces.ConfigureSuccessResponse
 	configureFailureChan []*chan *interfaces.ConfigureFailureResponse
 	fatalErrorChan       []*chan *interfaces.FatalErrorResponse
+	warningChan          []*chan *interfaces.WarningResponse
 	closeChan            []*chan *interfaces.CloseResponse
 	errorChan            []*chan *interfaces.ErrorResponse
 	unhandledChan        []*chan *[]byte
@@ -48,6 +49,7 @@ type DefaultChanHandler struct {
 	configureSuccessChan chan *interfaces.ConfigureSuccessResponse
 	configureFailureChan chan *interfaces.ConfigureFailureResponse
 	fatalErrorChan       chan *interfaces.FatalErrorResponse
+	warningChan          chan *interfaces.WarningResponse
 	closeChan            chan *interfaces.CloseResponse
 	errorChan            chan *interfaces.ErrorResponse
 	unhandledChan        chan *[]byte

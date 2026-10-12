@@ -26,3 +26,9 @@ type AgentMessageChan interface {
 	GetKeepAlive() []*chan *KeepAlive
 	GetSettingsApplied() []*chan *SettingsAppliedResponse
 }
+
+// FunctionCallCancelledChan receives cancellations for client-side function calls.
+// It is optional so existing AgentMessageChan implementations remain compatible.
+type FunctionCallCancelledChan interface {
+	GetFunctionCallCancelled() []*chan *FunctionCallCancelledResponse
+}

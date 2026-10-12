@@ -22,7 +22,19 @@ const (
 	TypeTurnInfoResponse  TypeResponse = "TurnInfo"
 	TypeConfigureSuccess  TypeResponse = "ConfigureSuccess"
 	TypeConfigureFailure  TypeResponse = "ConfigureFailure"
-	TypeFatalError        TypeResponse = "Error" // server sends {"type":"Error"} for fatal errors
+	TypeFatalError        TypeResponse = "Error"   // server sends {"type":"Error"} for fatal errors
+	TypeWarningResponse   TypeResponse = "Warning" // non-fatal informational message
+)
+
+// Warning codes for WarningResponse.Code. The set is open: the server may add
+// new values over time.
+const (
+	// WarningCodeForceEndTurnNoActiveTurn — a ForceEndTurn message arrived when no
+	// turn was active (before StartOfTurn or after EndOfTurn). The message is
+	// ignored: no EndOfTurn is emitted and turn_index does not advance. Timing
+	// races between an external end-of-turn signal and the server's StartOfTurn
+	// are normal, so this is informational, not an error.
+	WarningCodeForceEndTurnNoActiveTurn = "FORCE_END_TURN_NO_ACTIVE_TURN"
 )
 
 // TurnEvent values for TurnInfoResponse.EventType
@@ -32,4 +44,15 @@ const (
 	TurnEventEagerEndOfTurn = "EagerEndOfTurn"
 	TurnEventTurnResumed    = "TurnResumed"
 	TurnEventEndOfTurn      = "EndOfTurn"
+)
+
+// TurnTrigger values for TurnInfoResponse.Trigger on "EndOfTurn" events.
+// The field is an open string: the server may add new values over time.
+const (
+	// TurnTriggerModel — the turn ended via Flux's native end-of-turn detection.
+	TurnTriggerModel = "model"
+	// TurnTriggerManual — the turn ended because the client sent ForceEndTurn.
+	TurnTriggerManual = "manual"
+	// TurnTriggerTimeout — the turn ended because eot_timeout_ms elapsed.
+	TurnTriggerTimeout = "timeout"
 )

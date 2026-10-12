@@ -34,3 +34,5 @@ _testmain.go
 *.mp3
 chatlog.txt
 output_*.wav
+# Node modules for .github tooling (commitlint)
+node_modules/

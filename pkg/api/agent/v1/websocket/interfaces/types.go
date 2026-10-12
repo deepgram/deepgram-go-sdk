@@ -40,9 +40,17 @@ type InjectUserMessage struct {
 
 // FunctionCallResponse is the response from a function call
 type FunctionCallResponse struct {
-	Type           string `json:"type,omitempty"`
+	Type    string `json:"type,omitempty"`
+	ID      string `json:"id,omitempty"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
+	// ThoughtSignature must be echoed unchanged when provided by a Gemini function call.
+	ThoughtSignature string `json:"thought_signature,omitempty"`
+
+	// Deprecated: use ID.
 	FunctionCallID string `json:"function_call_id,omitempty"`
-	Output         string `json:"output,omitempty"`
+	// Deprecated: use Content.
+	Output string `json:"output,omitempty"`
 }
 
 // KeepAlive is the request to keep the connection alive
@@ -108,10 +116,37 @@ type AgentThinkingResponse struct {
 
 // FunctionCallRequestResponse is the response from a function call request
 type FunctionCallRequestResponse struct {
-	Type           string            `json:"type,omitempty"`
-	FunctionName   string            `json:"function_name,omitempty"`
-	FunctionCallID string            `json:"function_call_id,omitempty"`
-	Input          map[string]string `json:"input,omitempty"` // TODO: this is still undefined
+	Type      string         `json:"type,omitempty"`
+	Functions []FunctionCall `json:"functions,omitempty"`
+
+	// Deprecated: FunctionCallRequest now contains one or more Functions.
+	FunctionName string `json:"function_name,omitempty"`
+	// Deprecated: FunctionCallRequest now contains one or more Functions.
+	FunctionCallID string `json:"function_call_id,omitempty"`
+	// Deprecated: FunctionCallRequest now contains one or more Functions.
+	Input map[string]string `json:"input,omitempty"`
+}
+
+// FunctionCall is a function the server asks the client to execute.
+type FunctionCall struct {
+	ID               string `json:"id,omitempty"`
+	Name             string `json:"name,omitempty"`
+	Arguments        string `json:"arguments,omitempty"`
+	ClientSide       bool   `json:"client_side"`
+	ThoughtSignature string `json:"thought_signature,omitempty"`
+}
+
+// FunctionCallCancelledResponse tells the client to stop work for function calls
+// that are no longer needed after the user's turn resumes.
+type FunctionCallCancelledResponse struct {
+	Type      string                  `json:"type,omitempty"`
+	Functions []FunctionCallCancelled `json:"functions,omitempty"`
+}
+
+// FunctionCallCancelled identifies a function call that the client must not answer.
+type FunctionCallCancelled struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
 }
 
 // AgentStartedSpeakingResponse is the response from the Agent starting to speak. You will ONLY get this if `experimental` is set to true.
