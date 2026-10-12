@@ -8,6 +8,7 @@ import (
 	"flag"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -48,7 +49,21 @@ func Test_InitDefersGoTestFlagParsing(t *testing.T) {
 		return
 	}
 
-	command := exec.Command(os.Args[0], "-test.run=^Test_InitDefersGoTestFlagParsing$", "-custom=expected", "-v=2")
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatalf("find test executable: %v", err)
+	}
+
+	renamedExecutable := filepath.Join(t.TempDir(), "common-test-helper")
+	executableContents, err := os.ReadFile(executable)
+	if err != nil {
+		t.Fatalf("read test executable: %v", err)
+	}
+	if err := os.WriteFile(renamedExecutable, executableContents, 0o755); err != nil {
+		t.Fatalf("write renamed test executable: %v", err)
+	}
+
+	command := exec.Command(renamedExecutable, "--test.run=^Test_InitDefersGoTestFlagParsing$", "-custom=expected", "-v=2")
 	command.Env = append(os.Environ(), "DEEPGRAM_COMMON_INIT_HELPER=1")
 	output, err := command.CombinedOutput()
 	if err != nil {

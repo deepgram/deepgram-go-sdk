@@ -59,7 +59,7 @@ func isGoTest() bool {
 	}
 
 	for _, arg := range os.Args[1:] {
-		if strings.HasPrefix(arg, "-test.") {
+		if strings.HasPrefix(strings.TrimLeft(arg, "-"), "test.") {
 			return true
 		}
 	}
