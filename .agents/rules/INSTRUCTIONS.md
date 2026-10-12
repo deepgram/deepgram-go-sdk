@@ -1,11 +1,12 @@
 ---
 trigger: always_on
+description: "Select the repository skill that matches a Deepgram SDK product or workflow request."
 ---
 
-MANDATORY: Read `.agents/skills/**` before responding to ANY user message.
+When a request concerns Deepgram SDK product usage, API behavior, examples, or SDK-specific workflows:
 
-Do not act on the user's request until you have read `.agents/skills/**`.
-It contains the rules that determine your first action based on what the user asked.
-Skipping it WILL cause you to take the wrong action.
+1. Inspect `.agents/skills/` to identify the skill whose name and description match the request.
+2. Read only that relevant skill before acting.
+3. Do not load unrelated skills.
 
-There are no additional instructions in this file. All detailed instructions are in `.agents/skills/**`.
+For repository-wide conventions, follow `AGENTS.md`.
