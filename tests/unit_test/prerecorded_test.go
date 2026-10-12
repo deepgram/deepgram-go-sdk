@@ -65,6 +65,7 @@ func Test_PrerecordedFromURL(t *testing.T) {
 		"profanity_filter": {"true", "false"},
 		"redact":           {"true", "false", "pci", "ssn", "numbers"},
 		"diarize":          {"true", "false"},
+		"diarize_model":    {"latest", "v1", "v2"},
 		"diarize_version":  nil,
 		"smart_format":     {"true", "false"},
 		"multichannel":     {"true", "false"},

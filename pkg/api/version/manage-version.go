@@ -47,6 +47,14 @@ const (
 	UsageRequestByIDURI string = "projects/%s/requests/%s"
 	UsageURI            string = "projects/%s/usage"
 	UsageFieldsURI      string = "projects/%s/usage/fields"
+
+	// agents (reusable voice-agent configurations)
+	AgentsURI     string = "projects/%s/agents"
+	AgentsByIDURI string = "projects/%s/agents/%s"
+
+	// agent variables
+	AgentVariablesURI     string = "projects/%s/agent-variables"
+	AgentVariablesByIDURI string = "projects/%s/agent-variables/%s"
 )
 
 /*

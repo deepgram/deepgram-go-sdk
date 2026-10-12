@@ -23,9 +23,9 @@ import (
 )
 
 // gocritic:ignore
-func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, options *clientinterfaces.ClientOptions, processMessages *commonv1interfaces.WebSocketHandler, router *commonv1interfaces.Router) *WSClient {
+func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, options clientinterfaces.BaseClientOptions, processMessages *commonv1interfaces.WebSocketHandler, router *commonv1interfaces.Router) *WSClient {
 	if apiKey != "" {
-		options.APIKey = apiKey
+		options.SetAPIKey(apiKey)
 	}
 	err := options.Parse()
 	if err != nil {
@@ -157,7 +157,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	}
 
 	// Set Authorization header based on priority: AccessToken (Bearer) > APIKey (Token)
-	myHeader.Set("Host", c.cOptions.Host)
+	myHeader.Set("Host", c.cOptions.GetHost())
 	token, isBearer := c.cOptions.GetAuthToken()
 	if isBearer {
 		myHeader.Set("Authorization", "Bearer "+token)
@@ -167,8 +167,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		klog.V(4).Infof("WebSocket using Token authentication")
 	}
 	myHeader.Set("User-Agent", clientinterfaces.DgAgent)
-	if c.cOptions.WSHeaderProcessor != nil {
-		c.cOptions.WSHeaderProcessor(myHeader)
+	if wsHeaderProcessor := c.cOptions.GetWSHeaderProcessor(); wsHeaderProcessor != nil {
+		wsHeaderProcessor(myHeader)
 	}
 
 	// attempt to establish connection
@@ -189,7 +189,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		i++
 
 		// create new connection
-		url, err := (*c.processMessages).GetURL(c.cOptions.Host)
+		url, err := (*c.processMessages).GetURL(c.cOptions.GetHost())
 		if err != nil {
 			klog.V(1).Infof("GetURL failed. Err: %v\n", err)
 			klog.V(7).Infof("internalConnectWithCancel() LEAVE\n")
@@ -206,17 +206,17 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		if url[:5] == "ws://" {
 			dialer = websocket.Dialer{
 				HandshakeTimeout: 15 * time.Second,
-				RedirectService:  c.cOptions.RedirectService,
-				Proxy:            c.cOptions.Proxy,
+				RedirectService:  c.cOptions.GetRedirectService(),
+				Proxy:            c.cOptions.GetProxy(),
 			}
 		} else {
 			dialer = websocket.Dialer{
 				HandshakeTimeout: 15 * time.Second,
 				/* #nosec G402 */
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.SkipServerAuth},
-				RedirectService: c.cOptions.RedirectService,
-				SkipServerAuth:  c.cOptions.SkipServerAuth,
-				Proxy:           c.cOptions.Proxy,
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: c.cOptions.GetSkipServerAuth()},
+				RedirectService: c.cOptions.GetRedirectService(),
+				SkipServerAuth:  c.cOptions.GetSkipServerAuth(),
+				Proxy:           c.cOptions.GetProxy(),
 			}
 		}
 
@@ -227,13 +227,14 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			res.Body.Close()
 		}
 		if err != nil {
-			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.Host)
+			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.GetHost())
 			klog.V(1).Infof("Dialer failed. Err: %v\n", err)
 			continue
 		}
 
 		// set the object to allow threads to function
 		c.wsconn = ws
+		c.terminalCloseStarted = false
 		c.retry = true
 
 		// kick off threads to listen for messages and ping/keepalive
@@ -261,7 +262,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	}
 
 	// if we get here, we failed to connect
-	klog.V(1).Infof("Failed to connect to websocket: %s\n", c.cOptions.Host)
+	klog.V(1).Infof("Failed to connect to websocket: %s\n", c.cOptions.GetHost())
 	klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 
 	if lock {
@@ -324,16 +325,16 @@ func (c *WSClient) listen() {
 			case strings.Contains(errStr, SuccessfulSocketErr):
 				klog.V(3).Infof("Graceful websocket close\n")
 
-				// graceful close
-				c.closeWs(false, false)
+				// The peer has already completed its WebSocket close handshake. Do
+				// not send another application Close frame while releasing resources.
+				c.closeAfterPeerClose()
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
 
-				// fatal close
-				c.closeWs(false, false)
+				c.closeAfterPeerClose()
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -487,6 +488,31 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	return nil
 }
 
+// WriteControl sends a WebSocket control frame to the server.
+func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) error {
+	klog.V(7).Infof("common.WriteControl() ENTER\n")
+
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
+
+	ws := c.internalConnect()
+	if ws == nil {
+		klog.V(4).Infof("c.internalConnect() is nil\n")
+		klog.V(7).Infof("common.WriteControl() LEAVE\n")
+		return ErrInvalidConnection
+	}
+
+	if err := ws.WriteControl(msgType, data, deadline); err != nil {
+		klog.V(1).Infof("WriteControl failed. Err: %v\n", err)
+		klog.V(7).Infof("common.WriteControl() LEAVE\n")
+		return err
+	}
+
+	klog.V(5).Infof("WriteControl succeeded\n")
+	klog.V(7).Infof("common.WriteControl() LEAVE\n")
+	return nil
+}
+
 // closeStream sends an application level message to Deepgram
 func (c *WSClient) closeStream(lock bool) error {
 	klog.V(7).Infof("common.closeStream() ENTER\n")
@@ -564,15 +590,30 @@ func (c *WSClient) Stop() {
 	c.closeWs(false, true)
 }
 
+// closeAfterPeerClose releases local state after the server has already closed
+// the WebSocket. It still delivers the terminal router event, but skips outbound
+// application and protocol Close frames that would otherwise fail with ErrCloseSent.
+func (c *WSClient) closeAfterPeerClose() {
+	c.closeWsWithState(false, false, true)
+}
+
 // closeWs closes the websocket connection
 func (c *WSClient) closeWs(fatal bool, perm bool) {
+	c.closeWsWithState(fatal, perm, false)
+}
+
+func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 	klog.V(6).Infof("common.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
+	if c.terminalCloseStarted {
+		return
+	}
+	c.terminalCloseStarted = true
 
-	if c.wsconn != nil && !fatal {
+	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
 		_ = c.closeStream(false)
 		time.Sleep(TerminationSleep) // allow time for server to register closure
@@ -583,9 +624,6 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 	}
 
 	if fatal || c.wsconn != nil {
-		// process WS specific items
-		(*c.processMessages).Finish()
-
 		// fire off close connection
 		err := (*c.router).Close(&commonv1interfaces.CloseResponse{
 			Type: string(commonv1interfaces.TypeCloseResponse),
@@ -593,6 +631,10 @@ func (c *WSClient) closeWs(fatal bool, perm bool) {
 		if err != nil {
 			klog.V(1).Infof("router.CloseHelper failed. Err: %v\n", err)
 		}
+
+		// Let routers deliver the terminal event before protocol cleanup closes
+		// any handler-owned channels.
+		(*c.processMessages).Finish()
 	}
 
 	// cancel the context because we are permanently closing the connection

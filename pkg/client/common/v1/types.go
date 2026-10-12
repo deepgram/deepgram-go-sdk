@@ -24,7 +24,7 @@ const (
 // ***************************
 // WSClient is a struct representing the websocket client connection
 type WSClient struct {
-	cOptions *clientinterfaces.ClientOptions
+	cOptions clientinterfaces.BaseClientOptions
 
 	sendBuf   chan []byte
 	ctx       context.Context
@@ -34,6 +34,9 @@ type WSClient struct {
 	wsconn   *websocket.Conn
 	retry    bool
 	retryCnt int64
+	// terminalCloseStarted prevents concurrent local and peer-close paths from
+	// routing a second close event after handler-owned channels are released.
+	terminalCloseStarted bool
 
 	processMessages *commonv1interfaces.WebSocketHandler
 	router          *commonv1interfaces.Router
