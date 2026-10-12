@@ -54,6 +54,10 @@ func Init(init InitLib) {
 }
 
 func isGoTest() bool {
+	if strings.HasSuffix(os.Args[0], ".test") {
+		return true
+	}
+
 	for _, arg := range os.Args[1:] {
 		if strings.HasPrefix(arg, "-test.") {
 			return true
