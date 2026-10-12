@@ -273,8 +273,7 @@ ctx := context.Background()
 
 // Define Deepgram options
 options := &interfaces.LiveTranscriptionOptions{
-    Model:          "nova-3",
-    DetectEntities: true,
+    Model: "nova-3",
 }
 // Create WebSocket client with default handler
 dgClient, err := client.NewWSUsingChanForDemo(ctx, options)
@@ -306,7 +305,7 @@ dgClient.Stop()
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 
-Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values.
+Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
 
 ## Voice Agent
 
