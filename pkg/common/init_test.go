@@ -13,6 +13,7 @@ import (
 )
 
 var helperApplicationFlag *string
+var helperFlagsParsed bool
 
 func init() {
 	if os.Getenv("DEEPGRAM_COMMON_INIT_HELPER") != "1" {
@@ -23,30 +24,31 @@ func init() {
 	// package initialization, before the Go test runner defines its own flags.
 	helperApplicationFlag = flag.String("custom", "", "application flag")
 	Init(InitLib{LogLevel: LogLevelStandard})
+	helperFlagsParsed = flag.Parsed()
 }
 
-func Test_InitLeavesApplicationFlagsAlone(t *testing.T) {
+func Test_InitDefersGoTestFlagParsing(t *testing.T) {
 	if os.Getenv("DEEPGRAM_COMMON_INIT_HELPER") == "1" {
 		if helperApplicationFlag == nil {
 			t.Fatal("helper application flag was not initialized")
 		}
+		if helperFlagsParsed {
+			t.Fatal("Init must not parse flags before the Go test runner initializes them")
+		}
 		if *helperApplicationFlag != "expected" {
 			t.Fatalf("expected custom flag value %q, got %q", "expected", *helperApplicationFlag)
 		}
-		if flag.CommandLine.Lookup("v") != nil {
-			t.Fatal("Init must not register klog flags on the application flag set")
+		verbosity := flag.CommandLine.Lookup("v")
+		if verbosity == nil {
+			t.Fatal("Init must preserve klog flags on the application flag set")
 		}
-
-		// klog supports distinct flag sets, so repeated SDK initialization must also
-		// leave the consumer's global flag set untouched.
-		Init(InitLib{LogLevel: LogLevelFull})
-		if flag.CommandLine.Lookup("v") != nil {
-			t.Fatal("repeated Init must not register klog flags on the application flag set")
+		if got := verbosity.Value.String(); got != "2" {
+			t.Fatalf("expected klog verbosity %q, got %q", "2", got)
 		}
 		return
 	}
 
-	command := exec.Command(os.Args[0], "-test.run=^Test_InitLeavesApplicationFlagsAlone$", "-custom=expected")
+	command := exec.Command(os.Args[0], "-test.run=^Test_InitDefersGoTestFlagParsing$", "-custom=expected", "-v=2")
 	command.Env = append(os.Environ(), "DEEPGRAM_COMMON_INIT_HELPER=1")
 	output, err := command.CombinedOutput()
 	if err != nil {

@@ -10,7 +10,9 @@ package common
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 )
@@ -30,26 +32,33 @@ func Init(init InitLib) {
 		init.LogLevel = LogLevelStandard
 	}
 
-	// Keep klog flags isolated from the application's global flag set.
-	fs := flag.NewFlagSet("deepgram-go-sdk", flag.ContinueOnError)
-	klog.InitFlags(fs)
-
-	err := fs.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
+	klog.InitFlags(nil)
+	err := flag.Set("v", strconv.FormatInt(int64(init.LogLevel), 10))
 	if err != nil {
 		fmt.Printf("Error setting log level: %v", err)
 	}
 
 	if init.DebugFilePath != "" {
-		err = fs.Set("logtostderr", "false")
+		err = flag.Set("logtostderr", "false")
 		if err != nil {
 			fmt.Printf("Error setting logtostderr: %v", err)
 		}
-		err = fs.Set("log_file", init.DebugFilePath)
+		err = flag.Set("log_file", init.DebugFilePath)
 		if err != nil {
 			fmt.Printf("Error setting log_file: %v", err)
 		}
 	}
-	if err := fs.Parse([]string{}); err != nil {
-		fmt.Printf("Error parsing klog flags: %v", err)
+	if !isGoTest() {
+		flag.Parse()
 	}
+}
+
+func isGoTest() bool {
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "-test.") {
+			return true
+		}
+	}
+
+	return false
 }
