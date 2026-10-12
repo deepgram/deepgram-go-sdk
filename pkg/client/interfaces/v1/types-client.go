@@ -8,9 +8,14 @@ import (
 	"net/http"
 	"net/url"
 	"sync"
+
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/shared"
 )
 
 // ClientOptions defines any options for the client
+
+type BaseClientOptions = clientinterfaces.ClientOptions
+
 type ClientOptions struct {
 	APIKey            string
 	AccessToken       string                                // JWT access token for Bearer authentication
@@ -63,3 +68,9 @@ func (o *ClientOptions) GetAuthToken() (token string, isBearer bool) {
 	}
 	return o.APIKey, false
 }
+
+func (o *ClientOptions) GetHost() string                                 { return o.Host }
+func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)         { return o.WSHeaderProcessor }
+func (o *ClientOptions) GetRedirectService() bool                        { return o.RedirectService }
+func (o *ClientOptions) GetSkipServerAuth() bool                         { return o.SkipServerAuth }
+func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error) { return o.Proxy }

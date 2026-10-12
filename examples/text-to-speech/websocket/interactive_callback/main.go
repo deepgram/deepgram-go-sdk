@@ -58,13 +58,13 @@ func (c MyCallback) Binary(byMsg []byte) error {
 
 func (c MyCallback) Flush(fl *msginterfaces.FlushedResponse) error {
 	fmt.Printf("\n[Flushed] Received\n")
-	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	return nil
 }
 
 func (c MyCallback) Clear(fl *msginterfaces.ClearedResponse) error {
 	fmt.Printf("\n[Cleared] Received\n")
-	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	return nil
 }
 
@@ -133,18 +133,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Simulate user input to reset the buffer, flush, send new text, or just exit
+	// Simulate user input to clear the buffer, flush, send new text, or just exit
 	time.Sleep(2 * time.Second)
-	fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+	fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 	input := bufio.NewScanner(os.Stdin)
 	for input.Scan() {
 		switch input.Text() {
-		case "r":
-			err = dgClient.Reset()
+		case "c":
+			err = dgClient.Clear()
 			if err != nil {
-				fmt.Printf("Error resetting buffer: %v\n", err)
+				fmt.Printf("Error clearing buffer: %v\n", err)
 			} else {
-				fmt.Println("Buffer reset successfully.")
+				fmt.Println("Buffer cleared successfully.")
 			}
 		case "f":
 			// delete file if exists
@@ -196,7 +196,7 @@ func main() {
 			} else {
 				fmt.Println("Text sent successfully.")
 			}
-			fmt.Printf("\n\nPress 'r' and ENTER to reset the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
+			fmt.Printf("\n\nPress 'c' and ENTER to clear the buffer, 'f' and ENTER to flush, enter new text to send it, or just ENTER to exit...\n\n> ")
 		}
 	}
 

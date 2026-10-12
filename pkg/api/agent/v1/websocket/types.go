@@ -17,21 +17,22 @@ type DefaultChanHandler struct {
 	debugWebsocket        bool
 	debugWebsocketVerbose bool
 
-	binaryChan                   chan *[]byte
-	openChan                     chan *interfaces.OpenResponse
-	welcomeResponse              chan *interfaces.WelcomeResponse
-	conversationTextResponse     chan *interfaces.ConversationTextResponse
-	userStartedSpeakingResponse  chan *interfaces.UserStartedSpeakingResponse
-	agentThinkingResponse        chan *interfaces.AgentThinkingResponse
-	functionCallRequestResponse  chan *interfaces.FunctionCallRequestResponse
-	agentStartedSpeakingResponse chan *interfaces.AgentStartedSpeakingResponse
-	agentAudioDoneResponse       chan *interfaces.AgentAudioDoneResponse
-	injectionRefusedResponse     chan *interfaces.InjectionRefusedResponse
-	keepAliveResponse            chan *interfaces.KeepAlive
-	settingsAppliedResponse      chan *interfaces.SettingsAppliedResponse
-	closeChan                    chan *interfaces.CloseResponse
-	errorChan                    chan *interfaces.ErrorResponse
-	unhandledChan                chan *[]byte
+	binaryChan                    chan *[]byte
+	openChan                      chan *interfaces.OpenResponse
+	welcomeResponse               chan *interfaces.WelcomeResponse
+	conversationTextResponse      chan *interfaces.ConversationTextResponse
+	userStartedSpeakingResponse   chan *interfaces.UserStartedSpeakingResponse
+	agentThinkingResponse         chan *interfaces.AgentThinkingResponse
+	functionCallRequestResponse   chan *interfaces.FunctionCallRequestResponse
+	functionCallCancelledResponse chan *interfaces.FunctionCallCancelledResponse
+	agentStartedSpeakingResponse  chan *interfaces.AgentStartedSpeakingResponse
+	agentAudioDoneResponse        chan *interfaces.AgentAudioDoneResponse
+	injectionRefusedResponse      chan *interfaces.InjectionRefusedResponse
+	keepAliveResponse             chan *interfaces.KeepAlive
+	settingsAppliedResponse       chan *interfaces.SettingsAppliedResponse
+	closeChan                     chan *interfaces.CloseResponse
+	errorChan                     chan *interfaces.ErrorResponse
+	unhandledChan                 chan *[]byte
 }
 
 // ChanRouter routes events
@@ -39,19 +40,20 @@ type ChanRouter struct {
 	debugWebsocket bool
 
 	// call out to channels
-	binaryChan                   []*chan *[]byte
-	openChan                     []*chan *interfaces.OpenResponse
-	welcomeResponse              []*chan *interfaces.WelcomeResponse
-	conversationTextResponse     []*chan *interfaces.ConversationTextResponse
-	userStartedSpeakingResponse  []*chan *interfaces.UserStartedSpeakingResponse
-	agentThinkingResponse        []*chan *interfaces.AgentThinkingResponse
-	functionCallRequestResponse  []*chan *interfaces.FunctionCallRequestResponse
-	agentStartedSpeakingResponse []*chan *interfaces.AgentStartedSpeakingResponse
-	agentAudioDoneResponse       []*chan *interfaces.AgentAudioDoneResponse
-	injectionRefusedResponse     []*chan *interfaces.InjectionRefusedResponse
-	keepAliveResponse            []*chan *interfaces.KeepAlive
-	settingsAppliedResponse      []*chan *interfaces.SettingsAppliedResponse
-	closeChan                    []*chan *interfaces.CloseResponse
-	errorChan                    []*chan *interfaces.ErrorResponse
-	unhandledChan                []*chan *[]byte
+	binaryChan                    []*chan *[]byte
+	openChan                      []*chan *interfaces.OpenResponse
+	welcomeResponse               []*chan *interfaces.WelcomeResponse
+	conversationTextResponse      []*chan *interfaces.ConversationTextResponse
+	userStartedSpeakingResponse   []*chan *interfaces.UserStartedSpeakingResponse
+	agentThinkingResponse         []*chan *interfaces.AgentThinkingResponse
+	functionCallRequestResponse   []*chan *interfaces.FunctionCallRequestResponse
+	functionCallCancelledResponse []*chan *interfaces.FunctionCallCancelledResponse
+	agentStartedSpeakingResponse  []*chan *interfaces.AgentStartedSpeakingResponse
+	agentAudioDoneResponse        []*chan *interfaces.AgentAudioDoneResponse
+	injectionRefusedResponse      []*chan *interfaces.InjectionRefusedResponse
+	keepAliveResponse             []*chan *interfaces.KeepAlive
+	settingsAppliedResponse       []*chan *interfaces.SettingsAppliedResponse
+	closeChan                     []*chan *interfaces.CloseResponse
+	errorChan                     []*chan *interfaces.ErrorResponse
+	unhandledChan                 []*chan *[]byte
 }

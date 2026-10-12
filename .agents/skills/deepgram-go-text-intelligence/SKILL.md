@@ -1,0 +1,124 @@
+---
+name: deepgram-go-text-intelligence
+description: Use when writing or reviewing Go code in this repo that sends text to Deepgram Read via the analyze client. Route speech/audio inputs to deepgram-go-speech-to-text or deepgram-go-audio-intelligence, and management/admin work to deepgram-go-management-api.
+---
+
+# Using Deepgram Text Intelligence from the Go SDK
+
+## When to use this product
+
+Use this skill for plain-text analysis handled by `pkg/client/analyze`.
+
+- summarization
+- sentiment on text input
+- URL, file, or stream based Read requests
+
+Use a different skill when:
+
+- your source material is audio and should go through `/v1/listen` (`deepgram-go-audio-intelligence`)
+- you need transcription first (`deepgram-go-speech-to-text`)
+- you need admin endpoints (`deepgram-go-management-api`)
+
+## Authentication
+
+Set `DEEPGRAM_API_KEY` before creating the analyze client.
+
+```bash
+export DEEPGRAM_API_KEY="your_api_key"
+```
+
+## Quick start
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"strings"
+
+	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/analyze/v1"
+	analyze "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/analyze"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+)
+
+func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	ctx := context.Background()
+
+	client := analyze.NewWithDefaults()
+	dg := api.New(client)
+
+	resp, err := dg.FromStream(
+		ctx,
+		strings.NewReader("Deepgram provides APIs for speech, voice, and media intelligence."),
+		&interfaces.AnalyzeOptions{Summarize: true, Sentiment: true},
+	)
+	if err != nil {
+		return err
+	}
+
+	if resp.Results.Summary != nil {
+		fmt.Println(resp.Results.Summary.Text)
+	}
+	return nil
+}
+```
+
+## Key parameters
+
+- `interfaces.AnalyzeOptions`
+  - common fields include `Summarize`, `Sentiment`, and other Read features exposed by the analyze client
+- request helpers
+	- on `pkg/api/analyze/v1`: `api.New(client).FromFile`, `FromStream`, `FromURL`
+- constructors
+	- `analyze.NewWithDefaults()`
+	- `analyze.New(apiKey, options)`
+
+## API reference (layered)
+
+1. In-repo reference
+   - `README.md`
+   - `docs.go`
+   - `pkg/client/analyze/client.go`
+   - `pkg/client/analyze/v1/client.go`
+   - `pkg/client/interfaces/v1/types-analyze.go`
+   - `pkg/api/version/analyze-version.go`
+2. OpenAPI
+   - `https://developers.deepgram.com/openapi.yaml`
+3. AsyncAPI
+   - `https://developers.deepgram.com/asyncapi.yaml`
+4. Context7
+   - `/llmstxt/developers_deepgram_llms_txt`
+5. Product docs
+   - `https://developers.deepgram.com/reference/text-intelligence/analyze-text`
+   - `https://developers.deepgram.com/docs/text-intelligence`
+   - `https://developers.deepgram.com/docs/text-sentiment-analysis`
+
+## Gotchas
+
+1. The Go package is named `analyze`, but the product route maps to Read / text intelligence.
+2. Do not send raw audio here; audio intelligence features live on the listen REST path.
+3. `FromFile`, `FromStream`, and `FromURL` live on the `pkg/api/analyze/v1` wrapper, not on the base client.
+4. Reuse `context.Context` and stream readers for large inputs instead of materializing everything into one string.
+
+## Example files in this repo
+
+- `examples/analyze/summary/main.go`
+- `examples/analyze/sentiment/main.go`
+
+## Central product skills
+
+For cross-language Deepgram product knowledge — the consolidated API reference, documentation finder, focused runnable recipes, third-party integration examples, and MCP setup — install the central skills:
+
+```bash
+npx skills add deepgram/skills
+```
+
+This SDK ships language-idiomatic code skills; `deepgram/skills` ships cross-language product knowledge (see `api`, `docs`, `recipes`, `examples`, `starters`, `setup-mcp`).
