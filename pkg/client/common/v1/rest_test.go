@@ -72,6 +72,13 @@ func Test_HandleResponseReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T)
 	if err == nil {
 		t.Fatal("HandleResponse returned nil error")
 	}
+	var statusErr *interfaces.StatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
+	}
+	if statusErr.DeepgramError == nil || statusErr.DeepgramError.Description != "upstream unavailable" {
+		t.Fatalf("DeepgramError = %#v, want plain-text details", statusErr.DeepgramError)
+	}
 
 	got := err.Error()
 	if !strings.Contains(got, "503 Service Unavailable") {
@@ -79,6 +86,28 @@ func Test_HandleResponseReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T)
 	}
 	if !strings.Contains(got, "upstream unavailable") {
 		t.Fatalf("error = %q, want response body", got)
+	}
+}
+
+func Test_HandleResponseKeepsPlainBadRequestError(t *testing.T) {
+	client := NewREST("test-api-key", &interfaces.ClientOptions{})
+	if client == nil {
+		t.Fatal("NewREST returned nil")
+	}
+
+	res := newTestResponse(http.StatusBadRequest, "invalid request")
+	defer res.Body.Close()
+
+	_, err := client.HandleResponse(res, nil, nil)
+	if err == nil {
+		t.Fatal("HandleResponse returned nil error")
+	}
+	var statusErr *interfaces.StatusError
+	if errors.As(err, &statusErr) {
+		t.Fatalf("HandleResponse returned *interfaces.StatusError, want plain error")
+	}
+	if !strings.Contains(err.Error(), "invalid request") {
+		t.Fatalf("error = %q, want response body", err)
 	}
 }
 

@@ -77,6 +77,13 @@ func Test_DoReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
 	if err == nil {
 		t.Fatal("Do returned nil error")
 	}
+	var statusErr *interfaces.StatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
+	}
+	if statusErr.DeepgramError == nil || statusErr.DeepgramError.Description != "upstream unavailable" {
+		t.Fatalf("DeepgramError = %#v, want plain-text details", statusErr.DeepgramError)
+	}
 
 	got := err.Error()
 	if !strings.Contains(got, "503 Service Unavailable") {
@@ -84,5 +91,35 @@ func Test_DoReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
 	}
 	if !strings.Contains(got, "upstream unavailable") {
 		t.Fatalf("error = %q, want response body", got)
+	}
+}
+
+func Test_DoKeepsPlainBadRequestError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("invalid request"))
+	}))
+	defer server.Close()
+
+	client := New(&interfaces.ClientOptions{APIKey: "test-api-key", Host: server.URL})
+	if client == nil {
+		t.Fatal("New returned nil")
+	}
+
+	req, err := client.SetupRequest(context.Background(), http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("SetupRequest returned error: %v", err)
+	}
+
+	err = client.Do(context.Background(), req, nil)
+	if err == nil {
+		t.Fatal("Do returned nil error")
+	}
+	var statusErr *interfaces.StatusError
+	if errors.As(err, &statusErr) {
+		t.Fatalf("Do returned *interfaces.StatusError, want plain error")
+	}
+	if !strings.Contains(err.Error(), "invalid request") {
+		t.Fatalf("error = %q, want response body", err)
 	}
 }
