@@ -5,7 +5,6 @@
 package commonv1
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -35,8 +34,8 @@ func Test_HandleResponseReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T)
 		t.Fatal("HandleResponse returned nil error")
 	}
 
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	statusErr, ok := err.(*interfaces.StatusError)
+	if !ok {
 		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
 	}
 	if statusErr.Resp.StatusCode != http.StatusInternalServerError {
@@ -72,8 +71,8 @@ func Test_HandleResponseReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T)
 	if err == nil {
 		t.Fatal("HandleResponse returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	statusErr, ok := err.(*interfaces.StatusError)
+	if !ok {
 		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
 	}
 	if statusErr.DeepgramError == nil || statusErr.DeepgramError.Description != "upstream unavailable" {
@@ -102,12 +101,11 @@ func Test_HandleResponseKeepsPlainBadRequestError(t *testing.T) {
 	if err == nil {
 		t.Fatal("HandleResponse returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if errors.As(err, &statusErr) {
+	if _, ok := err.(*interfaces.StatusError); ok {
 		t.Fatalf("HandleResponse returned *interfaces.StatusError, want plain error")
 	}
-	if !strings.Contains(err.Error(), "invalid request") {
-		t.Fatalf("error = %q, want response body", err)
+	if got, want := err.Error(), "400 Bad Request: invalid request"; got != want {
+		t.Fatalf("error = %q, want %q", got, want)
 	}
 }
 
@@ -124,12 +122,32 @@ func Test_HandleResponseKeepsDescriptionOnlyBadRequestError(t *testing.T) {
 	if err == nil {
 		t.Fatal("HandleResponse returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	if _, ok := err.(*interfaces.StatusError); !ok {
 		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
 	}
-	if strings.Contains(err.Error(), "legacy detail") {
-		t.Fatalf("error = %q, must preserve the legacy status-only error text", err)
+	if got, want := err.Error(), "GET https://api.deepgram.com/v1/listen: 400 Bad Request"; got != want {
+		t.Fatalf("error = %q, want %q", got, want)
+	}
+}
+
+func Test_HandleResponseKeepsErrMsgBadRequestError(t *testing.T) {
+	client := NewREST("test-api-key", &interfaces.ClientOptions{})
+	if client == nil {
+		t.Fatal("NewREST returned nil")
+	}
+
+	res := newTestResponse(http.StatusBadRequest, `{"err_msg":"legacy message"}`)
+	defer res.Body.Close()
+
+	_, err := client.HandleResponse(res, nil, nil)
+	if err == nil {
+		t.Fatal("HandleResponse returned nil error")
+	}
+	if _, ok := err.(*interfaces.StatusError); !ok {
+		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
+	}
+	if got, want := err.Error(), "GET https://api.deepgram.com/v1/listen: 400 Bad Request - legacy message"; got != want {
+		t.Fatalf("error = %q, want %q", got, want)
 	}
 }
 

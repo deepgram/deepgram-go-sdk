@@ -6,7 +6,7 @@ package restv1
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -38,8 +38,8 @@ func Test_DoReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
 		t.Fatal("Do returned nil error")
 	}
 
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	statusErr, ok := err.(*interfaces.StatusError)
+	if !ok {
 		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
 	}
 	if statusErr.Resp.StatusCode != http.StatusInternalServerError {
@@ -77,8 +77,8 @@ func Test_DoReturnsPlainTextBodyForNonBadRequestStatus(t *testing.T) {
 	if err == nil {
 		t.Fatal("Do returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	statusErr, ok := err.(*interfaces.StatusError)
+	if !ok {
 		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
 	}
 	if statusErr.DeepgramError == nil || statusErr.DeepgramError.Description != "upstream unavailable" {
@@ -115,12 +115,11 @@ func Test_DoKeepsPlainBadRequestError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Do returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if errors.As(err, &statusErr) {
+	if _, ok := err.(*interfaces.StatusError); ok {
 		t.Fatalf("Do returned *interfaces.StatusError, want plain error")
 	}
-	if !strings.Contains(err.Error(), "invalid request") {
-		t.Fatalf("error = %q, want response body", err)
+	if got, want := err.Error(), "400 Bad Request: invalid request"; got != want {
+		t.Fatalf("error = %q, want %q", got, want)
 	}
 }
 
@@ -146,11 +145,40 @@ func Test_DoKeepsDescriptionOnlyBadRequestError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Do returned nil error")
 	}
-	var statusErr *interfaces.StatusError
-	if !errors.As(err, &statusErr) {
+	if _, ok := err.(*interfaces.StatusError); !ok {
 		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
 	}
-	if strings.Contains(err.Error(), "legacy detail") {
-		t.Fatalf("error = %q, must preserve the legacy status-only error text", err)
+	if got, want := err.Error(), fmt.Sprintf("GET %s: 400 Bad Request", server.URL); got != want {
+		t.Fatalf("error = %q, want %q", got, want)
+	}
+}
+
+func Test_DoKeepsErrMsgBadRequestError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"err_msg":"legacy message"}`))
+	}))
+	defer server.Close()
+
+	client := New(&interfaces.ClientOptions{APIKey: "test-api-key", Host: server.URL})
+	if client == nil {
+		t.Fatal("New returned nil")
+	}
+
+	req, err := client.SetupRequest(context.Background(), http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("SetupRequest returned error: %v", err)
+	}
+
+	err = client.Do(context.Background(), req, nil)
+	if err == nil {
+		t.Fatal("Do returned nil error")
+	}
+	if _, ok := err.(*interfaces.StatusError); !ok {
+		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
+	}
+	if got, want := err.Error(), fmt.Sprintf("GET %s: 400 Bad Request - legacy message", server.URL); got != want {
+		t.Fatalf("error = %q, want %q", got, want)
 	}
 }
