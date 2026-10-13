@@ -472,6 +472,19 @@ dgClient.WaitForComplete()
 dgClient.Stop()
 ```
 
+### Sending unmodeled control frames
+
+Use `SendControl` only for valid Speak v1 WebSocket control frames that the SDK does not yet model. Continue to use `Flush`, `Clear`, and `Stop` for those typed operations.
+
+```go
+import "encoding/json"
+
+control := json.RawMessage(`{"type":"FutureControl","config":{"enabled":true}}`)
+if err := dgClient.SendControl(control); err != nil {
+    return err
+}
+```
+
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
 
 ## Text Intelligence

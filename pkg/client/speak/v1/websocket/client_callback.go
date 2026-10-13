@@ -152,6 +152,13 @@ func (c *WSCallback) WriteJSON(playload controlMessage) error {
 	return c.WSClient.WriteJSON(playload)
 }
 
+// SendControl writes a caller-provided JSON control frame to the Speak v1 WebSocket.
+// Use it only for valid server control frames that do not have a typed SDK helper.
+// Use Flush, Clear, and Stop for their corresponding typed operations.
+func (c *WSCallback) SendControl(payload json.RawMessage) error {
+	return c.WSClient.WriteRawJSON(payload)
+}
+
 // Flush will instruct the server to flush the current text buffer
 func (c *WSCallback) Flush() error {
 	klog.V(6).Infof("speak.Flush() ENTER\n")
