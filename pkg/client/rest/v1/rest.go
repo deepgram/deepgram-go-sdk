@@ -90,18 +90,15 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 
 	err := c.HTTPClient.Do(ctx, req, func(res *http.Response) error {
 		switch res.StatusCode {
-		case http.StatusOK:
-		case http.StatusCreated:
-		case http.StatusNoContent:
+		case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 		case http.StatusBadRequest:
 			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
 			detail, err := io.ReadAll(res.Body)
 			if err != nil {
-				klog.V(4).Infof("io.ReadAll failed. Err: %v\n", err)
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", err)
 				return &interfaces.StatusError{Resp: res}
 			}
 
-			// attempt to parse out Deepgram error
 			var e interfaces.DeepgramError
 			if err := json.Unmarshal(detail, &e); err == nil {
 				klog.V(6).Infof("Parsed Deepgram Specific Error\n")
@@ -111,12 +108,32 @@ func (c *Client) Do(ctx context.Context, req *http.Request, resBody interface{})
 				}
 			}
 
-			// give standard generic error
 			byDetails := bytes.TrimSpace(detail)
 			klog.V(1).Infof("Unable to parse Deepgram Error. Err: %s: %s\n", res.Status, byDetails)
 			return fmt.Errorf("%s: %s", res.Status, byDetails)
 		default:
-			return &interfaces.StatusError{Resp: res}
+			klog.V(4).Infof("HTTP Error Code: %d\n", res.StatusCode)
+			detail, err := io.ReadAll(res.Body)
+			if err != nil {
+				klog.V(1).Infof("io.ReadAll failed. Err: %v\n", err)
+				return &interfaces.StatusError{Resp: res}
+			}
+
+			byDetails := bytes.TrimSpace(detail)
+			if len(byDetails) == 0 {
+				return &interfaces.StatusError{Resp: res}
+			}
+
+			var e interfaces.DeepgramError
+			if err := json.Unmarshal(byDetails, &e); err == nil && (e.ErrCode != "" || e.ErrMsg != "" || e.Description != "") {
+				klog.V(6).Infof("Parsed Deepgram Specific Error\n")
+				return &interfaces.StatusError{Resp: res, DeepgramError: &e}
+			}
+
+			return &interfaces.StatusError{
+				Resp:          res,
+				DeepgramError: &interfaces.DeepgramError{Description: string(byDetails)},
+			}
 		}
 
 		if resBody == nil {
