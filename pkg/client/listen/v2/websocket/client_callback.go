@@ -62,14 +62,15 @@ func (c *WSCallback) GetURL(host string) (string, error) {
 
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
 func (c *WSCallback) Start() {
+	workerCtx := c.workers.Start(c.ctx)
 	if c.cOptions.EnableKeepAlive {
-		go c.ping()
+		go c.ping(workerCtx)
 	}
 }
 
 // ping sends WebSocket protocol-level ping frames on a fixed interval to keep
 // the connection alive while the context is active.
-func (c *WSCallback) ping() {
+func (c *WSCallback) ping(ctx context.Context) {
 	klog.V(6).Infof("flux.WSCallback.ping() ENTER\n")
 
 	defer func() {
@@ -87,7 +88,7 @@ func (c *WSCallback) ping() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(3).Infof("flux.WSCallback.ping() Exiting\n")
 			return
 		case <-ticker.C:
@@ -256,8 +257,8 @@ func (c *WSCallback) GetCloseMsg() []byte {
 	return []byte(`{"type":"CloseStream"}`)
 }
 
-// Finish is a no-op. Flux uses server-side turn detection; no client flush is needed.
-func (c *WSCallback) Finish() {}
+// Finish stops background workers for the current connection.
+func (c *WSCallback) Finish() { c.workers.Stop() }
 
 // errorToResponse converts a Go error into a typed ErrorResponse.
 func (c *WSCallback) errorToResponse(err error) *msginterfaces.ErrorResponse {

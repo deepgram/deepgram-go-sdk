@@ -8,6 +8,7 @@ import (
 	"context"
 
 	msginterface "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
+	commonv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
@@ -18,6 +19,7 @@ type WSCallback struct {
 	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	workers   commonv1.Workers
 
 	cOptions *interfaces.ClientOptionsV2
 	tOptions *interfaces.FluxTranscriptionOptions
@@ -31,6 +33,7 @@ type WSChannel struct {
 	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	workers   commonv1.Workers
 
 	cOptions *interfaces.ClientOptionsV2
 	tOptions *interfaces.FluxTranscriptionOptions
