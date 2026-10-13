@@ -182,3 +182,34 @@ func Test_DoKeepsErrMsgBadRequestError(t *testing.T) {
 		t.Fatalf("error = %q, want %q", got, want)
 	}
 }
+
+func Test_DoKeepsBodylessNonBadRequestError(t *testing.T) {
+	for _, body := range []string{"", " \n\t "} {
+		t.Run(fmt.Sprintf("body=%q", body), func(t *testing.T) {
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte(body))
+			}))
+			defer server.Close()
+
+			client := New(&interfaces.ClientOptions{APIKey: "test-api-key", Host: server.URL})
+			if client == nil {
+				t.Fatal("New returned nil")
+			}
+
+			req, err := client.SetupRequest(context.Background(), http.MethodGet, server.URL, nil)
+			if err != nil {
+				t.Fatalf("SetupRequest returned error: %v", err)
+			}
+
+			err = client.Do(context.Background(), req, nil)
+			statusErr, ok := err.(*interfaces.StatusError)
+			if !ok {
+				t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
+			}
+			if statusErr.DeepgramError != nil {
+				t.Fatalf("DeepgramError = %#v, want nil", statusErr.DeepgramError)
+			}
+		})
+	}
+}

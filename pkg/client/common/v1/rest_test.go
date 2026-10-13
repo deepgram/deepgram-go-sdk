@@ -151,6 +151,29 @@ func Test_HandleResponseKeepsErrMsgBadRequestError(t *testing.T) {
 	}
 }
 
+func Test_HandleResponseKeepsBodylessNonBadRequestError(t *testing.T) {
+	client := NewREST("test-api-key", &interfaces.ClientOptions{})
+	if client == nil {
+		t.Fatal("NewREST returned nil")
+	}
+
+	for _, body := range []string{"", " \n\t "} {
+		t.Run(fmt.Sprintf("body=%q", body), func(t *testing.T) {
+			res := newTestResponse(http.StatusServiceUnavailable, body)
+			defer res.Body.Close()
+
+			_, err := client.HandleResponse(res, nil, nil)
+			statusErr, ok := err.(*interfaces.StatusError)
+			if !ok {
+				t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
+			}
+			if statusErr.DeepgramError != nil {
+				t.Fatalf("DeepgramError = %#v, want nil", statusErr.DeepgramError)
+			}
+		})
+	}
+}
+
 func newTestResponse(statusCode int, body string) *http.Response {
 	req, _ := http.NewRequest(http.MethodGet, "https://api.deepgram.com/v1/listen", nil)
 	return &http.Response{

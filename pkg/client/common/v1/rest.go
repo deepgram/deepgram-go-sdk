@@ -109,15 +109,20 @@ func (c *RESTClient) HandleResponse(res *http.Response, keys []string, resBody i
 			return nil, &interfaces.StatusError{Resp: res}
 		}
 
+		byDetails := bytes.TrimSpace(detail)
+		if len(byDetails) == 0 {
+			return nil, &interfaces.StatusError{Resp: res}
+		}
+
 		var e interfaces.DeepgramError
-		if err := json.Unmarshal(detail, &e); err == nil && (e.ErrCode != "" || e.ErrMsg != "" || e.Description != "") {
+		if err := json.Unmarshal(byDetails, &e); err == nil && (e.ErrCode != "" || e.ErrMsg != "" || e.Description != "") {
 			klog.V(6).Infof("Parsed Deepgram Specific Error\n")
 			return nil, &interfaces.StatusError{Resp: res, DeepgramError: &e}
 		}
 
 		return nil, &interfaces.StatusError{
 			Resp:          res,
-			DeepgramError: &interfaces.DeepgramError{Description: string(bytes.TrimSpace(detail))},
+			DeepgramError: &interfaces.DeepgramError{Description: string(byDetails)},
 		}
 	}
 }
