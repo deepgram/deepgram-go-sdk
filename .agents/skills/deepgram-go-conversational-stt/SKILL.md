@@ -1,6 +1,6 @@
 ---
 name: deepgram-go-conversational-stt
-description: Use when planning or reviewing Go SDK work for Deepgram conversational STT / Flux v2. This repo does not currently ship a first-class v2 listen client, so route supported v1 transcription to deepgram-go-speech-to-text and document raw WebSocket fallback honestly when v2 is requested.
+description: Use when planning or reviewing Go SDK work for Deepgram conversational STT / Flux v2. This repo ships first-class callback and channel Listen v2 WebSocket clients with typed options and mid-session configuration. Route v1 transcription to deepgram-go-speech-to-text.
 ---
 
 # Using Deepgram Conversational STT from the Go SDK
@@ -9,7 +9,7 @@ description: Use when planning or reviewing Go SDK work for Deepgram conversatio
 
 Use this skill when someone asks for Flux or conversational STT v2 in the Go SDK.
 
-Current repo status: this SDK snapshot does **not** implement a first-class `listen/v2` client.
+Current repo status: this SDK ships a first-class `pkg/client/listen/v2` WebSocket client for Flux STT. Flux STT does not have a REST client.
 
 Use a different skill when:
 
@@ -18,45 +18,68 @@ Use a different skill when:
 
 ## Authentication
 
-If you hand-roll a raw WebSocket client, it still uses the same Deepgram credentials.
+Flux constructors with defaults resolve credentials from `DEEPGRAM_API_KEY` or `DEEPGRAM_ACCESS_TOKEN`.
 
 ```bash
 export DEEPGRAM_API_KEY="your_api_key"
 ```
 
-## Quick start
+## Connection setup
 
-There is no supported `pkg/client/listen/v2` constructor in this repo today.
+Use the versioned v2 package and typed options:
 
-What you can do instead:
+```go
+package main
 
-- use `deepgram-go-speech-to-text` for supported `listen` v1 flows
-- if you must prototype v2, start from the low-level shared WebSocket plumbing and path/version hooks already in the repo:
-  - `pkg/client/common/v1/websocket.go`
-  - `pkg/client/interfaces/v1/types-client.go`
-  - `pkg/api/version/live-version.go`
-  - `pkg/api/version/constants.go`
+import (
+  "context"
+  "log"
 
-Treat that path as a manual integration, not an SDK-supported product surface.
+  api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket"
+  interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+  listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2"
+)
+
+func main() {
+  ctx := context.Background()
+  handler := api.NewDefaultCallbackHandler()
+  client, err := listen.NewWSUsingCallbackWithDefaults(ctx, &interfaces.FluxTranscriptionOptions{
+    Model: "flux-general-en",
+  }, handler)
+  if err != nil {
+    log.Fatal(err)
+  }
+  defer client.Stop()
+
+  if !client.Connect() {
+    log.Fatal("connect failed")
+  }
+}
+```
+
+This establishes the session only. Send audio with `Write` or `Stream`; use a runnable example for the complete capture and event-handling flow.
 
 ## Key parameters
 
-- unsupported in current public package layout
-  - no `pkg/client/listen/v2`
-  - no `pkg/api/listen/v2`
-- possible raw integration hooks
-  - client host/version/path overrides from the shared client options
-  - shared WS lifecycle and reconnect logic in `pkg/client/common/v1/websocket.go`
+- `interfaces.FluxTranscriptionOptions`
+  - `Model` is required: `flux-general-en` or `flux-general-multi`
+  - `Encoding`, `SampleRate`, `Keyterm`, `Tag`, and `LanguageHint` configure connection behavior
+  - `EagerEotThreshold`, `EotThreshold`, and `EotTimeoutMs` configure turn detection
+- `interfaces.FluxConfigureOptions`
+  - send with `WSCallback.Configure` or `WSChannel.Configure` to update thresholds, keyterms, or language hints mid-session
+- constructors
+  - `listen.NewWSUsingCallbackWithDefaults` and `listen.NewWSUsingChanWithDefaults` use environment-backed credentials
+  - `listen.NewWSUsingCallback` and `listen.NewWSUsingChan` accept explicit v2 client options and handlers
 
 ## API reference (layered)
 
 1. In-repo reference
    - `README.md`
    - `docs.go`
-   - `pkg/client/common/v1/websocket.go`
-   - `pkg/client/interfaces/v1/types-client.go`
-   - `pkg/api/version/live-version.go`
-   - `pkg/api/version/constants.go`
+   - `pkg/client/listen/v2/client.go`
+   - `pkg/client/listen/v2/websocket`
+   - `pkg/api/listen/v2/websocket/interfaces`
+   - `pkg/client/interfaces/v2/types-flux.go`
 2. OpenAPI
    - `https://developers.deepgram.com/openapi.yaml`
 3. AsyncAPI
@@ -64,18 +87,19 @@ Treat that path as a manual integration, not an SDK-supported product surface.
 4. Context7
    - `/llmstxt/developers_deepgram_llms_txt`
 5. Product docs
-   - `https://developers.deepgram.com/docs/conversational-speech-recognition`
+   - `https://developers.deepgram.com/reference/speech-to-text/listen-flux`
 
 ## Gotchas
 
-1. Be explicit: conversational STT v2 is not yet implemented as a first-class Go SDK client here.
-2. Do not invent `listen/v2` package paths, constructors, or examples.
-3. If a task requires production-ready Flux support, point to raw API usage or another SDK until this repo adds first-class coverage.
+1. Flux STT is WebSocket-only; route v1 prerecorded or Nova streaming requests to `deepgram-go-speech-to-text`.
+2. Use `pkg/client/listen/v2`, not the v1 `pkg/client/listen` facade, for Flux STT.
+3. Flux callback and channel clients use their own v2 event interfaces; do not mix them with Listen v1 handlers.
 
 ## Example files in this repo
 
-- No dedicated conversational STT v2 examples exist in this repo.
-- For shared WS patterns, inspect `tests/edge_cases/keepalive/main.go` and `tests/edge_cases/reconnect_client/main.go`.
+- `examples/speech-to-text/websocket/flux_callback/main.go`
+- `examples/speech-to-text/websocket/flux_channel/main.go`
+- `examples/speech-to-text/websocket/flux_force_end_turn/main.go`
 
 ## Central product skills
 
