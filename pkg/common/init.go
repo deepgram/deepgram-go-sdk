@@ -10,7 +10,9 @@ package common
 import (
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
+	"strings"
 
 	klog "k8s.io/klog/v2"
 )
@@ -35,6 +37,7 @@ func Init(init InitLib) {
 	if err != nil {
 		fmt.Printf("Error setting log level: %v", err)
 	}
+
 	if init.DebugFilePath != "" {
 		err = flag.Set("logtostderr", "false")
 		if err != nil {
@@ -45,5 +48,22 @@ func Init(init InitLib) {
 			fmt.Printf("Error setting log_file: %v", err)
 		}
 	}
-	flag.Parse()
+	if !isGoTest() {
+		flag.Parse()
+	}
+}
+
+func isGoTest() bool {
+	if strings.HasSuffix(os.Args[0], ".test") {
+		return true
+	}
+
+	for _, arg := range os.Args[1:] {
+		name, _, _ := strings.Cut(strings.TrimLeft(arg, "-"), "=")
+		if strings.HasPrefix(name, "test.") && flag.CommandLine.Lookup(name) == nil {
+			return true
+		}
+	}
+
+	return false
 }

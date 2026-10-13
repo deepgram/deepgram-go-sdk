@@ -19,6 +19,7 @@ type LiveTranscriptionOptions struct {
 	Diarize         bool     `json:"diarize,omitempty" schema:"diarize,omitempty"`
 	DiarizeVersion  string   `json:"diarize_version,omitempty" schema:"diarize_version,omitempty"`
 	Dictation       bool     `json:"dictation,omitempty" schema:"dictation,omitempty"` // Option to format spoken punctuated commands, must be enabled with punctuate parameter to true. Eg: "i went to the store comma new paragraph then i went home period" --> "i went to the store, <\n> then i went home."
+	DetectEntities  bool     `json:"detect_entities,omitempty" schema:"detect_entities,omitempty"`
 	Encoding        string   `json:"encoding,omitempty" schema:"encoding,omitempty"`
 	Endpointing     string   `json:"endpointing,omitempty" schema:"endpointing,omitempty"`
 	Extra           []string `json:"extra,omitempty" schema:"extra,omitempty"`

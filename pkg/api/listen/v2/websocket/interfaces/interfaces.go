@@ -66,6 +66,20 @@ type FluxMessageCallback interface {
 	UnhandledEvent(byData []byte) error
 }
 
+// FluxWarningCallback is an optional extension of FluxMessageCallback. Implement it
+// on your handler to receive non-fatal server warnings (e.g. code
+// "FORCE_END_TURN_NO_ACTIVE_TURN" when a ForceEndTurn arrives with no active turn).
+// If your handler does not implement it, warnings are forwarded to UnhandledEvent
+// and treated as non-fatal — the router does not report them as errors.
+//
+// This is a separate interface (rather than a method on FluxMessageCallback) so
+// existing FluxMessageCallback implementations keep compiling.
+type FluxWarningCallback interface {
+	// Warning is called when the server sends a non-fatal {"type":"Warning"} message.
+	// The session continues; no action is required.
+	Warning(wr *WarningResponse) error
+}
+
 // FluxMessageChan is the channel-based handler interface for Flux events.
 // Each getter returns a slice of channel pointers, allowing multiple subscribers.
 // Implement all methods and pass your implementation to NewWSUsingChan.
@@ -117,4 +131,18 @@ type FluxMessageChan interface {
 
 	// GetUnhandled returns channels to receive raw bytes of unrecognized message types.
 	GetUnhandled() []*chan *[]byte
+}
+
+// FluxWarningChan is an optional extension of FluxMessageChan. Implement it on your
+// handler to receive non-fatal server warnings (e.g. code
+// "FORCE_END_TURN_NO_ACTIVE_TURN" when a ForceEndTurn arrives with no active turn)
+// on dedicated channels. If your handler does not implement it, warnings are
+// forwarded to the unhandled channels and treated as non-fatal — the router does
+// not report them as errors.
+//
+// This is a separate interface (rather than a method on FluxMessageChan) so
+// existing FluxMessageChan implementations keep compiling.
+type FluxWarningChan interface {
+	// GetWarning returns channels to receive non-fatal {"type":"Warning"} messages.
+	GetWarning() []*chan *WarningResponse
 }
