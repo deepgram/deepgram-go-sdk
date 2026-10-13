@@ -5,8 +5,45 @@
 package websocketv1
 
 import (
+	"sync"
+
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 )
+
+type extraCache struct {
+	mu    sync.RWMutex
+	extra map[string]string
+}
+
+func (c *extraCache) store(extra map[string]string) {
+	if len(extra) == 0 {
+		return
+	}
+
+	copied := make(map[string]string, len(extra))
+	for k, v := range extra {
+		copied[k] = v
+	}
+
+	c.mu.Lock()
+	c.extra = copied
+	c.mu.Unlock()
+}
+
+func (c *extraCache) load() map[string]string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if len(c.extra) == 0 {
+		return nil
+	}
+
+	copied := make(map[string]string, len(c.extra))
+	for k, v := range c.extra {
+		copied[k] = v
+	}
+	return copied
+}
 
 /*
 Using Channels
@@ -30,6 +67,8 @@ type DefaultChanHandler struct {
 // ChanRouter routes events
 type ChanRouter struct {
 	debugWebsocket bool
+
+	extraMetadata extraCache
 
 	// call out to channels
 	openChan          []*chan *interfaces.OpenResponse
@@ -56,6 +95,8 @@ type DefaultCallbackHandler struct {
 type CallbackRouter struct {
 	debugWebsocket bool
 	callback       interfaces.LiveMessageCallback
+
+	extraMetadata extraCache
 }
 
 // MessageRouter is the interface for routing messages
