@@ -35,6 +35,7 @@ type WSCallback struct {
 	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	workers   common.Workers
 
 	cOptions *interfaces.ClientOptions
 	sOptions *interfaces.WSSpeakOptions
@@ -53,6 +54,7 @@ type WSChannel struct {
 	*common.WSClient
 	ctx       context.Context
 	ctxCancel context.CancelFunc
+	workers   common.Workers
 
 	cOptions *interfaces.ClientOptions
 	sOptions *interfaces.WSSpeakOptions

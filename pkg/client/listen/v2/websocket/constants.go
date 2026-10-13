@@ -28,6 +28,4 @@ const (
 	MessageTypeForceEndTurn string = "ForceEndTurn"
 )
 
-const (
-	pingPeriod = 60 * time.Second
-)
+var pingPeriod = 60 * time.Second

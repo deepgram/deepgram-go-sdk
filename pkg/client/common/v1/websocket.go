@@ -258,7 +258,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		klog.V(3).Infof("WebSocket Connection Successful!")
 		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 
-		return c.wsconn
+		return ws
 	}
 
 	// if we get here, we failed to connect
