@@ -123,3 +123,34 @@ func Test_DoKeepsPlainBadRequestError(t *testing.T) {
 		t.Fatalf("error = %q, want response body", err)
 	}
 }
+
+func Test_DoKeepsDescriptionOnlyBadRequestError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(`{"description":"legacy detail"}`))
+	}))
+	defer server.Close()
+
+	client := New(&interfaces.ClientOptions{APIKey: "test-api-key", Host: server.URL})
+	if client == nil {
+		t.Fatal("New returned nil")
+	}
+
+	req, err := client.SetupRequest(context.Background(), http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("SetupRequest returned error: %v", err)
+	}
+
+	err = client.Do(context.Background(), req, nil)
+	if err == nil {
+		t.Fatal("Do returned nil error")
+	}
+	var statusErr *interfaces.StatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("Do returned %T, want *interfaces.StatusError", err)
+	}
+	if strings.Contains(err.Error(), "legacy detail") {
+		t.Fatalf("error = %q, must preserve the legacy status-only error text", err)
+	}
+}

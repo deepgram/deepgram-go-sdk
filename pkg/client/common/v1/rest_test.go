@@ -111,6 +111,28 @@ func Test_HandleResponseKeepsPlainBadRequestError(t *testing.T) {
 	}
 }
 
+func Test_HandleResponseKeepsDescriptionOnlyBadRequestError(t *testing.T) {
+	client := NewREST("test-api-key", &interfaces.ClientOptions{})
+	if client == nil {
+		t.Fatal("NewREST returned nil")
+	}
+
+	res := newTestResponse(http.StatusBadRequest, `{"description":"legacy detail"}`)
+	defer res.Body.Close()
+
+	_, err := client.HandleResponse(res, nil, nil)
+	if err == nil {
+		t.Fatal("HandleResponse returned nil error")
+	}
+	var statusErr *interfaces.StatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("HandleResponse returned %T, want *interfaces.StatusError", err)
+	}
+	if strings.Contains(err.Error(), "legacy detail") {
+		t.Fatalf("error = %q, must preserve the legacy status-only error text", err)
+	}
+}
+
 func newTestResponse(statusCode int, body string) *http.Response {
 	req, _ := http.NewRequest(http.MethodGet, "https://api.deepgram.com/v1/listen", nil)
 	return &http.Response{
