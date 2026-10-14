@@ -6,6 +6,7 @@ package websocketv1
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,20 +23,31 @@ func Test_ClearControlMessage(t *testing.T) {
 	}
 
 	t.Run("callback Clear", func(t *testing.T) {
-		testCallbackControlMessage(t, func(client *WSCallback) error { return client.Clear() })
+		testCallbackControlMessage(t, func(client *WSCallback) error { return client.Clear() }, `{"type":"Clear"}`)
 	})
 	t.Run("callback Reset", func(t *testing.T) {
-		testCallbackControlMessage(t, func(client *WSCallback) error { return client.Reset() })
+		testCallbackControlMessage(t, func(client *WSCallback) error { return client.Reset() }, `{"type":"Clear"}`)
 	})
 	t.Run("channel Clear", func(t *testing.T) {
-		testChannelControlMessage(t, func(client *WSChannel) error { return client.Clear() })
+		testChannelControlMessage(t, func(client *WSChannel) error { return client.Clear() }, `{"type":"Clear"}`)
 	})
 	t.Run("channel Reset", func(t *testing.T) {
-		testChannelControlMessage(t, func(client *WSChannel) error { return client.Reset() })
+		testChannelControlMessage(t, func(client *WSChannel) error { return client.Reset() }, `{"type":"Clear"}`)
 	})
 }
 
-func testCallbackControlMessage(t *testing.T, call func(*WSCallback) error) {
+func Test_SendControl(t *testing.T) {
+	payload := json.RawMessage(`{ "type": "FutureControl", "config": { "enabled": true } }`)
+
+	t.Run("callback", func(t *testing.T) {
+		testCallbackControlMessage(t, func(client *WSCallback) error { return client.SendControl(payload) }, string(payload))
+	})
+	t.Run("channel", func(t *testing.T) {
+		testChannelControlMessage(t, func(client *WSChannel) error { return client.SendControl(payload) }, string(payload))
+	})
+}
+
+func testCallbackControlMessage(t *testing.T, call func(*WSCallback) error, want string) {
 	t.Helper()
 	host, received := newControlMessageServer(t)
 	client, err := NewUsingCallback(context.Background(), "test-api-key", testClientOptions(host), testSpeakOptions(), nil)
@@ -49,10 +61,10 @@ func testCallbackControlMessage(t *testing.T, call func(*WSCallback) error) {
 	if err := call(client); err != nil {
 		t.Fatalf("send control message: %v", err)
 	}
-	expectClearControlMessage(t, received)
+	expectControlMessage(t, received, want)
 }
 
-func testChannelControlMessage(t *testing.T, call func(*WSChannel) error) {
+func testChannelControlMessage(t *testing.T, call func(*WSChannel) error, want string) {
 	t.Helper()
 	host, received := newControlMessageServer(t)
 	client, err := NewUsingChan(context.Background(), "test-api-key", testClientOptions(host), testSpeakOptions(), nil)
@@ -66,7 +78,7 @@ func testChannelControlMessage(t *testing.T, call func(*WSChannel) error) {
 	if err := call(client); err != nil {
 		t.Fatalf("send control message: %v", err)
 	}
-	expectClearControlMessage(t, received)
+	expectControlMessage(t, received, want)
 }
 
 func newControlMessageServer(t *testing.T) (string, <-chan string) {
@@ -109,11 +121,11 @@ func testSpeakOptions() *interfaces.WSSpeakOptions {
 	return &interfaces.WSSpeakOptions{Model: "aura-asteria-en"}
 }
 
-func expectClearControlMessage(t *testing.T, received <-chan string) {
+func expectControlMessage(t *testing.T, received <-chan string, want string) {
 	t.Helper()
 	select {
 	case got := <-received:
-		if want := `{"type":"Clear"}`; got != want {
+		if got != want {
 			t.Errorf("control message = %s, want %s", got, want)
 		}
 	case <-time.After(time.Second):

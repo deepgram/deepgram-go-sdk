@@ -9,6 +9,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"runtime/debug"
@@ -458,6 +459,22 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 		return err
 	}
 
+	err = c.writeJSON(byData)
+	klog.V(6).Infof("common.WriteJSON() LEAVE\n")
+
+	return err
+}
+
+// WriteRawJSON writes a validated JSON payload without changing its bytes.
+func (c *WSClient) WriteRawJSON(payload []byte) error {
+	if !json.Valid(payload) {
+		return errors.New("raw JSON payload is invalid")
+	}
+
+	return c.writeJSON(payload)
+}
+
+func (c *WSClient) writeJSON(byData []byte) error {
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
@@ -467,7 +484,6 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
-		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 		return err
 	}
@@ -477,13 +493,11 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 		byData,
 	); err != nil {
 		klog.V(1).Infof("WriteJSON WriteMessage failed. Err: %v\n", err)
-		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 		return err
 	}
 
 	klog.V(4).Infof("common.WriteJSON() Succeeded\n")
 	klog.V(6).Infof("payload: %s\n", string(byData))
-	klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 	return nil
 }
