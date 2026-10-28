@@ -50,6 +50,10 @@ type Alternative struct {
 	Transcript string   `json:"transcript,omitempty"`
 	Words      []Word   `json:"words,omitempty"`
 	Languages  []string `json:"languages,omitempty"`
+	// LanguagesHinted echoes the normalized language_hint values sent at connect
+	// time. It is present (possibly empty) on every Nova-3 multilingual result and
+	// absent otherwise: decoding yields a non-nil empty slice when no hints were sent.
+	LanguagesHinted []string `json:"languages_hinted,omitempty"`
 }
 
 // Entity is a named entity recognized in the transcript
