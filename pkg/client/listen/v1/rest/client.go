@@ -48,6 +48,9 @@ Input parameters:
 - options: ClientOptions which allows overriding things like hostname, version of the API, etc.
 */
 func New(apiKey string, options *interfaces.ClientOptions) *Client {
+	if options == nil {
+		options = &interfaces.ClientOptions{}
+	}
 	if apiKey != "" {
 		options.APIKey = apiKey
 	}
