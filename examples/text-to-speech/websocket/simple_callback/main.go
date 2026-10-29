@@ -6,6 +6,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -171,6 +172,14 @@ func main() {
 	err = dgClient.Flush()
 	if err != nil {
 		fmt.Printf("Error sending text input: %v\n", err)
+		return
+	}
+
+	// Use typed helpers when available. SendControlJSON is the extension point
+	// for valid server controls that the SDK does not model yet.
+	err = dgClient.SendControlJSON(json.RawMessage(`{"type":"Clear"}`))
+	if err != nil {
+		fmt.Printf("Error sending raw control input: %v\n", err)
 		return
 	}
 
