@@ -18,8 +18,8 @@ func Test_TransportErrorsSetCode(t *testing.T) {
 		"channel":  (&WSChannel{}).errorToResponse(err),
 	} {
 		t.Run(name, func(t *testing.T) {
-			if response.ErrCode != "bad" {
-				t.Errorf("ErrCode = %q, want %q", response.ErrCode, "bad")
+			if response.Code != "bad" {
+				t.Errorf("Code = %q, want %q", response.Code, "bad")
 			}
 		})
 	}
