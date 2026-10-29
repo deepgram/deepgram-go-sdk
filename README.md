@@ -307,6 +307,8 @@ dgClient.Stop()
 
 Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
 
+For an active Listen v1 WebSocket, call `Configure` with `LiveConfigureOptions` to change `keyterms` or `features` without reconnecting. Configure does not support `language` or language hints; set `Keyterms` to a pointer to an empty slice to clear keyterms. See the [Configure example](examples/speech-to-text/websocket/configure).
+
 ## Voice Agent
 
 Configure a Voice Agent using WebSocket.

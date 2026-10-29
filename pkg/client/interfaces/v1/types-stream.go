@@ -45,3 +45,14 @@ type LiveTranscriptionOptions struct {
 	VadEvents       bool     `json:"vad_events,omitempty" schema:"vad_events,omitempty"`
 	Version         string   `json:"version,omitempty" schema:"version,omitempty"`
 }
+
+// LiveConfigureOptions are the supported mid-session updates for a Listen v1
+// WebSocket. Send them through WSCallback.Configure or WSChannel.Configure.
+//
+// Keyterms is a pointer so callers can distinguish an omitted field from an
+// explicit empty list that clears the active keyterms. A pointer to a nil slice
+// serializes as JSON null, matching the nullable wire contract.
+type LiveConfigureOptions struct {
+	Keyterms *[]string       `json:"keyterms,omitempty"`
+	Features map[string]bool `json:"features,omitempty"`
+}
