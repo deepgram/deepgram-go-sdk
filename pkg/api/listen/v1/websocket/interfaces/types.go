@@ -91,6 +91,15 @@ type Metadata struct {
 /***********************************/
 type LiveTranscriptionOptions interfaces.LiveTranscriptionOptions
 
+// ConfigureMessage is a mid-session Listen v1 WebSocket configuration update.
+// Build it with WSCallback.Configure or WSChannel.Configure rather than sending
+// it directly. Only keyterms and features are supported by this message.
+type ConfigureMessage struct {
+	Type     string          `json:"type"`
+	Keyterms *[]string       `json:"keyterms,omitempty"`
+	Features map[string]bool `json:"features,omitempty"`
+}
+
 /***********************************/
 // Results from Live Transcription
 /***********************************/
@@ -137,6 +146,23 @@ type SpeechStartedResponse struct {
 	Type      string  `json:"type,omitempty"`
 	Channel   []int   `json:"channel,omitempty"`
 	Timestamp float64 `json:"timestamp,omitempty"`
+}
+
+// ConfigureSuccessResponse acknowledges that a mid-session Configure message
+// was accepted by the server.
+type ConfigureSuccessResponse struct {
+	Type      string   `json:"type"`
+	RequestID string   `json:"request_id"`
+	Keyterms  []string `json:"keyterms,omitempty"`
+}
+
+// ConfigureFailureResponse reports that a mid-session Configure message was
+// rejected by the server.
+type ConfigureFailureResponse struct {
+	Type        string `json:"type"`
+	RequestID   string `json:"request_id"`
+	Code        string `json:"code"`
+	Description string `json:"description"`
 }
 
 // CloseResponse is the response from closing the connection

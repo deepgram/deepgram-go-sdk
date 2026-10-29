@@ -38,15 +38,17 @@ func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
 	}
 
 	router := &ChanRouter{
-		debugWebsocket:    strings.EqualFold(strings.ToLower(debugStr), "true"),
-		openChan:          make([]*chan *interfaces.OpenResponse, 0),
-		messageChan:       make([]*chan *interfaces.MessageResponse, 0),
-		metadataChan:      make([]*chan *interfaces.MetadataResponse, 0),
-		speechStartedChan: make([]*chan *interfaces.SpeechStartedResponse, 0),
-		utteranceEndChan:  make([]*chan *interfaces.UtteranceEndResponse, 0),
-		closeChan:         make([]*chan *interfaces.CloseResponse, 0),
-		errorChan:         make([]*chan *interfaces.ErrorResponse, 0),
-		unhandledChan:     make([]*chan *[]byte, 0),
+		debugWebsocket:       strings.EqualFold(strings.ToLower(debugStr), "true"),
+		openChan:             make([]*chan *interfaces.OpenResponse, 0),
+		messageChan:          make([]*chan *interfaces.MessageResponse, 0),
+		metadataChan:         make([]*chan *interfaces.MetadataResponse, 0),
+		speechStartedChan:    make([]*chan *interfaces.SpeechStartedResponse, 0),
+		utteranceEndChan:     make([]*chan *interfaces.UtteranceEndResponse, 0),
+		configureSuccessChan: make([]*chan *interfaces.ConfigureSuccessResponse, 0),
+		configureFailureChan: make([]*chan *interfaces.ConfigureFailureResponse, 0),
+		closeChan:            make([]*chan *interfaces.CloseResponse, 0),
+		errorChan:            make([]*chan *interfaces.ErrorResponse, 0),
+		unhandledChan:        make([]*chan *[]byte, 0),
 	}
 
 	if chans != nil {
@@ -55,6 +57,10 @@ func NewChanRouter(chans interfaces.LiveMessageChan) *ChanRouter {
 		router.metadataChan = append(router.metadataChan, chans.GetMetadata()...)
 		router.speechStartedChan = append(router.speechStartedChan, chans.GetSpeechStarted()...)
 		router.utteranceEndChan = append(router.utteranceEndChan, chans.GetUtteranceEnd()...)
+		if configureChans, ok := chans.(interfaces.LiveConfigureChan); ok {
+			router.configureSuccessChan = append(router.configureSuccessChan, configureChans.GetConfigureSuccess()...)
+			router.configureFailureChan = append(router.configureFailureChan, configureChans.GetConfigureFailure()...)
+		}
 		router.closeChan = append(router.closeChan, chans.GetClose()...)
 		router.errorChan = append(router.errorChan, chans.GetError()...)
 		router.unhandledChan = append(router.unhandledChan, chans.GetUnhandled()...)
@@ -245,6 +251,50 @@ func (r *ChanRouter) processErrorResponse(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeErrorResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processConfigureSuccess(byMsg []byte) error {
+	if len(r.configureSuccessChan) == 0 {
+		return r.processGeneric(string(interfaces.TypeConfigureSuccess), byMsg, func(data []byte) error {
+			for _, ch := range r.unhandledChan {
+				*ch <- &data
+			}
+			return nil
+		})
+	}
+
+	return r.processGeneric(string(interfaces.TypeConfigureSuccess), byMsg, func(data []byte) error {
+		var msg interfaces.ConfigureSuccessResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		for _, ch := range r.configureSuccessChan {
+			*ch <- &msg
+		}
+		return nil
+	})
+}
+
+func (r *ChanRouter) processConfigureFailure(byMsg []byte) error {
+	if len(r.configureFailureChan) == 0 {
+		return r.processGeneric(string(interfaces.TypeConfigureFailure), byMsg, func(data []byte) error {
+			for _, ch := range r.unhandledChan {
+				*ch <- &data
+			}
+			return nil
+		})
+	}
+
+	return r.processGeneric(string(interfaces.TypeConfigureFailure), byMsg, func(data []byte) error {
+		var msg interfaces.ConfigureFailureResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		for _, ch := range r.configureFailureChan {
+			*ch <- &msg
+		}
+		return nil
+	})
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -270,6 +320,10 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processSpeechStartedResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
 		err = r.processUtteranceEndResponse(byMsg)
+	case interfaces.TypeConfigureSuccess:
+		err = r.processConfigureSuccess(byMsg)
+	case interfaces.TypeConfigureFailure:
+		err = r.processConfigureFailure(byMsg)
 	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
 		err = r.processErrorResponse(byMsg)
 	default:

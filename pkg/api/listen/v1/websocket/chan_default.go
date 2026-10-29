@@ -37,6 +37,8 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		metadataChan:          make(chan *interfaces.MetadataResponse),
 		speechStartedChan:     make(chan *interfaces.SpeechStartedResponse),
 		utteranceEndChan:      make(chan *interfaces.UtteranceEndResponse),
+		configureSuccessChan:  make(chan *interfaces.ConfigureSuccessResponse),
+		configureFailureChan:  make(chan *interfaces.ConfigureFailureResponse),
 		closeChan:             make(chan *interfaces.CloseResponse),
 		errorChan:             make(chan *interfaces.ErrorResponse),
 		unhandledChan:         make(chan *[]byte),
@@ -75,6 +77,16 @@ func (dch DefaultChanHandler) GetSpeechStarted() []*chan *interfaces.SpeechStart
 // GetUtteranceEnd returns the utterance end channels
 func (dch DefaultChanHandler) GetUtteranceEnd() []*chan *interfaces.UtteranceEndResponse {
 	return []*chan *interfaces.UtteranceEndResponse{&dch.utteranceEndChan}
+}
+
+// GetConfigureSuccess returns channels for accepted Configure updates.
+func (dch DefaultChanHandler) GetConfigureSuccess() []*chan *interfaces.ConfigureSuccessResponse {
+	return []*chan *interfaces.ConfigureSuccessResponse{&dch.configureSuccessChan}
+}
+
+// GetConfigureFailure returns channels for rejected Configure updates.
+func (dch DefaultChanHandler) GetConfigureFailure() []*chan *interfaces.ConfigureFailureResponse {
+	return []*chan *interfaces.ConfigureFailureResponse{&dch.configureFailureChan}
 }
 
 // GetClose returns the close channels
@@ -249,6 +261,26 @@ func (dch DefaultChanHandler) Run() error {
 				fmt.Printf("\nUtteranceEnd.Timestamp: %f\n", uer.LastWordEnd)
 				fmt.Printf("UtteranceEnd.Channel: %d\n\n", uer.Channel)
 			}
+		}
+	}()
+
+	// configure success channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for cs := range dch.configureSuccessChan {
+			fmt.Printf("\n[ConfigureSuccess] request_id=%s\n", cs.RequestID)
+		}
+	}()
+
+	// configure failure channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for cf := range dch.configureFailureChan {
+			fmt.Printf("\n[ConfigureFailure] request_id=%s code=%s description=%s\n", cf.RequestID, cf.Code, cf.Description)
 		}
 	}()
 

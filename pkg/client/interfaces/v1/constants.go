@@ -20,4 +20,10 @@ const (
 var (
 	// ErrNoAPIKey no api key found
 	ErrNoAPIKey = errors.New("no api key found")
+
+	// ErrOptionsRequired a nil options struct was passed where one is required
+	ErrOptionsRequired = errors.New("options cannot be nil")
+
+	// ErrConfigureNoFields a Configure carried no fields to change
+	ErrConfigureNoFields = errors.New("configure requires at least one field to change")
 )
