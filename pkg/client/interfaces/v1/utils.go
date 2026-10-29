@@ -7,6 +7,7 @@ package interfacesv1
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"runtime"
@@ -71,20 +72,143 @@ type RawResponse struct {
 
 // DeepgramWarning is the Deepgram specific response warning
 type DeepgramWarning struct {
-	Type        string
+	Type        string `json:"type,omitempty"`
 	WarnCode    string `json:"warn_code,omitempty"`
 	WarnMsg     string `json:"warn_msg,omitempty"`
 	Description string `json:"description,omitempty"`
 	Variant     string `json:"variant,omitempty"`
 }
 
+// UnmarshalJSON accepts the current WebSocket code field and the legacy
+// warn_code field without changing the public WarnCode name.
+func (w *DeepgramWarning) UnmarshalJSON(data []byte) error {
+	type warningJSON struct {
+		Type        string `json:"type,omitempty"`
+		Code        string `json:"code,omitempty"`
+		WarnCode    string `json:"warn_code,omitempty"`
+		WarnMsg     string `json:"warn_msg,omitempty"`
+		Description string `json:"description,omitempty"`
+		Variant     string `json:"variant,omitempty"`
+	}
+
+	var wire warningJSON
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+
+	w.Type = wire.Type
+	w.WarnCode = wire.Code
+	if w.WarnCode == "" {
+		w.WarnCode = wire.WarnCode
+	}
+	w.WarnMsg = wire.WarnMsg
+	w.Description = wire.Description
+	w.Variant = wire.Variant
+	return nil
+}
+
+// MarshalJSON emits the current WebSocket warning shape when Type is set and
+// preserves the legacy warn_code shape for non-WebSocket values.
+func (w DeepgramWarning) MarshalJSON() ([]byte, error) {
+	if w.Type == "" {
+		type legacyWarningJSON struct {
+			WarnCode    string `json:"warn_code,omitempty"`
+			WarnMsg     string `json:"warn_msg,omitempty"`
+			Description string `json:"description,omitempty"`
+			Variant     string `json:"variant,omitempty"`
+		}
+		return json.Marshal(legacyWarningJSON{
+			WarnCode:    w.WarnCode,
+			WarnMsg:     w.WarnMsg,
+			Description: w.Description,
+			Variant:     w.Variant,
+		})
+	}
+
+	type warningJSON struct {
+		Type        string `json:"type,omitempty"`
+		Code        string `json:"code,omitempty"`
+		WarnMsg     string `json:"warn_msg,omitempty"`
+		Description string `json:"description,omitempty"`
+		Variant     string `json:"variant,omitempty"`
+	}
+	return json.Marshal(warningJSON{
+		Type:        w.Type,
+		Code:        w.WarnCode,
+		WarnMsg:     w.WarnMsg,
+		Description: w.Description,
+		Variant:     w.Variant,
+	})
+}
+
 // DeepgramError is the Deepgram specific response error
 type DeepgramError struct {
-	Type        string
+	Type        string `json:"type,omitempty"`
 	ErrCode     string `json:"err_code,omitempty"`
 	ErrMsg      string `json:"err_msg,omitempty"`
 	Description string `json:"description,omitempty"`
 	Variant     string `json:"variant,omitempty"`
+}
+
+// UnmarshalJSON accepts both REST err_code errors and WebSocket code events.
+func (e *DeepgramError) UnmarshalJSON(data []byte) error {
+	type errorJSON struct {
+		Type        string `json:"type,omitempty"`
+		Code        string `json:"code,omitempty"`
+		ErrCode     string `json:"err_code,omitempty"`
+		ErrMsg      string `json:"err_msg,omitempty"`
+		Description string `json:"description,omitempty"`
+		Variant     string `json:"variant,omitempty"`
+	}
+
+	var wire errorJSON
+	if err := json.Unmarshal(data, &wire); err != nil {
+		return err
+	}
+
+	e.Type = wire.Type
+	e.ErrCode = wire.Code
+	if e.ErrCode == "" {
+		e.ErrCode = wire.ErrCode
+	}
+	e.ErrMsg = wire.ErrMsg
+	e.Description = wire.Description
+	e.Variant = wire.Variant
+	return nil
+}
+
+// MarshalJSON emits the current WebSocket error shape when Type is set and
+// preserves the REST err_code shape for non-WebSocket values.
+func (e DeepgramError) MarshalJSON() ([]byte, error) {
+	if e.Type == "" {
+		type restErrorJSON struct {
+			ErrCode     string `json:"err_code,omitempty"`
+			ErrMsg      string `json:"err_msg,omitempty"`
+			Description string `json:"description,omitempty"`
+			Variant     string `json:"variant,omitempty"`
+		}
+		return json.Marshal(restErrorJSON{
+			ErrCode:     e.ErrCode,
+			ErrMsg:      e.ErrMsg,
+			Description: e.Description,
+			Variant:     e.Variant,
+		})
+	}
+
+	type websocketErrorJSON struct {
+		Type        string `json:"type,omitempty"`
+		Code        string `json:"code,omitempty"`
+		ErrMsg      string `json:"err_msg,omitempty"`
+		Description string `json:"description,omitempty"`
+		Variant     string `json:"variant,omitempty"`
+	}
+	return json.Marshal(websocketErrorJSON{
+		Type:        e.Type,
+		Code:        e.ErrCode,
+		ErrMsg:      e.ErrMsg,
+		Description: e.Description,
+		Variant:     e.Variant,
+	})
 }
 
 // StatusError captures a REST error in the library
