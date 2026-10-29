@@ -138,6 +138,8 @@ type Alternative struct {
 	Translation *Translation `json:"translation,omitempty"`
 	// Languages lists detected BCP-47 language tags when multilingual detection is used.
 	Languages []string `json:"languages,omitempty"`
+	// LanguagesHinted lists the language_hint values applied to multilingual recognition.
+	LanguagesHinted []string `json:"languages_hinted,omitempty"`
 }
 
 type Paragraphs struct {
@@ -206,6 +208,8 @@ type Utterance struct {
 	SentimentScore *float64 `json:"sentiment_score,omitempty"`
 	// ID is the API identifier for the utterance.
 	ID string `json:"id,omitempty"`
+	// Languages lists detected BCP-47 language tags for this utterance.
+	Languages []string `json:"languages,omitempty"`
 }
 
 type Intent struct {
