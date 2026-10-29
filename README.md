@@ -445,35 +445,49 @@ fmt.Printf("Audio saved to: %s\n", filePath)
 Convert streaming text into speech using a WebSocket.
 
 ```go
-// Define Deepgram options
-options := &interfaces.SpeakWSOptions{
-    Model:      "aura-2-thalia-en",
-    Encoding:   "linear16",
-    SampleRate: 16000,
-}
+package main
 
-// Create Deepgram client with custom callback
-dgClient, err := client.NewWSUsingCallback(ctx, "", &interfaces.ClientOptions{}, options, callback)
-    if err != nil {
-    fmt.Printf("Error creating client: %v\n", err)
-        os.Exit(1)
+import (
+    "context"
+    "encoding/json"
+    "log"
+
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+    speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
+)
+
+func main() {
+    ctx := context.Background()
+    options := &interfaces.WSSpeakOptions{
+        Model:      "aura-2-thalia-en",
+        Encoding:   "linear16",
+        SampleRate: 16000,
     }
 
-    // Connect to Deepgram
-dgClient.Connect()
+    // Pass a SpeakMessageCallback instead of nil to handle audio and events.
+    dgClient, err := speak.NewWSUsingCallbackWithDefaults(ctx, options, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer dgClient.Stop()
 
-// Send text to convert to speech
-text := "Hello, this is a text to speech example."
-dgClient.SendText(text)
-dgClient.Flush()
+    if !dgClient.Connect() {
+        log.Fatal("connect Speak WebSocket")
+    }
+    if err := dgClient.SpeakWithText("Hello, this is a text to speech example."); err != nil {
+        log.Fatal(err)
+    }
+    if err := dgClient.Flush(); err != nil {
+        log.Fatal(err)
+    }
 
-// Use typed helpers such as Flush and Clear when available. For a valid
-// server control frame that the SDK does not model yet, send raw JSON:
-// dgClient.SendControlJSON(json.RawMessage(`{"type":"CustomControl"}`))
+}
 
-// Wait for completion and cleanup
-dgClient.WaitForComplete()
-dgClient.Stop()
+// Use typed helpers such as Flush and Clear when available. Send raw JSON
+// only for a valid server control frame that the SDK does not model yet.
+func sendCustomControl(client *speak.WSCallback) error {
+    return client.SendControlJSON(json.RawMessage(`{"type":"CustomControl"}`))
+}
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
