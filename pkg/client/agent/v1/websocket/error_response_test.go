@@ -11,7 +11,7 @@ import (
 
 func Test_TransportErrorsSetCode(t *testing.T) {
 	response := (&WSChannel{}).errorToResponse(errors.New("websocket: bad 400 handshake: invalid configuration"))
-	if response.ErrCode != "bad" {
-		t.Errorf("ErrCode = %q, want %q", response.ErrCode, "bad")
+	if response.Code != "bad" {
+		t.Errorf("Code = %q, want %q", response.Code, "bad")
 	}
 }
