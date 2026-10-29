@@ -467,6 +467,10 @@ text := "Hello, this is a text to speech example."
 dgClient.SendText(text)
 dgClient.Flush()
 
+// Use typed helpers such as Flush and Clear when available. For a valid
+// server control frame that the SDK does not model yet, send raw JSON:
+// dgClient.SendControlJSON(json.RawMessage(`{"type":"CustomControl"}`))
+
 // Wait for completion and cleanup
 dgClient.WaitForComplete()
 dgClient.Stop()

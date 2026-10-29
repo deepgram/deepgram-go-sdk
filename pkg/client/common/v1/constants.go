@@ -34,6 +34,9 @@ var (
 	// ErrInvalidConnection connection is not valid
 	ErrInvalidConnection = errors.New("connection is not valid")
 
+	// ErrInvalidJSON payload is not valid JSON
+	ErrInvalidJSON = errors.New("payload is not valid JSON")
+
 	// ErrFatalPanicRecovered fatal panic recovered
 	ErrFatalPanicRecovered = errors.New("fatal panic - attempt to recover")
 )

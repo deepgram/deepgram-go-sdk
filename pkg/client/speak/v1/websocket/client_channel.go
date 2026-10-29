@@ -152,6 +152,12 @@ func (c *WSChannel) WriteJSON(playload controlMessage) error {
 	return c.WSClient.WriteJSON(playload)
 }
 
+// SendControlJSON sends a valid, caller-supplied Speak control message unchanged.
+// Use this extension point for valid server controls not modeled by the SDK.
+func (c *WSChannel) SendControlJSON(payload json.RawMessage) error {
+	return c.WSClient.WriteRawJSON(payload)
+}
+
 // Flush will instruct the server to flush the current text buffer
 func (c *WSChannel) Flush() error {
 	klog.V(6).Infof("speak.Flush() ENTER\n")

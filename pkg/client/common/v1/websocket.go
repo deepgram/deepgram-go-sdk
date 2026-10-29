@@ -488,6 +488,38 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	return nil
 }
 
+// WriteRawJSON writes a valid JSON payload unchanged as a websocket text message.
+func (c *WSClient) WriteRawJSON(payload json.RawMessage) error {
+	klog.V(6).Infof("common.WriteRawJSON() ENTER\n")
+
+	if !json.Valid(payload) {
+		klog.V(1).Infof("WriteRawJSON: invalid JSON payload\n")
+		klog.V(6).Infof("common.WriteRawJSON() LEAVE\n")
+		return ErrInvalidJSON
+	}
+
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
+
+	ws := c.internalConnect()
+	if ws == nil {
+		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", ErrInvalidConnection)
+		klog.V(6).Infof("common.WriteRawJSON() LEAVE\n")
+		return ErrInvalidConnection
+	}
+
+	if err := ws.WriteMessage(websocket.TextMessage, payload); err != nil {
+		klog.V(1).Infof("WriteRawJSON WriteMessage failed. Err: %v\n", err)
+		klog.V(6).Infof("common.WriteRawJSON() LEAVE\n")
+		return err
+	}
+
+	klog.V(4).Infof("common.WriteRawJSON() Succeeded\n")
+	klog.V(6).Infof("payload: %s\n", string(payload))
+	klog.V(6).Infof("common.WriteRawJSON() LEAVE\n")
+	return nil
+}
+
 // WriteControl sends a WebSocket control frame to the server.
 func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) error {
 	klog.V(7).Infof("common.WriteControl() ENTER\n")
