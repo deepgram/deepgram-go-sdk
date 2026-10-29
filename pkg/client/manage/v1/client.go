@@ -26,6 +26,9 @@ func NewWithDefaults() *Client {
 }
 
 func New(apiKey string, options *interfaces.ClientOptions) *Client {
+	if options == nil {
+		options = &interfaces.ClientOptions{}
+	}
 	if apiKey != "" {
 		options.APIKey = apiKey
 	}
