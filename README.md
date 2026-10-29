@@ -134,8 +134,6 @@ import (
     "context"
     "fmt"
     "log"
-    "time"
-    "time"
     "os"
 
     api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
@@ -453,6 +451,7 @@ import (
     "context"
     "fmt"
     "log"
+    "time"
 
     speakws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/websocket/interfaces"
     interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
