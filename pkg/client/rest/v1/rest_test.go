@@ -6,6 +6,7 @@ package restv1
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -53,6 +54,47 @@ func Test_DoReturnsDeepgramErrorForNonBadRequestStatus(t *testing.T) {
 	}
 	if statusErr.DeepgramError.ErrMsg != "engine failed" {
 		t.Fatalf("ErrMsg = %q, want %q", statusErr.DeepgramError.ErrMsg, "engine failed")
+	}
+}
+
+func Test_DoPreservesRESTErrorWireShapeWhenTypeIsPresent(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"type":"Error","err_code":"ENGINE_ERROR","err_msg":"engine failed"}`))
+	}))
+	defer server.Close()
+
+	client := New(&interfaces.ClientOptions{APIKey: "test-api-key", Host: server.URL})
+	if client == nil {
+		t.Fatal("New returned nil")
+	}
+	req, err := client.SetupRequest(context.Background(), http.MethodGet, server.URL, nil)
+	if err != nil {
+		t.Fatalf("SetupRequest returned error: %v", err)
+	}
+
+	err = client.Do(context.Background(), req, nil)
+	statusErr, ok := err.(*interfaces.StatusError)
+	if !ok || statusErr.DeepgramError == nil {
+		t.Fatalf("Do returned %T with DeepgramError %#v", err, statusErr)
+	}
+	if statusErr.DeepgramError.Type != "Error" {
+		t.Errorf("Type = %q, want %q", statusErr.DeepgramError.Type, "Error")
+	}
+	data, err := json.Marshal(statusErr.DeepgramError)
+	if err != nil {
+		t.Fatalf("marshal REST error: %v", err)
+	}
+	var payload map[string]interface{}
+	if err := json.Unmarshal(data, &payload); err != nil {
+		t.Fatalf("unmarshal marshaled REST error: %v", err)
+	}
+	if payload["type"] != "Error" || payload["err_code"] != "ENGINE_ERROR" {
+		t.Errorf("unexpected REST payload: %s", data)
+	}
+	if _, found := payload["code"]; found {
+		t.Errorf("REST payload must not contain code: %s", data)
 	}
 }
 

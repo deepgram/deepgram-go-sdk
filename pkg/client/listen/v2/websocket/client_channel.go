@@ -277,7 +277,7 @@ func (c *WSChannel) errorToResponse(err error) *msginterfaces.ErrorResponse {
 
 	return &msginterfaces.ErrorResponse{
 		Type:        string(msginterfaces.TypeErrorResponse),
-		ErrCode:     errorCode,
+		Code:        errorCode,
 		ErrMsg:      strings.TrimSpace(fmt.Sprintf("%s %s", errorCode, errorNum)),
 		Description: strings.TrimSpace(errorDesc),
 		Variant:     errorNum,
