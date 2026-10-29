@@ -22,6 +22,8 @@ import (
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
+const maxHandshakeErrorBody = 64 << 10
+
 // gocritic:ignore
 func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, options clientinterfaces.BaseClientOptions, processMessages *commonv1interfaces.WebSocketHandler, router *commonv1interfaces.Router) *WSClient {
 	if apiKey != "" {
@@ -171,7 +173,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		wsHeaderProcessor(myHeader)
 	}
 
-	// attempt to establish connection
+	// Attempt to establish a connection. Preserve the latest server rejection so
+	// transient failures can retry without notifying handlers for every attempt.
+	var lastHandshakeError *commonv1interfaces.ErrorResponse
 	i := int64(0)
 	for {
 		if i >= c.retryCnt {
@@ -222,14 +226,23 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 		// perform the websocket connection
 		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
-		if res != nil {
-			klog.V(3).Infof("HTTP Response: %s\n", res.Status)
-			res.Body.Close()
-		}
 		if err != nil {
+			if res != nil {
+				klog.V(3).Infof("HTTP Response: %s\n", res.Status)
+				lastHandshakeError = handshakeErrorResponse(res)
+				res.Body.Close()
+
+				if isDeterministicHandshakeRejection(res.StatusCode) {
+					c.retry = false
+					break
+				}
+			}
 			klog.V(1).Infof("Cannot connect to websocket: %s\n", c.cOptions.GetHost())
 			klog.V(1).Infof("Dialer failed. Err: %v\n", err)
 			continue
+		}
+		if res != nil {
+			res.Body.Close()
 		}
 
 		// set the object to allow threads to function
@@ -269,8 +282,53 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		klog.V(3).Infof("Unlocking connection mutex\n")
 		c.muConn.Unlock()
 	}
+	if lastHandshakeError != nil {
+		c.sendHandshakeError(lastHandshakeError)
+	}
 
 	return nil
+}
+
+func handshakeErrorResponse(res *http.Response) *commonv1interfaces.ErrorResponse {
+	response := &commonv1interfaces.ErrorResponse{
+		Type:    string(commonv1interfaces.TypeErrorResponse),
+		ErrCode: res.Status,
+		ErrMsg:  res.Status,
+		Variant: res.Status,
+	}
+
+	if res.Body == nil {
+		return response
+	}
+
+	body, err := io.ReadAll(io.LimitReader(res.Body, maxHandshakeErrorBody))
+	if err != nil {
+		response.Description = err.Error()
+		return response
+	}
+
+	body = []byte(strings.TrimSpace(string(body)))
+	if len(body) == 0 {
+		return response
+	}
+
+	var deepgramError commonv1interfaces.ErrorResponse
+	if err := json.Unmarshal(body, &deepgramError); err == nil &&
+		(deepgramError.ErrCode != "" || deepgramError.ErrMsg != "" || deepgramError.Description != "") {
+		if deepgramError.Type == "" {
+			deepgramError.Type = string(commonv1interfaces.TypeErrorResponse)
+		}
+		deepgramError.Variant = res.Status
+		return &deepgramError
+	}
+
+	response.Description = string(body)
+	return response
+}
+
+func isDeterministicHandshakeRejection(statusCode int) bool {
+	return statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError &&
+		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
 }
 
 //nolint:funlen // this is a complex function. keep as is
@@ -661,4 +719,10 @@ func (c *WSClient) sendError(err error) error {
 	}
 
 	return err
+}
+
+func (c *WSClient) sendHandshakeError(response *commonv1interfaces.ErrorResponse) {
+	if err := (*c.router).Error(response); err != nil {
+		klog.V(1).Infof("router.Error failed. Err: %v\n", err)
+	}
 }
