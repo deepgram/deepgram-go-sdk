@@ -150,6 +150,36 @@ func (r *CallbackRouter) processErrorResponse(byMsg []byte) error {
 	return r.processGeneric("ErrorResponse", byMsg, action, msg)
 }
 
+func (r *CallbackRouter) processConfigureSuccess(byMsg []byte) error {
+	var msg interfaces.ConfigureSuccessResponse
+	if err := json.Unmarshal(byMsg, &msg); err != nil {
+		return err
+	}
+
+	if callback, ok := r.callback.(interfaces.LiveConfigureCallback); ok {
+		return r.processGeneric("ConfigureSuccessResponse", byMsg, func(data *interface{}) error {
+			return callback.ConfigureSuccess(&msg)
+		}, msg)
+	}
+
+	return r.callback.UnhandledEvent(byMsg)
+}
+
+func (r *CallbackRouter) processConfigureFailure(byMsg []byte) error {
+	var msg interfaces.ConfigureFailureResponse
+	if err := json.Unmarshal(byMsg, &msg); err != nil {
+		return err
+	}
+
+	if callback, ok := r.callback.(interfaces.LiveConfigureCallback); ok {
+		return r.processGeneric("ConfigureFailureResponse", byMsg, func(data *interface{}) error {
+			return callback.ConfigureFailure(&msg)
+		}, msg)
+	}
+
+	return r.callback.UnhandledEvent(byMsg)
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *CallbackRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -175,6 +205,10 @@ func (r *CallbackRouter) Message(byMsg []byte) error {
 		err = r.processSpeechStartedResponse(byMsg)
 	case interfaces.TypeUtteranceEndResponse:
 		err = r.processUtteranceEndResponse(byMsg)
+	case interfaces.TypeConfigureSuccess:
+		err = r.processConfigureSuccess(byMsg)
+	case interfaces.TypeConfigureFailure:
+		err = r.processConfigureFailure(byMsg)
 	case interfaces.TypeResponse(interfaces.TypeErrorResponse):
 		err = r.processErrorResponse(byMsg)
 	default:

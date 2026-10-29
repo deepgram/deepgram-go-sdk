@@ -131,6 +131,15 @@ func (o *LiveTranscriptionOptions) Check() error {
 	return nil
 }
 
+// Check validates that a Listen v1 Configure message changes at least one
+// supported field.
+func (o *LiveConfigureOptions) Check() error {
+	if o.Keyterms == nil && len(o.Features) == 0 {
+		return ErrConfigureNoFields
+	}
+	return nil
+}
+
 func (o *AnalyzeOptions) Check() error {
 	// checks
 	// currently no op
