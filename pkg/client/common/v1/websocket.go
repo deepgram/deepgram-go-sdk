@@ -247,6 +247,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 		// set the object to allow threads to function
 		c.wsconn = ws
+		c.sessionDone = make(chan struct{})
+		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
 		c.retry = true
 
@@ -257,6 +259,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			c.muConn.Unlock()
 		}
 
+		c.closeOnContextDone(ctx, ws, sessionDone)
+
 		// start WS specific items
 		(*c.processMessages).Start()
 
@@ -266,6 +270,10 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		})
 		if err != nil {
 			klog.V(1).Infof("router.Open failed. Err: %v\n", err)
+		}
+		if ctx.Err() != nil {
+			klog.V(3).Infof("Connection closed while Open handler was running\n")
+			return nil
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
@@ -329,6 +337,39 @@ func handshakeErrorResponse(res *http.Response) *commonv1interfaces.ErrorRespons
 func isDeterministicHandshakeRejection(statusCode int) bool {
 	return statusCode >= http.StatusBadRequest && statusCode < http.StatusInternalServerError &&
 		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
+}
+
+func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) {
+	go func() {
+		select {
+		case <-ctx.Done():
+		case <-sessionDone:
+			return
+		}
+
+		c.muConn.Lock()
+		if c.wsconn != ws || c.sessionDone != sessionDone || c.terminalCloseStarted {
+			c.muConn.Unlock()
+			return
+		}
+		c.terminalCloseStarted = true
+		c.retry = false
+		c.wsconn = nil
+		c.sessionDone = nil
+		close(sessionDone)
+
+		// Context cancellation aborts the active session. Protocol-specific graceful
+		// completion remains an explicit caller action. Finish and Close remain under
+		// the connection lock so a reconnect cannot inherit this session's teardown.
+		if err := (*c.router).Close(&commonv1interfaces.CloseResponse{
+			Type: string(commonv1interfaces.TypeCloseResponse),
+		}); err != nil {
+			klog.V(1).Infof("router.Close failed. Err: %v\n", err)
+		}
+		(*c.processMessages).Finish()
+		_ = ws.Close()
+		c.muConn.Unlock()
+	}()
 }
 
 //nolint:funlen // this is a complex function. keep as is
@@ -702,6 +743,10 @@ func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 		return
 	}
 	c.terminalCloseStarted = true
+	if c.sessionDone != nil {
+		close(c.sessionDone)
+		c.sessionDone = nil
+	}
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
