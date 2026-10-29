@@ -255,6 +255,20 @@ fmt.Printf("Request ID: %s\n", res.RequestID)
 
 ## Streaming Audio
 
+### Nova-3 Multilingual Prompting
+
+For Nova-3 multilingual transcription, set `Language` to `multi` and provide the expected languages with `LanguageHint`. Hints bias language detection; they do not restrict recognition to those languages.
+
+```go
+options := &interfaces.PreRecordedTranscriptionOptions{
+    Model:        "nova-3",
+    Language:     "multi",
+    LanguageHint: []string{"en", "es"},
+}
+```
+
+The same fields are available on `LiveTranscriptionOptions`. Read `LanguagesHinted` on alternatives to see which hints the API applied. REST utterances also include their detected `Languages`.
+
 Transcribe streaming audio.
 
 ```go
