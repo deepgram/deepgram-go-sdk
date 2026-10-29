@@ -135,6 +135,7 @@ import (
     "fmt"
     "log"
     "time"
+    "time"
     "os"
 
     api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
