@@ -134,6 +134,7 @@ import (
     "context"
     "fmt"
     "log"
+    "time"
     "os"
 
     api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/rest"
@@ -449,23 +450,49 @@ package main
 
 import (
     "context"
-    "encoding/json"
+    "fmt"
     "log"
 
+    speakws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/websocket/interfaces"
     interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
     speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
 )
 
+type flushHandler struct {
+    flushed chan struct{}
+    errors  chan error
+}
+
+func (h *flushHandler) Open(*speakws.OpenResponse) error       { return nil }
+func (h *flushHandler) Metadata(*speakws.MetadataResponse) error { return nil }
+func (h *flushHandler) Flush(*speakws.FlushedResponse) error {
+    close(h.flushed)
+    return nil
+}
+func (h *flushHandler) Clear(*speakws.ClearedResponse) error   { return nil }
+func (h *flushHandler) Close(*speakws.CloseResponse) error     { return nil }
+func (h *flushHandler) Warning(*speakws.WarningResponse) error { return nil }
+func (h *flushHandler) Error(response *speakws.ErrorResponse) error {
+    h.errors <- fmt.Errorf("Speak error: %s", response.Description)
+    return nil
+}
+func (h *flushHandler) UnhandledEvent([]byte) error { return nil }
+func (h *flushHandler) Binary([]byte) error         { return nil }
+
 func main() {
-    ctx := context.Background()
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
     options := &interfaces.WSSpeakOptions{
         Model:      "aura-2-thalia-en",
         Encoding:   "linear16",
         SampleRate: 16000,
     }
+    handler := &flushHandler{
+        flushed: make(chan struct{}),
+        errors:  make(chan error, 1),
+    }
 
-    // Pass a SpeakMessageCallback instead of nil to handle audio and events.
-    dgClient, err := speak.NewWSUsingCallbackWithDefaults(ctx, options, nil)
+    dgClient, err := speak.NewWSUsingCallbackWithDefaults(ctx, options, handler)
     if err != nil {
         log.Fatal(err)
     }
@@ -480,15 +507,17 @@ func main() {
     if err := dgClient.Flush(); err != nil {
         log.Fatal(err)
     }
-
-}
-
-// Use typed helpers such as Flush and Clear when available. Send raw JSON
-// only for a valid server control frame that the SDK does not model yet.
-func sendCustomControl(client *speak.WSCallback) error {
-    return client.SendControlJSON(json.RawMessage(`{"type":"CustomControl"}`))
+    select {
+    case <-handler.flushed:
+    case err := <-handler.errors:
+        log.Fatal(err)
+    case <-ctx.Done():
+        log.Fatal(ctx.Err())
+    }
 }
 ```
+
+Use typed helpers such as `Flush` and `Clear` when available. For a server-documented control frame that is not modeled by the SDK, pass a `json.RawMessage` to `SendControlJSON`. It validates JSON syntax; the server still validates the control frame itself.
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
 
