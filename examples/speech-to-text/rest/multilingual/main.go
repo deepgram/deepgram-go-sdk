@@ -20,6 +20,7 @@ func main() {
 		Model:        "nova-3",
 		Language:     "multi",
 		LanguageHint: []string{"en", "es"},
+		Utterances:   true,
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -27,4 +28,7 @@ func main() {
 
 	alternative := response.Results.Channels[0].Alternatives[0]
 	fmt.Printf("Transcript: %s\nApplied language hints: %v\n", alternative.Transcript, alternative.LanguagesHinted)
+	for _, utterance := range response.Results.Utterances {
+		fmt.Printf("Utterance languages: %v\n", utterance.Languages)
+	}
 }
