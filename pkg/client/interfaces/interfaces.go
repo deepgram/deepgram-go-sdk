@@ -21,6 +21,11 @@ func NewSettingsConfigurationOptions() *interfacesv1.SettingsOptions {
 	return interfacesv1.NewSettingsOptions()
 }
 
+// NewThinkLiveSettings creates Think Live settings with the required provider.
+func NewThinkLiveSettings() *interfacesv1.ThinkLiveSettings {
+	return interfacesv1.NewThinkLiveSettings()
+}
+
 // options
 type ClientOptions = interfacesv1.ClientOptions
 type ClientOptionsV2 = interfacesv2.ClientOptions
