@@ -52,7 +52,7 @@ var (
 func init() {
 	flag.StringVar(&model, "model", "flux-general-en", "Flux model: flux-general-en or flux-general-multi")
 	flag.Var(&languageHints, "language", "Language hint (repeat for multiple, e.g. -language en -language es); only applied with flux-general-multi")
-	flag.StringVar(&configureNumerals, "configure-numerals", "", "Set Configure-time numeric formatting after connection (true or false)")
+	flag.StringVar(&configureNumerals, "configure-numerals", "", "Update numeric formatting after connection (true or false)")
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.

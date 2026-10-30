@@ -45,9 +45,13 @@ type FluxThresholds struct {
 // Send via WSCallback.Configure() or WSChannel.Configure() to adjust turn-detection
 // behavior without reconnecting.
 type FluxConfigureOptions struct {
-	Thresholds    *FluxThresholds `json:"thresholds,omitempty"`
-	Keyterms      []string        `json:"keyterms,omitempty"`
-	LanguageHints []string        `json:"language_hints,omitempty"`
+	Thresholds *FluxThresholds `json:"thresholds,omitempty"`
+	// Keyterms leaves the server setting unchanged when nil. A non-nil empty
+	// slice sends an explicit empty keyterms update.
+	Keyterms []string `json:"keyterms,omitempty"`
+	// LanguageHints leaves the server setting unchanged when nil. A non-nil
+	// empty slice sends an explicit empty language hints update.
+	LanguageHints []string `json:"language_hints,omitempty"`
 	// Numerals controls numeric formatting for subsequent Flux STT turns. A nil
 	// value leaves the server setting unchanged; use a pointer to send false.
 	Numerals *bool `json:"numerals,omitempty"`

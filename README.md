@@ -310,7 +310,7 @@ Set `DetectEntities` to receive named entity recognition results in the top-leve
 
 ## Flux STT
 
-Flux STT uses the `/v2/listen` WebSocket and separates connection-time options from mid-session `Configure` messages. Supply connection-time options such as the model, encoding, sample rate, and language hints in `FluxTranscriptionOptions` when constructing the client. Configure-time numerals are sent after `Connect` and use a pointer so `false` is not omitted.
+Flux STT uses the `/v2/listen` WebSocket and separates initial connection-time options from mid-session `Configure` messages. Supply the initial numerals setting, alongside the model, encoding, sample rate, and language hints, in `FluxTranscriptionOptions` when constructing the client. Use `FluxConfigureOptions.Numerals` after `Connect` to update numeric formatting for subsequent turns; it uses a pointer so `false` is not omitted.
 
 ```go
 numerals := true
@@ -321,7 +321,7 @@ if err := dgClient.Configure(&interfaces.FluxConfigureOptions{
 }
 ```
 
-`Numerals` is currently a Configure-time option only; do not add it to `FluxTranscriptionOptions`. See the [Flux callback example](examples/speech-to-text/websocket/flux_callback) for a runnable client with `-configure-numerals true` or `-configure-numerals false`.
+`FluxTranscriptionOptions.Numerals` sets the initial connection-time value. `FluxConfigureOptions.Numerals` updates that value after `Connect`. See the [Flux callback example](examples/speech-to-text/websocket/flux_callback) for a runnable client with `-configure-numerals true` or `-configure-numerals false`.
 
 ## Voice Agent
 
