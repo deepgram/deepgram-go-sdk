@@ -7,6 +7,7 @@ package interfacesv1
 import (
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 /***********************************/
@@ -24,6 +25,25 @@ type UpdatePrompt struct {
 type UpdateSpeak struct {
 	Type  string                  `json:"type,omitempty"`
 	Speak interfaces.SpeakOptions `json:"speak,omitempty"`
+}
+
+// UpdateListen is the request to replace the active Listen configuration.
+// The provider must be supplied; omitted provider fields retain their current
+// values except language_hints, which the service clears when omitted.
+type UpdateListen struct {
+	Type   string               `json:"type"`
+	Listen *interfacesv1.Listen `json:"listen"`
+}
+
+// UpdateThink is the request to replace the active Think configuration.
+type UpdateThink struct {
+	Type  string              `json:"type"`
+	Think *interfacesv1.Think `json:"think"`
+}
+
+// ForceEndTurn asks the service to end the current user turn immediately.
+type ForceEndTurn struct {
+	Type string `json:"type"`
 }
 
 // InjectAgentMessage is the request to inject a message into the Agent
@@ -177,4 +197,22 @@ type InjectionRefusedResponse struct {
 // SettingsAppliedResponse is the response confirming settings were applied
 type SettingsAppliedResponse struct {
 	Type string `json:"type,omitempty"`
+}
+
+// ListenUpdatedResponse confirms that the service applied an UpdateListen request.
+type ListenUpdatedResponse struct {
+	Type string `json:"type,omitempty"`
+}
+
+// ThinkUpdatedResponse confirms that the service applied an UpdateThink request.
+type ThinkUpdatedResponse struct {
+	Type string `json:"type,omitempty"`
+}
+
+// WarningResponse describes a non-fatal service warning. ForceEndTurn sends
+// FORCE_END_TURN_UNSUPPORTED when the active Listen provider is not Flux V2.
+type WarningResponse struct {
+	Type        string `json:"type,omitempty"`
+	Code        string `json:"code,omitempty"`
+	Description string `json:"description,omitempty"`
 }
