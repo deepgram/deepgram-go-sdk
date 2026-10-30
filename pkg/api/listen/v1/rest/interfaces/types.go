@@ -95,14 +95,15 @@ type Translation struct {
 }
 
 type Alternative struct {
-	Transcript  string       `json:"transcript,omitempty"`
-	Confidence  float64      `json:"confidence,omitempty"`
-	Words       []Word       `json:"words,omitempty"`
-	Paragraphs  *Paragraphs  `json:"paragraphs,omitempty"`
-	Entities    *[]Entity    `json:"entities,omitempty"`
-	Summaries   *[]SummaryV1 `json:"summaries,omitempty"`
-	Translation *Translation `json:"translation,omitempty"`
-	Languages   []string     `json:"languages,omitempty"`
+	Transcript      string       `json:"transcript,omitempty"`
+	Confidence      float64      `json:"confidence,omitempty"`
+	Words           []Word       `json:"words,omitempty"`
+	Paragraphs      *Paragraphs  `json:"paragraphs,omitempty"`
+	Entities        *[]Entity    `json:"entities,omitempty"`
+	Summaries       *[]SummaryV1 `json:"summaries,omitempty"`
+	Translation     *Translation `json:"translation,omitempty"`
+	Languages       []string     `json:"languages,omitempty"`
+	LanguagesHinted []string     `json:"languages_hinted,omitempty"`
 }
 
 type Paragraphs struct {
@@ -154,6 +155,7 @@ type Utterance struct {
 	Sentiment      *string  `json:"sentiment,omitempty"`
 	SentimentScore *float64 `json:"sentiment_score,omitempty"`
 	ID             string   `json:"id,omitempty"`
+	Languages      []string `json:"languages,omitempty"`
 }
 
 type Intent struct {

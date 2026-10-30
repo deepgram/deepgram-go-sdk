@@ -46,10 +46,11 @@ type Word struct {
 
 // Alternative is a single alternative in a transcript
 type Alternative struct {
-	Confidence float64  `json:"confidence,omitempty"`
-	Transcript string   `json:"transcript,omitempty"`
-	Words      []Word   `json:"words,omitempty"`
-	Languages  []string `json:"languages,omitempty"`
+	Confidence      float64  `json:"confidence,omitempty"`
+	Transcript      string   `json:"transcript,omitempty"`
+	Words           []Word   `json:"words,omitempty"`
+	Languages       []string `json:"languages,omitempty"`
+	LanguagesHinted []string `json:"languages_hinted,omitempty"`
 }
 
 // Entity is a named entity recognized in the transcript

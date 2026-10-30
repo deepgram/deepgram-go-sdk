@@ -28,6 +28,7 @@ type LiveTranscriptionOptions struct {
 	Keywords        []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm         []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Language        string   `json:"language,omitempty" schema:"language,omitempty"`
+	LanguageHint    []string `json:"language_hint,omitempty" schema:"language_hint,omitempty"`
 	Model           string   `json:"model,omitempty" schema:"model,omitempty"`
 	Multichannel    bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
 	NoDelay         bool     `json:"no_delay,omitempty" schema:"no_delay,omitempty"`
