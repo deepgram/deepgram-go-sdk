@@ -34,6 +34,7 @@ const (
 	TypeConversationTextResponse      = "ConversationText"
 	TypeUserStartedSpeakingResponse   = "UserStartedSpeaking"
 	TypeAgentThinkingResponse         = "AgentThinking"
+	TypeFrustrationDetectedResponse   = "FrustrationDetected"
 	TypeFunctionCallRequestResponse   = "FunctionCallRequest"
 	TypeFunctionCallCancelledResponse = "FunctionCallCancelled"
 	TypeAgentStartedSpeakingResponse  = "AgentStartedSpeaking"
