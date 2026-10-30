@@ -36,11 +36,12 @@ type thinkLiveHandler struct {
 
 func Test_ThinkLiveRestrictedTermsMarshaling(t *testing.T) {
 	for _, test := range []struct {
-		name  string
-		terms []string
-		want  string
+		name          string
+		terms         []string
+		want          string
+		wantTermsOmit bool
 	}{
-		{name: "nil omits", want: `"type":"deepgram"`},
+		{name: "nil omits", wantTermsOmit: true},
 		{name: "empty preserves", terms: []string{}, want: `"restricted_terms":[]`},
 		{name: "values preserve", terms: []string{"human"}, want: `"restricted_terms":["human"]`},
 	} {
@@ -50,6 +51,16 @@ func Test_ThinkLiveRestrictedTermsMarshaling(t *testing.T) {
 			data, err := json.Marshal(provider)
 			if err != nil {
 				t.Fatalf("marshal provider: %v", err)
+			}
+			if test.wantTermsOmit {
+				var payload map[string]json.RawMessage
+				if err := json.Unmarshal(data, &payload); err != nil {
+					t.Fatalf("unmarshal provider: %v", err)
+				}
+				if _, found := payload["restricted_terms"]; found {
+					t.Errorf("payload %s must omit restricted_terms", data)
+				}
+				return
 			}
 			if !strings.Contains(string(data), test.want) {
 				t.Errorf("payload %s does not contain %s", data, test.want)
