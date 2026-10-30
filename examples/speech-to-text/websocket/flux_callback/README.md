@@ -27,6 +27,12 @@ go run main.go -model flux-general-multi
 # Multilingual model with language hints (sent as connect-time query params)
 go run main.go -model flux-general-multi -language en -language es -language fr
 
+# Enable numeric formatting after the WebSocket connects
+go run main.go -configure-numerals true
+
+# Explicitly disable numeric formatting after the WebSocket connects
+go run main.go -configure-numerals false
+
 # Filter profanity, format numerals, and redact sensitive numbers at connection time
 go run main.go -profanity-filter -numerals -redact aggressive_numbers
 ```
@@ -37,6 +43,7 @@ go run main.go -profanity-filter -numerals -redact aggressive_numbers
 |------|---------|-------------|
 | `-model` | `flux-general-en` | Flux model to use. Valid values: `flux-general-en`, `flux-general-multi` |
 | `-language` | _(none)_ | Language hint BCP-47 tag (e.g. `en`, `es`, `fr`, `pt`). Repeat the flag for multiple languages. Only sent when `-model flux-general-multi` is used. |
+| `-configure-numerals` | _(unset)_ | Sends a post-connect `Configure` message with `numerals` set to `true` or `false`. |
 | `-profanity-filter` | `false` | Replace recognized profanity with a non-profane word or remove it. |
 | `-numerals` | `false` | Convert written numbers to numerical format. |
 | `-redact` | _(none)_ | Sensitive-number redaction mode: `numbers` or `aggressive_numbers`. |
@@ -45,6 +52,8 @@ go run main.go -profanity-filter -numerals -redact aggressive_numbers
 
 - **Single model** (`flux-general-en`): Transcribes English audio with server-side turn detection. Language hints are ignored.
 - **Multi model** (`flux-general-multi`): Transcribes multilingual audio. If `-language` flags are provided, the hints are passed as `language_hint` query parameters at connect time. The server will include the detected and hinted languages in each `EndOfTurn` event.
+- **Numerals**: `-numerals` sets the initial connection-time value. `-configure-numerals` sends `FluxConfigureOptions.Numerals` after the WebSocket connects to update numeric formatting for subsequent turns.
+- **Safety options**: `-profanity-filter` and `-redact` are connection-time options. Redaction supports `numbers` and `aggressive_numbers`.
 
 ## Turn Events
 

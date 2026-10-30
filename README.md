@@ -310,7 +310,7 @@ Set `DetectEntities` to receive named entity recognition results in the top-leve
 
 ## Flux STT
 
-Flux STT connection options are query parameters sent when the WebSocket opens. Use `ProfanityFilter` to replace recognized profanity with a non-profane word or remove it, `Numerals` to convert written numbers to numerical format, and `Redact` for one of Flux STT's two sensitive-number modes.
+Flux STT separates initial connection-time options from mid-session `Configure` messages. Connection options are query parameters sent when the WebSocket opens. Use `ProfanityFilter` to replace recognized profanity with a non-profane word or remove it, `Numerals` to convert written numbers to numerical format, and `Redact` for one of Flux STT's two sensitive-number modes.
 
 ```go
 options := &interfaces.FluxTranscriptionOptions{
@@ -323,9 +323,20 @@ options := &interfaces.FluxTranscriptionOptions{
 }
 ```
 
-`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. These fields are fixed for the connection. `FluxConfigureOptions` updates mid-session thresholds, keyterms, and language hints; this release does not expose Configure-time `numerals`, so set `Numerals` on `FluxTranscriptionOptions` before connecting.
+`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. These fields are fixed for the connection.
 
-See the runnable [Flux callback example](examples/speech-to-text/websocket/flux_callback) for flag-based use of these options.
+Use `FluxConfigureOptions.Numerals` after `Connect` to update numeric formatting for subsequent turns; it uses a pointer so `false` is not omitted.
+
+```go
+numerals := true
+if err := dgClient.Configure(&interfaces.FluxConfigureOptions{
+    Numerals: &numerals,
+}); err != nil {
+    log.Fatal(err)
+}
+```
+
+`FluxTranscriptionOptions.Numerals` sets the initial connection-time value. `FluxConfigureOptions.Numerals` updates that value after `Connect`. See the runnable [Flux callback example](examples/speech-to-text/websocket/flux_callback) for flag-based use of the connection-time options and `-configure-numerals true` or `-configure-numerals false`.
 
 ## Voice Agent
 
