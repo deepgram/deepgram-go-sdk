@@ -209,3 +209,63 @@ func Test_FluxChanRouterWarning(t *testing.T) {
 		}
 	})
 }
+
+// Test_FluxConfigureSuccessNumeralsRouting verifies ConfigureSuccess retains an
+// explicit false numerals acknowledgement through both public routing patterns.
+func Test_FluxConfigureSuccessNumeralsRouting(t *testing.T) {
+	const raw = `{"type":"ConfigureSuccess","request_id":"request-id","sequence_id":7,"numerals":false}`
+
+	t.Run("callback", func(t *testing.T) {
+		handler := &configureFluxCallback{}
+		router := listenv2api.NewCallbackRouter(handler)
+
+		if err := router.Message([]byte(raw)); err != nil {
+			t.Fatalf("ConfigureSuccess must route successfully, got: %s", err)
+		}
+		if handler.configureSuccess == nil || handler.configureSuccess.Numerals == nil {
+			t.Fatal("ConfigureSuccess did not retain numerals")
+		}
+		if *handler.configureSuccess.Numerals {
+			t.Error("ConfigureSuccess numerals = true, want false")
+		}
+	})
+
+	t.Run("channel", func(t *testing.T) {
+		handler := &configureFluxChan{
+			baseFluxChan:         *newBaseFluxChan(),
+			configureSuccessChan: make(chan *msginterfaces.ConfigureSuccessResponse, 1),
+		}
+		router := listenv2api.NewChanRouter(handler)
+
+		if err := router.Message([]byte(raw)); err != nil {
+			t.Fatalf("ConfigureSuccess must route successfully, got: %s", err)
+		}
+		select {
+		case msg := <-handler.configureSuccessChan:
+			if msg.Numerals == nil || *msg.Numerals {
+				t.Errorf("ConfigureSuccess numerals = %v, want false", msg.Numerals)
+			}
+		case <-time.After(time.Second):
+			t.Fatal("ConfigureSuccess was not delivered on the configured channel")
+		}
+	})
+}
+
+type configureFluxCallback struct {
+	baseFluxCallback
+	configureSuccess *msginterfaces.ConfigureSuccessResponse
+}
+
+func (c *configureFluxCallback) ConfigureSuccess(msg *msginterfaces.ConfigureSuccessResponse) error {
+	c.configureSuccess = msg
+	return nil
+}
+
+type configureFluxChan struct {
+	baseFluxChan
+	configureSuccessChan chan *msginterfaces.ConfigureSuccessResponse
+}
+
+func (h *configureFluxChan) GetConfigureSuccess() []*chan *msginterfaces.ConfigureSuccessResponse {
+	return []*chan *msginterfaces.ConfigureSuccessResponse{&h.configureSuccessChan}
+}
