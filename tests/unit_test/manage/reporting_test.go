@@ -128,8 +128,8 @@ func Test_ManageReporting(t *testing.T) {
 			if want := "/v1/projects/" + reportingProjectID + "/purchases"; r.URL.Path != want {
 				t.Errorf("expected path %s, got %s", want, r.URL.Path)
 			}
-			if got := r.URL.Query().Get("limit"); got != "25.000000" {
-				t.Errorf("expected limit=25.000000, got %q", got)
+			if got := r.URL.Query().Get("limit"); got != "25" {
+				t.Errorf("expected limit=25, got %q", got)
 			}
 		})
 
@@ -157,4 +157,71 @@ func Test_ManageReporting(t *testing.T) {
 			t.Fatalf("expected no response on error, got %+v", response)
 		}
 	})
+}
+
+func Test_ManageReportingNilRequests(t *testing.T) {
+	tests := []struct {
+		name    string
+		fixture string
+		path    string
+		call    func(*api.Client) error
+	}{
+		{
+			name:    "GetUsageBreakdown",
+			fixture: "usage_breakdown.json",
+			path:    "/v1/projects/" + reportingProjectID + "/usage/breakdown",
+			call: func(client *api.Client) error {
+				_, err := client.GetUsageBreakdown(context.Background(), reportingProjectID, nil)
+				return err
+			},
+		},
+		{
+			name:    "GetBillingBreakdown",
+			fixture: "billing_breakdown.json",
+			path:    "/v1/projects/" + reportingProjectID + "/billing/breakdown",
+			call: func(client *api.Client) error {
+				_, err := client.GetBillingBreakdown(context.Background(), reportingProjectID, nil)
+				return err
+			},
+		},
+		{
+			name:    "GetBillingFields",
+			fixture: "billing_fields.json",
+			path:    "/v1/projects/" + reportingProjectID + "/billing/fields",
+			call: func(client *api.Client) error {
+				_, err := client.GetBillingFields(context.Background(), reportingProjectID, nil)
+				return err
+			},
+		},
+		{
+			name:    "ListPurchases",
+			fixture: "purchases.json",
+			path:    "/v1/projects/" + reportingProjectID + "/purchases",
+			call: func(client *api.Client) error {
+				_, err := client.ListPurchases(context.Background(), reportingProjectID, nil)
+				return err
+			},
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			client := newReportingClient(t, reportingFixture(t, test.fixture), func(r *http.Request) {
+				if r.Method != http.MethodGet {
+					t.Errorf("expected GET, got %s", r.Method)
+				}
+				if r.URL.Path != test.path {
+					t.Errorf("expected path %s, got %s", test.path, r.URL.Path)
+				}
+				if r.URL.RawQuery != "" {
+					t.Errorf("expected no query parameters, got %q", r.URL.RawQuery)
+				}
+			})
+
+			if err := test.call(client); err != nil {
+				t.Fatalf("%s with nil request failed: %v", test.name, err)
+			}
+		})
+	}
 }
