@@ -1080,7 +1080,10 @@ import (
 
 mgClient := manageapi.New(manage.NewWithDefaults())
 projects, err := mgClient.ListProjects(ctx)
-if err != nil || len(projects.Projects) == 0 {
+if err != nil {
+    log.Fatal(err)
+}
+if len(projects.Projects) == 0 {
     log.Fatal("no accessible projects")
 }
 myProjectID := projects.Projects[0].ProjectID
