@@ -41,6 +41,8 @@ jobs:
 
       - name: Get dependencies
         shell: bash
+        env:
+          DEEPGRAM_API_KEY: ${{ secrets.DEEPGRAM_API_KEY }}
         run: |
           BRANCH_NAME="response-shape-${{ github.run_id }}"
           git checkout -b "$BRANCH_NAME"
