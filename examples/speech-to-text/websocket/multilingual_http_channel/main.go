@@ -28,7 +28,7 @@ func (h languageHandler) Message(response *msginterfaces.MessageResponse) error 
 	for _, alternative := range response.Channel.Alternatives {
 		fmt.Printf("Transcript: %s\nDetected languages: %v\nApplied language hints: %v\n", alternative.Transcript, alternative.Languages, alternative.LanguagesHinted)
 	}
-	return h.DefaultCallbackHandler.Message(response)
+	return nil
 }
 
 func main() {
