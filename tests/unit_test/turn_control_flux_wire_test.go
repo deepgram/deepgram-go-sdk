@@ -54,7 +54,7 @@ func newFluxTestServer(t *testing.T) (host string, frames chan string, shutdown 
 					return
 				}
 			}
-			if strings.Contains(string(msg), `"type":"Configure"`) {
+			if strings.Contains(string(msg), `"type":"Configure"`) && strings.Contains(string(msg), `"numerals":`) {
 				numerals := "false"
 				if strings.Contains(string(msg), `"numerals":true`) {
 					numerals = "true"
@@ -224,7 +224,7 @@ func Test_FluxConfigureNumeralsWireCallback(t *testing.T) {
 	host, frames, shutdown := newFluxTestServer(t)
 	defer shutdown()
 
-	handler := &wireCallbackHandler{configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 1)}
+	handler := &wireCallbackHandler{configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 4)}
 	dgClient, err := listenv2.NewWSUsingCallback(
 		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
 	if err != nil {
@@ -238,15 +238,29 @@ func Test_FluxConfigureNumeralsWireCallback(t *testing.T) {
 	if err := dgClient.Configure(nil); !errors.Is(err, interfacesv2.ErrOptionsRequired) {
 		t.Errorf("Configure(nil): expected ErrOptionsRequired, got: %v", err)
 	}
-	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{}); !errors.Is(err, interfacesv2.ErrFluxConfigureNoFields) {
-		t.Errorf("Configure(empty): expected ErrFluxConfigureNoFields, got: %v", err)
+	for _, tc := range []struct {
+		name string
+		opts interfaces.FluxConfigureOptions
+		want string
+	}{
+		{name: "no-op", want: `{"type":"Configure"}`},
+		{name: "empty keyterms", opts: interfaces.FluxConfigureOptions{Keyterms: []string{}}, want: `{"type":"Configure","keyterms":[]}`},
+		{name: "empty language hints", opts: interfaces.FluxConfigureOptions{LanguageHints: []string{}}, want: `{"type":"Configure","language_hints":[]}`},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			if err := dgClient.Configure(&tc.opts); err != nil {
+				t.Fatalf("Configure failed: %s", err)
+			}
+			awaitConfigureFrame(t, frames, tc.want)
+		})
 	}
 
 	numerals := true
 	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
 		t.Fatalf("Configure numerals=true failed: %s", err)
 	}
-	awaitConfigureNumeralsFrame(t, frames, `{"type":"Configure","numerals":true}`)
+	awaitConfigureFrame(t, frames, `{"type":"Configure","numerals":true}`)
 	awaitConfigureSuccessNumerals(t, handler.configureSuccess, true)
 }
 
@@ -256,7 +270,7 @@ func Test_FluxConfigureNumeralsWireChannel(t *testing.T) {
 
 	handler := &wireChanHandler{
 		baseFluxChan:     *newBaseFluxChan(),
-		configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 1),
+		configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 4),
 	}
 	dgClient, err := listenv2.NewWSUsingChan(
 		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
@@ -271,19 +285,33 @@ func Test_FluxConfigureNumeralsWireChannel(t *testing.T) {
 	if err := dgClient.Configure(nil); !errors.Is(err, interfacesv2.ErrOptionsRequired) {
 		t.Errorf("Configure(nil): expected ErrOptionsRequired, got: %v", err)
 	}
-	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{}); !errors.Is(err, interfacesv2.ErrFluxConfigureNoFields) {
-		t.Errorf("Configure(empty): expected ErrFluxConfigureNoFields, got: %v", err)
+	for _, tc := range []struct {
+		name string
+		opts interfaces.FluxConfigureOptions
+		want string
+	}{
+		{name: "no-op", want: `{"type":"Configure"}`},
+		{name: "empty keyterms", opts: interfaces.FluxConfigureOptions{Keyterms: []string{}}, want: `{"type":"Configure","keyterms":[]}`},
+		{name: "empty language hints", opts: interfaces.FluxConfigureOptions{LanguageHints: []string{}}, want: `{"type":"Configure","language_hints":[]}`},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			if err := dgClient.Configure(&tc.opts); err != nil {
+				t.Fatalf("Configure failed: %s", err)
+			}
+			awaitConfigureFrame(t, frames, tc.want)
+		})
 	}
 
 	numerals := false
 	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
 		t.Fatalf("Configure numerals=false failed: %s", err)
 	}
-	awaitConfigureNumeralsFrame(t, frames, `{"type":"Configure","numerals":false}`)
+	awaitConfigureFrame(t, frames, `{"type":"Configure","numerals":false}`)
 	awaitConfigureSuccessNumerals(t, handler.configureSuccess, false)
 }
 
-func awaitConfigureNumeralsFrame(t *testing.T, frames chan string, want string) {
+func awaitConfigureFrame(t *testing.T, frames chan string, want string) {
 	t.Helper()
 
 	select {
