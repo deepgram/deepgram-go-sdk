@@ -21,8 +21,8 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
     - [Streaming Audio](#streaming-audio)
-   - [Flux STT](#flux-stt)
-   - [Voice Agent](#voice-agent)
+    - [Flux STT](#flux-stt)
+    - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
   - [Text to Speech Streaming](#text-to-speech-streaming)
   - [Text Intelligence](#text-intelligence)
@@ -310,7 +310,22 @@ Set `DetectEntities` to receive named entity recognition results in the top-leve
 
 ## Flux STT
 
-Flux STT uses the `/v2/listen` WebSocket and separates initial connection-time options from mid-session `Configure` messages. Supply the initial numerals setting, alongside the model, encoding, sample rate, and language hints, in `FluxTranscriptionOptions` when constructing the client. Use `FluxConfigureOptions.Numerals` after `Connect` to update numeric formatting for subsequent turns; it uses a pointer so `false` is not omitted.
+Flux STT separates initial connection-time options from mid-session `Configure` messages. Connection options are query parameters sent when the WebSocket opens. Use `ProfanityFilter` to replace recognized profanity with a non-profane word or remove it, `Numerals` to convert written numbers to numerical format, and `Redact` for one of Flux STT's two sensitive-number modes.
+
+```go
+options := &interfaces.FluxTranscriptionOptions{
+    Model:           "flux-general-en",
+    Encoding:        "linear16",
+    SampleRate:      16000,
+    ProfanityFilter: true,
+    Numerals:        true,
+    Redact:          interfaces.FluxRedactAggressiveNumbers,
+}
+```
+
+`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. These fields are fixed for the connection.
+
+Use `FluxConfigureOptions.Numerals` after `Connect` to update numeric formatting for subsequent turns; it uses a pointer so `false` is not omitted.
 
 ```go
 numerals := true
@@ -321,7 +336,7 @@ if err := dgClient.Configure(&interfaces.FluxConfigureOptions{
 }
 ```
 
-`FluxTranscriptionOptions.Numerals` sets the initial connection-time value. `FluxConfigureOptions.Numerals` updates that value after `Connect`. See the [Flux callback example](examples/speech-to-text/websocket/flux_callback) for a runnable client with `-configure-numerals true` or `-configure-numerals false`.
+`FluxTranscriptionOptions.Numerals` sets the initial connection-time value. `FluxConfigureOptions.Numerals` updates that value after `Connect`. See the runnable [Flux callback example](examples/speech-to-text/websocket/flux_callback) for flag-based use of the connection-time options and `-configure-numerals true` or `-configure-numerals false`.
 
 ## Voice Agent
 

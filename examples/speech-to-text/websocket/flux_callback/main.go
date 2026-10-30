@@ -10,6 +10,8 @@
 //
 //	DEEPGRAM_API_KEY=<your-key> go run main.go -model flux-general-en
 //	DEEPGRAM_API_KEY=<your-key> go run main.go -model flux-general-multi -language en -language es
+//	// Format and redact transcripts at connection time.
+//	DEEPGRAM_API_KEY=<your-key> go run main.go -profanity-filter -numerals -redact aggressive_numbers
 package main
 
 import (
@@ -47,12 +49,18 @@ var (
 	model             string
 	languageHints     languageFlags
 	configureNumerals string
+	profanityFilter   bool
+	numerals          bool
+	redact            string
 )
 
 func init() {
 	flag.StringVar(&model, "model", "flux-general-en", "Flux model: flux-general-en or flux-general-multi")
 	flag.Var(&languageHints, "language", "Language hint (repeat for multiple, e.g. -language en -language es); only applied with flux-general-multi")
 	flag.StringVar(&configureNumerals, "configure-numerals", "", "Update numeric formatting after connection (true or false)")
+	flag.BoolVar(&profanityFilter, "profanity-filter", false, "Filter recognized profanity")
+	flag.BoolVar(&numerals, "numerals", false, "Format written numbers as numerals")
+	flag.StringVar(&redact, "redact", "", "Redact sensitive numbers: numbers or aggressive_numbers")
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.
@@ -132,14 +140,14 @@ func (c MyCallback) UnhandledEvent(byData []byte) error {
 
 func main() {
 	flag.Parse()
-	var numerals *bool
+	var configureNumeralsValue *bool
 	if configureNumerals != "" {
 		value, err := strconv.ParseBool(configureNumerals)
 		if err != nil {
 			fmt.Printf("ERROR: -configure-numerals must be true or false: %v\n", err)
 			return
 		}
-		numerals = &value
+		configureNumeralsValue = &value
 	}
 
 	microphone.Initialize()
@@ -161,6 +169,9 @@ func main() {
 		Encoding:          "linear16",
 		SampleRate:        16000,
 		EagerEotThreshold: 0.3,
+		ProfanityFilter:   profanityFilter,
+		Numerals:          numerals,
+		Redact:            interfaces.FluxRedact(redact),
 	}
 
 	if model == "flux-general-multi" && len(languageHints) > 0 {
@@ -180,8 +191,8 @@ func main() {
 		fmt.Println("ERROR: failed to connect to Deepgram Flux endpoint")
 		os.Exit(1)
 	}
-	if numerals != nil {
-		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: numerals}); err != nil {
+	if configureNumeralsValue != nil {
+		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: configureNumeralsValue}); err != nil {
 			fmt.Printf("ERROR: configuring numerals: %v\n", err)
 			dgClient.Stop()
 			microphone.Teardown()
