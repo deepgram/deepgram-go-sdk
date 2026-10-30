@@ -17,7 +17,7 @@ type SettingsOptions interfaces.SettingsOptions
 // UpdatePrompt is the request to update the Agent prompt
 type UpdatePrompt struct {
 	Type   string `json:"type,omitempty"`
-	Prompt string `json:"instructions,omitempty"`
+	Prompt string `json:"prompt"` // required by the API; sent even when empty
 }
 
 // UpdateSpeak is the request to update configuration for speaking
@@ -29,7 +29,7 @@ type UpdateSpeak struct {
 // InjectAgentMessage is the request to inject a message into the Agent
 type InjectAgentMessage struct {
 	Type    string `json:"type,omitempty"`
-	Content string `json:"content,omitempty"`
+	Content string `json:"message"` // required by the API; sent even when empty
 }
 
 // InjectUserMessage is the request to interact with the agent using text.
