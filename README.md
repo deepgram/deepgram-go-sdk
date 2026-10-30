@@ -412,6 +412,16 @@ For a complete implementation, you would need to:
 3. Handle function calls where `ClientSide` is true if your agent uses them. Each `FunctionCallRequest` contains a `Functions` slice; each call's `Arguments` field is JSON-encoded and can be decoded for the function implementation. Send the result with `conn.WriteJSON(FunctionCallResponse{...})`, setting `Type` to `TypeFunctionCallResponse` and using the call's `ID`, `Name`, and a `Content` string; echo `ThoughtSignature` unchanged when it is present. Implement `FunctionCallCancelledChan` to stop work and avoid replying when the server cancels a client-side call. If your handler embeds `DefaultChanHandler`, override `GetFunctionCallCancelled` too; otherwise cancellations go to the default handler, which only prints them.
 4. Add proper error handling and connection management
 
+### Runtime controls
+
+After `SettingsApplied`, a channel-based Agent connection supports `UpdateListen`, `UpdateThink`, and `ForceEndTurn`:
+
+- `UpdateListen` takes `*interfacesv1.Listen` and emits `ListenUpdated`. It is a partial update, but the service clears `language_hints` when they are omitted.
+- `UpdateThink` takes `*interfacesv1.Think`, replaces the active Think configuration, and emits `ThinkUpdated`.
+- `ForceEndTurn` takes no arguments and requires a Deepgram V2 (Flux) Listen provider. It has no success acknowledgement; a successful forced turn follows the usual `ConversationText` and `AgentThinking` flow. Implement optional `WarningChan` to receive `FORCE_END_TURN_UNSUPPORTED` for a non-Flux provider.
+
+Custom handlers remain source-compatible. To receive the new events, additionally implement `ListenUpdatedChan`, `ThinkUpdatedChan`, and/or `WarningChan`; otherwise the router safely forwards those frames to `GetUnhandled`. This initial runtime-control surface intentionally excludes custom Think-provider pass-through messages and `History`. See the runnable text-only [`runtime_controls`](examples/agent/websocket/runtime_controls) example.
+
 See [`examples/agent/websocket/function_call`](./examples/agent/websocket/function_call) for a runnable client-side function call.
 
 [See our API reference for more info](https://developers.deepgram.com/reference/voice-agent-api/agent).
