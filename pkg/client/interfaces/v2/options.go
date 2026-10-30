@@ -13,7 +13,9 @@ import (
 )
 
 func (o *FluxTranscriptionOptions) Check() error {
-	// currently no op
+	if o.Redact != "" && o.Redact != FluxRedactNumbers && o.Redact != FluxRedactAggressiveNumbers {
+		return ErrFluxRedactInvalid
+	}
 	return nil
 }
 

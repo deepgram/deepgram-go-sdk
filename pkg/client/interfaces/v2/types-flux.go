@@ -31,7 +31,24 @@ type FluxTranscriptionOptions struct {
 	// LanguageHint constrains and prioritizes language detection for the
 	// flux-general-multi model. Only valid when Model is "flux-general-multi".
 	LanguageHint []string `json:"language_hint,omitempty" schema:"language_hint,omitempty"`
+	// ProfanityFilter replaces recognized profanity with a non-profane word or removes it.
+	ProfanityFilter bool `json:"profanity_filter,omitempty" schema:"profanity_filter,omitempty"`
+	// Numerals converts written numbers to numerical format.
+	Numerals bool `json:"numerals,omitempty" schema:"numerals,omitempty"`
+	// Redact removes sensitive numbers from transcripts. Flux supports only the
+	// FluxRedactNumbers and FluxRedactAggressiveNumbers modes.
+	Redact FluxRedact `json:"redact,omitempty" schema:"redact,omitempty"`
 }
+
+// FluxRedact is a sensitive-number redaction mode supported by Flux STT.
+type FluxRedact string
+
+const (
+	// FluxRedactNumbers redacts numbers from Flux STT transcripts.
+	FluxRedactNumbers FluxRedact = "numbers"
+	// FluxRedactAggressiveNumbers applies Flux STT's aggressive number redaction mode.
+	FluxRedactAggressiveNumbers FluxRedact = "aggressive_numbers"
+)
 
 // FluxThresholds holds the turn-detection thresholds used in Configure messages
 // and ConfigureSuccess responses.

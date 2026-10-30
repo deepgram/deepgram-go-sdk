@@ -34,4 +34,7 @@ var (
 
 	// ErrSpeedOutOfRange the speed value is outside the supported set
 	ErrSpeedOutOfRange = errors.New("speed must be between 0.5 and 1.5 in 0.05 increments")
+
+	// ErrFluxRedactInvalid the redaction mode is not supported by Flux STT
+	ErrFluxRedactInvalid = errors.New("redact must be numbers or aggressive_numbers")
 )

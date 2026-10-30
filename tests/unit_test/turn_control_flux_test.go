@@ -14,6 +14,8 @@ import (
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
+	listenv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2"
 	listenv2ws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2/websocket"
 )
 
@@ -153,5 +155,80 @@ func Test_FluxConfigureThresholdOne(t *testing.T) {
 	want := `{"type":"Configure","thresholds":{"eot_threshold":1}}`
 	if string(data) != want {
 		t.Errorf("ConfigureMessage wire format mismatch: got %s, want %s", data, want)
+	}
+}
+
+const fluxSafetyOptionsQuery = "encoding=linear16&model=flux-general-en&numerals=true&profanity_filter=true&redact=aggressive_numbers&sample_rate=16000"
+
+func fluxSafetyOptions() *interfaces.FluxTranscriptionOptions {
+	return &interfaces.FluxTranscriptionOptions{
+		Model:           "flux-general-en",
+		Encoding:        "linear16",
+		SampleRate:      16000,
+		ProfanityFilter: true,
+		Numerals:        true,
+		Redact:          interfaces.FluxRedactAggressiveNumbers,
+	}
+}
+
+func assertFluxSafetyOptionsURL(t *testing.T, uri string, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("GetURL failed: %s", err)
+	}
+
+	parsed, err := url.Parse(uri)
+	if err != nil {
+		t.Fatalf("parse URL %q: %s", uri, err)
+	}
+	if parsed.Scheme != "wss" || parsed.Host != "api.deepgram.com" || parsed.Path != "/v2/listen" {
+		t.Fatalf("unexpected Flux WebSocket endpoint: %s", uri)
+	}
+	if parsed.RawQuery != fluxSafetyOptionsQuery {
+		t.Errorf("unexpected Flux safety options query:\n got: %s\nwant: %s", parsed.RawQuery, fluxSafetyOptionsQuery)
+	}
+}
+
+func Test_FluxSafetyOptionsQueryCallback(t *testing.T) {
+	client, err := listenv2.NewWSUsingCallback(
+		context.Background(), MockAPIKey, &interfaces.ClientOptionsV2{}, fluxSafetyOptions(), nil)
+	if err != nil {
+		t.Fatalf("NewWSUsingCallback failed: %s", err)
+	}
+
+	uri, err := client.GetURL("")
+	assertFluxSafetyOptionsURL(t, uri, err)
+}
+
+func Test_FluxSafetyOptionsQueryChannel(t *testing.T) {
+	client, err := listenv2.NewWSUsingChan(
+		context.Background(), MockAPIKey, &interfaces.ClientOptionsV2{}, fluxSafetyOptions(), nil)
+	if err != nil {
+		t.Fatalf("NewWSUsingChan failed: %s", err)
+	}
+
+	uri, err := client.GetURL("")
+	assertFluxSafetyOptionsURL(t, uri, err)
+}
+
+func Test_FluxSafetyOptionsValidateRedactModes(t *testing.T) {
+	tests := []struct {
+		name string
+		mode interfaces.FluxRedact
+		want error
+	}{
+		{name: "unset"},
+		{name: "numbers", mode: interfaces.FluxRedactNumbers},
+		{name: "aggressive_numbers", mode: interfaces.FluxRedactAggressiveNumbers},
+		{name: "invalid", mode: interfaces.FluxRedact("pii"), want: interfacesv2.ErrFluxRedactInvalid},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := (&interfaces.FluxTranscriptionOptions{Model: "flux-general-en", Redact: test.mode}).Check()
+			if err != test.want {
+				t.Errorf("Check() error = %v, want %v", err, test.want)
+			}
+		})
 	}
 }
