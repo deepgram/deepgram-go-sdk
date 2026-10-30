@@ -6,6 +6,7 @@ package deepgram_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,6 +17,7 @@ import (
 
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 	listenv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2"
 )
 
@@ -49,6 +51,16 @@ func newFluxTestServer(t *testing.T) (host string, frames chan string, shutdown 
 			if strings.Contains(string(msg), `"ForceEndTurn"`) {
 				warning := `{"type":"Warning","code":"FORCE_END_TURN_NO_ACTIVE_TURN","description":"ForceEndTurn received with no active turn"}`
 				if err := conn.WriteMessage(websocket.TextMessage, []byte(warning)); err != nil {
+					return
+				}
+			}
+			if strings.Contains(string(msg), `"type":"Configure"`) {
+				numerals := "false"
+				if strings.Contains(string(msg), `"numerals":true`) {
+					numerals = "true"
+				}
+				success := `{"type":"ConfigureSuccess","request_id":"request-id","sequence_id":1,"numerals":` + numerals + `}`
+				if err := conn.WriteMessage(websocket.TextMessage, []byte(success)); err != nil {
 					return
 				}
 			}
@@ -99,11 +111,17 @@ func awaitForceEndTurnFrame(t *testing.T, frames chan string) {
 // warnings delivered through the live client.
 type wireCallbackHandler struct {
 	baseFluxCallback
-	warnings chan *msginterfaces.WarningResponse
+	warnings         chan *msginterfaces.WarningResponse
+	configureSuccess chan *msginterfaces.ConfigureSuccessResponse
 }
 
 func (c *wireCallbackHandler) Warning(wr *msginterfaces.WarningResponse) error {
 	c.warnings <- wr
+	return nil
+}
+
+func (c *wireCallbackHandler) ConfigureSuccess(cs *msginterfaces.ConfigureSuccessResponse) error {
+	c.configureSuccess <- cs
 	return nil
 }
 
@@ -115,7 +133,7 @@ func Test_FluxForceEndTurnWireCallback(t *testing.T) {
 	host, frames, shutdown := newFluxTestServer(t)
 	defer shutdown()
 
-	handler := &wireCallbackHandler{warnings: make(chan *msginterfaces.WarningResponse, 4)}
+	handler := &wireCallbackHandler{warnings: make(chan *msginterfaces.WarningResponse, 4), configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 4)}
 	dgClient, err := listenv2.NewWSUsingCallback(
 		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
 	if err != nil {
@@ -150,11 +168,16 @@ func Test_FluxForceEndTurnWireCallback(t *testing.T) {
 // delivered through the live client.
 type wireChanHandler struct {
 	baseFluxChan
-	warningChan chan *msginterfaces.WarningResponse
+	warningChan      chan *msginterfaces.WarningResponse
+	configureSuccess chan *msginterfaces.ConfigureSuccessResponse
 }
 
 func (h *wireChanHandler) GetWarning() []*chan *msginterfaces.WarningResponse {
 	return []*chan *msginterfaces.WarningResponse{&h.warningChan}
+}
+
+func (h *wireChanHandler) GetConfigureSuccess() []*chan *msginterfaces.ConfigureSuccessResponse {
+	return []*chan *msginterfaces.ConfigureSuccessResponse{&h.configureSuccess}
 }
 
 // Test_FluxForceEndTurnWireChannel is the channel-client counterpart of
@@ -164,8 +187,9 @@ func Test_FluxForceEndTurnWireChannel(t *testing.T) {
 	defer shutdown()
 
 	handler := &wireChanHandler{
-		baseFluxChan: *newBaseFluxChan(),
-		warningChan:  make(chan *msginterfaces.WarningResponse, 4),
+		baseFluxChan:     *newBaseFluxChan(),
+		warningChan:      make(chan *msginterfaces.WarningResponse, 4),
+		configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 4),
 	}
 	dgClient, err := listenv2.NewWSUsingChan(
 		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
@@ -193,5 +217,94 @@ func Test_FluxForceEndTurnWireChannel(t *testing.T) {
 	dgClient.Stop()
 	if err := dgClient.ForceEndTurn(); err == nil {
 		t.Error("ForceEndTurn after Stop must propagate a write error, got nil")
+	}
+}
+
+func Test_FluxConfigureNumeralsWireCallback(t *testing.T) {
+	host, frames, shutdown := newFluxTestServer(t)
+	defer shutdown()
+
+	handler := &wireCallbackHandler{configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 1)}
+	dgClient, err := listenv2.NewWSUsingCallback(
+		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
+	if err != nil {
+		t.Fatalf("NewWSUsingCallback failed: %s", err)
+	}
+	if !dgClient.Connect() {
+		t.Fatal("Connect to the test server failed")
+	}
+	defer dgClient.Stop()
+
+	if err := dgClient.Configure(nil); !errors.Is(err, interfacesv2.ErrOptionsRequired) {
+		t.Errorf("Configure(nil): expected ErrOptionsRequired, got: %v", err)
+	}
+	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{}); !errors.Is(err, interfacesv2.ErrFluxConfigureNoFields) {
+		t.Errorf("Configure(empty): expected ErrFluxConfigureNoFields, got: %v", err)
+	}
+
+	numerals := true
+	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
+		t.Fatalf("Configure numerals=true failed: %s", err)
+	}
+	awaitConfigureNumeralsFrame(t, frames, `{"type":"Configure","numerals":true}`)
+	awaitConfigureSuccessNumerals(t, handler.configureSuccess, true)
+}
+
+func Test_FluxConfigureNumeralsWireChannel(t *testing.T) {
+	host, frames, shutdown := newFluxTestServer(t)
+	defer shutdown()
+
+	handler := &wireChanHandler{
+		baseFluxChan:     *newBaseFluxChan(),
+		configureSuccess: make(chan *msginterfaces.ConfigureSuccessResponse, 1),
+	}
+	dgClient, err := listenv2.NewWSUsingChan(
+		context.Background(), MockAPIKey, fluxWireClientOptions(host), fluxWireTranscriptionOptions(), handler)
+	if err != nil {
+		t.Fatalf("NewWSUsingChan failed: %s", err)
+	}
+	if !dgClient.Connect() {
+		t.Fatal("Connect to the test server failed")
+	}
+	defer dgClient.Stop()
+
+	if err := dgClient.Configure(nil); !errors.Is(err, interfacesv2.ErrOptionsRequired) {
+		t.Errorf("Configure(nil): expected ErrOptionsRequired, got: %v", err)
+	}
+	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{}); !errors.Is(err, interfacesv2.ErrFluxConfigureNoFields) {
+		t.Errorf("Configure(empty): expected ErrFluxConfigureNoFields, got: %v", err)
+	}
+
+	numerals := false
+	if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
+		t.Fatalf("Configure numerals=false failed: %s", err)
+	}
+	awaitConfigureNumeralsFrame(t, frames, `{"type":"Configure","numerals":false}`)
+	awaitConfigureSuccessNumerals(t, handler.configureSuccess, false)
+}
+
+func awaitConfigureNumeralsFrame(t *testing.T, frames chan string, want string) {
+	t.Helper()
+
+	select {
+	case frame := <-frames:
+		if frame != want {
+			t.Errorf("expected frame %s, got %s", want, frame)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatalf("server never received the Configure text frame %s", want)
+	}
+}
+
+func awaitConfigureSuccessNumerals(t *testing.T, responses chan *msginterfaces.ConfigureSuccessResponse, want bool) {
+	t.Helper()
+
+	select {
+	case response := <-responses:
+		if response.Numerals == nil || *response.Numerals != want {
+			t.Errorf("ConfigureSuccess numerals = %v, want %t", response.Numerals, want)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the server's ConfigureSuccess never reached the client handler")
 	}
 }

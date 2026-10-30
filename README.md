@@ -20,8 +20,9 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Pre-Recorded (Asynchronous / Callbacks)](#pre-recorded-asynchronous--callbacks)
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
-  - [Streaming Audio](#streaming-audio)
-  - [Voice Agent](#voice-agent)
+    - [Streaming Audio](#streaming-audio)
+   - [Flux STT](#flux-stt)
+   - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
   - [Text to Speech Streaming](#text-to-speech-streaming)
   - [Text Intelligence](#text-intelligence)
@@ -306,6 +307,21 @@ dgClient.Stop()
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 
 Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
+
+## Flux STT
+
+Flux STT uses the `/v2/listen` WebSocket and separates connection-time options from mid-session `Configure` messages. Supply connection-time options such as the model, encoding, sample rate, and language hints in `FluxTranscriptionOptions` when constructing the client. Configure-time numerals are sent after `Connect` and use a pointer so `false` is not omitted.
+
+```go
+numerals := true
+if err := dgClient.Configure(&interfaces.FluxConfigureOptions{
+    Numerals: &numerals,
+}); err != nil {
+    log.Fatal(err)
+}
+```
+
+`Numerals` is currently a Configure-time option only; do not add it to `FluxTranscriptionOptions`. See the [Flux callback example](examples/speech-to-text/websocket/flux_callback) for a runnable client with `-configure-numerals true` or `-configure-numerals false`.
 
 ## Voice Agent
 

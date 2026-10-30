@@ -48,4 +48,7 @@ type FluxConfigureOptions struct {
 	Thresholds    *FluxThresholds `json:"thresholds,omitempty"`
 	Keyterms      []string        `json:"keyterms,omitempty"`
 	LanguageHints []string        `json:"language_hints,omitempty"`
+	// Numerals controls numeric formatting for subsequent Flux STT turns. A nil
+	// value leaves the server setting unchanged; use a pointer to send false.
+	Numerals *bool `json:"numerals,omitempty"`
 }

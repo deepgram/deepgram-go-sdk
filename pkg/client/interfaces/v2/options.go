@@ -17,6 +17,18 @@ func (o *FluxTranscriptionOptions) Check() error {
 	return nil
 }
 
+// Check validates a mid-session Flux STT Configure message. Numerals uses a
+// pointer so false remains an explicit update rather than an omitted field.
+func (o *FluxConfigureOptions) Check() error {
+	if o == nil {
+		return ErrOptionsRequired
+	}
+	if o.Thresholds == nil && len(o.Keyterms) == 0 && len(o.LanguageHints) == 0 && o.Numerals == nil {
+		return ErrFluxConfigureNoFields
+	}
+	return nil
+}
+
 func (o *SpeakV2Options) Check() error {
 	// model is required on /v2/speak — unlike /v1/speak there is no default
 	if o.Model == "" {

@@ -155,3 +155,32 @@ func Test_FluxConfigureThresholdOne(t *testing.T) {
 		t.Errorf("ConfigureMessage wire format mismatch: got %s, want %s", data, want)
 	}
 }
+
+// Test_FluxConfigureNumeralsSerialization verifies Configure uses a pointer so
+// both enabled numerals and an explicit false value reach the wire unchanged.
+func Test_FluxConfigureNumeralsSerialization(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		value bool
+		want  string
+	}{
+		{name: "true", value: true, want: `{"type":"Configure","numerals":true}`},
+		{name: "false", value: false, want: `{"type":"Configure","numerals":false}`},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			msg := msginterfaces.ConfigureMessage{
+				Type:     listenv2ws.MessageTypeConfigure,
+				Numerals: &tc.value,
+			}
+
+			data, err := json.Marshal(msg)
+			if err != nil {
+				t.Fatalf("marshal ConfigureMessage failed: %s", err)
+			}
+			if string(data) != tc.want {
+				t.Errorf("ConfigureMessage wire format mismatch: got %s, want %s", data, tc.want)
+			}
+		})
+	}
+}
