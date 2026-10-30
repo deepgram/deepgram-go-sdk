@@ -47,6 +47,12 @@ const (
 	UsageRequestByIDURI string = "projects/%s/requests/%s"
 	UsageURI            string = "projects/%s/usage"
 	UsageFieldsURI      string = "projects/%s/usage/fields"
+	UsageBreakdownURI   string = "projects/%s/usage/breakdown"
+
+	// billing reporting
+	BillingBreakdownURI string = "projects/%s/billing/breakdown"
+	BillingFieldsURI    string = "projects/%s/billing/fields"
+	PurchasesURI        string = "projects/%s/purchases"
 
 	// agents (reusable voice-agent configurations)
 	AgentsURI     string = "projects/%s/agents"
@@ -69,5 +75,5 @@ mechanism for:
 The return value is the complete URL endpoint to be used for manage
 */
 func GetManageAPI(ctx context.Context, host, version, path string, vals interface{}, args ...interface{}) (string, error) {
-	return getAPIURL(ctx, "speak", host, version, path, nil, args...)
+	return getAPIURL(ctx, "speak", host, version, path, vals, args...)
 }

@@ -1,0 +1,18 @@
+{
+  "start": "2026-01-01",
+  "end": "2026-01-31",
+  "resolution": {"units": "day", "amount": 1},
+  "results": [
+    {
+      "dollars": 12.34,
+      "grouping": {
+        "start": "2026-01-01",
+        "end": "2026-01-01",
+        "accessor": null,
+        "deployment": "hosted",
+        "line_item": "streaming::nova-3",
+        "tags": ["production"]
+      }
+    }
+  ]
+}
