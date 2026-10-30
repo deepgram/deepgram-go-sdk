@@ -49,6 +49,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
 		thinkLiveUpdatedResponse:      make(chan *interfaces.ThinkLiveUpdatedResponse),
 		warningResponse:               make(chan *interfaces.WarningResponse),
+		customFromThinkProvider:       make(chan *interfaces.CustomFromThinkProviderResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
 		unhandledChan:                 make(chan *[]byte),
@@ -167,6 +168,11 @@ func (dch DefaultChanHandler) GetThinkLiveUpdated() []*chan *interfaces.ThinkLiv
 // GetWarning returns non-fatal service warning channels.
 func (dch DefaultChanHandler) GetWarning() []*chan *interfaces.WarningResponse {
 	return []*chan *interfaces.WarningResponse{&dch.warningResponse}
+}
+
+// GetCustomFromThinkProvider returns the custom Think provider response channels.
+func (dch DefaultChanHandler) GetCustomFromThinkProvider() []*chan *interfaces.CustomFromThinkProviderResponse {
+	return []*chan *interfaces.CustomFromThinkProviderResponse{&dch.customFromThinkProvider}
 }
 
 // Open is the callback for when the connection opens
@@ -396,6 +402,20 @@ func (dch DefaultChanHandler) Run() error {
 		defer wgReceivers.Done()
 		for warning := range dch.warningResponse {
 			fmt.Printf("\n[WarningResponse]\nCode: %s\nDescription: %s\n\n", warning.Code, warning.Description)
+		}
+	}()
+
+	// custom Think provider response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for response := range dch.customFromThinkProvider {
+			if dch.debugWebsocket {
+				logDebugObjectLength("CustomFromThinkProvider", response)
+			}
+
+			fmt.Printf("\n\n[CustomFromThinkProviderResponse]\n\n")
 		}
 	}()
 

@@ -62,3 +62,9 @@ type ThinkLiveChan interface {
 type ThinkLiveUpdatedChan interface {
 	GetThinkLiveUpdated() []*chan *ThinkLiveUpdatedResponse
 }
+
+// CustomFromThinkProviderChan receives responses from a custom Think provider.
+// It is optional so existing AgentMessageChan implementations remain compatible.
+type CustomFromThinkProviderChan interface {
+	GetCustomFromThinkProvider() []*chan *CustomFromThinkProviderResponse
+}

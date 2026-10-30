@@ -6,6 +6,7 @@ package websocketv1
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"io"
 	"os"
@@ -35,6 +36,10 @@ func Test_DefaultChanHandlerDoesNotLogPayloads(t *testing.T) {
 		handler.conversationTextResponse <- &interfaces.ConversationTextResponse{
 			Type:    "ConversationText",
 			Content: secret,
+		}
+		handler.customFromThinkProvider <- &interfaces.CustomFromThinkProviderResponse{
+			Type:    interfaces.TypeCustomFromThinkProviderResponse,
+			Content: json.RawMessage(`{"token":"` + secret + `"}`),
 		}
 		unhandled := []byte(`{"type":"FutureEvent","token":"` + secret + `"}`)
 		handler.unhandledChan <- &unhandled
@@ -77,6 +82,7 @@ func newTestDefaultChanHandler() *DefaultChanHandler {
 		userStartedSpeakingResponse:   make(chan *interfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:         make(chan *interfaces.AgentThinkingResponse),
 		frustrationDetectedResponse:   make(chan *interfaces.FrustrationDetectedResponse),
+		customFromThinkProvider:       make(chan *interfaces.CustomFromThinkProviderResponse),
 		functionCallRequestResponse:   make(chan *interfaces.FunctionCallRequestResponse),
 		functionCallCancelledResponse: make(chan *interfaces.FunctionCallCancelledResponse),
 		agentStartedSpeakingResponse:  make(chan *interfaces.AgentStartedSpeakingResponse),
@@ -102,6 +108,7 @@ func closeTestDefaultChanHandler(handler *DefaultChanHandler) {
 	close(handler.userStartedSpeakingResponse)
 	close(handler.agentThinkingResponse)
 	close(handler.frustrationDetectedResponse)
+	close(handler.customFromThinkProvider)
 	close(handler.functionCallRequestResponse)
 	close(handler.functionCallCancelledResponse)
 	close(handler.agentStartedSpeakingResponse)

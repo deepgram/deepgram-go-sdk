@@ -54,6 +54,13 @@ type ForceEndTurn struct {
 	Type string `json:"type"`
 }
 
+// CustomToThinkProvider sends an arbitrary JSON value to an experimental custom
+// Think provider configured with a wss:// endpoint.
+type CustomToThinkProvider struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
+}
+
 // InjectAgentMessage is the request to inject a message into the Agent
 type InjectAgentMessage struct {
 	Type    string `json:"type,omitempty"`
@@ -258,4 +265,14 @@ type WarningResponse struct {
 	Type        string `json:"type,omitempty"`
 	Code        string `json:"code,omitempty"`
 	Description string `json:"description,omitempty"`
+}
+
+// CustomFromThinkProviderResponse contains a custom Think provider response
+// body exactly as the Voice Agent server sent it.
+//
+// This is an experimental Voice Agent event. A non-JSON provider response is
+// delivered as a JSON string, so Content remains valid JSON in all cases.
+type CustomFromThinkProviderResponse struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
 }

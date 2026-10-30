@@ -48,4 +48,6 @@ const (
 	TypeThinkUpdatedResponse          = "ThinkUpdated"
 	TypeThinkLiveUpdatedResponse      = "ThinkLiveUpdated"
 	TypeWarningResponse               = "Warning"
+	// TypeCustomFromThinkProviderResponse is an experimental custom Think provider event.
+	TypeCustomFromThinkProviderResponse = "__customFromThinkProvider"
 )
