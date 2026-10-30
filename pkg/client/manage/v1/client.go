@@ -44,10 +44,16 @@ func New(apiKey string, options *interfaces.ClientOptions) *Client {
 // APIRequest issues a request against the Manage API and decodes the response
 // into resBody. Pass a nil resBody for endpoints that answer with an empty body.
 func (c *Client) APIRequest(ctx context.Context, method, apiPath string, body io.Reader, resBody interface{}, params ...interface{}) error {
+	return c.APIRequestWithQuery(ctx, method, apiPath, nil, body, resBody, params...)
+}
+
+// APIRequestWithQuery issues a request against the Manage API with query
+// parameters encoded from query and decodes the response into resBody.
+func (c *Client) APIRequestWithQuery(ctx context.Context, method, apiPath string, query interface{}, body io.Reader, resBody interface{}, params ...interface{}) error {
 	klog.V(6).Infof("manage.%s() ENTER\n", method+apiPath) // Dynamic entry log based on method and path
 
 	// Construct the uri with parameters
-	uri, err := version.GetManageAPI(ctx, c.Options.Host, c.Options.APIVersion, apiPath, nil, params...)
+	uri, err := version.GetManageAPI(ctx, c.Options.Host, c.Options.APIVersion, apiPath, query, params...)
 	if err != nil {
 		klog.V(1).Infof("GetManageAPI failed. Err: %v\n", err)
 		klog.V(6).Infof("manage.%s() LEAVE\n", method+apiPath)
