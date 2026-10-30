@@ -21,6 +21,8 @@ const (
 	TypeFunctionCallResponse = "FunctionCallResponse"
 	TypeKeepAlive            = "KeepAlive"
 	TypeClose                = "Close"
+	// TypeCustomToThinkProvider is an experimental custom Think provider message.
+	TypeCustomToThinkProvider = "__customToThinkProvider"
 )
 
 // server message types
@@ -39,4 +41,6 @@ const (
 	TypeErrorResponse                 = commoninterfaces.TypeErrorResponse
 	TypeInjectionRefusedResponse      = "InjectionRefused"
 	TypeSettingsAppliedResponse       = "SettingsApplied"
+	// TypeCustomFromThinkProviderResponse is an experimental custom Think provider event.
+	TypeCustomFromThinkProviderResponse = "__customFromThinkProvider"
 )

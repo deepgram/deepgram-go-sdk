@@ -32,3 +32,9 @@ type AgentMessageChan interface {
 type FunctionCallCancelledChan interface {
 	GetFunctionCallCancelled() []*chan *FunctionCallCancelledResponse
 }
+
+// CustomFromThinkProviderChan receives responses from a custom Think provider.
+// It is optional so existing AgentMessageChan implementations remain compatible.
+type CustomFromThinkProviderChan interface {
+	GetCustomFromThinkProvider() []*chan *CustomFromThinkProviderResponse
+}
