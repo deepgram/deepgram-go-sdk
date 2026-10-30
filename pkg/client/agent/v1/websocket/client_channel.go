@@ -273,7 +273,7 @@ func (c *WSChannel) UpdateThink(think *interfacesv1.Think) error {
 		return ErrInvalidUpdateThink
 	}
 
-	return c.WriteJSON(msginterfaces.UpdateThink{
+	return c.WriteJSONWithoutPayloadLogging(msginterfaces.UpdateThink{
 		Type:  msginterfaces.TypeUpdateThink,
 		Think: think,
 	})
