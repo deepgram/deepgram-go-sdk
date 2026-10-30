@@ -1073,20 +1073,18 @@ The reporting examples below assume a Management client and project ID initializ
 
 ```go
 import (
+    "os"
+
     manageapi "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"
     interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1/interfaces"
     manage "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/manage"
 )
 
 mgClient := manageapi.New(manage.NewWithDefaults())
-projects, err := mgClient.ListProjects(ctx)
-if err != nil {
-    log.Fatal(err)
+myProjectID := os.Getenv("DEEPGRAM_PROJECT_ID")
+if myProjectID == "" {
+    log.Fatal("DEEPGRAM_PROJECT_ID is required")
 }
-if len(projects.Projects) == 0 {
-    log.Fatal("no accessible projects")
-}
-myProjectID := projects.Projects[0].ProjectID
 ```
 
 ```go
