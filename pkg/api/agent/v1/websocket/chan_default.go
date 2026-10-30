@@ -38,6 +38,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		conversationTextResponse:      make(chan *interfaces.ConversationTextResponse),
 		userStartedSpeakingResponse:   make(chan *interfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:         make(chan *interfaces.AgentThinkingResponse),
+		frustrationDetectedResponse:   make(chan *interfaces.FrustrationDetectedResponse),
 		functionCallRequestResponse:   make(chan *interfaces.FunctionCallRequestResponse),
 		functionCallCancelledResponse: make(chan *interfaces.FunctionCallCancelledResponse),
 		agentStartedSpeakingResponse:  make(chan *interfaces.AgentStartedSpeakingResponse),
@@ -87,6 +88,11 @@ func (dch DefaultChanHandler) GetUserStartedSpeaking() []*chan *interfaces.UserS
 // GetAgentThinkingResponse returns the agent thinking response channels
 func (dch DefaultChanHandler) GetAgentThinking() []*chan *interfaces.AgentThinkingResponse {
 	return []*chan *interfaces.AgentThinkingResponse{&dch.agentThinkingResponse}
+}
+
+// GetFrustrationDetected returns the Think Live frustration event channels.
+func (dch DefaultChanHandler) GetFrustrationDetected() []*chan *interfaces.FrustrationDetectedResponse {
+	return []*chan *interfaces.FrustrationDetectedResponse{&dch.frustrationDetectedResponse}
 }
 
 // GetFunctionCallRequestResponse returns the function call request response channels
@@ -298,6 +304,16 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[AgentThinkingResponse]\n\n")
+		}
+	}()
+
+	// Think Live frustration events
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for fdr := range dch.frustrationDetectedResponse {
+			fmt.Printf("\n\n[FrustrationDetectedResponse] count=%d escalated=%t\n\n", fdr.Count, fdr.Escalated)
 		}
 	}()
 

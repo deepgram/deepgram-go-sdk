@@ -32,3 +32,9 @@ type AgentMessageChan interface {
 type FunctionCallCancelledChan interface {
 	GetFunctionCallCancelled() []*chan *FunctionCallCancelledResponse
 }
+
+// ThinkLiveChan receives Think Live events. It is optional so existing
+// AgentMessageChan implementations remain compatible.
+type ThinkLiveChan interface {
+	GetFrustrationDetected() []*chan *FrustrationDetectedResponse
+}

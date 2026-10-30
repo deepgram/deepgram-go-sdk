@@ -134,15 +134,73 @@ type Think struct {
 	Prompt        string                 `json:"prompt,omitempty"`
 	ContextLength any                    `json:"context_length,omitempty"` // int or "max"
 }
+
+// ThinkLiveProvider configures Deepgram's Think Live model. Think Live runs
+// alongside the reasoning model configured by Think.
+type ThinkLiveProvider struct {
+	Type                        string   `json:"type"`
+	Version                     string   `json:"version"`
+	AgentBackchannelSensitivity *float64 `json:"agent_backchannel_sensitivity,omitempty"`
+	PresenceCheckMaxCount       *int     `json:"presence_check_max_count,omitempty"`
+	PresenceCheckIntervalMS     *int     `json:"presence_check_interval_ms,omitempty"`
+	FrustrationMaxCount         *int     `json:"frustration_max_count,omitempty"`
+	RestrictedTerms             []string `json:"restricted_terms,omitempty"`
+}
+
+// MarshalJSON preserves an explicit empty restricted_terms array, which clears
+// the service default, while omitting nil values.
+func (p ThinkLiveProvider) MarshalJSON() ([]byte, error) {
+	type providerJSON struct {
+		Type                        string    `json:"type"`
+		Version                     string    `json:"version"`
+		AgentBackchannelSensitivity *float64  `json:"agent_backchannel_sensitivity,omitempty"`
+		PresenceCheckMaxCount       *int      `json:"presence_check_max_count,omitempty"`
+		PresenceCheckIntervalMS     *int      `json:"presence_check_interval_ms,omitempty"`
+		FrustrationMaxCount         *int      `json:"frustration_max_count,omitempty"`
+		RestrictedTerms             *[]string `json:"restricted_terms,omitempty"`
+	}
+
+	var restrictedTerms *[]string
+	if p.RestrictedTerms != nil {
+		restrictedTerms = &p.RestrictedTerms
+	}
+	return json.Marshal(providerJSON{
+		Type:                        p.Type,
+		Version:                     p.Version,
+		AgentBackchannelSensitivity: p.AgentBackchannelSensitivity,
+		PresenceCheckMaxCount:       p.PresenceCheckMaxCount,
+		PresenceCheckIntervalMS:     p.PresenceCheckIntervalMS,
+		FrustrationMaxCount:         p.FrustrationMaxCount,
+		RestrictedTerms:             restrictedTerms,
+	})
+}
+
+// ThinkLiveSettings enables and configures Deepgram's Think Live model.
+type ThinkLiveSettings struct {
+	Provider *ThinkLiveProvider `json:"provider,omitempty"`
+}
+
+// NewThinkLiveSettings creates a Think Live configuration with its required
+// Deepgram provider and version.
+func NewThinkLiveSettings() *ThinkLiveSettings {
+	return &ThinkLiveSettings{
+		Provider: &ThinkLiveProvider{
+			Type:    "deepgram",
+			Version: "v1",
+		},
+	}
+}
+
 type Speak struct {
 	Provider map[string]interface{} `json:"provider,omitempty"`
 	Endpoint *Endpoint              `json:"endpoint,omitempty"`
 }
 type Agent struct {
-	Language      string   `json:"language,omitempty"`
-	Listen        Listen   `json:"listen,omitempty"`
-	Think         Think    `json:"think,omitempty"`
-	Speak         Speak    `json:"speak,omitempty"`
-	SpeakFallback *[]Speak `json:"speak_fallback,omitempty"`
-	Greeting      string   `json:"greeting,omitempty"`
+	Language      string             `json:"language,omitempty"`
+	Listen        Listen             `json:"listen,omitempty"`
+	Think         Think              `json:"think,omitempty"`
+	ThinkLive     *ThinkLiveSettings `json:"think_live,omitempty"`
+	Speak         Speak              `json:"speak,omitempty"`
+	SpeakFallback *[]Speak           `json:"speak_fallback,omitempty"`
+	Greeting      string             `json:"greeting,omitempty"`
 }
