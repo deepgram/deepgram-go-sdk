@@ -104,6 +104,7 @@ func (c *WSChannel) sendConfigurationSettings(writeJSON func(interface{}) error)
 	if agent, ok := clone["agent"].(map[string]interface{}); ok {
 		deleteEmptyProvider(agent, "speak")
 		deleteEmptyProvider(agent, "think")
+		deleteEmptyProvider(agent, "think_live")
 		deleteEmptyProvider(agent, "listen")
 	}
 	if _, err := json.Marshal(clone); err != nil {
