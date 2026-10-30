@@ -2,8 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// Reporting retrieves grouped usage and billing data for the first project the
-// configured API key can access.
+// Reporting retrieves grouped usage and billing data for DEEPGRAM_PROJECT_ID.
 package main
 
 import (
