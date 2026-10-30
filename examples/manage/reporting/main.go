@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1/interfaces"
@@ -21,15 +22,10 @@ func main() {
 	ctx := context.Background()
 	management := api.New(client.NewWithDefaults())
 
-	projects, err := management.ListProjects(ctx)
-	if err != nil {
-		log.Fatal(err)
+	projectID := os.Getenv("DEEPGRAM_PROJECT_ID")
+	if projectID == "" {
+		log.Fatal("DEEPGRAM_PROJECT_ID is required")
 	}
-	if len(projects.Projects) == 0 {
-		log.Fatal("no projects available to the configured API key")
-	}
-
-	projectID := projects.Projects[0].ProjectID
 	usage, err := management.GetUsageBreakdown(ctx, projectID, &interfaces.UsageBreakdownRequest{
 		Grouping: interfaces.UsageBreakdownGroupingEndpoint,
 	})
