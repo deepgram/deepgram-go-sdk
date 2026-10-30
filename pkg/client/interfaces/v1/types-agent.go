@@ -147,6 +147,34 @@ type ThinkLiveProvider struct {
 	RestrictedTerms             []string `json:"restricted_terms,omitempty"`
 }
 
+// MarshalJSON preserves an explicit empty restricted_terms array, which clears
+// the service default, while omitting nil values.
+func (p ThinkLiveProvider) MarshalJSON() ([]byte, error) {
+	type providerJSON struct {
+		Type                        string    `json:"type"`
+		Version                     string    `json:"version"`
+		AgentBackchannelSensitivity *float64  `json:"agent_backchannel_sensitivity,omitempty"`
+		PresenceCheckMaxCount       *int      `json:"presence_check_max_count,omitempty"`
+		PresenceCheckIntervalMS     *int      `json:"presence_check_interval_ms,omitempty"`
+		FrustrationMaxCount         *int      `json:"frustration_max_count,omitempty"`
+		RestrictedTerms             *[]string `json:"restricted_terms,omitempty"`
+	}
+
+	var restrictedTerms *[]string
+	if p.RestrictedTerms != nil {
+		restrictedTerms = &p.RestrictedTerms
+	}
+	return json.Marshal(providerJSON{
+		Type:                        p.Type,
+		Version:                     p.Version,
+		AgentBackchannelSensitivity: p.AgentBackchannelSensitivity,
+		PresenceCheckMaxCount:       p.PresenceCheckMaxCount,
+		PresenceCheckIntervalMS:     p.PresenceCheckIntervalMS,
+		FrustrationMaxCount:         p.FrustrationMaxCount,
+		RestrictedTerms:             restrictedTerms,
+	})
+}
+
 // ThinkLiveSettings enables and configures Deepgram's Think Live model.
 type ThinkLiveSettings struct {
 	Provider *ThinkLiveProvider `json:"provider,omitempty"`

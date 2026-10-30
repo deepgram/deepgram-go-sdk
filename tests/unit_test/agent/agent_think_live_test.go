@@ -6,6 +6,7 @@ package deepgram_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -31,6 +32,30 @@ type thinkLiveHandler struct {
 	*legacyFunctionCallHandler
 	conversationTexts   chan *msginterfaces.ConversationTextResponse
 	frustrationDetected chan *msginterfaces.FrustrationDetectedResponse
+}
+
+func Test_ThinkLiveRestrictedTermsMarshaling(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		terms []string
+		want  string
+	}{
+		{name: "nil omits", want: `"type":"deepgram"`},
+		{name: "empty preserves", terms: []string{}, want: `"restricted_terms":[]`},
+		{name: "values preserve", terms: []string{"human"}, want: `"restricted_terms":["human"]`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			provider := interfacesv1.NewThinkLiveSettings().Provider
+			provider.RestrictedTerms = test.terms
+			data, err := json.Marshal(provider)
+			if err != nil {
+				t.Fatalf("marshal provider: %v", err)
+			}
+			if !strings.Contains(string(data), test.want) {
+				t.Errorf("payload %s does not contain %s", data, test.want)
+			}
+		})
+	}
 }
 
 func newThinkLiveHandler() *thinkLiveHandler {

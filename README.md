@@ -419,20 +419,20 @@ See [`examples/agent/websocket/function_call`](./examples/agent/websocket/functi
 Think Live is an invite-only Early Access Voice Agent feature. It runs alongside the reasoning provider in `agent.think` and requires a project enrolled in the Think Live program. Configure it through the optional `Agent.ThinkLive` field; its provider must be Deepgram `v1`.
 
 ```go
-import interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+import interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 
 sensitivity := 0.2
 presenceCheckMaxCount := 2
 frustrationMaxCount := 2
 
-options.Agent.ThinkLive = interfacesv1.NewThinkLiveSettings()
+options.Agent.ThinkLive = interfaces.NewThinkLiveSettings()
 options.Agent.ThinkLive.Provider.AgentBackchannelSensitivity = &sensitivity
 options.Agent.ThinkLive.Provider.PresenceCheckMaxCount = &presenceCheckMaxCount
 options.Agent.ThinkLive.Provider.FrustrationMaxCount = &frustrationMaxCount
 options.Agent.ThinkLive.Provider.RestrictedTerms = []string{"human", "transfer"}
 ```
 
-The pointer numeric fields preserve an explicit `0`, which disables agent backchannels, presence checks, or frustration events respectively. Existing channel handlers remain compatible. To receive `FrustrationDetected`, implement the optional `ThinkLiveChan` interface with `GetFrustrationDetected() []*chan *FrustrationDetectedResponse`; handlers also receive `ConversationTextResponse.ConversationalBehavior` as `default`, `backchannel`, `presence_check`, or `filler`.
+An explicit `0` disables agent backchannels, presence checks, or frustration events for `AgentBackchannelSensitivity`, `PresenceCheckMaxCount`, and `FrustrationMaxCount`. When presence checks are enabled, `PresenceCheckIntervalMS` must be between 1 and 60,000. Existing channel handlers remain compatible. To receive `FrustrationDetected`, implement the optional `ThinkLiveChan` interface with `GetFrustrationDetected() []*chan *FrustrationDetectedResponse`; handlers also receive `ConversationTextResponse.ConversationalBehavior` as `default`, `backchannel`, `presence_check`, or `filler`. A custom handler that embeds `DefaultChanHandler` must override `GetFrustrationDetected` to receive this event itself.
 
 See [`examples/agent/websocket/think_live`](./examples/agent/websocket/think_live) for a runnable text-only session. It requires `DEEPGRAM_API_KEY` and Think Live Early Access; it does not capture or play audio.
 
