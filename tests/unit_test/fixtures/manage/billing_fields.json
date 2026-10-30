@@ -1,0 +1,6 @@
+{
+  "accessors": ["7d3e2204-281d-4b9c-9fce-1b9f7e799a24"],
+  "deployments": ["hosted", "dedicated"],
+  "tags": ["production"],
+  "line_items": {"streaming::nova-3": "Nova-3 streaming"}
+}

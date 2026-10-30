@@ -58,9 +58,13 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
     - [Get Request](#get-request)
     - [Get Fields](#get-fields)
     - [Summarize Usage](#summarize-usage)
+    - [Get Usage Breakdown](#get-usage-breakdown)
   - [Billing](#billing)
     - [Get All Balances](#get-all-balances)
     - [Get Balance](#get-balance)
+    - [Get Billing Breakdown](#get-billing-breakdown)
+    - [Get Billing Fields](#get-billing-fields)
+    - [List Purchases](#list-purchases)
   - [Models](#models)
     - [Get All Project Models](#get-all-project-models)
     - [Get Model](#get-model)
@@ -1061,6 +1065,42 @@ fmt.Printf("Usage summary: %+v\n", res.Usage)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/usage/get).
 
+### Get Usage Breakdown
+
+Retrieves grouped project usage. Boolean feature filters use pointers so `false` is sent as an explicit exclusion rather than omitted.
+
+The reporting examples below assume a Management client and project ID initialized as follows:
+
+```go
+import (
+    "os"
+
+    manageapi "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1/interfaces"
+    manage "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/manage"
+)
+
+mgClient := manageapi.New(manage.NewWithDefaults())
+myProjectID := os.Getenv("DEEPGRAM_PROJECT_ID")
+if myProjectID == "" {
+    log.Fatal("DEEPGRAM_PROJECT_ID is required")
+}
+```
+
+```go
+excludeDiarization := false
+res, err := mgClient.GetUsageBreakdown(ctx, myProjectID, &interfaces.UsageBreakdownRequest{
+    Grouping: interfaces.UsageBreakdownGroupingEndpoint,
+    Diarize:  &excludeDiarization,
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Usage: %+v\n", res.Results)
+```
+
+[See the Management API reference](https://developers.deepgram.com/openapi.yaml).
+
 ## Billing
 
 ### Get All Balances
@@ -1096,6 +1136,51 @@ fmt.Printf("Balance: %+v\n", res.Balance)
 ```
 
 [See our API reference for more info](https://developers.deepgram.com/reference/management-api/balances/get).
+
+### Get Billing Breakdown
+
+Retrieves project billing grouped by one or more dimensions. Reporting endpoints are project-scoped and use the configured API key's access to the specified project.
+
+```go
+res, err := mgClient.GetBillingBreakdown(ctx, myProjectID, &interfaces.BillingBreakdownRequest{
+    Grouping: []interfaces.BillingBreakdownGrouping{
+        interfaces.BillingBreakdownGroupingLineItem,
+    },
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Billing: %+v\n", res.Results)
+```
+
+### Get Billing Fields
+
+Lists the accessors, deployments, tags, and line items available as billing-breakdown filters during a reporting period.
+
+```go
+res, err := mgClient.GetBillingFields(ctx, myProjectID, &interfaces.BillingFieldsRequest{
+    Start: "2026-01-01",
+    End:   "2026-01-31",
+})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Line items: %+v\n", res.LineItems)
+```
+
+### List Purchases
+
+Lists the original purchased amount on project order transactions.
+
+```go
+res, err := mgClient.ListPurchases(ctx, myProjectID, &interfaces.PurchasesRequest{Limit: 100})
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Purchases: %+v\n", res.Orders)
+```
+
+[See the Management API reference](https://developers.deepgram.com/openapi.yaml).
 
 ## Models
 

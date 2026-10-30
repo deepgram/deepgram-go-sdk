@@ -1,0 +1,12 @@
+{
+  "orders": [
+    {
+      "order_id": "7d3e2204-281d-4b9c-9fce-1b9f7e799a24",
+      "expiration": "2027-01-01T00:00:00Z",
+      "created": "2026-01-01T00:00:00Z",
+      "amount": 100.5,
+      "units": "USD",
+      "order_type": "credit"
+    }
+  ]
+}
