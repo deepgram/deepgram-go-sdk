@@ -7,24 +7,39 @@ package main
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	listenws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket"
+	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
 )
 
 const streamURL = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 
+type languageHandler struct {
+	listenws.DefaultCallbackHandler
+}
+
+func (h languageHandler) Message(response *msginterfaces.MessageResponse) error {
+	for _, alternative := range response.Channel.Alternatives {
+		fmt.Printf("Transcript: %s\nDetected languages: %v\nApplied language hints: %v\n", alternative.Transcript, alternative.Languages, alternative.LanguagesHinted)
+	}
+	return h.DefaultCallbackHandler.Message(response)
+}
+
 func main() {
 	ctx := context.Background()
-	client, err := listen.NewWSUsingChanForDemo(ctx, &interfaces.LiveTranscriptionOptions{
+	options := &interfaces.LiveTranscriptionOptions{
 		Model:        "nova-3",
 		Language:     "multi",
 		LanguageHint: []string{"en", "es"},
 		Punctuate:    true,
-	})
+	}
+	client, err := listen.NewWSUsingCallback(ctx, "", &interfaces.ClientOptions{}, options, languageHandler{DefaultCallbackHandler: *listenws.NewDefaultCallbackHandler()})
 	if err != nil {
 		log.Fatal(err)
 	}
