@@ -424,7 +424,7 @@ Custom handlers remain source-compatible. To receive the new events, additionall
 
 See [`examples/agent/websocket/function_call`](./examples/agent/websocket/function_call) for a runnable client-side function call.
 
-[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent-api/agent).
+[See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/voice-agent).
 
 ## Text to Speech REST
 
