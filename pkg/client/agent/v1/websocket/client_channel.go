@@ -107,9 +107,6 @@ func (c *WSChannel) sendConfigurationSettings(writeJSON func(interface{}) error)
 		deleteEmptyProvider(agent, "think_live")
 		deleteEmptyProvider(agent, "listen")
 	}
-	if _, err := json.Marshal(clone); err != nil {
-		return fmt.Errorf("marshal cleaned configuration settings: %w", err)
-	}
 	if err := writeJSON(clone); err != nil {
 		return fmt.Errorf("write configuration settings: %w", err)
 	}
