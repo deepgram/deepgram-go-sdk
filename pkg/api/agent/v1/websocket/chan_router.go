@@ -53,6 +53,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		injectionRefusedResponse:      make([]*chan *interfaces.InjectionRefusedResponse, 0),
 		keepAliveResponse:             make([]*chan *interfaces.KeepAlive, 0),
 		settingsAppliedResponse:       make([]*chan *interfaces.SettingsAppliedResponse, 0),
+		listenUpdatedResponse:         make([]*chan *interfaces.ListenUpdatedResponse, 0),
+		thinkUpdatedResponse:          make([]*chan *interfaces.ThinkUpdatedResponse, 0),
+		warningResponse:               make([]*chan *interfaces.WarningResponse, 0),
 		closeChan:                     make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                     make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:                 make([]*chan *[]byte, 0),
@@ -77,6 +80,15 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.injectionRefusedResponse = append(router.injectionRefusedResponse, chans.GetInjectionRefused()...)
 		router.keepAliveResponse = append(router.keepAliveResponse, chans.GetKeepAlive()...)
 		router.settingsAppliedResponse = append(router.settingsAppliedResponse, chans.GetSettingsApplied()...)
+		if listenUpdated, ok := chans.(interfaces.ListenUpdatedChan); ok {
+			router.listenUpdatedResponse = append(router.listenUpdatedResponse, listenUpdated.GetListenUpdated()...)
+		}
+		if thinkUpdated, ok := chans.(interfaces.ThinkUpdatedChan); ok {
+			router.thinkUpdatedResponse = append(router.thinkUpdatedResponse, thinkUpdated.GetThinkUpdated()...)
+		}
+		if warning, ok := chans.(interfaces.WarningChan); ok {
+			router.warningResponse = append(router.warningResponse, warning.GetWarning()...)
+		}
 	}
 
 	return router
@@ -382,6 +394,69 @@ func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeSettingsAppliedResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processListenUpdated(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.ListenUpdatedResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		if len(r.listenUpdatedResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+		for _, ch := range r.listenUpdatedResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeListenUpdatedResponse), byMsg, action)
+}
+
+func (r *ChanRouter) processThinkUpdated(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.ThinkUpdatedResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		if len(r.thinkUpdatedResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+		for _, ch := range r.thinkUpdatedResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeThinkUpdatedResponse), byMsg, action)
+}
+
+func (r *ChanRouter) processWarning(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.WarningResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		if len(r.warningResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+		for _, ch := range r.warningResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeWarningResponse), byMsg, action)
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -423,6 +498,12 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processKeepAlive(byMsg)
 	case interfaces.TypeSettingsAppliedResponse:
 		err = r.processSettingsApplied(byMsg)
+	case interfaces.TypeListenUpdatedResponse:
+		err = r.processListenUpdated(byMsg)
+	case interfaces.TypeThinkUpdatedResponse:
+		err = r.processThinkUpdated(byMsg)
+	case interfaces.TypeWarningResponse:
+		err = r.processWarning(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}

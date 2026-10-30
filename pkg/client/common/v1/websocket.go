@@ -488,6 +488,25 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	return nil
 }
 
+// WriteJSONWithoutPayloadLogging writes a JSON control payload without logging
+// caller-provided data. Use it for payloads that may contain provider secrets.
+func (c *WSClient) WriteJSONWithoutPayloadLogging(payload interface{}) error {
+	byData, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	c.muConn.Lock()
+	defer c.muConn.Unlock()
+
+	ws := c.internalConnect()
+	if ws == nil {
+		return ErrInvalidConnection
+	}
+
+	return ws.WriteMessage(websocket.TextMessage, byData)
+}
+
 // WriteControl sends a WebSocket control frame to the server.
 func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) error {
 	klog.V(7).Infof("common.WriteControl() ENTER\n")

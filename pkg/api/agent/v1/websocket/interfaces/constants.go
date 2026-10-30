@@ -16,6 +16,9 @@ const (
 	TypeSettings             = "Settings"
 	TypeUpdatePrompt         = "UpdatePrompt"
 	TypeUpdateSpeak          = "UpdateSpeak"
+	TypeUpdateListen         = "UpdateListen"
+	TypeUpdateThink          = "UpdateThink"
+	TypeForceEndTurn         = "ForceEndTurn"
 	TypeInjectAgentMessage   = "InjectAgentMessage"
 	TypeInjectUserMessage    = "InjectUserMessage"
 	TypeFunctionCallResponse = "FunctionCallResponse"
@@ -39,4 +42,7 @@ const (
 	TypeErrorResponse                 = commoninterfaces.TypeErrorResponse
 	TypeInjectionRefusedResponse      = "InjectionRefused"
 	TypeSettingsAppliedResponse       = "SettingsApplied"
+	TypeListenUpdatedResponse         = "ListenUpdated"
+	TypeThinkUpdatedResponse          = "ThinkUpdated"
+	TypeWarningResponse               = "Warning"
 )

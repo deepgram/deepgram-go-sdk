@@ -30,6 +30,9 @@ type DefaultChanHandler struct {
 	injectionRefusedResponse      chan *interfaces.InjectionRefusedResponse
 	keepAliveResponse             chan *interfaces.KeepAlive
 	settingsAppliedResponse       chan *interfaces.SettingsAppliedResponse
+	listenUpdatedResponse         chan *interfaces.ListenUpdatedResponse
+	thinkUpdatedResponse          chan *interfaces.ThinkUpdatedResponse
+	warningResponse               chan *interfaces.WarningResponse
 	closeChan                     chan *interfaces.CloseResponse
 	errorChan                     chan *interfaces.ErrorResponse
 	unhandledChan                 chan *[]byte
@@ -53,6 +56,9 @@ type ChanRouter struct {
 	injectionRefusedResponse      []*chan *interfaces.InjectionRefusedResponse
 	keepAliveResponse             []*chan *interfaces.KeepAlive
 	settingsAppliedResponse       []*chan *interfaces.SettingsAppliedResponse
+	listenUpdatedResponse         []*chan *interfaces.ListenUpdatedResponse
+	thinkUpdatedResponse          []*chan *interfaces.ThinkUpdatedResponse
+	warningResponse               []*chan *interfaces.WarningResponse
 	closeChan                     []*chan *interfaces.CloseResponse
 	errorChan                     []*chan *interfaces.ErrorResponse
 	unhandledChan                 []*chan *[]byte

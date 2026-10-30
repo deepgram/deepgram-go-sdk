@@ -5,11 +5,19 @@
 package websocketv1
 
 import (
+	"errors"
 	"time"
 )
 
 const (
 	PackageVersion string = "v1.0"
+)
+
+var (
+	// ErrInvalidUpdateListen is returned when UpdateListen has no provider.
+	ErrInvalidUpdateListen = errors.New("agent UpdateListen requires a listen provider")
+	// ErrInvalidUpdateThink is returned when UpdateThink has no provider.
+	ErrInvalidUpdateThink = errors.New("agent UpdateThink requires a think provider")
 )
 
 // external constants

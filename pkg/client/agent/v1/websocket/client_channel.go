@@ -20,6 +20,7 @@ import (
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 func deleteEmptyProvider(m map[string]interface{}, key string) {
@@ -249,6 +250,41 @@ func (c *WSChannel) KeepAlive() error {
 	klog.V(7).Infof("agent.KeepAlive() LEAVE\n")
 
 	return err
+}
+
+// UpdateListen replaces the active Listen configuration. The service confirms a
+// successful update with ListenUpdated. This is a partial update: omitted fields
+// retain their current values except language_hints, which the service clears.
+func (c *WSChannel) UpdateListen(listen *interfacesv1.Listen) error {
+	if listen == nil || len(listen.Provider) == 0 {
+		return ErrInvalidUpdateListen
+	}
+
+	return c.WriteJSON(msginterfaces.UpdateListen{
+		Type:   msginterfaces.TypeUpdateListen,
+		Listen: listen,
+	})
+}
+
+// UpdateThink replaces the active Think configuration. The service confirms a
+// successful update with ThinkUpdated.
+func (c *WSChannel) UpdateThink(think *interfacesv1.Think) error {
+	if think == nil || len(think.Provider) == 0 {
+		return ErrInvalidUpdateThink
+	}
+
+	return c.WriteJSONWithoutPayloadLogging(msginterfaces.UpdateThink{
+		Type:  msginterfaces.TypeUpdateThink,
+		Think: think,
+	})
+}
+
+// ForceEndTurn ends the current user turn when the active Listen provider is
+// Deepgram V2 (Flux). It has no acknowledgement event: the resulting turn uses
+// the normal ConversationText and AgentThinking events. The service sends a
+// Warning with code FORCE_END_TURN_UNSUPPORTED for non-Flux providers.
+func (c *WSChannel) ForceEndTurn() error {
+	return c.WriteJSON(msginterfaces.ForceEndTurn{Type: msginterfaces.TypeForceEndTurn})
 }
 
 // GetCloseMsg sends an application level message to Deepgram

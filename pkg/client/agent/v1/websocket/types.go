@@ -11,16 +11,26 @@ import (
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 // client messages
 type SettingsOptions interfaces.SettingsOptions
 type UpdatePrompt msginterface.UpdatePrompt
 type UpdateSpeak msginterface.UpdateSpeak
+type UpdateListen msginterface.UpdateListen
+type UpdateThink msginterface.UpdateThink
+type ForceEndTurn msginterface.ForceEndTurn
 type InjectAgentMessage msginterface.InjectAgentMessage
 type InjectUserMessage msginterface.InjectUserMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
 type KeepAlive msginterface.KeepAlive
+
+// Listen is the typed listen configuration accepted by UpdateListen.
+type Listen = interfacesv1.Listen
+
+// Think is the typed think configuration accepted by UpdateThink.
+type Think = interfacesv1.Think
 
 // WSChannel is a struct representing the websocket client connection using channels
 type WSChannel struct {

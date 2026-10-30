@@ -44,6 +44,10 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		agentAudioDoneResponse:        make(chan *interfaces.AgentAudioDoneResponse),
 		injectionRefusedResponse:      make(chan *interfaces.InjectionRefusedResponse),
 		keepAliveResponse:             make(chan *interfaces.KeepAlive),
+		settingsAppliedResponse:       make(chan *interfaces.SettingsAppliedResponse),
+		listenUpdatedResponse:         make(chan *interfaces.ListenUpdatedResponse),
+		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
+		warningResponse:               make(chan *interfaces.WarningResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
 		unhandledChan:                 make(chan *[]byte),
@@ -137,6 +141,21 @@ func (dch DefaultChanHandler) GetUnhandled() []*chan *[]byte {
 // GetSettingsApplied returns the settings applied response channels
 func (dch DefaultChanHandler) GetSettingsApplied() []*chan *interfaces.SettingsAppliedResponse {
 	return []*chan *interfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
+}
+
+// GetListenUpdated returns ListenUpdated response channels.
+func (dch DefaultChanHandler) GetListenUpdated() []*chan *interfaces.ListenUpdatedResponse {
+	return []*chan *interfaces.ListenUpdatedResponse{&dch.listenUpdatedResponse}
+}
+
+// GetThinkUpdated returns ThinkUpdated response channels.
+func (dch DefaultChanHandler) GetThinkUpdated() []*chan *interfaces.ThinkUpdatedResponse {
+	return []*chan *interfaces.ThinkUpdatedResponse{&dch.thinkUpdatedResponse}
+}
+
+// GetWarning returns non-fatal service warning channels.
+func (dch DefaultChanHandler) GetWarning() []*chan *interfaces.WarningResponse {
+	return []*chan *interfaces.WarningResponse{&dch.warningResponse}
 }
 
 // Open is the callback for when the connection opens
@@ -436,6 +455,31 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[SettingsAppliedResponse]\n\n")
+		}
+	}()
+
+	// runtime-control acknowledgement channels
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for range dch.listenUpdatedResponse {
+			fmt.Printf("\n\n[ListenUpdatedResponse]\n\n")
+		}
+	}()
+
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for range dch.thinkUpdatedResponse {
+			fmt.Printf("\n\n[ThinkUpdatedResponse]\n\n")
+		}
+	}()
+
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for warning := range dch.warningResponse {
+			fmt.Printf("\n[WarningResponse]\nCode: %s\nDescription: %s\n\n", warning.Code, warning.Description)
 		}
 	}()
 
