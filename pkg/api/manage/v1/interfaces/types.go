@@ -654,7 +654,7 @@ type BillingFieldsRequest struct {
 
 // PurchasesRequest controls purchase-history pagination.
 type PurchasesRequest struct {
-	Limit float64 `schema:"limit,omitempty"`
+	Limit int `schema:"limit,omitempty"`
 }
 
 /***********************************/
