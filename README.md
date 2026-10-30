@@ -1069,6 +1069,23 @@ fmt.Printf("Usage summary: %+v\n", res.Usage)
 
 Retrieves grouped project usage. Boolean feature filters use pointers so `false` is sent as an explicit exclusion rather than omitted.
 
+The reporting examples below assume a Management client and project ID initialized as follows:
+
+```go
+import (
+    manageapi "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1/interfaces"
+    manage "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/manage"
+)
+
+mgClient := manageapi.New(manage.NewWithDefaults())
+projects, err := mgClient.ListProjects(ctx)
+if err != nil || len(projects.Projects) == 0 {
+    log.Fatal("no accessible projects")
+}
+myProjectID := projects.Projects[0].ProjectID
+```
+
 ```go
 excludeDiarization := false
 res, err := mgClient.GetUsageBreakdown(ctx, myProjectID, &interfaces.UsageBreakdownRequest{
