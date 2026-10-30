@@ -32,9 +32,6 @@ var (
 	// ErrConfigureNoFields a Configure carried no fields to change
 	ErrConfigureNoFields = errors.New("configure requires at least one field to change (set Speed)")
 
-	// ErrFluxConfigureNoFields a Flux STT Configure carried no fields to change
-	ErrFluxConfigureNoFields = errors.New("flux configure requires at least one field to change")
-
 	// ErrSpeedOutOfRange the speed value is outside the supported set
 	ErrSpeedOutOfRange = errors.New("speed must be between 0.5 and 1.5 in 0.05 increments")
 )
