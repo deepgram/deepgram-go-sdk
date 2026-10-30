@@ -167,7 +167,7 @@ Transcribe audio from a URL.
 
 ```go
 // Define Deepgram options
-options := &interfaces.PreRecordedTranscriptionOptions{
+options := &interfaces.LiveTranscriptionOptions{
     Model:       "nova-3",
 }
 // Define url to use
