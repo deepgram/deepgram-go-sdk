@@ -76,6 +76,8 @@ type ConfigureSuccessResponse struct {
 	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
 	Keyterms      []string                           `json:"keyterms,omitempty"`
 	LanguageHints []string                           `json:"language_hints,omitempty"`
+	// Numerals is nil when the acknowledgement did not include a numerals update.
+	Numerals *bool `json:"numerals,omitempty"`
 }
 
 // ConfigureFailureResponse signals that a mid-session Configure message was rejected.
@@ -126,12 +128,15 @@ type ErrorResponse = clientinterfaces.DeepgramError
 //
 // JSON example:
 //
-//	{"type":"Configure","thresholds":{"eot_threshold":0.8},"keyterms":["Deepgram","Flux"]}
+//	{"type":"Configure","thresholds":{"eot_threshold":0.8},"keyterms":["Deepgram","Flux"],"numerals":true}
 type ConfigureMessage struct {
 	Type          string                             `json:"type"` // always "Configure"
 	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
 	Keyterms      []string                           `json:"keyterms,omitempty"`
 	LanguageHints []string                           `json:"language_hints,omitempty"`
+	// Numerals controls numeric formatting for subsequent turns. A pointer keeps
+	// an explicit false value on the wire.
+	Numerals *bool `json:"numerals,omitempty"`
 }
 
 // ForceEndTurnMessage is the JSON payload that asks the server to end the current

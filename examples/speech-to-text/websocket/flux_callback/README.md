@@ -29,6 +29,12 @@ go run main.go -model flux-general-multi -language en -language es -language fr
 
 # Filter profanity, format numerals, and redact sensitive numbers at connection time
 go run main.go -profanity-filter -numerals -redact aggressive_numbers
+
+# Enable numeric formatting after the WebSocket connects
+go run main.go -configure-numerals true
+
+# Explicitly disable numeric formatting after the WebSocket connects
+go run main.go -configure-numerals false
 ```
 
 ## Flags
@@ -40,11 +46,13 @@ go run main.go -profanity-filter -numerals -redact aggressive_numbers
 | `-profanity-filter` | `false` | Replace recognized profanity with a non-profane word or remove it. |
 | `-numerals` | `false` | Convert written numbers to numerical format. |
 | `-redact` | _(none)_ | Sensitive-number redaction mode: `numbers` or `aggressive_numbers`. |
+| `-configure-numerals` | _(unset)_ | Sends a post-connect `Configure` message with `numerals` set to `true` or `false`. |
 
 ## Behaviour
 
 - **Single model** (`flux-general-en`): Transcribes English audio with server-side turn detection. Language hints are ignored.
 - **Multi model** (`flux-general-multi`): Transcribes multilingual audio. If `-language` flags are provided, the hints are passed as `language_hint` query parameters at connect time. The server will include the detected and hinted languages in each `EndOfTurn` event.
+- **Numerals**: `-numerals` is sent as a connection-time query parameter. `-configure-numerals` optionally sends a post-connect update, including an explicit `false` value.
 
 ## Turn Events
 

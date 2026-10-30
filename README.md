@@ -323,7 +323,16 @@ options := &interfaces.FluxTranscriptionOptions{
 }
 ```
 
-`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. These fields are fixed for the connection. `FluxConfigureOptions` updates mid-session thresholds, keyterms, and language hints; this release does not expose Configure-time `numerals`, so set `Numerals` on `FluxTranscriptionOptions` before connecting.
+`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. `FluxConfigureOptions` updates mid-session thresholds, keyterms, language hints, and numerals. Configure-time `Numerals` uses a pointer so an explicit `false` reaches the API.
+
+To update numeric formatting after connecting:
+
+```go
+numerals := false
+if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
+    log.Fatal(err)
+}
+```
 
 See the runnable [Flux callback example](examples/speech-to-text/websocket/flux_callback) for flag-based use of these options.
 
