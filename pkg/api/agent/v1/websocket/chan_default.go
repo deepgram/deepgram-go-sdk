@@ -44,6 +44,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		agentAudioDoneResponse:        make(chan *interfaces.AgentAudioDoneResponse),
 		injectionRefusedResponse:      make(chan *interfaces.InjectionRefusedResponse),
 		keepAliveResponse:             make(chan *interfaces.KeepAlive),
+		customFromThinkProvider:       make(chan *interfaces.CustomFromThinkProviderResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
 		unhandledChan:                 make(chan *[]byte),
@@ -137,6 +138,11 @@ func (dch DefaultChanHandler) GetUnhandled() []*chan *[]byte {
 // GetSettingsApplied returns the settings applied response channels
 func (dch DefaultChanHandler) GetSettingsApplied() []*chan *interfaces.SettingsAppliedResponse {
 	return []*chan *interfaces.SettingsAppliedResponse{&dch.settingsAppliedResponse}
+}
+
+// GetCustomFromThinkProvider returns the custom Think provider response channels.
+func (dch DefaultChanHandler) GetCustomFromThinkProvider() []*chan *interfaces.CustomFromThinkProviderResponse {
+	return []*chan *interfaces.CustomFromThinkProviderResponse{&dch.customFromThinkProvider}
 }
 
 // Open is the callback for when the connection opens
@@ -436,6 +442,31 @@ func (dch DefaultChanHandler) Run() error {
 			}
 
 			fmt.Printf("\n\n[SettingsAppliedResponse]\n\n")
+		}
+	}()
+
+	// custom Think provider response channel
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for response := range dch.customFromThinkProvider {
+			if dch.debugWebsocket {
+				data, err := json.Marshal(response)
+				if err != nil {
+					klog.V(1).Infof("CustomFromThinkProvider json.Marshal failed. Err: %v\n", err)
+					continue
+				}
+
+				prettyJSON, err := prettyjson.Format(data)
+				if err != nil {
+					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
+					continue
+				}
+				klog.V(2).Infof("\n\nCustomFromThinkProvider Object:\n%s\n\n", prettyJSON)
+			}
+
+			fmt.Printf("\n\n[CustomFromThinkProviderResponse]\n%s\n\n", response.Content)
 		}
 	}()
 

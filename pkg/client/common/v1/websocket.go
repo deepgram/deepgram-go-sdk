@@ -482,7 +482,7 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	}
 
 	klog.V(4).Infof("common.WriteJSON() Succeeded\n")
-	klog.V(6).Infof("payload: %s\n", string(byData))
+	klog.V(6).Infof("payload length: %d\n", len(byData))
 	klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 	return nil

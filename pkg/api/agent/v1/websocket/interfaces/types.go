@@ -5,6 +5,8 @@
 package interfacesv1
 
 import (
+	"encoding/json"
+
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
@@ -61,6 +63,15 @@ type KeepAlive struct {
 // Close terminates the connection
 type Close struct {
 	Type string `json:"type,omitempty"`
+}
+
+// CustomToThinkProvider sends arbitrary JSON to a custom Think provider.
+//
+// This is an experimental Voice Agent message. Content must contain one valid
+// JSON value; use json.RawMessage to preserve that value on the wire.
+type CustomToThinkProvider struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
 }
 
 /***********************************/
@@ -177,4 +188,14 @@ type InjectionRefusedResponse struct {
 // SettingsAppliedResponse is the response confirming settings were applied
 type SettingsAppliedResponse struct {
 	Type string `json:"type,omitempty"`
+}
+
+// CustomFromThinkProviderResponse contains a custom Think provider response
+// body exactly as the Voice Agent server sent it.
+//
+// This is an experimental Voice Agent event. A non-JSON provider response is
+// delivered as a JSON string, so Content remains valid JSON in all cases.
+type CustomFromThinkProviderResponse struct {
+	Type    string          `json:"type"`
+	Content json.RawMessage `json:"content"`
 }

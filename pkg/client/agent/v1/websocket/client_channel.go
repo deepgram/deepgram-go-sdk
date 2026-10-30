@@ -100,15 +100,12 @@ func (c *WSChannel) Start() {
 			deleteEmptyProvider(agent, "think")
 			deleteEmptyProvider(agent, "listen")
 		}
-		byteData, marshalErr2 := json.Marshal(clone)
+		_, marshalErr2 := json.Marshal(clone)
 		if marshalErr2 != nil {
 			klog.V(1).Infof("Marshaling cleaned configuration settings failed. Err: %v\n", marshalErr2)
 			c.WSClient.Stop()
 			return
 		}
-		print("ConfigurationSettings: ")
-		fmt.Println(string(byteData))
-		klog.V(4).Infof("Cleaned ConfigurationSettings: %s", string(byteData))
 		err := c.WriteJSON(clone)
 		if err != nil {
 			klog.V(1).Infof("w.WriteJSON ConfigurationSettings failed. Err: %v\n", err)
@@ -249,6 +246,22 @@ func (c *WSChannel) KeepAlive() error {
 	klog.V(7).Infof("agent.KeepAlive() LEAVE\n")
 
 	return err
+}
+
+// SendCustomToThinkProvider sends arbitrary JSON to a custom Think provider.
+// The provider endpoint must use wss:// and this experimental server feature.
+func (c *WSChannel) SendCustomToThinkProvider(content json.RawMessage) error {
+	if content == nil {
+		content = json.RawMessage("null")
+	}
+	if !json.Valid(content) {
+		return fmt.Errorf("custom Think provider content must be valid JSON")
+	}
+
+	return c.WriteJSON(msginterfaces.CustomToThinkProvider{
+		Type:    msginterfaces.TypeCustomToThinkProvider,
+		Content: content,
+	})
 }
 
 // GetCloseMsg sends an application level message to Deepgram

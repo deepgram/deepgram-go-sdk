@@ -21,6 +21,7 @@ type InjectAgentMessage msginterface.InjectAgentMessage
 type InjectUserMessage msginterface.InjectUserMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
 type KeepAlive msginterface.KeepAlive
+type CustomToThinkProvider msginterface.CustomToThinkProvider
 
 // WSChannel is a struct representing the websocket client connection using channels
 type WSChannel struct {
