@@ -98,9 +98,10 @@ type WelcomeResponse struct {
 
 // ConversationTextResponse is the response from the conversation text
 type ConversationTextResponse struct {
-	Type    string `json:"type,omitempty"`
-	Role    string `json:"role,omitempty"`
-	Content string `json:"content,omitempty"`
+	Type                   string `json:"type,omitempty"`
+	Role                   string `json:"role,omitempty"`
+	ConversationalBehavior string `json:"conversational_behavior,omitempty"`
+	Content                string `json:"content,omitempty"`
 }
 
 // UserStartedSpeakingResponse is the response from the user starting to speak
@@ -112,6 +113,15 @@ type UserStartedSpeakingResponse struct {
 type AgentThinkingResponse struct {
 	Type    string `json:"type,omitempty"`
 	Content string `json:"content,omitempty"`
+}
+
+// FrustrationDetectedResponse reports Think Live frustration detection. Count
+// is cumulative for the session; Escalated is true once it reaches the
+// configured frustration_max_count.
+type FrustrationDetectedResponse struct {
+	Type      string `json:"type,omitempty"`
+	Count     int    `json:"count"`
+	Escalated bool   `json:"escalated"`
 }
 
 // FunctionCallRequestResponse is the response from a function call request

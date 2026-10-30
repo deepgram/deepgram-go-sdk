@@ -46,6 +46,7 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		conversationTextResponse:      make([]*chan *interfaces.ConversationTextResponse, 0),
 		userStartedSpeakingResponse:   make([]*chan *interfaces.UserStartedSpeakingResponse, 0),
 		agentThinkingResponse:         make([]*chan *interfaces.AgentThinkingResponse, 0),
+		frustrationDetectedResponse:   make([]*chan *interfaces.FrustrationDetectedResponse, 0),
 		functionCallRequestResponse:   make([]*chan *interfaces.FunctionCallRequestResponse, 0),
 		functionCallCancelledResponse: make([]*chan *interfaces.FunctionCallCancelledResponse, 0),
 		agentStartedSpeakingResponse:  make([]*chan *interfaces.AgentStartedSpeakingResponse, 0),
@@ -65,6 +66,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.conversationTextResponse = append(router.conversationTextResponse, chans.GetConversationText()...)
 		router.userStartedSpeakingResponse = append(router.userStartedSpeakingResponse, chans.GetUserStartedSpeaking()...)
 		router.agentThinkingResponse = append(router.agentThinkingResponse, chans.GetAgentThinking()...)
+		if thinkLive, ok := chans.(interfaces.ThinkLiveChan); ok {
+			router.frustrationDetectedResponse = append(router.frustrationDetectedResponse, thinkLive.GetFrustrationDetected()...)
+		}
 		router.functionCallRequestResponse = append(router.functionCallRequestResponse, chans.GetFunctionCallRequest()...)
 		if functionCallCancelled, ok := chans.(interfaces.FunctionCallCancelledChan); ok {
 			router.functionCallCancelledResponse = append(router.functionCallCancelledResponse, functionCallCancelled.GetFunctionCallCancelled()...)
@@ -239,6 +243,30 @@ func (r *ChanRouter) processAgentThinking(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeAgentThinkingResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processFrustrationDetected(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.FrustrationDetectedResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			klog.V(1).Infof("json.Unmarshal(FrustrationDetectedResponse) failed. Err: %v\n", err)
+			return err
+		}
+
+		if len(r.frustrationDetectedResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+
+		for _, ch := range r.frustrationDetectedResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeFrustrationDetectedResponse), byMsg, action)
+}
+
 func (r *ChanRouter) processFunctionCallRequest(byMsg []byte) error {
 	action := func(data []byte) error {
 		var msg interfaces.FunctionCallRequestResponse
@@ -407,6 +435,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processUserStartedSpeaking(byMsg)
 	case interfaces.TypeAgentThinkingResponse:
 		err = r.processAgentThinking(byMsg)
+	case interfaces.TypeFrustrationDetectedResponse:
+		err = r.processFrustrationDetected(byMsg)
 	case interfaces.TypeFunctionCallRequestResponse:
 		err = r.processFunctionCallRequest(byMsg)
 	case interfaces.TypeFunctionCallCancelledResponse:

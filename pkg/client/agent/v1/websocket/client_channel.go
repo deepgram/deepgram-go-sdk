@@ -98,6 +98,7 @@ func (c *WSChannel) Start() {
 		if agent, ok := clone["agent"].(map[string]interface{}); ok {
 			deleteEmptyProvider(agent, "speak")
 			deleteEmptyProvider(agent, "think")
+			deleteEmptyProvider(agent, "think_live")
 			deleteEmptyProvider(agent, "listen")
 		}
 		byteData, marshalErr2 := json.Marshal(clone)

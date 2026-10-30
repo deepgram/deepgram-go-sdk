@@ -23,6 +23,7 @@ type DefaultChanHandler struct {
 	conversationTextResponse      chan *interfaces.ConversationTextResponse
 	userStartedSpeakingResponse   chan *interfaces.UserStartedSpeakingResponse
 	agentThinkingResponse         chan *interfaces.AgentThinkingResponse
+	frustrationDetectedResponse   chan *interfaces.FrustrationDetectedResponse
 	functionCallRequestResponse   chan *interfaces.FunctionCallRequestResponse
 	functionCallCancelledResponse chan *interfaces.FunctionCallCancelledResponse
 	agentStartedSpeakingResponse  chan *interfaces.AgentStartedSpeakingResponse
@@ -46,6 +47,7 @@ type ChanRouter struct {
 	conversationTextResponse      []*chan *interfaces.ConversationTextResponse
 	userStartedSpeakingResponse   []*chan *interfaces.UserStartedSpeakingResponse
 	agentThinkingResponse         []*chan *interfaces.AgentThinkingResponse
+	frustrationDetectedResponse   []*chan *interfaces.FrustrationDetectedResponse
 	functionCallRequestResponse   []*chan *interfaces.FunctionCallRequestResponse
 	functionCallCancelledResponse []*chan *interfaces.FunctionCallCancelledResponse
 	agentStartedSpeakingResponse  []*chan *interfaces.AgentStartedSpeakingResponse
