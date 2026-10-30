@@ -26,6 +26,9 @@ go run main.go -model flux-general-multi
 
 # Multilingual model with language hints (sent as connect-time query params)
 go run main.go -model flux-general-multi -language en -language es -language fr
+
+# Filter profanity, format numerals, and redact sensitive numbers at connection time
+go run main.go -profanity-filter -numerals -redact aggressive_numbers
 ```
 
 ## Flags
@@ -34,6 +37,9 @@ go run main.go -model flux-general-multi -language en -language es -language fr
 |------|---------|-------------|
 | `-model` | `flux-general-en` | Flux model to use. Valid values: `flux-general-en`, `flux-general-multi` |
 | `-language` | _(none)_ | Language hint BCP-47 tag (e.g. `en`, `es`, `fr`, `pt`). Repeat the flag for multiple languages. Only sent when `-model flux-general-multi` is used. |
+| `-profanity-filter` | `false` | Replace recognized profanity with a non-profane word or remove it. |
+| `-numerals` | `false` | Convert written numbers to numerical format. |
+| `-redact` | _(none)_ | Sensitive-number redaction mode: `numbers` or `aggressive_numbers`. |
 
 ## Behaviour
 

@@ -21,6 +21,7 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
   - [Streaming Audio](#streaming-audio)
+  - [Flux STT](#flux-stt)
   - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
   - [Text to Speech Streaming](#text-to-speech-streaming)
@@ -306,6 +307,25 @@ dgClient.Stop()
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 
 Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
+
+## Flux STT
+
+Flux STT connection options are query parameters sent when the WebSocket opens. Use `ProfanityFilter` to replace recognized profanity with a non-profane word or remove it, `Numerals` to convert written numbers to numerical format, and `Redact` for one of Flux STT's two sensitive-number modes.
+
+```go
+options := &interfaces.FluxTranscriptionOptions{
+    Model:           "flux-general-en",
+    Encoding:        "linear16",
+    SampleRate:      16000,
+    ProfanityFilter: true,
+    Numerals:        true,
+    Redact:          interfaces.FluxRedactAggressiveNumbers,
+}
+```
+
+`Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. These fields are fixed for the connection. `FluxConfigureOptions` updates mid-session thresholds, keyterms, and language hints; this release does not expose Configure-time `numerals`, so set `Numerals` on `FluxTranscriptionOptions` before connecting.
+
+See the runnable [Flux callback example](examples/speech-to-text/websocket/flux_callback) for flag-based use of these options.
 
 ## Voice Agent
 
