@@ -19,6 +19,8 @@ const (
 	TypeUtteranceEndResponse  TypeResponse = "UtteranceEnd"
 	TypeSpeechStartedResponse TypeResponse = "SpeechStarted"
 	TypeFinalizeResponse      TypeResponse = "Finalize"
+	TypeConfigureSuccess      TypeResponse = "ConfigureSuccess"
+	TypeConfigureFailure      TypeResponse = "ConfigureFailure"
 	TypeCloseResponse                      = commoninterfaces.TypeCloseResponse
 	TypeCloseStreamResponse   TypeResponse = "CloseStream"
 	TypeErrorResponse                      = commoninterfaces.TypeErrorResponse
