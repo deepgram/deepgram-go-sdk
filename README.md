@@ -260,7 +260,7 @@ fmt.Printf("Request ID: %s\n", res.RequestID)
 For Nova-3 multilingual transcription, set `Language` to `multi` and provide the expected languages with `LanguageHint`. Hints bias language detection; they do not restrict recognition to those languages.
 
 ```go
-options := &interfaces.PreRecordedTranscriptionOptions{
+options := &interfaces.LiveTranscriptionOptions{
     Model:        "nova-3",
     Language:     "multi",
     LanguageHint: []string{"en", "es"},
