@@ -52,7 +52,7 @@ go run main.go -configure-numerals false
 
 - **Single model** (`flux-general-en`): Transcribes English audio with server-side turn detection. Language hints are ignored.
 - **Multi model** (`flux-general-multi`): Transcribes multilingual audio. If `-language` flags are provided, the hints are passed as `language_hint` query parameters at connect time. The server will include the detected and hinted languages in each `EndOfTurn` event.
-- **Numerals**: `-numerals` is sent as a connection-time query parameter. `-configure-numerals` optionally sends a post-connect update, including an explicit `false` value.
+- **Numerals**: `FluxTranscriptionOptions.Numerals` sets the initial connection-time value. This example's `-configure-numerals` flag sends `FluxConfigureOptions.Numerals` after the WebSocket connects to update numeric formatting for subsequent turns.
 
 ## Turn Events
 

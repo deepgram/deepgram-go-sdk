@@ -7,6 +7,7 @@ package deepgram_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/url"
 	"strconv"
 	"testing"
@@ -257,6 +258,69 @@ func Test_FluxConfigureNumeralsSerialization(t *testing.T) {
 			}
 			if string(data) != tc.want {
 				t.Errorf("ConfigureMessage wire format mismatch: got %s, want %s", data, tc.want)
+			}
+		})
+	}
+}
+
+func Test_FluxConfigureSerializationPreservesEmptySlices(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		msg  msginterfaces.ConfigureMessage
+		want string
+	}{
+		{
+			name: "no-op",
+			msg:  msginterfaces.ConfigureMessage{Type: listenv2ws.MessageTypeConfigure},
+			want: `{"type":"Configure"}`,
+		},
+		{
+			name: "empty keyterms",
+			msg: msginterfaces.ConfigureMessage{
+				Type:     listenv2ws.MessageTypeConfigure,
+				Keyterms: []string{},
+			},
+			want: `{"type":"Configure","keyterms":[]}`,
+		},
+		{
+			name: "empty language hints",
+			msg: msginterfaces.ConfigureMessage{
+				Type:          listenv2ws.MessageTypeConfigure,
+				LanguageHints: []string{},
+			},
+			want: `{"type":"Configure","language_hints":[]}`,
+		},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			data, err := json.Marshal(tc.msg)
+			if err != nil {
+				t.Fatalf("marshal ConfigureMessage failed: %s", err)
+			}
+			if string(data) != tc.want {
+				t.Errorf("ConfigureMessage wire format mismatch: got %s, want %s", data, tc.want)
+			}
+		})
+	}
+}
+
+func Test_FluxConfigureOptionsCheck(t *testing.T) {
+	if err := (*interfaces.FluxConfigureOptions)(nil).Check(); !errors.Is(err, interfacesv2.ErrOptionsRequired) {
+		t.Errorf("nil Configure options: expected ErrOptionsRequired, got %v", err)
+	}
+
+	for _, tc := range []struct {
+		name string
+		opts interfaces.FluxConfigureOptions
+	}{
+		{name: "no-op"},
+		{name: "empty keyterms", opts: interfaces.FluxConfigureOptions{Keyterms: []string{}}},
+		{name: "empty language hints", opts: interfaces.FluxConfigureOptions{LanguageHints: []string{}}},
+	} {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			if err := tc.opts.Check(); err != nil {
+				t.Errorf("Configure options validation failed: %v", err)
 			}
 		})
 	}
