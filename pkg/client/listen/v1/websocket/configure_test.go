@@ -70,7 +70,7 @@ func configureTestTranscriptionOptions() *clientinterfaces.LiveTranscriptionOpti
 	return &clientinterfaces.LiveTranscriptionOptions{Model: "nova-3"}
 }
 
-func TestConfigureRejectsNilAndEmptyOptions(t *testing.T) {
+func Test_ConfigureRejectsNilAndEmptyOptions(t *testing.T) {
 	tests := []struct {
 		name      string
 		configure func(*clientinterfaces.LiveConfigureOptions) error
@@ -90,10 +90,17 @@ func TestConfigureRejectsNilAndEmptyOptions(t *testing.T) {
 				t.Errorf("Configure(empty) error = %v, want ErrConfigureNoFields", err)
 			}
 		})
+		t.Run(test.name+" keyterms pointer to nil slice", func(t *testing.T) {
+			var keyterms []string
+			err := test.configure(&clientinterfaces.LiveConfigureOptions{Keyterms: &keyterms})
+			if !errors.Is(err, interfacesv1.ErrConfigureKeytermsNil) {
+				t.Errorf("Configure(keyterms pointer to nil slice) error = %v, want ErrConfigureKeytermsNil", err)
+			}
+		})
 	}
 }
 
-func TestConfigureWritesControlFrame(t *testing.T) {
+func Test_ConfigureWritesControlFrame(t *testing.T) {
 	keyterms := []string{}
 	opts := &clientinterfaces.LiveConfigureOptions{
 		Keyterms: &keyterms,

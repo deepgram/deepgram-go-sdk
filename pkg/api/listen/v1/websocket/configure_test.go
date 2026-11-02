@@ -116,7 +116,7 @@ func (c *legacyConfigureChannels) GetUnhandled() []*chan *[]byte {
 	return []*chan *[]byte{&c.unhandled}
 }
 
-func TestConfigureMessageSerialization(t *testing.T) {
+func Test_ConfigureMessageSerialization(t *testing.T) {
 	t.Run("omitted keyterms", func(t *testing.T) {
 		data, err := json.Marshal(interfaces.ConfigureMessage{Type: "Configure"})
 		if err != nil {
@@ -165,7 +165,7 @@ func TestConfigureMessageSerialization(t *testing.T) {
 	})
 }
 
-func TestConfigureResponseDecoding(t *testing.T) {
+func Test_ConfigureResponseDecoding(t *testing.T) {
 	var success interfaces.ConfigureSuccessResponse
 	if err := json.Unmarshal([]byte(`{"type":"ConfigureSuccess","request_id":"request-1","keyterms":["Deepgram"]}`), &success); err != nil {
 		t.Fatalf("decode ConfigureSuccess: %v", err)
@@ -190,7 +190,7 @@ func TestConfigureResponseDecoding(t *testing.T) {
 	}
 }
 
-func TestConfigureCallbackRouter(t *testing.T) {
+func Test_ConfigureCallbackRouter(t *testing.T) {
 	handler := &configureCallback{}
 	router := NewCallbackRouter(handler)
 
@@ -217,7 +217,7 @@ func TestConfigureCallbackRouter(t *testing.T) {
 	}
 }
 
-func TestConfigureChanRouter(t *testing.T) {
+func Test_ConfigureChanRouter(t *testing.T) {
 	handler := newConfigureChannels()
 	router := NewChanRouter(handler)
 

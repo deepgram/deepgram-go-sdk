@@ -52,7 +52,7 @@ type LiveTranscriptionOptions struct {
 //
 // Keyterms is a pointer so callers can distinguish an omitted field from an
 // explicit empty list that clears the active keyterms. A pointer to a nil slice
-// serializes as JSON null, matching the nullable wire contract.
+// is not valid.
 type LiveConfigureOptions struct {
 	Keyterms *[]string       `json:"keyterms,omitempty"`
 	Features map[string]bool `json:"features,omitempty"`
