@@ -33,6 +33,28 @@ func Test_LanguageHint(t *testing.T) {
 		}
 	})
 
+	for _, test := range []struct {
+		name  string
+		hints []string
+	}{
+		{name: "omits unset hints"},
+		{name: "omits empty hints", hints: []string{}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			endpoint, err := version.GetPrerecordedAPI(context.Background(), "", "", "", &interfaces.PreRecordedTranscriptionOptions{LanguageHint: test.hints})
+			if err != nil {
+				t.Fatalf("build prerecorded API URL: %v", err)
+			}
+			parsed, err := url.Parse(endpoint)
+			if err != nil {
+				t.Fatalf("parse endpoint: %v", err)
+			}
+			if _, found := parsed.Query()["language_hint"]; found {
+				t.Errorf("language_hint must be omitted: %s", endpoint)
+			}
+		})
+	}
+
 	t.Run("decodes applied hints and utterance languages", func(t *testing.T) {
 		var response PreRecordedResponse
 		if err := json.Unmarshal([]byte(`{"results":{"channels":[{"alternatives":[{"languages_hinted":["en","es"]}]}],"utterances":[{"languages":["en","es"]}]}}`), &response); err != nil {
