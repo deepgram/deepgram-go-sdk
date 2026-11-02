@@ -12,14 +12,24 @@ import (
 )
 
 func Test_TransportErrorsSetCode(t *testing.T) {
-	err := errors.New("websocket: bad 400 handshake: invalid configuration")
-	for name, response := range map[string]*msginterfaces.ErrorResponse{
-		"callback": (&WSCallback{}).errorToResponse(err),
-		"channel":  (&WSChannel{}).errorToResponse(err),
+	for _, test := range []struct {
+		name string
+		err  error
+		code string
+	}{
+		{name: "close reason", err: errors.New("websocket: close 1008 (policy violation): DATA-0000 invalid configuration"), code: "DATA-0000"},
+		{name: "bad handshake", err: errors.New("websocket: bad handshake")},
 	} {
-		t.Run(name, func(t *testing.T) {
-			if response.Code != "bad" {
-				t.Errorf("Code = %q, want %q", response.Code, "bad")
+		t.Run(test.name, func(t *testing.T) {
+			for name, response := range map[string]*msginterfaces.ErrorResponse{
+				"callback": (&WSCallback{}).errorToResponse(test.err),
+				"channel":  (&WSChannel{}).errorToResponse(test.err),
+			} {
+				t.Run(name, func(t *testing.T) {
+					if response.Code != test.code {
+						t.Errorf("Code = %q, want %q", response.Code, test.code)
+					}
+				})
 			}
 		})
 	}

@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* **WebSocket:** Re-marshal `Error` and `Warning` events with their wire-format `type` key instead of Go's `Type` key. ([#385](https://github.com/deepgram/deepgram-go-sdk/pull/385))
+
 ## [3.10.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.9.0...v3.10.0) (2026-10-13)
 
 ### Features
