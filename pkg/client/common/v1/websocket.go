@@ -355,12 +355,16 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 			c.muConn.Unlock()
 			return
 		}
+		// Keep Stop from releasing protocol-owned resources after muConn is
+		// unlocked but before the terminal Close reaches the router.
+		c.terminalMu.Lock()
 		c.terminalCloseStarted = true
 		c.retry = false
 		c.wsconn = nil
 		c.sessionDone = nil
 		close(sessionDone)
 		c.muConn.Unlock()
+		defer c.terminalMu.Unlock()
 
 		// Abort the transport before notifying application code. Router callbacks
 		// can block, and must not delay unblocking the reader or a reconnect.
@@ -747,6 +751,8 @@ func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
+	c.terminalMu.Lock()
+	defer c.terminalMu.Unlock()
 	if c.terminalCloseStarted {
 		return
 	}

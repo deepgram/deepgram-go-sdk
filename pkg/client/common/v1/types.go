@@ -31,6 +31,7 @@ type WSClient struct {
 	ctxCancel context.CancelFunc
 
 	muConn      sync.RWMutex
+	terminalMu  sync.Mutex
 	wsconn      *websocket.Conn
 	sessionDone chan struct{}
 	retry       bool

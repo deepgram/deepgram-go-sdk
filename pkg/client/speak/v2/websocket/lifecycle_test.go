@@ -9,15 +9,39 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/dvonthenen/websocket"
 
+	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2/interfaces"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
+type blockingCloseRouter struct {
+	closeStarted chan struct{}
+	closeRelease chan struct{}
+	closeOnce    sync.Once
+}
+
+func (r *blockingCloseRouter) Open(*commoninterfaces.OpenResponse) error { return nil }
+func (r *blockingCloseRouter) Message([]byte) error                      { return nil }
+func (r *blockingCloseRouter) Binary([]byte) error                       { return nil }
+func (r *blockingCloseRouter) Error(*commoninterfaces.ErrorResponse) error {
+	return nil
+}
+func (r *blockingCloseRouter) Close(*commoninterfaces.CloseResponse) error {
+	r.closeOnce.Do(func() { close(r.closeStarted) })
+	<-r.closeRelease
+	return nil
+}
+
 func newDefaultHandlerLifecycleClient(t *testing.T, onFrame func(*websocket.Conn, string), onConnect func(*websocket.Conn)) *WSChannel {
+	return newDefaultHandlerLifecycleClientWithContext(t, context.Background(), onFrame, onConnect)
+}
+
+func newDefaultHandlerLifecycleClientWithContext(t *testing.T, ctx context.Context, onFrame func(*websocket.Conn, string), onConnect func(*websocket.Conn)) *WSChannel {
 	t.Helper()
 
 	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +66,7 @@ func newDefaultHandlerLifecycleClient(t *testing.T, onFrame func(*websocket.Conn
 	}))
 	t.Cleanup(srv.Close)
 
-	client, err := NewUsingChan(context.Background(), "test", &clientinterfaces.ClientOptionsV2{
+	client, err := NewUsingChan(ctx, "test", &clientinterfaces.ClientOptionsV2{
 		Host:           strings.TrimPrefix(srv.URL, "https://"),
 		SkipServerAuth: true,
 	}, &clientinterfaces.SpeakV2WSOptions{
@@ -185,4 +209,55 @@ func Test_WSChannelDefaultHandlerContextCancellation(t *testing.T) {
 	// Context cancellation routes Close before shutting down the owned channels.
 	// Stop must remain safe after that terminal cleanup.
 	client.Stop()
+}
+
+func Test_WSChannelStopWaitsForContextCancellationClose(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	client := newDefaultHandlerLifecycleClientWithContext(t, ctx, nil, nil)
+
+	// The common client and the Flux TTS channel client share this router pointer.
+	// Block cancellation after it owns terminal teardown but before it can call
+	// onFinish, which reproduces the former Stop race deterministically.
+	blockingRouter := &blockingCloseRouter{
+		closeStarted: make(chan struct{}),
+		closeRelease: make(chan struct{}),
+	}
+	var releaseClose sync.Once
+	release := func() { releaseClose.Do(func() { close(blockingRouter.closeRelease) }) }
+	defer release()
+	var router commoninterfaces.Router = blockingRouter
+	*client.router = router
+
+	cancel()
+	select {
+	case <-blockingRouter.closeStarted:
+	case <-time.After(2 * time.Second):
+		t.Fatal("context cancellation did not route Close")
+	}
+
+	stopDone := make(chan struct{})
+	go func() {
+		client.Stop()
+		close(stopDone)
+	}()
+
+	select {
+	case <-client.defaultHandlerDone:
+		t.Fatal("Stop shut down the default handler before cancellation routed Close")
+	case <-time.After(100 * time.Millisecond):
+	}
+	select {
+	case <-stopDone:
+		t.Fatal("Stop returned before cancellation terminal teardown completed")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	release()
+	select {
+	case <-stopDone:
+	case <-time.After(2 * time.Second):
+		t.Fatal("Stop did not return after cancellation terminal teardown completed")
+	}
+	awaitDefaultHandlerStopped(t, client)
 }
