@@ -142,3 +142,47 @@ func Test_WSChannelDefaultHandlerStopsWithLifecycle(t *testing.T) {
 		awaitDefaultHandlerStopped(t, client)
 	})
 }
+
+func Test_WSChannelDefaultHandlerContextCancellation(t *testing.T) {
+	serverClosed := make(chan struct{})
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := (&websocket.Upgrader{}).Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+
+		_, _, _ = conn.ReadMessage()
+		close(serverClosed)
+	}))
+	defer srv.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	client, err := NewUsingChan(ctx, "test", &clientinterfaces.ClientOptionsV2{
+		Host:           strings.TrimPrefix(srv.URL, "https://"),
+		SkipServerAuth: true,
+	}, &clientinterfaces.SpeakV2WSOptions{
+		Model:      "test-model",
+		Encoding:   "linear16",
+		SampleRate: 48000,
+	}, nil)
+	if err != nil {
+		t.Fatalf("NewUsingChan failed: %v", err)
+	}
+	if !client.Connect() {
+		t.Fatal("Connect failed")
+	}
+
+	cancel()
+	select {
+	case <-serverClosed:
+	case <-time.After(2 * time.Second):
+		t.Fatal("context cancellation did not close the connection")
+	}
+	awaitDefaultHandlerStopped(t, client)
+
+	// Context cancellation routes Close before shutting down the owned channels.
+	// Stop must remain safe after that terminal cleanup.
+	client.Stop()
+}

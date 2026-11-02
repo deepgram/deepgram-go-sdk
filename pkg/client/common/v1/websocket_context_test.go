@@ -135,6 +135,7 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
 	var connections atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		connection := connections.Add(1)
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			t.Errorf("upgrade websocket: %v", err)
@@ -142,7 +143,7 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 		}
 		defer conn.Close()
 
-		if connections.Add(1) == 1 {
+		if connection == 1 {
 			_ = conn.WriteControl(
 				websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
