@@ -20,6 +20,7 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
   - [Pre-Recorded (Asynchronous / Callbacks)](#pre-recorded-asynchronous--callbacks)
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
+  - [Nova-3 Multilingual Prompting](#nova-3-multilingual-prompting)
   - [Streaming Audio](#streaming-audio)
   - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
@@ -253,21 +254,22 @@ fmt.Printf("Request ID: %s\n", res.RequestID)
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen).
 
-## Streaming Audio
-
-### Nova-3 Multilingual Prompting
+## Nova-3 Multilingual Prompting
 
 For Nova-3 multilingual transcription, set `Language` to `multi` and provide the expected languages with `LanguageHint`. Hints bias language detection; they do not restrict recognition to those languages.
 
 ```go
-options := &interfaces.LiveTranscriptionOptions{
+options := &interfaces.PreRecordedTranscriptionOptions{
     Model:        "nova-3",
     Language:     "multi",
     LanguageHint: []string{"en", "es"},
+    Utterances:   true,
 }
 ```
 
 The same fields are available on `LiveTranscriptionOptions`. Read `LanguagesHinted` on alternatives to see which hints the API applied. With `Utterances: true`, REST utterances also include their detected `Languages`.
+
+## Streaming Audio
 
 Transcribe streaming audio.
 
