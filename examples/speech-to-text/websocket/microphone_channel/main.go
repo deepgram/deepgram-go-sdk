@@ -8,6 +8,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -20,6 +21,26 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
 )
+
+// languageFlags is a custom flag type that accumulates multiple -language values.
+type languageFlags []string
+
+func (l *languageFlags) String() string { return strings.Join(*l, ",") }
+func (l *languageFlags) Set(v string) error {
+	for _, existing := range *l {
+		if existing == v {
+			return nil
+		}
+	}
+	*l = append(*l, v)
+	return nil
+}
+
+var languageHints languageFlags
+
+func init() {
+	flag.Var(&languageHints, "language", "Language hint (repeat for multiple, e.g. -language en -language es); switches to Nova-3 multilingual (language=multi)")
+}
 
 type MyHandler struct {
 	openChan          chan *msginterfaces.OpenResponse
@@ -112,15 +133,25 @@ func (dch MyHandler) Run() error {
 		defer wgReceivers.Done()
 
 		for mr := range dch.messageChan {
-			sentence := strings.TrimSpace(mr.Channel.Alternatives[0].Transcript)
+			if len(mr.Channel.Alternatives) == 0 {
+				klog.V(7).Infof("DEEPGRAM - no transcript")
+				continue
+			}
 
-			if len(mr.Channel.Alternatives) == 0 || sentence == "" {
+			alternative := mr.Channel.Alternatives[0]
+			sentence := strings.TrimSpace(alternative.Transcript)
+			if sentence == "" {
 				klog.V(7).Infof("DEEPGRAM - no transcript")
 				continue
 			}
 
 			if mr.IsFinal {
 				fmt.Printf("\n[MessageResponse] (Final) %s\n", sentence)
+
+				// Nova-3 multilingual (language=multi) reports detected and hinted languages
+				if len(alternative.Languages) > 0 || alternative.LanguagesHinted != nil {
+					fmt.Printf("[Languages]: languages=%v hinted=%v\n", alternative.Languages, alternative.LanguagesHinted)
+				}
 			} else {
 				fmt.Printf("\n[MessageResponse] (Interim) %s\n", sentence)
 			}
@@ -201,6 +232,8 @@ func (dch MyHandler) Run() error {
 }
 
 func main() {
+	flag.Parse()
+
 	// init library
 	microphone.Initialize()
 
@@ -237,6 +270,13 @@ func main() {
 		InterimResults: true,
 		UtteranceEndMs: "1000",
 		// End of UtteranceEnd settings
+	}
+
+	// language hints only apply to Nova-3 multilingual (language=multi)
+	if len(languageHints) > 0 {
+		fmt.Printf("Using language hints: %s\n", strings.Join(languageHints, ", "))
+		tOptions.Language = "multi"
+		tOptions.LanguageHint = languageHints
 	}
 
 	// example on how to send a custom parameter

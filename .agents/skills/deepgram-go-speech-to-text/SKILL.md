@@ -139,6 +139,7 @@ func run() error {
 	- use with `pkg/api/listen/v1/rest`: `api.New(client).FromURL`, `FromFile`, `FromStream`
 - `interfaces.LiveTranscriptionOptions`
 	- common fields: `Model`, `Language`, `Encoding`, `SampleRate`, `Channels`, `InterimResults`, `Endpointing`
+	- `LanguageHint` (`[]string`, sent as repeated `language_hint`): biases detection on Nova-3 multilingual; requires `Model: "nova-3"` and `Language: "multi"` (ignored otherwise; unsupported codes fail the handshake with HTTP 400). Results expose `Alternatives[i].LanguagesHinted` and `Languages`
 - constructor families
 	- REST: `listen.NewRESTWithDefaults()`, `listen.NewREST(apiKey, options)`
   - WS callbacks: `listen.NewWSUsingCallback...`
