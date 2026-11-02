@@ -6,6 +6,7 @@ package commonv1
 
 import (
 	"errors"
+	"regexp"
 	"time"
 )
 
@@ -40,6 +41,13 @@ var (
 	// ErrFatalPanicRecovered fatal panic recovered
 	ErrFatalPanicRecovered = errors.New("fatal panic - attempt to recover")
 )
+
+var transportErrorCodeRegexp = regexp.MustCompile(`^[A-Z][A-Z0-9]*(?:[-_][A-Z0-9]+)+\b`)
+
+// TransportErrorCode returns the service code at the start of a WebSocket close reason.
+func TransportErrorCode(reason string) string {
+	return transportErrorCodeRegexp.FindString(reason)
+}
 
 // internal constants for retry, waits, back-off, etc.
 const (
