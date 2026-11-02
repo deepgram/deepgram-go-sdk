@@ -339,8 +339,11 @@ func isDeterministicHandshakeRejection(statusCode int) bool {
 		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
 }
 
-func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) {
+func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) <-chan struct{} {
+	watcherDone := make(chan struct{})
 	go func() {
+		defer close(watcherDone)
+
 		select {
 		case <-ctx.Done():
 		case <-sessionDone:
@@ -357,19 +360,24 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 		c.wsconn = nil
 		c.sessionDone = nil
 		close(sessionDone)
+		c.muConn.Unlock()
+
+		// Abort the transport before notifying application code. Router callbacks
+		// can block, and must not delay unblocking the reader or a reconnect.
+		_ = ws.Close()
 
 		// Context cancellation aborts the active session. Protocol-specific graceful
-		// completion remains an explicit caller action. Finish and Close remain under
-		// the connection lock so a reconnect cannot inherit this session's teardown.
+		// completion remains an explicit caller action. Keep Close before Finish so
+		// routers can deliver the terminal event before handler-owned channels close.
 		if err := (*c.router).Close(&commonv1interfaces.CloseResponse{
 			Type: string(commonv1interfaces.TypeCloseResponse),
 		}); err != nil {
 			klog.V(1).Infof("router.Close failed. Err: %v\n", err)
 		}
 		(*c.processMessages).Finish()
-		_ = ws.Close()
-		c.muConn.Unlock()
 	}()
+
+	return watcherDone
 }
 
 //nolint:funlen // this is a complex function. keep as is

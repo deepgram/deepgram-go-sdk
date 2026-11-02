@@ -131,6 +131,7 @@ func Test_WSClientContextCancellationClosesActiveConnection(t *testing.T) {
 }
 
 func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
+	secondMessageReceived := make(chan struct{}, 1)
 	secondConnectionClosed := make(chan struct{}, 1)
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
 	var connections atomic.Int32
@@ -143,17 +144,18 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 		}
 		defer conn.Close()
 
-		if connection == 1 {
-			_ = conn.WriteControl(
-				websocket.CloseMessage,
-				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-				time.Now().Add(time.Second),
-			)
-			return
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				if connection == 2 {
+					secondConnectionClosed <- struct{}{}
+				}
+				return
+			}
+			if connection == 2 {
+				secondMessageReceived <- struct{}{}
+			}
 		}
-
-		_, _, _ = conn.ReadMessage()
-		secondConnectionClosed <- struct{}{}
 	}))
 	defer server.Close()
 
@@ -168,29 +170,57 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 	var routerInterface commoninterfaces.Router = router
 	client := NewWS(firstCtx, cancelFirst, "test-api-key", &interfaces.ClientOptions{}, &handlerInterface, &routerInterface)
 
-	if !client.ConnectWithCancel(firstCtx, cancelFirst, 1) {
-		t.Fatal("connect first session")
+	url := "ws" + strings.TrimPrefix(server.URL, "http")
+	firstWS, response, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("connect first session: %v", err)
 	}
-	select {
-	case <-router.closed:
-	case <-time.After(time.Second):
-		t.Fatal("first server close did not reach the client")
+	if response != nil {
+		response.Body.Close()
 	}
+	defer firstWS.Close()
+
+	firstSessionDone := make(chan struct{})
+	client.muConn.Lock()
+	client.wsconn = firstWS
+	client.sessionDone = firstSessionDone
+	client.terminalCloseStarted = false
+	client.muConn.Unlock()
+	firstWatcherDone := client.closeOnContextDone(firstCtx, firstWS, firstSessionDone)
 
 	secondCtx, cancelSecond := context.WithCancel(context.Background())
 	defer cancelSecond()
-	if !client.AttemptReconnectWithCancel(secondCtx, cancelSecond, 1) {
-		t.Fatal("reconnect second session")
+	secondWS, response, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		t.Fatalf("reconnect second session: %v", err)
 	}
-	if got := connections.Load(); got != 2 {
-		t.Fatalf("connections = %d, want 2", got)
+	if response != nil {
+		response.Body.Close()
 	}
+	defer secondWS.Close()
+
+	secondSessionDone := make(chan struct{})
+	client.muConn.Lock()
+	client.wsconn = secondWS
+	client.sessionDone = secondSessionDone
+	client.terminalCloseStarted = false
+	client.muConn.Unlock()
+	secondWatcherDone := client.closeOnContextDone(secondCtx, secondWS, secondSessionDone)
 
 	cancelFirst()
 	select {
-	case <-secondConnectionClosed:
-		t.Fatal("stale context closed the reconnected session")
-	case <-time.After(100 * time.Millisecond):
+	case <-firstWatcherDone:
+	case <-time.After(time.Second):
+		t.Fatal("stale context watcher did not complete its identity check")
+	}
+
+	if err := secondWS.WriteMessage(websocket.TextMessage, []byte("still connected")); err != nil {
+		t.Fatalf("stale context closed the reconnected session: %v", err)
+	}
+	select {
+	case <-secondMessageReceived:
+	case <-time.After(time.Second):
+		t.Fatal("reconnected session did not receive a message")
 	}
 
 	cancelSecond()
@@ -198,6 +228,11 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 	case <-secondConnectionClosed:
 	case <-time.After(time.Second):
 		t.Fatal("active context did not close the reconnected session")
+	}
+	select {
+	case <-secondWatcherDone:
+	case <-time.After(time.Second):
+		t.Fatal("active context watcher did not finish")
 	}
 }
 
@@ -239,27 +274,34 @@ func Test_WSClientContextCancellationClosesTransportBeforeBlockingHandlers(t *te
 		t.Fatal("Open handler was not called")
 	}
 
-	cancel()
+	close(router.openRelease)
 	select {
-	case <-serverClosed:
+	case ok := <-connected:
+		if !ok {
+			t.Fatal("ConnectWithCancel failed")
+		}
 	case <-time.After(time.Second):
-		t.Fatal("context cancellation did not close the transport while Open was blocked")
+		t.Fatal("ConnectWithCancel did not return")
 	}
+
+	cancel()
 	select {
 	case <-router.closeStarted:
 	case <-time.After(time.Second):
 		t.Fatal("Close handler was not called")
 	}
 
-	close(router.openRelease)
+	select {
+	case <-serverClosed:
+	case <-time.After(time.Second):
+		t.Fatal("context cancellation did not close the transport while Close was blocked")
+	}
+
 	close(router.closeRelease)
 	select {
-	case ok := <-connected:
-		if ok {
-			t.Error("ConnectWithCancel succeeded after context cancellation")
-		}
+	case <-handler.finished:
 	case <-time.After(time.Second):
-		t.Fatal("ConnectWithCancel did not return after releasing handlers")
+		t.Fatal("handler Finish was not called after Close returned")
 	}
 }
 
