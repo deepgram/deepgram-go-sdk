@@ -33,7 +33,7 @@ func (c *Client) GetMemberScopes(ctx context.Context, projectID, memberID string
 	}
 
 	klog.V(6).Infof("manage.GetMemberScopes() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // UpdateMemberScopes updates the scopes for a member
@@ -55,5 +55,5 @@ func (c *Client) UpdateMemberScopes(ctx context.Context, projectID, memberID str
 	}
 
 	klog.V(6).Infof("manage.UpdateMemberScopes() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
