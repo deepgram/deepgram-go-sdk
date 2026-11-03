@@ -36,7 +36,7 @@ func (c *Client) ListKeys(ctx context.Context, projectID string) (*api.KeysResul
 	}
 
 	klog.V(6).Infof("manage.ListKeys() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetKey gets a key for a project
@@ -52,7 +52,7 @@ func (c *Client) GetKey(ctx context.Context, projectID, keyID string) (*api.KeyR
 	}
 
 	klog.V(6).Infof("manage.GetKey() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // CreateKey creates a key for a project
@@ -95,7 +95,7 @@ func (c *Client) CreateKey(ctx context.Context, projectID string, key *api.KeyCr
 	}
 
 	klog.V(6).Infof("manage.CreateKey() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // DeleteKey deletes a key for a project
@@ -111,5 +111,5 @@ func (c *Client) DeleteKey(ctx context.Context, projectID, keyID string) (*api.M
 	}
 
 	klog.V(6).Infof("manage.DeleteKey() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }

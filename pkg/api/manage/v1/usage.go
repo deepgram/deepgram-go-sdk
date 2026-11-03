@@ -41,7 +41,7 @@ func (c *Client) ListRequests(ctx context.Context, projectID string, use *api.Us
 	}
 
 	klog.V(6).Infof("manage.ListRequests() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetRequest gets a request by ID
@@ -57,7 +57,7 @@ func (c *Client) GetRequest(ctx context.Context, projectID, requestID string) (*
 	}
 
 	klog.V(6).Infof("manage.GetRequest() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetFields gets a list of fields for a project
@@ -79,7 +79,7 @@ func (c *Client) GetFields(ctx context.Context, projectID string, use *api.Usage
 	}
 
 	klog.V(6).Infof("manage.GetFields() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetUsage gets a usage by ID
@@ -101,5 +101,5 @@ func (c *Client) GetUsage(ctx context.Context, projectID string, use *api.UsageR
 	}
 
 	klog.V(6).Infof("manage.GetUsage() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }

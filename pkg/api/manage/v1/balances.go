@@ -31,7 +31,7 @@ func (c *Client) ListBalances(ctx context.Context, projectID string) (*api.Balan
 	}
 
 	klog.V(6).Infof("manage.ListBalances() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetBalance gets a balance for a project
@@ -47,5 +47,5 @@ func (c *Client) GetBalance(ctx context.Context, projectID, balanceID string) (*
 	}
 
 	klog.V(6).Infof("manage.GetBalance() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }

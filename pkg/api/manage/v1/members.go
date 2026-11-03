@@ -31,7 +31,7 @@ func (c *Client) ListMembers(ctx context.Context, projectID string) (*api.Member
 	}
 
 	klog.V(6).Infof("manage.ListMembers() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // RemoveMember removes a member from a project
@@ -47,5 +47,5 @@ func (c *Client) RemoveMember(ctx context.Context, projectID, memberID string) (
 	}
 
 	klog.V(6).Infof("manage.RemoveMember() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
