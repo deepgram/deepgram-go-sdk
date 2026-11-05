@@ -71,7 +71,8 @@ type RawResponse struct {
 
 // DeepgramWarning is the Deepgram specific response warning
 type DeepgramWarning struct {
-	Type        string
+	Type        string `json:"type,omitempty"`
+	Code        string `json:"code,omitempty"`
 	WarnCode    string `json:"warn_code,omitempty"`
 	WarnMsg     string `json:"warn_msg,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -80,7 +81,8 @@ type DeepgramWarning struct {
 
 // DeepgramError is the Deepgram specific response error
 type DeepgramError struct {
-	Type        string
+	Type        string `json:"type,omitempty"`
+	Code        string `json:"code,omitempty"`
 	ErrCode     string `json:"err_code,omitempty"`
 	ErrMsg      string `json:"err_msg,omitempty"`
 	Description string `json:"description,omitempty"`

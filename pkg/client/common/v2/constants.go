@@ -31,3 +31,8 @@ var (
 	ErrInvalidConnection   = commonv1.ErrInvalidConnection
 	ErrFatalPanicRecovered = commonv1.ErrFatalPanicRecovered
 )
+
+// TransportErrorCode returns the service code at the start of a WebSocket close reason.
+func TransportErrorCode(reason string) string {
+	return commonv1.TransportErrorCode(reason)
+}
