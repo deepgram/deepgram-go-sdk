@@ -56,3 +56,9 @@ type WarningChan interface {
 type ThinkLiveChan interface {
 	GetFrustrationDetected() []*chan *FrustrationDetectedResponse
 }
+
+// ThinkLiveUpdatedChan receives confirmations for UpdateThink_Live. It is
+// optional so existing AgentMessageChan implementations remain compatible.
+type ThinkLiveUpdatedChan interface {
+	GetThinkLiveUpdated() []*chan *ThinkLiveUpdatedResponse
+}

@@ -23,6 +23,7 @@ type thinkLiveHandler struct {
 	settingsApplied     chan *msginterfaces.SettingsAppliedResponse
 	conversationTexts   chan *msginterfaces.ConversationTextResponse
 	frustrationDetected chan *msginterfaces.FrustrationDetectedResponse
+	thinkLiveUpdated    chan *msginterfaces.ThinkLiveUpdatedResponse
 	errors              chan *msginterfaces.ErrorResponse
 }
 
@@ -32,6 +33,7 @@ func newThinkLiveHandler() *thinkLiveHandler {
 		settingsApplied:     make(chan *msginterfaces.SettingsAppliedResponse, 1),
 		conversationTexts:   make(chan *msginterfaces.ConversationTextResponse, 4),
 		frustrationDetected: make(chan *msginterfaces.FrustrationDetectedResponse, 1),
+		thinkLiveUpdated:    make(chan *msginterfaces.ThinkLiveUpdatedResponse, 1),
 		errors:              make(chan *msginterfaces.ErrorResponse, 1),
 	}
 }
@@ -46,6 +48,10 @@ func (h *thinkLiveHandler) GetConversationText() []*chan *msginterfaces.Conversa
 
 func (h *thinkLiveHandler) GetFrustrationDetected() []*chan *msginterfaces.FrustrationDetectedResponse {
 	return []*chan *msginterfaces.FrustrationDetectedResponse{&h.frustrationDetected}
+}
+
+func (h *thinkLiveHandler) GetThinkLiveUpdated() []*chan *msginterfaces.ThinkLiveUpdatedResponse {
+	return []*chan *msginterfaces.ThinkLiveUpdatedResponse{&h.thinkLiveUpdated}
 }
 
 func (h *thinkLiveHandler) GetError() []*chan *msginterfaces.ErrorResponse {
@@ -103,6 +109,17 @@ func run() error {
 		return fmt.Errorf("apply Think Live settings: %s", response.Description)
 	case <-ctx.Done():
 		return fmt.Errorf("wait for SettingsApplied: %w", ctx.Err())
+	}
+
+	if err := conn.UpdateThinkLive(options.Agent.ThinkLive); err != nil {
+		return fmt.Errorf("update Think Live settings: %w", err)
+	}
+	select {
+	case <-handler.thinkLiveUpdated:
+	case response := <-handler.errors:
+		return fmt.Errorf("update Think Live settings: %s", response.Description)
+	case <-ctx.Done():
+		return fmt.Errorf("wait for ThinkLiveUpdated: %w", ctx.Err())
 	}
 
 	if err := conn.WriteJSON(msginterfaces.InjectUserMessage{

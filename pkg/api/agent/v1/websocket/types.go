@@ -33,6 +33,7 @@ type DefaultChanHandler struct {
 	settingsAppliedResponse       chan *interfaces.SettingsAppliedResponse
 	listenUpdatedResponse         chan *interfaces.ListenUpdatedResponse
 	thinkUpdatedResponse          chan *interfaces.ThinkUpdatedResponse
+	thinkLiveUpdatedResponse      chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               chan *interfaces.WarningResponse
 	closeChan                     chan *interfaces.CloseResponse
 	errorChan                     chan *interfaces.ErrorResponse
@@ -60,6 +61,7 @@ type ChanRouter struct {
 	settingsAppliedResponse       []*chan *interfaces.SettingsAppliedResponse
 	listenUpdatedResponse         []*chan *interfaces.ListenUpdatedResponse
 	thinkUpdatedResponse          []*chan *interfaces.ThinkUpdatedResponse
+	thinkLiveUpdatedResponse      []*chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               []*chan *interfaces.WarningResponse
 	closeChan                     []*chan *interfaces.CloseResponse
 	errorChan                     []*chan *interfaces.ErrorResponse
