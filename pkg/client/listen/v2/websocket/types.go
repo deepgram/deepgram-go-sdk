@@ -6,6 +6,7 @@ package websocketv2
 
 import (
 	"context"
+	"sync"
 
 	msginterface "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
 	commonv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
@@ -17,6 +18,7 @@ import (
 // WSCallback is a Flux WebSocket client that delivers server events via a FluxMessageCallback.
 type WSCallback struct {
 	*common.WSClient
+	ctxMu     sync.RWMutex
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	workers   commonv1.Workers
@@ -31,6 +33,7 @@ type WSCallback struct {
 // WSChannel is a Flux WebSocket client that delivers server events via Go channels.
 type WSChannel struct {
 	*common.WSClient
+	ctxMu     sync.RWMutex
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 	workers   commonv1.Workers

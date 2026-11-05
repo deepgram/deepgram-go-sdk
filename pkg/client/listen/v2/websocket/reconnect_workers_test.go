@@ -18,7 +18,26 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
+type reconnectingFluxClient interface {
+	Connect() bool
+	AttemptReconnect(context.Context, int64) bool
+	Stop()
+}
+
 func Test_ReconnectDoesNotDuplicatePing(t *testing.T) {
+	testReconnectDoesNotDuplicatePing(t, func(options *interfaces.ClientOptionsV2) (reconnectingFluxClient, error) {
+		return NewUsingCallback(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	})
+}
+
+func Test_ReconnectDoesNotDuplicatePingChannel(t *testing.T) {
+	testReconnectDoesNotDuplicatePing(t, func(options *interfaces.ClientOptionsV2) (reconnectingFluxClient, error) {
+		return NewUsingChan(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	})
+}
+
+func testReconnectDoesNotDuplicatePing(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (reconnectingFluxClient, error)) {
+	t.Helper()
 	originalPingPeriod := pingPeriod
 	pingPeriod = 50 * time.Millisecond
 	t.Cleanup(func() { pingPeriod = originalPingPeriod })
@@ -26,6 +45,7 @@ func Test_ReconnectDoesNotDuplicatePing(t *testing.T) {
 	var connections, pings atomic.Int32
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		connection := connections.Add(1)
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			t.Errorf("upgrade websocket: %v", err)
@@ -33,7 +53,7 @@ func Test_ReconnectDoesNotDuplicatePing(t *testing.T) {
 		}
 		defer conn.Close()
 
-		if connections.Add(1) == 1 {
+		if connection == 1 {
 			_ = conn.WriteControl(
 				websocket.CloseMessage,
 				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
@@ -61,7 +81,7 @@ func Test_ReconnectDoesNotDuplicatePing(t *testing.T) {
 			headers.Del("Host")
 		},
 	}
-	client, err := NewUsingCallback(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	client, err := newClient(options)
 	if err != nil {
 		t.Fatalf("create client: %v", err)
 	}
