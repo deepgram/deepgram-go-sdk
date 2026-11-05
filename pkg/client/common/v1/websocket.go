@@ -668,7 +668,7 @@ func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) er
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
-	ws := c.internalConnect()
+	ws := c.wsconn
 	if ws == nil {
 		klog.V(4).Infof("connection is nil\n")
 		klog.V(7).Infof("common.WriteControl() LEAVE\n")
