@@ -272,8 +272,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.retry = true
 		c.terminalMu.Unlock()
 
-		// kick off threads to listen for messages and ping/keepalive
-		go c.listen()
+		// Start protocol workers before the reader can process an immediate peer close.
+		// Finish then always has an active worker context to cancel.
 		if lock {
 			klog.V(3).Infof("Unlocking connection mutex\n")
 			c.muConn.Unlock()
@@ -283,10 +283,11 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			c.muConn.Unlock()
 		}
 
-		c.closeOnContextDone(ctx, ws, sessionDone)
-
 		// start WS specific items
 		(*c.processMessages).Start()
+		go c.listen()
+
+		c.closeOnContextDone(ctx, ws, sessionDone)
 
 		// fire off close connection
 		err = (*c.router).Open(&commonv1interfaces.OpenResponse{
