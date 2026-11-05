@@ -30,10 +30,12 @@ type WSClient struct {
 	ctx       context.Context
 	ctxCancel context.CancelFunc
 
-	muConn   sync.RWMutex
-	wsconn   *websocket.Conn
-	retry    bool
-	retryCnt int64
+	muConn      sync.RWMutex
+	terminalMu  sync.Mutex
+	wsconn      *websocket.Conn
+	sessionDone chan struct{}
+	retry       bool
+	retryCnt    int64
 	// terminalCloseStarted prevents concurrent local and peer-close paths from
 	// routing a second close event after handler-owned channels are released.
 	terminalCloseStarted bool

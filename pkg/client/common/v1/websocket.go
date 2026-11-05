@@ -246,9 +246,13 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 
 		// set the object to allow threads to function
+		c.terminalMu.Lock()
 		c.wsconn = ws
+		c.sessionDone = make(chan struct{})
+		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
 		c.retry = true
+		c.terminalMu.Unlock()
 
 		// kick off threads to listen for messages and ping/keepalive
 		go c.listen()
@@ -256,6 +260,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			klog.V(3).Infof("Unlocking connection mutex\n")
 			c.muConn.Unlock()
 		}
+
+		c.closeOnContextDone(ctx, ws, sessionDone)
 
 		// start WS specific items
 		(*c.processMessages).Start()
@@ -266,6 +272,10 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		})
 		if err != nil {
 			klog.V(1).Infof("router.Open failed. Err: %v\n", err)
+		}
+		if ctx.Err() != nil {
+			klog.V(3).Infof("Connection closed while Open handler was running\n")
+			return nil
 		}
 
 		klog.V(3).Infof("WebSocket Connection Successful!")
@@ -331,9 +341,55 @@ func isDeterministicHandshakeRejection(statusCode int) bool {
 		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
 }
 
+func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) <-chan struct{} {
+	watcherDone := make(chan struct{})
+	go func() {
+		defer close(watcherDone)
+
+		select {
+		case <-ctx.Done():
+		case <-sessionDone:
+			return
+		}
+
+		c.muConn.Lock()
+		if c.wsconn != ws || c.sessionDone != sessionDone || c.terminalCloseStarted {
+			c.muConn.Unlock()
+			return
+		}
+		// Keep Stop from releasing protocol-owned resources after muConn is
+		// unlocked but before the terminal Close reaches the router.
+		c.terminalMu.Lock()
+		c.terminalCloseStarted = true
+		c.retry = false
+		c.wsconn = nil
+		c.sessionDone = nil
+		close(sessionDone)
+		c.muConn.Unlock()
+		defer c.terminalMu.Unlock()
+
+		// Abort the transport before notifying application code. Router callbacks
+		// can block, and must not delay unblocking the reader or a reconnect.
+		_ = ws.Close()
+
+		// Context cancellation aborts the active session. Protocol-specific graceful
+		// completion remains an explicit caller action. Keep Close before Finish so
+		// routers can deliver the terminal event before handler-owned channels close.
+		if err := (*c.router).Close(&commonv1interfaces.CloseResponse{
+			Type: string(commonv1interfaces.TypeCloseResponse),
+		}); err != nil {
+			klog.V(1).Infof("router.Close failed. Err: %v\n", err)
+		}
+		(*c.processMessages).Finish()
+	}()
+
+	return watcherDone
+}
+
 //nolint:funlen // this is a complex function. keep as is
 func (c *WSClient) listen() {
 	klog.V(6).Infof("common.listen() ENTER\n")
+	var activeWS *websocket.Conn
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -349,7 +405,7 @@ func (c *WSClient) listen() {
 			}
 
 			// fatal close
-			c.closeWs(true, false)
+			c.closeWsFor(activeWS, true, false)
 
 			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
@@ -370,6 +426,7 @@ func (c *WSClient) listen() {
 			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
 		}
+		activeWS = ws
 
 		// release the lock
 		c.muConn.Unlock()
@@ -385,14 +442,14 @@ func (c *WSClient) listen() {
 
 				// The peer has already completed its WebSocket close handshake. Do
 				// not send another application Close frame while releasing resources.
-				c.closeAfterPeerClose()
+				c.closeAfterPeerClose(ws)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
 
-				c.closeAfterPeerClose()
+				c.closeAfterPeerClose(ws)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -406,7 +463,7 @@ func (c *WSClient) listen() {
 				}
 
 				// fatal close
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -420,7 +477,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(false, false)
+				c.closeWsFor(ws, false, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -434,7 +491,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -448,7 +505,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -683,25 +740,42 @@ func (c *WSClient) Stop() {
 // closeAfterPeerClose releases local state after the server has already closed
 // the WebSocket. It still delivers the terminal router event, but skips outbound
 // application and protocol Close frames that would otherwise fail with ErrCloseSent.
-func (c *WSClient) closeAfterPeerClose() {
-	c.closeWsWithState(false, false, true)
+func (c *WSClient) closeAfterPeerClose(ws *websocket.Conn) {
+	c.closeWsWithStateFor(ws, false, false, true)
 }
 
 // closeWs closes the websocket connection
 func (c *WSClient) closeWs(fatal bool, perm bool) {
-	c.closeWsWithState(fatal, perm, false)
+	c.closeWsWithStateFor(nil, fatal, perm, false)
 }
 
 func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
+	c.closeWsWithStateFor(nil, fatal, perm, peerClosed)
+}
+
+func (c *WSClient) closeWsFor(ws *websocket.Conn, fatal bool, perm bool) {
+	c.closeWsWithStateFor(ws, fatal, perm, false)
+}
+
+func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool, peerClosed bool) {
 	klog.V(6).Infof("common.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
+	if ws != nil && c.wsconn != ws {
+		return
+	}
+	c.terminalMu.Lock()
+	defer c.terminalMu.Unlock()
 	if c.terminalCloseStarted {
 		return
 	}
 	c.terminalCloseStarted = true
+	if c.sessionDone != nil {
+		close(c.sessionDone)
+		c.sessionDone = nil
+	}
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
