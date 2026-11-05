@@ -35,7 +35,7 @@ func (c *Client) ListProjects(ctx context.Context) (*api.ProjectsResult, error) 
 	}
 
 	klog.V(6).Infof("manage.ListProjects() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetProject gets a project by ID
@@ -51,7 +51,7 @@ func (c *Client) GetProject(ctx context.Context, projectID string) (*api.Project
 	}
 
 	klog.V(6).Infof("manage.GetProject() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // UpdateProject updates a project
@@ -73,7 +73,7 @@ func (c *Client) UpdateProject(ctx context.Context, projectID string, proj *api.
 	}
 
 	klog.V(6).Infof("manage.UpdateProject() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // DeleteProject deletes a project
@@ -89,5 +89,5 @@ func (c *Client) DeleteProject(ctx context.Context, projectID string) (*api.Mess
 	}
 
 	klog.V(6).Infof("manage.DeleteProject() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }

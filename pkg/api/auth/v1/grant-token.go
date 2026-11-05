@@ -45,5 +45,5 @@ func (c *Client) GrantToken(ctx context.Context, req *api.GrantTokenRequest) (*a
 	}
 
 	klog.V(6).Infof("auth.GrantToken() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
