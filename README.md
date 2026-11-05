@@ -445,32 +445,79 @@ fmt.Printf("Audio saved to: %s\n", filePath)
 Convert streaming text into speech using a WebSocket.
 
 ```go
-// Define Deepgram options
-options := &interfaces.SpeakWSOptions{
-    Model:      "aura-2-thalia-en",
-    Encoding:   "linear16",
-    SampleRate: 16000,
+package main
+
+import (
+    "context"
+    "fmt"
+    "log"
+    "time"
+
+    speakws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/speak/v1/websocket/interfaces"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
+    speak "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/speak"
+)
+
+type flushHandler struct {
+    flushed chan struct{}
+    errors  chan error
 }
 
-// Create Deepgram client with custom callback
-dgClient, err := client.NewWSUsingCallback(ctx, "", &interfaces.ClientOptions{}, options, callback)
-    if err != nil {
-    fmt.Printf("Error creating client: %v\n", err)
-        os.Exit(1)
+func (h *flushHandler) Open(*speakws.OpenResponse) error       { return nil }
+func (h *flushHandler) Metadata(*speakws.MetadataResponse) error { return nil }
+func (h *flushHandler) Flush(*speakws.FlushedResponse) error {
+    close(h.flushed)
+    return nil
+}
+func (h *flushHandler) Clear(*speakws.ClearedResponse) error   { return nil }
+func (h *flushHandler) Close(*speakws.CloseResponse) error     { return nil }
+func (h *flushHandler) Warning(*speakws.WarningResponse) error { return nil }
+func (h *flushHandler) Error(response *speakws.ErrorResponse) error {
+    h.errors <- fmt.Errorf("Speak error: %s", response.Description)
+    return nil
+}
+func (h *flushHandler) UnhandledEvent([]byte) error { return nil }
+func (h *flushHandler) Binary([]byte) error         { return nil }
+
+func main() {
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
+    options := &interfaces.WSSpeakOptions{
+        Model:      "aura-2-thalia-en",
+        Encoding:   "linear16",
+        SampleRate: 16000,
+    }
+    handler := &flushHandler{
+        flushed: make(chan struct{}),
+        errors:  make(chan error, 1),
     }
 
-    // Connect to Deepgram
-dgClient.Connect()
+    dgClient, err := speak.NewWSUsingCallbackWithDefaults(ctx, options, handler)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer dgClient.Stop()
 
-// Send text to convert to speech
-text := "Hello, this is a text to speech example."
-dgClient.SendText(text)
-dgClient.Flush()
-
-// Wait for completion and cleanup
-dgClient.WaitForComplete()
-dgClient.Stop()
+    if !dgClient.Connect() {
+        log.Fatal("connect Speak WebSocket")
+    }
+    if err := dgClient.SpeakWithText("Hello, this is a text to speech example."); err != nil {
+        log.Fatal(err)
+    }
+    if err := dgClient.Flush(); err != nil {
+        log.Fatal(err)
+    }
+    select {
+    case <-handler.flushed:
+    case err := <-handler.errors:
+        log.Fatal(err)
+    case <-ctx.Done():
+        log.Fatal(ctx.Err())
+    }
+}
 ```
+
+Use typed helpers such as `Flush` and `Clear` when available. For a server-documented control frame that is not modeled by the SDK, pass a `json.RawMessage` to `SendControlJSON`. It validates JSON syntax; the server still validates the control frame itself.
 
 [See our API reference for more info](https://developers.deepgram.com/reference/text-to-speech-api/speak-streaming).
 
