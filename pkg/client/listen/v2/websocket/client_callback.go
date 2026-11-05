@@ -21,6 +21,7 @@ import (
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v2"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
 )
 
 // Connect performs a WebSocket connection with DefaultConnectRetry retries.
@@ -201,11 +202,23 @@ func (c *WSCallback) Stream(r io.Reader) error {
 func (c *WSCallback) Configure(opts *clientinterfaces.FluxConfigureOptions) error {
 	klog.V(7).Infof("flux.WSCallback.Configure() ENTER\n")
 
+	if opts == nil {
+		klog.V(1).Infof("Configure: nil options\n")
+		klog.V(7).Infof("flux.WSCallback.Configure() LEAVE\n")
+		return interfacesv2.ErrOptionsRequired
+	}
+	if err := opts.Check(); err != nil {
+		klog.V(1).Infof("Configure: invalid options. Err: %v\n", err)
+		klog.V(7).Infof("flux.WSCallback.Configure() LEAVE\n")
+		return err
+	}
+
 	msg := msginterfaces.ConfigureMessage{
 		Type:          MessageTypeConfigure,
 		Thresholds:    opts.Thresholds,
 		Keyterms:      opts.Keyterms,
 		LanguageHints: opts.LanguageHints,
+		Numerals:      opts.Numerals,
 	}
 	if err := c.WriteJSON(msg); err != nil {
 		klog.V(1).Infof("Configure failed. Err: %v\n", err)

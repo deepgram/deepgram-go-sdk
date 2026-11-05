@@ -19,6 +19,16 @@ func (o *FluxTranscriptionOptions) Check() error {
 	return nil
 }
 
+// Check validates a mid-session Flux STT Configure message. An empty Configure
+// is a valid no-op, and non-nil empty slices are explicit updates. Numerals uses
+// a pointer so false remains an explicit update rather than an omitted field.
+func (o *FluxConfigureOptions) Check() error {
+	if o == nil {
+		return ErrOptionsRequired
+	}
+	return nil
+}
+
 func (o *SpeakV2Options) Check() error {
 	// model is required on /v2/speak — unlike /v1/speak there is no default
 	if o.Model == "" {

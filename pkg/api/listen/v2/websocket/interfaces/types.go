@@ -5,6 +5,8 @@
 package interfacesv2
 
 import (
+	"encoding/json"
+
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
 	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	clientinterfacesv2 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v2"
@@ -76,6 +78,8 @@ type ConfigureSuccessResponse struct {
 	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
 	Keyterms      []string                           `json:"keyterms,omitempty"`
 	LanguageHints []string                           `json:"language_hints,omitempty"`
+	// Numerals is nil when the acknowledgement did not include a numerals update.
+	Numerals *bool `json:"numerals,omitempty"`
 }
 
 // ConfigureFailureResponse signals that a mid-session Configure message was rejected.
@@ -126,12 +130,43 @@ type ErrorResponse = clientinterfaces.DeepgramError
 //
 // JSON example:
 //
-//	{"type":"Configure","thresholds":{"eot_threshold":0.8},"keyterms":["Deepgram","Flux"]}
+//	{"type":"Configure","thresholds":{"eot_threshold":0.8},"keyterms":["Deepgram","Flux"],"numerals":true}
 type ConfigureMessage struct {
-	Type          string                             `json:"type"` // always "Configure"
-	Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
-	Keyterms      []string                           `json:"keyterms,omitempty"`
-	LanguageHints []string                           `json:"language_hints,omitempty"`
+	Type       string                             `json:"type"` // always "Configure"
+	Thresholds *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
+	// Keyterms omits a nil value but preserves a non-nil empty slice as [].
+	Keyterms []string `json:"keyterms,omitempty"`
+	// LanguageHints omits a nil value but preserves a non-nil empty slice as [].
+	LanguageHints []string `json:"language_hints,omitempty"`
+	// Numerals controls numeric formatting for subsequent turns. A pointer keeps
+	// an explicit false value on the wire.
+	Numerals *bool `json:"numerals,omitempty"`
+}
+
+// MarshalJSON preserves the distinction between an omitted slice and an
+// explicitly empty update without changing the public slice fields.
+func (m ConfigureMessage) MarshalJSON() ([]byte, error) {
+	type configureMessage struct {
+		Type          string                             `json:"type"`
+		Thresholds    *clientinterfacesv2.FluxThresholds `json:"thresholds,omitempty"`
+		Keyterms      *[]string                          `json:"keyterms,omitempty"`
+		LanguageHints *[]string                          `json:"language_hints,omitempty"`
+		Numerals      *bool                              `json:"numerals,omitempty"`
+	}
+
+	message := configureMessage{
+		Type:       m.Type,
+		Thresholds: m.Thresholds,
+		Numerals:   m.Numerals,
+	}
+	if m.Keyterms != nil {
+		message.Keyterms = &m.Keyterms
+	}
+	if m.LanguageHints != nil {
+		message.LanguageHints = &m.LanguageHints
+	}
+
+	return json.Marshal(message)
 }
 
 // ForceEndTurnMessage is the JSON payload that asks the server to end the current

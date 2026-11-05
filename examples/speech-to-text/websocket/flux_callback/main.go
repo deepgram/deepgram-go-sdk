@@ -20,6 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -45,11 +46,12 @@ func (l *languageFlags) Set(v string) error {
 }
 
 var (
-	model           string
-	languageHints   languageFlags
-	profanityFilter bool
-	numerals        bool
-	redact          string
+	model             string
+	languageHints     languageFlags
+	profanityFilter   bool
+	numerals          bool
+	redact            string
+	configureNumerals string
 )
 
 func init() {
@@ -58,6 +60,7 @@ func init() {
 	flag.BoolVar(&profanityFilter, "profanity-filter", false, "Filter recognized profanity")
 	flag.BoolVar(&numerals, "numerals", false, "Format written numbers as numerals")
 	flag.StringVar(&redact, "redact", "", "Redact sensitive numbers: numbers or aggressive_numbers")
+	flag.StringVar(&configureNumerals, "configure-numerals", "", "Update numeric formatting after connection (true or false)")
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.
@@ -137,6 +140,15 @@ func (c MyCallback) UnhandledEvent(byData []byte) error {
 
 func main() {
 	flag.Parse()
+	var configuredNumerals *bool
+	if configureNumerals != "" {
+		value, err := strconv.ParseBool(configureNumerals)
+		if err != nil {
+			fmt.Printf("ERROR: -configure-numerals must be true or false: %v\n", err)
+			return
+		}
+		configuredNumerals = &value
+	}
 
 	microphone.Initialize()
 
@@ -178,6 +190,14 @@ func main() {
 	if !dgClient.Connect() {
 		fmt.Println("ERROR: failed to connect to Deepgram Flux endpoint")
 		os.Exit(1)
+	}
+	if configuredNumerals != nil {
+		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: configuredNumerals}); err != nil {
+			fmt.Printf("ERROR: configuring numerals: %v\n", err)
+			dgClient.Stop()
+			microphone.Teardown()
+			return
+		}
 	}
 
 	mic, err := microphone.New(microphone.AudioConfig{
