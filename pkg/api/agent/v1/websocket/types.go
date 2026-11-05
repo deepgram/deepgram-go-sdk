@@ -23,6 +23,7 @@ type DefaultChanHandler struct {
 	conversationTextResponse      chan *interfaces.ConversationTextResponse
 	userStartedSpeakingResponse   chan *interfaces.UserStartedSpeakingResponse
 	agentThinkingResponse         chan *interfaces.AgentThinkingResponse
+	frustrationDetectedResponse   chan *interfaces.FrustrationDetectedResponse
 	functionCallRequestResponse   chan *interfaces.FunctionCallRequestResponse
 	functionCallCancelledResponse chan *interfaces.FunctionCallCancelledResponse
 	agentStartedSpeakingResponse  chan *interfaces.AgentStartedSpeakingResponse
@@ -32,6 +33,7 @@ type DefaultChanHandler struct {
 	settingsAppliedResponse       chan *interfaces.SettingsAppliedResponse
 	listenUpdatedResponse         chan *interfaces.ListenUpdatedResponse
 	thinkUpdatedResponse          chan *interfaces.ThinkUpdatedResponse
+	thinkLiveUpdatedResponse      chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               chan *interfaces.WarningResponse
 	closeChan                     chan *interfaces.CloseResponse
 	errorChan                     chan *interfaces.ErrorResponse
@@ -49,6 +51,7 @@ type ChanRouter struct {
 	conversationTextResponse      []*chan *interfaces.ConversationTextResponse
 	userStartedSpeakingResponse   []*chan *interfaces.UserStartedSpeakingResponse
 	agentThinkingResponse         []*chan *interfaces.AgentThinkingResponse
+	frustrationDetectedResponse   []*chan *interfaces.FrustrationDetectedResponse
 	functionCallRequestResponse   []*chan *interfaces.FunctionCallRequestResponse
 	functionCallCancelledResponse []*chan *interfaces.FunctionCallCancelledResponse
 	agentStartedSpeakingResponse  []*chan *interfaces.AgentStartedSpeakingResponse
@@ -58,6 +61,7 @@ type ChanRouter struct {
 	settingsAppliedResponse       []*chan *interfaces.SettingsAppliedResponse
 	listenUpdatedResponse         []*chan *interfaces.ListenUpdatedResponse
 	thinkUpdatedResponse          []*chan *interfaces.ThinkUpdatedResponse
+	thinkLiveUpdatedResponse      []*chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               []*chan *interfaces.WarningResponse
 	closeChan                     []*chan *interfaces.CloseResponse
 	errorChan                     []*chan *interfaces.ErrorResponse

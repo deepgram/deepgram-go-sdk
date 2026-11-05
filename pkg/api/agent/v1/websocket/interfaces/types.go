@@ -5,6 +5,8 @@
 package interfacesv1
 
 import (
+	"encoding/json"
+
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
@@ -41,6 +43,12 @@ type UpdateThink struct {
 	Think *interfacesv1.Think `json:"think"`
 }
 
+// UpdateThinkLive is the request to update the active Think Live configuration.
+type UpdateThinkLive struct {
+	Type      string                          `json:"type"`
+	ThinkLive *interfacesv1.ThinkLiveSettings `json:"think_live"`
+}
+
 // ForceEndTurn asks the service to end the current user turn immediately.
 type ForceEndTurn struct {
 	Type string `json:"type"`
@@ -50,6 +58,26 @@ type ForceEndTurn struct {
 type InjectAgentMessage struct {
 	Type    string `json:"type,omitempty"`
 	Content string `json:"content,omitempty"`
+}
+
+// InjectDynamicAgentMessage asks Think Live to generate a filler line instead
+// of speaking caller-provided text.
+type InjectDynamicAgentMessage struct {
+	Type     string `json:"type"`
+	Behavior string `json:"behavior,omitempty"`
+}
+
+// MarshalJSON always sends the required is_dynamic flag as true.
+func (m InjectDynamicAgentMessage) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		Type      string `json:"type"`
+		IsDynamic bool   `json:"is_dynamic"`
+		Behavior  string `json:"behavior,omitempty"`
+	}{
+		Type:      m.Type,
+		IsDynamic: true,
+		Behavior:  m.Behavior,
+	})
 }
 
 // InjectUserMessage is the request to interact with the agent using text.
@@ -118,9 +146,10 @@ type WelcomeResponse struct {
 
 // ConversationTextResponse is the response from the conversation text
 type ConversationTextResponse struct {
-	Type    string `json:"type,omitempty"`
-	Role    string `json:"role,omitempty"`
-	Content string `json:"content,omitempty"`
+	Type                   string `json:"type,omitempty"`
+	Role                   string `json:"role,omitempty"`
+	ConversationalBehavior string `json:"conversational_behavior,omitempty"`
+	Content                string `json:"content,omitempty"`
 }
 
 // UserStartedSpeakingResponse is the response from the user starting to speak
@@ -132,6 +161,15 @@ type UserStartedSpeakingResponse struct {
 type AgentThinkingResponse struct {
 	Type    string `json:"type,omitempty"`
 	Content string `json:"content,omitempty"`
+}
+
+// FrustrationDetectedResponse reports Think Live frustration detection. Count
+// is cumulative for the session; Escalated is true once it reaches the
+// configured frustration_max_count.
+type FrustrationDetectedResponse struct {
+	Type      string `json:"type,omitempty"`
+	Count     int    `json:"count"`
+	Escalated bool   `json:"escalated"`
 }
 
 // FunctionCallRequestResponse is the response from a function call request
@@ -206,6 +244,11 @@ type ListenUpdatedResponse struct {
 
 // ThinkUpdatedResponse confirms that the service applied an UpdateThink request.
 type ThinkUpdatedResponse struct {
+	Type string `json:"type,omitempty"`
+}
+
+// ThinkLiveUpdatedResponse confirms that the service applied an UpdateThink_Live request.
+type ThinkLiveUpdatedResponse struct {
 	Type string `json:"type,omitempty"`
 }
 
