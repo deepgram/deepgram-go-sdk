@@ -32,3 +32,21 @@ type AgentMessageChan interface {
 type FunctionCallCancelledChan interface {
 	GetFunctionCallCancelled() []*chan *FunctionCallCancelledResponse
 }
+
+// ListenUpdatedChan receives confirmations for UpdateListen. It is optional so
+// existing AgentMessageChan implementations remain compatible.
+type ListenUpdatedChan interface {
+	GetListenUpdated() []*chan *ListenUpdatedResponse
+}
+
+// ThinkUpdatedChan receives confirmations for UpdateThink. It is optional so
+// existing AgentMessageChan implementations remain compatible.
+type ThinkUpdatedChan interface {
+	GetThinkUpdated() []*chan *ThinkUpdatedResponse
+}
+
+// WarningChan receives non-fatal service warnings. It is optional so existing
+// AgentMessageChan implementations remain compatible.
+type WarningChan interface {
+	GetWarning() []*chan *WarningResponse
+}
