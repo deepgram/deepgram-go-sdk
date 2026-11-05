@@ -560,7 +560,7 @@ func (c *WSClient) WriteBinary(byData []byte) error {
 	defer c.muConn.Unlock()
 
 	// get the connection
-	ws := c.internalConnect()
+	ws := c.wsconn
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
@@ -670,7 +670,7 @@ func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) er
 
 	ws := c.internalConnect()
 	if ws == nil {
-		klog.V(4).Infof("c.internalConnect() is nil\n")
+		klog.V(4).Infof("connection is nil\n")
 		klog.V(7).Infof("common.WriteControl() LEAVE\n")
 		return ErrInvalidConnection
 	}
