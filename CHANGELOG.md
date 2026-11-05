@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.11.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.10.0...v3.11.0) (2026-11-05)
+
+
+### Features
+
+* **listen:** add support to language_hint in the v1 API ([#380](https://github.com/deepgram/deepgram-go-sdk/issues/380)) ([ab7f944](https://github.com/deepgram/deepgram-go-sdk/commit/ab7f944196d55c46d87fbf777d7be9f9446351f6))
+* **speak:** expose raw control frames ([#386](https://github.com/deepgram/deepgram-go-sdk/issues/386)) ([02bdba9](https://github.com/deepgram/deepgram-go-sdk/commit/02bdba96f258624c2da82b1989dc3d7228e9b859))
+
+
+### Bug Fixes
+
+* allow nil client options ([#381](https://github.com/deepgram/deepgram-go-sdk/issues/381)) ([47a0b70](https://github.com/deepgram/deepgram-go-sdk/commit/47a0b708cdf01ce2a7f54012843d713747ee5d1f))
+* **websocket:** close sessions on context cancellation ([#384](https://github.com/deepgram/deepgram-go-sdk/issues/384)) ([272d09b](https://github.com/deepgram/deepgram-go-sdk/commit/272d09b2770508cc35183f6c4f41331618901d6e))
+* **websocket:** surface handshake errors ([#383](https://github.com/deepgram/deepgram-go-sdk/issues/383)) ([4913c47](https://github.com/deepgram/deepgram-go-sdk/commit/4913c47cc76f7121fe7308350a84f2300b9cde2f))
+
 ## [3.10.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.9.0...v3.10.0) (2026-10-13)
 
 ### Features
