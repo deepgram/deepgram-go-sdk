@@ -1,0 +1,27 @@
+{
+  "start": "2026-01-01",
+  "end": "2026-01-31",
+  "resolution": {"units": "day", "amount": 1},
+  "results": [
+    {
+      "hours": 12.5,
+      "total_hours": 14.25,
+      "agent_hours": 1.5,
+      "tokens_in": 1000,
+      "tokens_out": 2000,
+      "tts_characters": 3000,
+      "requests": 42,
+      "grouping": {
+        "start": "2026-01-01",
+        "end": "2026-01-01",
+        "accessor": null,
+        "endpoint": "listen",
+        "feature_set": "diarize",
+        "models": ["nova-3", null],
+        "method": "sync",
+        "tags": ["production"],
+        "deployment": "hosted"
+      }
+    }
+  ]
+}
