@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -111,6 +112,77 @@ func Test_ReconnectDoesNotDuplicatePingChannel(t *testing.T) {
 	testReconnectDoesNotDuplicatePing(t, func(options *interfaces.ClientOptionsV2) (reconnectingFluxClient, error) {
 		return NewUsingChan(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
 	})
+}
+
+func Test_ReconnectWaitsForInFlightPing(t *testing.T) {
+	originalPingPeriod := pingPeriod
+	pingPeriod = 20 * time.Millisecond
+	t.Cleanup(func() { pingPeriod = originalPingPeriod })
+
+	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := NewUsingCallback(context.Background(), "test-api-key", &interfaces.ClientOptionsV2{
+		Host:            "ws" + strings.TrimPrefix(server.URL, "http"),
+		EnableKeepAlive: true,
+		WSHeaderProcessor: func(headers http.Header) {
+			headers.Del("Host")
+		},
+	}, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	t.Cleanup(client.Stop)
+
+	pingStarted := make(chan struct{})
+	releasePing := make(chan struct{})
+	var blockOnce sync.Once
+	client.beforePing = func() {
+		blockOnce.Do(func() {
+			close(pingStarted)
+			<-releasePing
+		})
+	}
+
+	if !client.Connect() {
+		t.Fatal("connect")
+	}
+	select {
+	case <-pingStarted:
+	case <-time.After(time.Second):
+		t.Fatal("ping did not start")
+	}
+
+	reconnected := make(chan bool, 1)
+	go func() { reconnected <- client.AttemptReconnect(context.Background(), 3) }()
+	select {
+	case <-reconnected:
+		t.Fatal("reconnect completed while the old ping was in flight")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	close(releasePing)
+	select {
+	case ok := <-reconnected:
+		if !ok {
+			t.Fatal("reconnect failed")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("reconnect did not complete after the old ping exited")
+	}
 }
 
 func testReconnectDoesNotDuplicatePing(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (reconnectingFluxClient, error)) {

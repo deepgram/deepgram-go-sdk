@@ -42,10 +42,14 @@ func (c *WSChannel) AttemptReconnect(ctx context.Context, retries int64) bool {
 
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
-	// Stop the old ping worker before it can trigger a competing reconnect.
-	c.workers.Stop()
+	c.stopWorkers()
 	c.setContext(ctx, ctxCancel)
-	return c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
+	connected := c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
+	if connected {
+		// AttemptReconnect may reuse a healthy connection without invoking Start.
+		c.Start()
+	}
+	return connected
 }
 
 func (c *WSChannel) setContext(ctx context.Context, ctxCancel context.CancelFunc) {
@@ -74,10 +78,24 @@ func (c *WSChannel) GetURL(host string) (string, error) {
 
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
 func (c *WSChannel) Start() {
+	c.workerMu.Lock()
+	defer c.workerMu.Unlock()
+
 	workerCtx := c.workers.Start(c.context())
 	if c.cOptions.EnableKeepAlive {
-		go c.ping(workerCtx)
+		c.workerWG.Add(1)
+		go func() {
+			defer c.workerWG.Done()
+			c.ping(workerCtx)
+		}()
 	}
+}
+
+func (c *WSChannel) stopWorkers() {
+	c.workerMu.Lock()
+	c.workers.Stop()
+	c.workerWG.Wait()
+	c.workerMu.Unlock()
 }
 
 // ping sends WebSocket protocol-level ping frames on a fixed interval to keep
@@ -104,6 +122,9 @@ func (c *WSChannel) ping(ctx context.Context) {
 			klog.V(3).Infof("flux.WSChannel.ping() Exiting\n")
 			return
 		case <-ticker.C:
+			if c.beforePing != nil {
+				c.beforePing()
+			}
 			klog.V(5).Infof("Sending WebSocket ping...\n")
 			if err := c.WritePing(); err != nil {
 				klog.V(1).Infof("ping: WritePing failed. Err: %v\n", err)
