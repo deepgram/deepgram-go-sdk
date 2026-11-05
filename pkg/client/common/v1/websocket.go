@@ -124,6 +124,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			}
 			return nil
 		default:
+			c.lastConnectReused = true
 			klog.V(7).Infof("Connection is good. Return object.")
 			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 			if lock {
@@ -253,6 +254,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.sessionDone = make(chan struct{})
 		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
+		c.lastConnectReused = false
 		c.retry = true
 		c.terminalMu.Unlock()
 
@@ -299,6 +301,14 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	}
 
 	return nil
+}
+
+// LastConnectionReused reports whether the most recent successful connection
+// operation returned an already-active transport rather than creating a new one.
+func (c *WSClient) LastConnectionReused() bool {
+	c.muConn.RLock()
+	defer c.muConn.RUnlock()
+	return c.lastConnectReused
 }
 
 func handshakeErrorResponse(res *http.Response) *commonv1interfaces.ErrorResponse {

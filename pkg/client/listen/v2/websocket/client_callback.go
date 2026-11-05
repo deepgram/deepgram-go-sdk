@@ -46,7 +46,7 @@ func (c *WSCallback) AttemptReconnectWithCancel(ctx context.Context, ctxCancel c
 	c.stopWorkers()
 	c.setContext(ctx, ctxCancel)
 	connected := c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
-	if connected {
+	if connected && c.WSClient.LastConnectionReused() {
 		// AttemptReconnect may reuse a healthy connection without invoking Start.
 		c.Start()
 	}
