@@ -50,11 +50,15 @@ func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, opt
 
 // Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
 func (c *WSClient) Connect() bool {
+	c.muConn.RLock()
+	ctx, ctxCancel, retryCnt := c.ctx, c.ctxCancel, c.retryCnt
+	c.muConn.RUnlock()
+
 	// set the retry count
-	if c.retryCnt == 0 {
-		c.retryCnt = DefaultConnectRetry
+	if retryCnt == 0 {
+		retryCnt = DefaultConnectRetry
 	}
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), true) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, int(retryCnt), true) != nil
 }
 
 // ConnectWithCancel performs a websocket connection with specified number of retries and providing a
@@ -65,11 +69,8 @@ func (c *WSClient) ConnectWithCancel(ctx context.Context, ctxCancel context.Canc
 
 // AttemptReconnect performs a reconnect after failing retries
 func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
-	c.muConn.Lock()
-	c.retry = true
-	c.muConn.Unlock()
-	c.ctx, c.ctxCancel = context.WithCancel(ctx)
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries), true) != nil
+	reconnectCtx, reconnectCancel := context.WithCancel(ctx)
+	return c.AttemptReconnectWithCancel(reconnectCtx, reconnectCancel, retries)
 }
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
@@ -88,16 +89,17 @@ func (c *WSClient) internalConnect() *websocket.Conn {
 func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
 	klog.V(7).Infof("common.internalConnectWithCancel() ENTER\n")
 
-	// set the context
-	c.ctx = ctx
-	c.ctxCancel = ctxCancel
-	c.retryCnt = int64(retryCnt)
-
 	// lock conn access
 	if lock {
 		klog.V(3).Infof("Locking connection mutex\n")
 		c.muConn.Lock()
 	}
+
+	// The caller holds muConn when lock is false, so all transport context
+	// replacement and use is serialized with writes and reconnects.
+	c.ctx = ctx
+	c.ctxCancel = ctxCancel
+	c.retryCnt = int64(retryCnt)
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
@@ -113,7 +115,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	// if the connection is good, return it otherwise, attempt reconnect
 	if c.wsconn != nil {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(1).Infof("Connection is not valid\n")
 			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 			if lock {
@@ -132,7 +134,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 	} else {
 		select {
-		case <-c.ctx.Done():
+		case <-ctx.Done():
 			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
 			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 			if lock {
@@ -149,7 +151,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	myHeader := http.Header{}
 
 	// restore application options to HTTP header
-	if headers, ok := c.ctx.Value(clientinterfaces.HeadersContext{}).(http.Header); ok {
+	if headers, ok := ctx.Value(clientinterfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
 				klog.V(3).Infof("internalConnectWithCancel RESTORE Header: %s = %s\n", k, v)
@@ -225,7 +227,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 
 		// perform the websocket connection
-		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
+		ws, res, err := dialer.DialContext(ctx, url, myHeader)
 		if err != nil {
 			if res != nil {
 				klog.V(3).Infof("HTTP Response: %s\n", res.Status)
