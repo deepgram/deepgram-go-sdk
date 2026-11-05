@@ -277,6 +277,10 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		if lock {
 			klog.V(3).Infof("Unlocking connection mutex\n")
 			c.muConn.Unlock()
+		} else {
+			// Write paths call internalConnect with muConn already held. Protocol
+			// Start may drain an in-flight worker that needs this lock to finish.
+			c.muConn.Unlock()
 		}
 
 		c.closeOnContextDone(ctx, ws, sessionDone)
@@ -290,6 +294,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		})
 		if err != nil {
 			klog.V(1).Infof("router.Open failed. Err: %v\n", err)
+		}
+		if !lock {
+			c.muConn.Lock()
 		}
 		if ctx.Err() != nil {
 			klog.V(3).Infof("Connection closed while Open handler was running\n")
