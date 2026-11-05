@@ -28,16 +28,19 @@ import (
 )
 
 const (
-	listenUpdatedPayload = `{"type":"ListenUpdated"}`
-	thinkUpdatedPayload  = `{"type":"ThinkUpdated"}`
-	forceEndTurnWarning  = `{"type":"Warning","code":"FORCE_END_TURN_UNSUPPORTED","description":"ForceEndTurn requires a Deepgram V2 listen provider"}`
+	listenUpdatedPayload    = `{"type":"ListenUpdated"}`
+	thinkUpdatedPayload     = `{"type":"ThinkUpdated"}`
+	thinkLiveUpdatedPayload = `{"type":"ThinkLiveUpdated"}`
+	forceEndTurnWarning     = `{"type":"Warning","code":"FORCE_END_TURN_UNSUPPORTED","description":"ForceEndTurn requires a Deepgram V2 listen provider"}`
+	dynamicFillerWarning    = `{"type":"Warning","code":"DYNAMIC_FILLER_UNAVAILABLE","description":"Dynamic filler is unavailable"}`
 )
 
 type runtimeControlHandler struct {
 	*legacyFunctionCallHandler
-	listenUpdated chan *msginterfaces.ListenUpdatedResponse
-	thinkUpdated  chan *msginterfaces.ThinkUpdatedResponse
-	warnings      chan *msginterfaces.WarningResponse
+	listenUpdated    chan *msginterfaces.ListenUpdatedResponse
+	thinkUpdated     chan *msginterfaces.ThinkUpdatedResponse
+	thinkLiveUpdated chan *msginterfaces.ThinkLiveUpdatedResponse
+	warnings         chan *msginterfaces.WarningResponse
 }
 
 func newRuntimeControlHandler() *runtimeControlHandler {
@@ -45,6 +48,7 @@ func newRuntimeControlHandler() *runtimeControlHandler {
 		legacyFunctionCallHandler: newLegacyFunctionCallHandler(),
 		listenUpdated:             make(chan *msginterfaces.ListenUpdatedResponse, 1),
 		thinkUpdated:              make(chan *msginterfaces.ThinkUpdatedResponse, 1),
+		thinkLiveUpdated:          make(chan *msginterfaces.ThinkLiveUpdatedResponse, 1),
 		warnings:                  make(chan *msginterfaces.WarningResponse, 1),
 	}
 }
@@ -55,6 +59,10 @@ func (h *runtimeControlHandler) GetListenUpdated() []*chan *msginterfaces.Listen
 
 func (h *runtimeControlHandler) GetThinkUpdated() []*chan *msginterfaces.ThinkUpdatedResponse {
 	return []*chan *msginterfaces.ThinkUpdatedResponse{&h.thinkUpdated}
+}
+
+func (h *runtimeControlHandler) GetThinkLiveUpdated() []*chan *msginterfaces.ThinkLiveUpdatedResponse {
+	return []*chan *msginterfaces.ThinkLiveUpdatedResponse{&h.thinkLiveUpdated}
 }
 
 func (h *runtimeControlHandler) GetWarning() []*chan *msginterfaces.WarningResponse {
@@ -72,6 +80,7 @@ func Test_AgentRuntimeControlSerialization(t *testing.T) {
 		"type":  "open_ai",
 		"model": "gpt-4o-mini",
 	}, Prompt: "Answer concisely."}
+	thinkLive := interfacesv1.NewThinkLiveSettings()
 
 	tests := []struct {
 		name string
@@ -87,6 +96,11 @@ func Test_AgentRuntimeControlSerialization(t *testing.T) {
 			name: "UpdateThink",
 			msg:  clientws.UpdateThink{Type: msginterfaces.TypeUpdateThink, Think: think},
 			want: `{"type":"UpdateThink","think":{"provider":{"model":"gpt-4o-mini","type":"open_ai"},"prompt":"Answer concisely."}}`,
+		},
+		{
+			name: "UpdateThinkLive",
+			msg:  clientws.UpdateThinkLive{Type: msginterfaces.TypeUpdateThinkLive, ThinkLive: thinkLive},
+			want: `{"type":"UpdateThink_Live","think_live":{"provider":{"type":"deepgram","version":"v1"}}}`,
 		},
 		{
 			name: "ForceEndTurn",
@@ -118,6 +132,9 @@ func Test_AgentRuntimeControlRouting(t *testing.T) {
 	if err := router.Message([]byte(thinkUpdatedPayload)); err != nil {
 		t.Fatalf("ThinkUpdated routing failed: %v", err)
 	}
+	if err := router.Message([]byte(thinkLiveUpdatedPayload)); err != nil {
+		t.Fatalf("ThinkLiveUpdated routing failed: %v", err)
+	}
 	if err := router.Message([]byte(forceEndTurnWarning)); err != nil {
 		t.Fatalf("Warning routing failed: %v", err)
 	}
@@ -141,6 +158,15 @@ func Test_AgentRuntimeControlRouting(t *testing.T) {
 	}
 
 	select {
+	case event := <-handler.thinkLiveUpdated:
+		if event.Type != msginterfaces.TypeThinkLiveUpdatedResponse {
+			t.Errorf("unexpected ThinkLiveUpdated type: %q", event.Type)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("ThinkLiveUpdated was not delivered")
+	}
+
+	select {
 	case event := <-handler.warnings:
 		if event.Code != "FORCE_END_TURN_UNSUPPORTED" {
 			t.Errorf("unexpected warning code: %q", event.Code)
@@ -154,7 +180,7 @@ func Test_AgentRuntimeControlFallsBackToUnhandled(t *testing.T) {
 	handler := newLegacyFunctionCallHandler()
 	router := agentws.NewChanRouter(handler)
 
-	for _, payload := range []string{listenUpdatedPayload, thinkUpdatedPayload, forceEndTurnWarning} {
+	for _, payload := range []string{listenUpdatedPayload, thinkUpdatedPayload, thinkLiveUpdatedPayload, forceEndTurnWarning} {
 		if err := router.Message([]byte(payload)); err != nil {
 			t.Fatalf("legacy handler must safely fall back for %s: %v", payload, err)
 		}
@@ -183,6 +209,12 @@ func Test_AgentRuntimeControlValidation(t *testing.T) {
 	}
 	if err := client.UpdateThink(&interfacesv1.Think{}); !errors.Is(err, clientws.ErrInvalidUpdateThink) {
 		t.Errorf("UpdateThink without provider error = %v, want ErrInvalidUpdateThink", err)
+	}
+	if err := client.UpdateThinkLive(nil); !errors.Is(err, clientws.ErrInvalidUpdateThinkLive) {
+		t.Errorf("UpdateThinkLive(nil) error = %v, want ErrInvalidUpdateThinkLive", err)
+	}
+	if err := client.UpdateThinkLive(&interfacesv1.ThinkLiveSettings{}); !errors.Is(err, clientws.ErrInvalidUpdateThinkLive) {
+		t.Errorf("UpdateThinkLive without provider error = %v, want ErrInvalidUpdateThinkLive", err)
 	}
 }
 
@@ -216,6 +248,12 @@ func newAgentRuntimeControlTestServer(t *testing.T) (string, chan string, func()
 			case strings.Contains(frame, `"type":"UpdateThink"`):
 				frames <- frame
 				_ = conn.WriteMessage(websocket.TextMessage, []byte(thinkUpdatedPayload))
+			case strings.Contains(frame, `"type":"UpdateThink_Live"`):
+				frames <- frame
+				_ = conn.WriteMessage(websocket.TextMessage, []byte(thinkLiveUpdatedPayload))
+			case strings.Contains(frame, `"is_dynamic":true`):
+				frames <- frame
+				_ = conn.WriteMessage(websocket.TextMessage, []byte(dynamicFillerWarning))
 			case strings.Contains(frame, `"type":"ForceEndTurn"`):
 				frames <- frame
 				_ = conn.WriteMessage(websocket.TextMessage, []byte(forceEndTurnWarning))
@@ -304,6 +342,35 @@ func Test_AgentRuntimeControlsWireChannel(t *testing.T) {
 		t.Fatal("ThinkUpdated was not routed through the connected client")
 	}
 
+	thinkLive := interfacesv1.NewThinkLiveSettings()
+	if err := client.UpdateThinkLive(thinkLive); err != nil {
+		t.Fatalf("UpdateThinkLive failed: %v", err)
+	}
+	awaitAgentRuntimeControlFrame(t, frames, `{"type":"UpdateThink_Live","think_live":{"provider":{"type":"deepgram","version":"v1"}}}`)
+
+	select {
+	case event := <-handler.thinkLiveUpdated:
+		if event.Type != msginterfaces.TypeThinkLiveUpdatedResponse {
+			t.Errorf("ThinkLiveUpdated type = %q, want %q", event.Type, msginterfaces.TypeThinkLiveUpdatedResponse)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("ThinkLiveUpdated was not routed through the connected client")
+	}
+
+	if err := client.InjectDynamicAgentMessage("queue"); err != nil {
+		t.Fatalf("InjectDynamicAgentMessage failed: %v", err)
+	}
+	awaitAgentRuntimeControlFrame(t, frames, `{"type":"InjectAgentMessage","is_dynamic":true,"behavior":"queue"}`)
+
+	select {
+	case event := <-handler.warnings:
+		if event.Code != "DYNAMIC_FILLER_UNAVAILABLE" {
+			t.Errorf("warning code = %q, want DYNAMIC_FILLER_UNAVAILABLE", event.Code)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("dynamic filler warning was not routed through the connected client")
+	}
+
 	if err := client.ForceEndTurn(); err != nil {
 		t.Fatalf("ForceEndTurn failed: %v", err)
 	}
@@ -324,6 +391,12 @@ func Test_AgentRuntimeControlsWireChannel(t *testing.T) {
 	}
 	if err := client.UpdateThink(think); err == nil {
 		t.Error("UpdateThink after Stop returned nil")
+	}
+	if err := client.UpdateThinkLive(thinkLive); err == nil {
+		t.Error("UpdateThinkLive after Stop returned nil")
+	}
+	if err := client.InjectDynamicAgentMessage("queue"); err == nil {
+		t.Error("InjectDynamicAgentMessage after Stop returned nil")
 	}
 	if err := client.ForceEndTurn(); err == nil {
 		t.Error("ForceEndTurn after Stop returned nil")

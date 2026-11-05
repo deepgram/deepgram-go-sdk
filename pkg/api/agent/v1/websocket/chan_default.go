@@ -48,6 +48,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		settingsAppliedResponse:       make(chan *interfaces.SettingsAppliedResponse),
 		listenUpdatedResponse:         make(chan *interfaces.ListenUpdatedResponse),
 		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
+		thinkLiveUpdatedResponse:      make(chan *interfaces.ThinkLiveUpdatedResponse),
 		warningResponse:               make(chan *interfaces.WarningResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
@@ -157,6 +158,11 @@ func (dch DefaultChanHandler) GetListenUpdated() []*chan *interfaces.ListenUpdat
 // GetThinkUpdated returns ThinkUpdated response channels.
 func (dch DefaultChanHandler) GetThinkUpdated() []*chan *interfaces.ThinkUpdatedResponse {
 	return []*chan *interfaces.ThinkUpdatedResponse{&dch.thinkUpdatedResponse}
+}
+
+// GetThinkLiveUpdated returns ThinkLiveUpdated response channels.
+func (dch DefaultChanHandler) GetThinkLiveUpdated() []*chan *interfaces.ThinkLiveUpdatedResponse {
+	return []*chan *interfaces.ThinkLiveUpdatedResponse{&dch.thinkLiveUpdatedResponse}
 }
 
 // GetWarning returns non-fatal service warning channels.
@@ -488,6 +494,14 @@ func (dch DefaultChanHandler) Run() error {
 		defer wgReceivers.Done()
 		for range dch.thinkUpdatedResponse {
 			fmt.Printf("\n\n[ThinkUpdatedResponse]\n\n")
+		}
+	}()
+
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for range dch.thinkLiveUpdatedResponse {
+			fmt.Printf("\n\n[ThinkLiveUpdatedResponse]\n\n")
 		}
 	}()
 

@@ -12,6 +12,7 @@ import (
 
 	agentws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket"
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
+	clientws "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/agent/v1/websocket"
 	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
@@ -32,6 +33,7 @@ type thinkLiveHandler struct {
 	*legacyFunctionCallHandler
 	conversationTexts   chan *msginterfaces.ConversationTextResponse
 	frustrationDetected chan *msginterfaces.FrustrationDetectedResponse
+	thinkLiveUpdated    chan *msginterfaces.ThinkLiveUpdatedResponse
 }
 
 func Test_ThinkLiveRestrictedTermsMarshaling(t *testing.T) {
@@ -74,6 +76,7 @@ func newThinkLiveHandler() *thinkLiveHandler {
 		legacyFunctionCallHandler: newLegacyFunctionCallHandler(),
 		conversationTexts:         make(chan *msginterfaces.ConversationTextResponse, 1),
 		frustrationDetected:       make(chan *msginterfaces.FrustrationDetectedResponse, 1),
+		thinkLiveUpdated:          make(chan *msginterfaces.ThinkLiveUpdatedResponse, 1),
 	}
 }
 
@@ -83,6 +86,10 @@ func (h *thinkLiveHandler) GetConversationText() []*chan *msginterfaces.Conversa
 
 func (h *thinkLiveHandler) GetFrustrationDetected() []*chan *msginterfaces.FrustrationDetectedResponse {
 	return []*chan *msginterfaces.FrustrationDetectedResponse{&h.frustrationDetected}
+}
+
+func (h *thinkLiveHandler) GetThinkLiveUpdated() []*chan *msginterfaces.ThinkLiveUpdatedResponse {
+	return []*chan *msginterfaces.ThinkLiveUpdatedResponse{&h.thinkLiveUpdated}
 }
 
 func Test_ThinkLiveSettingsMarshaling(t *testing.T) {
@@ -129,6 +136,9 @@ func Test_ThinkLiveEventsRouting(t *testing.T) {
 	if err := router.Message([]byte(thinkLiveConversationPayload)); err != nil {
 		t.Fatalf("route ConversationText: %v", err)
 	}
+	if err := router.Message([]byte(thinkLiveUpdatedPayload)); err != nil {
+		t.Fatalf("route ThinkLiveUpdated: %v", err)
+	}
 
 	select {
 	case event := <-handler.frustrationDetected:
@@ -147,6 +157,15 @@ func Test_ThinkLiveEventsRouting(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("ConversationText was not delivered to the handler")
 	}
+
+	select {
+	case event := <-handler.thinkLiveUpdated:
+		if event.Type != msginterfaces.TypeThinkLiveUpdatedResponse {
+			t.Errorf("unexpected ThinkLiveUpdated type: %q", event.Type)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("ThinkLiveUpdated was not delivered to the handler")
+	}
 }
 
 func Test_ThinkLiveFrustrationFallsBackToUnhandled(t *testing.T) {
@@ -164,5 +183,18 @@ func Test_ThinkLiveFrustrationFallsBackToUnhandled(t *testing.T) {
 		}
 	case <-time.After(time.Second):
 		t.Fatal("FrustrationDetected was not delivered to the unhandled handler")
+	}
+}
+
+func Test_ThinkLiveRuntimeMessageSerialization(t *testing.T) {
+	dynamic, err := json.Marshal(clientws.InjectDynamicAgentMessage{
+		Type:     msginterfaces.TypeInjectAgentMessage,
+		Behavior: "queue",
+	})
+	if err != nil {
+		t.Fatalf("marshal InjectDynamicAgentMessage: %v", err)
+	}
+	if got, want := string(dynamic), `{"type":"InjectAgentMessage","is_dynamic":true,"behavior":"queue"}`; got != want {
+		t.Errorf("InjectDynamicAgentMessage = %s, want %s", got, want)
 	}
 }

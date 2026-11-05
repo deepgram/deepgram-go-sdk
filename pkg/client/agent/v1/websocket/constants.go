@@ -18,6 +18,8 @@ var (
 	ErrInvalidUpdateListen = errors.New("agent UpdateListen requires a listen provider")
 	// ErrInvalidUpdateThink is returned when UpdateThink has no provider.
 	ErrInvalidUpdateThink = errors.New("agent UpdateThink requires a think provider")
+	// ErrInvalidUpdateThinkLive is returned when UpdateThinkLive has no provider.
+	ErrInvalidUpdateThinkLive = errors.New("agent UpdateThinkLive requires a Think Live provider")
 )
 
 // external constants

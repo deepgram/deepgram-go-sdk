@@ -56,6 +56,7 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		settingsAppliedResponse:       make([]*chan *interfaces.SettingsAppliedResponse, 0),
 		listenUpdatedResponse:         make([]*chan *interfaces.ListenUpdatedResponse, 0),
 		thinkUpdatedResponse:          make([]*chan *interfaces.ThinkUpdatedResponse, 0),
+		thinkLiveUpdatedResponse:      make([]*chan *interfaces.ThinkLiveUpdatedResponse, 0),
 		warningResponse:               make([]*chan *interfaces.WarningResponse, 0),
 		closeChan:                     make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                     make([]*chan *interfaces.ErrorResponse, 0),
@@ -89,6 +90,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		}
 		if thinkUpdated, ok := chans.(interfaces.ThinkUpdatedChan); ok {
 			router.thinkUpdatedResponse = append(router.thinkUpdatedResponse, thinkUpdated.GetThinkUpdated()...)
+		}
+		if thinkLiveUpdated, ok := chans.(interfaces.ThinkLiveUpdatedChan); ok {
+			router.thinkLiveUpdatedResponse = append(router.thinkLiveUpdatedResponse, thinkLiveUpdated.GetThinkLiveUpdated()...)
 		}
 		if warning, ok := chans.(interfaces.WarningChan); ok {
 			router.warningResponse = append(router.warningResponse, warning.GetWarning()...)
@@ -464,6 +468,27 @@ func (r *ChanRouter) processThinkUpdated(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeThinkUpdatedResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processThinkLiveUpdated(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.ThinkLiveUpdatedResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		if len(r.thinkLiveUpdatedResponse) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+		for _, ch := range r.thinkLiveUpdatedResponse {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeThinkLiveUpdatedResponse), byMsg, action)
+}
+
 func (r *ChanRouter) processWarning(byMsg []byte) error {
 	action := func(data []byte) error {
 		var msg interfaces.WarningResponse
@@ -532,6 +557,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processListenUpdated(byMsg)
 	case interfaces.TypeThinkUpdatedResponse:
 		err = r.processThinkUpdated(byMsg)
+	case interfaces.TypeThinkLiveUpdatedResponse:
+		err = r.processThinkLiveUpdated(byMsg)
 	case interfaces.TypeWarningResponse:
 		err = r.processWarning(byMsg)
 	default:

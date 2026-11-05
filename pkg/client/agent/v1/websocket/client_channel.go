@@ -253,6 +253,27 @@ func (c *WSChannel) KeepAlive() error {
 	return err
 }
 
+// UpdateThinkLive replaces the active Think Live configuration. The service
+// confirms a successful update with ThinkLiveUpdated.
+func (c *WSChannel) UpdateThinkLive(thinkLive *interfacesv1.ThinkLiveSettings) error {
+	if thinkLive == nil || thinkLive.Provider == nil {
+		return ErrInvalidUpdateThinkLive
+	}
+
+	return c.WriteJSON(msginterfaces.UpdateThinkLive{
+		Type:      msginterfaces.TypeUpdateThinkLive,
+		ThinkLive: thinkLive,
+	})
+}
+
+// InjectDynamicAgentMessage asks Think Live to generate a filler line.
+func (c *WSChannel) InjectDynamicAgentMessage(behavior string) error {
+	return c.WriteJSON(msginterfaces.InjectDynamicAgentMessage{
+		Type:     msginterfaces.TypeInjectAgentMessage,
+		Behavior: behavior,
+	})
+}
+
 // UpdateListen replaces the active Listen configuration. The service confirms a
 // successful update with ListenUpdated. This is a partial update: omitted fields
 // retain their current values except language_hints, which the service clears.
