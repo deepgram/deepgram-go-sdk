@@ -560,7 +560,7 @@ func (c *WSClient) WriteBinary(byData []byte) error {
 	defer c.muConn.Unlock()
 
 	// get the connection
-	ws := c.wsconn
+	ws := c.internalConnect()
 	if ws == nil {
 		err := ErrInvalidConnection
 		klog.V(4).Infof("c.internalConnect() is nil. Err: %v\n", err)
