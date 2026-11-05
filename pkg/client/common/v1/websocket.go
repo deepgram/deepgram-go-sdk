@@ -246,11 +246,13 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 
 		// set the object to allow threads to function
+		c.terminalMu.Lock()
 		c.wsconn = ws
 		c.sessionDone = make(chan struct{})
 		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
 		c.retry = true
+		c.terminalMu.Unlock()
 
 		// kick off threads to listen for messages and ping/keepalive
 		go c.listen()
@@ -387,6 +389,7 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 //nolint:funlen // this is a complex function. keep as is
 func (c *WSClient) listen() {
 	klog.V(6).Infof("common.listen() ENTER\n")
+	var activeWS *websocket.Conn
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -402,7 +405,7 @@ func (c *WSClient) listen() {
 			}
 
 			// fatal close
-			c.closeWs(true, false)
+			c.closeWsFor(activeWS, true, false)
 
 			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
@@ -423,6 +426,7 @@ func (c *WSClient) listen() {
 			klog.V(6).Infof("common.listen() LEAVE\n")
 			return
 		}
+		activeWS = ws
 
 		// release the lock
 		c.muConn.Unlock()
@@ -438,14 +442,14 @@ func (c *WSClient) listen() {
 
 				// The peer has already completed its WebSocket close handshake. Do
 				// not send another application Close frame while releasing resources.
-				c.closeAfterPeerClose()
+				c.closeAfterPeerClose(ws)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
 			case strings.Contains(errStr, UseOfClosedSocket):
 				klog.V(3).Infof("Probable graceful websocket close: %v\n", err)
 
-				c.closeAfterPeerClose()
+				c.closeAfterPeerClose(ws)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -459,7 +463,7 @@ func (c *WSClient) listen() {
 				}
 
 				// fatal close
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -473,7 +477,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(false, false)
+				c.closeWsFor(ws, false, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -487,7 +491,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -501,7 +505,7 @@ func (c *WSClient) listen() {
 				}
 
 				// close the connection
-				c.closeWs(true, false)
+				c.closeWsFor(ws, true, false)
 
 				klog.V(6).Infof("common.listen() LEAVE\n")
 				return
@@ -736,21 +740,32 @@ func (c *WSClient) Stop() {
 // closeAfterPeerClose releases local state after the server has already closed
 // the WebSocket. It still delivers the terminal router event, but skips outbound
 // application and protocol Close frames that would otherwise fail with ErrCloseSent.
-func (c *WSClient) closeAfterPeerClose() {
-	c.closeWsWithState(false, false, true)
+func (c *WSClient) closeAfterPeerClose(ws *websocket.Conn) {
+	c.closeWsWithStateFor(ws, false, false, true)
 }
 
 // closeWs closes the websocket connection
 func (c *WSClient) closeWs(fatal bool, perm bool) {
-	c.closeWsWithState(fatal, perm, false)
+	c.closeWsWithStateFor(nil, fatal, perm, false)
 }
 
 func (c *WSClient) closeWsWithState(fatal bool, perm bool, peerClosed bool) {
+	c.closeWsWithStateFor(nil, fatal, perm, peerClosed)
+}
+
+func (c *WSClient) closeWsFor(ws *websocket.Conn, fatal bool, perm bool) {
+	c.closeWsWithStateFor(ws, fatal, perm, false)
+}
+
+func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool, peerClosed bool) {
 	klog.V(6).Infof("common.closeWs() closing channels...\n")
 
 	// doing a write, need to lock
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
+	if ws != nil && c.wsconn != ws {
+		return
+	}
 	c.terminalMu.Lock()
 	defer c.terminalMu.Unlock()
 	if c.terminalCloseStarted {

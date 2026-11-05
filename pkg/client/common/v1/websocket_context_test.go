@@ -58,14 +58,16 @@ func (h *contextCloseHandler) Finish() {
 func (h *contextCloseHandler) GetCloseMsg() []byte { return nil }
 
 type blockingContextRouter struct {
+	openOnce     sync.Once
 	openStarted  chan struct{}
 	openRelease  chan struct{}
+	closeOnce    sync.Once
 	closeStarted chan struct{}
 	closeRelease chan struct{}
 }
 
 func (r *blockingContextRouter) Open(*commoninterfaces.OpenResponse) error {
-	close(r.openStarted)
+	r.openOnce.Do(func() { close(r.openStarted) })
 	<-r.openRelease
 	return nil
 }
@@ -75,7 +77,7 @@ func (r *blockingContextRouter) Error(*commoninterfaces.ErrorResponse) error {
 	return nil
 }
 func (r *blockingContextRouter) Close(*commoninterfaces.CloseResponse) error {
-	close(r.closeStarted)
+	r.closeOnce.Do(func() { close(r.closeStarted) })
 	<-r.closeRelease
 	return nil
 }
@@ -238,16 +240,24 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 
 func Test_WSClientContextCancellationClosesTransportBeforeBlockingHandlers(t *testing.T) {
 	serverClosed := make(chan struct{}, 1)
+	secondMessageReceived := make(chan struct{}, 1)
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	var connections atomic.Int32
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		connection := connections.Add(1)
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			t.Errorf("upgrade websocket: %v", err)
 			return
 		}
 		defer conn.Close()
-		_, _, _ = conn.ReadMessage()
-		serverClosed <- struct{}{}
+		_, _, err = conn.ReadMessage()
+		if err == nil && connection == 2 {
+			secondMessageReceived <- struct{}{}
+		}
+		if connection == 1 {
+			serverClosed <- struct{}{}
+		}
 	}))
 	defer server.Close()
 
@@ -297,7 +307,33 @@ func Test_WSClientContextCancellationClosesTransportBeforeBlockingHandlers(t *te
 		t.Fatal("context cancellation did not close the transport while Close was blocked")
 	}
 
+	secondCtx, cancelSecond := context.WithCancel(context.Background())
+	defer cancelSecond()
+	reconnected := make(chan bool, 1)
+	go func() { reconnected <- client.AttemptReconnectWithCancel(secondCtx, cancelSecond, 1) }()
+	select {
+	case <-reconnected:
+		t.Fatal("reconnect completed while the previous session was still closing")
+	case <-time.After(100 * time.Millisecond):
+	}
+
 	close(router.closeRelease)
+	select {
+	case ok := <-reconnected:
+		if !ok {
+			t.Fatal("AttemptReconnectWithCancel failed")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("reconnect did not complete after terminal teardown")
+	}
+	if err := client.WriteJSON(map[string]string{"type": "KeepAlive"}); err != nil {
+		t.Fatalf("write on reconnected session: %v", err)
+	}
+	select {
+	case <-secondMessageReceived:
+	case <-time.After(time.Second):
+		t.Fatal("reconnected session did not receive a message")
+	}
 	select {
 	case <-handler.finished:
 	case <-time.After(time.Second):
