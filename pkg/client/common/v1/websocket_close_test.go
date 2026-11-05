@@ -5,6 +5,7 @@
 package commonv1
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/dvonthenen/websocket"
 
 	commoninterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1/interfaces"
+	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 type closeCountingRouter struct {
@@ -99,5 +101,26 @@ func Test_WriteControlWithoutConnectionDoesNotReconnect(t *testing.T) {
 	}
 	if handler.urlCalls != 0 {
 		t.Errorf("WriteControl attempted %d reconnects, want 0", handler.urlCalls)
+	}
+}
+
+func Test_WriteBinaryWithoutConnectionAttemptsReconnect(t *testing.T) {
+	handler := &closeCountingHandler{}
+	router := &closeCountingRouter{}
+	var handlerInterface commoninterfaces.WebSocketHandler = handler
+	var routerInterface commoninterfaces.Router = router
+	client := NewWS(context.Background(), func() {}, "", &interfaces.ClientOptions{SelfHosted: true}, &handlerInterface, &routerInterface)
+	if client == nil {
+		t.Fatal("NewWS returned nil")
+	}
+	client.retry = true
+	client.retryCnt = 1
+
+	err := client.WriteBinary([]byte{1})
+	if !errors.Is(err, ErrInvalidConnection) {
+		t.Fatalf("WriteBinary error = %v, want ErrInvalidConnection", err)
+	}
+	if handler.urlCalls != 1 {
+		t.Errorf("WriteBinary attempted %d reconnects, want 1", handler.urlCalls)
 	}
 }
