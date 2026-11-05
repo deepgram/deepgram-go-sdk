@@ -42,10 +42,14 @@ func (c *WSChannel) AttemptReconnect(ctx context.Context, retries int64) bool {
 
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 func (c *WSChannel) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	if c.WSClient.HasActiveConnection() {
+		return true
+	}
+
 	c.stopWorkers()
 	c.setContext(ctx, ctxCancel)
-	connected := c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
-	if connected && c.WSClient.LastConnectionReused() {
+	connected, reused := c.WSClient.AttemptReconnectWithCancelStatus(ctx, ctxCancel, retries)
+	if connected && reused {
 		// AttemptReconnect may reuse a healthy connection without invoking Start.
 		c.Start()
 	}
@@ -81,6 +85,10 @@ func (c *WSChannel) Start() {
 	c.workerMu.Lock()
 	defer c.workerMu.Unlock()
 
+	// A peer-close may only cancel the old worker. Wait here, outside the
+	// transport lock, before launching a worker for the replacement session.
+	c.workers.Stop()
+	c.workerWG.Wait()
 	workerCtx := c.workers.Start(c.context())
 	if c.cOptions.EnableKeepAlive {
 		c.workerWG.Add(1)

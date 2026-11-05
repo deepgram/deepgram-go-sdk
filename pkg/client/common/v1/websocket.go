@@ -58,13 +58,13 @@ func (c *WSClient) Connect() bool {
 	if retryCnt == 0 {
 		retryCnt = DefaultConnectRetry
 	}
-	return c.internalConnectWithCancel(ctx, ctxCancel, int(retryCnt), true) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, int(retryCnt), true, nil) != nil
 }
 
 // ConnectWithCancel performs a websocket connection with specified number of retries and providing a
 // cancel function to stop the connection
 func (c *WSClient) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
-	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt, true) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt, true, nil) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries
@@ -75,18 +75,28 @@ func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
 func (c *WSClient) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	connected, _ := c.AttemptReconnectWithCancelStatus(ctx, ctxCancel, retries)
+	return connected
+}
+
+// AttemptReconnectWithCancelStatus reconnects and reports whether it reused an
+// existing active transport instead of creating a new connection.
+func (c *WSClient) AttemptReconnectWithCancelStatus(ctx context.Context, ctxCancel context.CancelFunc, retries int64) (bool, bool) {
 	c.muConn.Lock()
 	c.retry = true
 	c.muConn.Unlock()
-	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true) != nil
+
+	var reused bool
+	connected := c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true, &reused) != nil
+	return connected, reused
 }
 
 func (c *WSClient) internalConnect() *websocket.Conn {
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false)
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false, nil)
 }
 
 //nolint:funlen,gocyclo // this is a complex function. keep as is
-func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
+func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool, reused *bool) *websocket.Conn {
 	klog.V(7).Infof("common.internalConnectWithCancel() ENTER\n")
 
 	// lock conn access
@@ -100,6 +110,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
 	c.retryCnt = int64(retryCnt)
+	if reused != nil {
+		*reused = false
+	}
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
@@ -124,7 +137,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			}
 			return nil
 		default:
-			c.lastConnectReused = true
+			if reused != nil {
+				*reused = true
+			}
 			klog.V(7).Infof("Connection is good. Return object.")
 			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
 			if lock {
@@ -254,7 +269,6 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.sessionDone = make(chan struct{})
 		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
-		c.lastConnectReused = false
 		c.retry = true
 		c.terminalMu.Unlock()
 
@@ -303,12 +317,12 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	return nil
 }
 
-// LastConnectionReused reports whether the most recent successful connection
-// operation returned an already-active transport rather than creating a new one.
-func (c *WSClient) LastConnectionReused() bool {
+// HasActiveConnection reports whether the shared transport is open and its
+// current context remains active.
+func (c *WSClient) HasActiveConnection() bool {
 	c.muConn.RLock()
 	defer c.muConn.RUnlock()
-	return c.lastConnectReused
+	return c.wsconn != nil && c.ctx != nil && c.ctx.Err() == nil
 }
 
 func handshakeErrorResponse(res *http.Response) *commonv1interfaces.ErrorResponse {
