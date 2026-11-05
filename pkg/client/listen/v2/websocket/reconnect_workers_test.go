@@ -268,6 +268,104 @@ func Test_StartWaitsForCancelledPingWorker(t *testing.T) {
 	}
 }
 
+func Test_WriteBinaryReconnectWaitsForInFlightPing(t *testing.T) {
+	originalPingPeriod := pingPeriod
+	pingPeriod = 20 * time.Millisecond
+	t.Cleanup(func() { pingPeriod = originalPingPeriod })
+
+	closeFirst := make(chan struct{})
+	secondBinary := make(chan struct{}, 1)
+	var connections atomic.Int32
+	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		connection := connections.Add(1)
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+
+		if connection == 1 {
+			<-closeFirst
+			_ = conn.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""), time.Now().Add(time.Second))
+			return
+		}
+
+		messageType, _, err := conn.ReadMessage()
+		if err == nil && messageType == websocket.BinaryMessage {
+			secondBinary <- struct{}{}
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := NewUsingCallback(context.Background(), "test-api-key", &interfaces.ClientOptionsV2{
+		Host:            "ws" + strings.TrimPrefix(server.URL, "http"),
+		EnableKeepAlive: true,
+		WSHeaderProcessor: func(headers http.Header) {
+			headers.Del("Host")
+		},
+	}, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	t.Cleanup(func() {
+		client.Stop()
+		client.stopWorkers()
+	})
+
+	pingStarted := make(chan struct{})
+	releasePing := make(chan struct{})
+	var blockOnce sync.Once
+	client.beforePing = func() {
+		blockOnce.Do(func() {
+			close(pingStarted)
+			<-releasePing
+		})
+	}
+
+	if !client.Connect() {
+		t.Fatal("connect")
+	}
+	select {
+	case <-pingStarted:
+	case <-time.After(time.Second):
+		t.Fatal("ping did not start")
+	}
+
+	close(closeFirst)
+	deadline := time.Now().Add(time.Second)
+	for client.WSClient.HasActiveConnection() && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	if client.WSClient.HasActiveConnection() {
+		t.Fatal("peer close did not clear the active transport")
+	}
+
+	written := make(chan error, 1)
+	go func() { written <- client.WriteBinary([]byte{1}) }()
+	select {
+	case <-written:
+		t.Fatal("WriteBinary reconnected while the old ping was in flight")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	close(releasePing)
+	select {
+	case err := <-written:
+		if err != nil {
+			t.Fatalf("WriteBinary: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("WriteBinary did not reconnect after the old ping exited")
+	}
+	select {
+	case <-secondBinary:
+	case <-time.After(time.Second):
+		t.Fatal("replacement transport did not receive binary audio")
+	}
+}
+
 func testReconnectDoesNotDuplicatePing(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (reconnectingFluxClient, error)) {
 	t.Helper()
 	originalPingPeriod := pingPeriod
