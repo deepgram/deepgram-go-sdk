@@ -24,6 +24,7 @@ type ClientOptionsV2 = interfacesv2.ClientOptions
 type SettingsOptions = interfacesv1.SettingsOptions
 type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOptions
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
+type LiveConfigureOptions = interfacesv1.LiveConfigureOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions
 type SpeakOptions = interfacesv1.SpeakOptions
 type WSSpeakOptions = interfacesv1.WSSpeakOptions

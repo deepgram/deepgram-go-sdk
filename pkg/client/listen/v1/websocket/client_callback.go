@@ -21,6 +21,8 @@ import (
 	msginterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	common "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
+	clientinterfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 )
 
 // Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
@@ -199,6 +201,24 @@ func (c *WSCallback) KeepAlive() error {
 	klog.V(7).Infof("live.KeepAlive() LEAVE\n")
 
 	return err
+}
+
+// Configure sends a mid-session Listen v1 configuration update. Configure only
+// supports keyterms and features; language hints cannot be changed mid-session.
+// The server responds asynchronously with ConfigureSuccess or ConfigureFailure.
+func (c *WSCallback) Configure(opts *clientinterfaces.LiveConfigureOptions) error {
+	if opts == nil {
+		return interfacesv1.ErrOptionsRequired
+	}
+	if err := opts.Check(); err != nil {
+		return err
+	}
+
+	return c.WriteJSON(msginterfaces.ConfigureMessage{
+		Type:     MessageTypeConfigure,
+		Keyterms: opts.Keyterms,
+		Features: opts.Features,
+	})
 }
 
 /*

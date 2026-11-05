@@ -169,6 +169,18 @@ func (dch DefaultCallbackHandler) UtteranceEnd(ur *interfaces.UtteranceEndRespon
 	return nil
 }
 
+// ConfigureSuccess is the callback for an accepted mid-session Configure update.
+func (dch DefaultCallbackHandler) ConfigureSuccess(cs *interfaces.ConfigureSuccessResponse) error {
+	fmt.Printf("\n[ConfigureSuccess] request_id=%s\n", cs.RequestID)
+	return nil
+}
+
+// ConfigureFailure is the callback for a rejected mid-session Configure update.
+func (dch DefaultCallbackHandler) ConfigureFailure(cf *interfaces.ConfigureFailureResponse) error {
+	fmt.Printf("\n[ConfigureFailure] request_id=%s code=%s description=%s\n", cf.RequestID, cf.Code, cf.Description)
+	return nil
+}
+
 // Close is the callback for when the connection closes
 func (dch DefaultCallbackHandler) Close(or *interfaces.CloseResponse) error {
 	if dch.debugWebsocket {

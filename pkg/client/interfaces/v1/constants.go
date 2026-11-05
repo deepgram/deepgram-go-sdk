@@ -20,4 +20,13 @@ const (
 var (
 	// ErrNoAPIKey no api key found
 	ErrNoAPIKey = errors.New("no api key found")
+
+	// ErrOptionsRequired a nil options struct was passed where one is required
+	ErrOptionsRequired = errors.New("options cannot be nil")
+
+	// ErrConfigureNoFields a Configure carried no fields to change
+	ErrConfigureNoFields = errors.New("configure requires at least one field to change")
+
+	// ErrConfigureKeytermsNil a Configure keyterms pointer references a nil slice
+	ErrConfigureKeytermsNil = errors.New("configure keyterms cannot be a pointer to a nil slice")
 )
