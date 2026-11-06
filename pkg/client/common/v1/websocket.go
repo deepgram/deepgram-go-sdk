@@ -125,11 +125,6 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.muConn.Lock()
 	}
 
-	// The caller holds muConn when lock is false, so all transport context
-	// replacement and use is serialized with writes and reconnects.
-	c.ctx = ctx
-	c.ctxCancel = ctxCancel
-	c.retryCnt = int64(retryCnt)
 	if reused != nil {
 		*reused = false
 	}
@@ -145,43 +140,39 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		return nil
 	}
 
-	// if the connection is good, return it otherwise, attempt reconnect
+	// Keep the active session's context with its transport. Replacing it would
+	// let the original context watcher close a socket returned to a new caller.
 	if c.wsconn != nil {
-		select {
-		case <-ctx.Done():
-			klog.V(1).Infof("Connection is not valid\n")
-			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
-			if lock {
-				klog.V(3).Infof("Unlocking connection mutex\n")
-				c.muConn.Unlock()
-			}
-			return nil
-		default:
-			if reused != nil {
-				*reused = true
-			}
-			klog.V(7).Infof("Connection is good. Return object.")
-			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
-			if lock {
-				klog.V(3).Infof("Unlocking connection mutex\n")
-				c.muConn.Unlock()
-			}
-			return c.wsconn
+		if reused != nil {
+			*reused = true
 		}
-	} else {
-		select {
-		case <-ctx.Done():
-			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
-			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
-			if lock {
-				klog.V(3).Infof("Unlocking connection mutex\n")
-				c.muConn.Unlock()
-			}
-			return nil
-		default:
-			klog.V(3).Infof("Context is still valid. Retry...\n")
+		klog.V(7).Infof("Connection is good. Return object.")
+		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+		if lock {
+			klog.V(3).Infof("Unlocking connection mutex\n")
+			c.muConn.Unlock()
 		}
+		return c.wsconn
 	}
+
+	select {
+	case <-ctx.Done():
+		klog.V(1).Infof("Context is not valid. Has been canceled.\n")
+		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+		if lock {
+			klog.V(3).Infof("Unlocking connection mutex\n")
+			c.muConn.Unlock()
+		}
+		return nil
+	default:
+		klog.V(3).Infof("Context is still valid. Retry...\n")
+	}
+
+	// The caller holds muConn when lock is false, so context replacement and
+	// use are serialized with writes and reconnects.
+	c.ctx = ctx
+	c.ctxCancel = ctxCancel
+	c.retryCnt = int64(retryCnt)
 
 	// set websocket headers
 	myHeader := http.Header{}

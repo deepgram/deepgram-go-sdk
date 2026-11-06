@@ -174,3 +174,26 @@ func Test_InternalConnectWaitsForCancelledSession(t *testing.T) {
 		t.Fatal("reconnect did not install the replacement context")
 	}
 }
+
+func Test_InternalConnectKeepsActiveSessionContext(t *testing.T) {
+	handler := &closeCountingHandler{}
+	var handlerInterface commoninterfaces.WebSocketHandler = handler
+	oldCtx, cancelOld := context.WithCancel(context.Background())
+	client := NewWS(oldCtx, cancelOld, "", &interfaces.ClientOptions{SelfHosted: true}, &handlerInterface, nil)
+	if client == nil {
+		t.Fatal("NewWS returned nil")
+	}
+	client.wsconn = &websocket.Conn{}
+	client.sessionDone = make(chan struct{})
+
+	newCtx := context.Background()
+	if got := client.internalConnectWithCancel(newCtx, func() {}, 1, true, nil); got == nil {
+		t.Fatal("reconnect did not reuse the active transport")
+	}
+	client.muConn.RLock()
+	currentCtx := client.ctx
+	client.muConn.RUnlock()
+	if currentCtx != oldCtx {
+		t.Fatal("reconnect replaced the active session context")
+	}
+}
