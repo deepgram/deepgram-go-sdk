@@ -26,12 +26,13 @@ type reconnectingFluxClient interface {
 	Stop()
 }
 
-// idleReader yields no audio, so Stream keeps polling its context until the client stops.
-type idleReader struct{}
+// audioReader continuously yields audio so Stream exercises WriteBinary during reconnect.
+type audioReader struct{}
 
-func (idleReader) Read([]byte) (int, error) {
+func (audioReader) Read(p []byte) (int, error) {
 	time.Sleep(time.Millisecond)
-	return 0, nil
+	p[0] = 0
+	return 1, nil
 }
 
 // The stream tests exercise Stream reading the client context while AttemptReconnect
@@ -51,6 +52,7 @@ func Test_StreamDuringReconnectIsRaceFreeChannel(t *testing.T) {
 
 func testStreamDuringReconnect(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (reconnectingFluxClient, error)) {
 	t.Helper()
+	audioReceived := make(chan struct{}, 1)
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
@@ -60,8 +62,15 @@ func testStreamDuringReconnect(t *testing.T, newClient func(*interfaces.ClientOp
 		}
 		defer conn.Close()
 		for {
-			if _, _, err := conn.ReadMessage(); err != nil {
+			messageType, _, err := conn.ReadMessage()
+			if err != nil {
 				return
+			}
+			if messageType == websocket.BinaryMessage {
+				select {
+				case audioReceived <- struct{}{}:
+				default:
+				}
 			}
 		}
 	}))
@@ -84,10 +93,14 @@ func testStreamDuringReconnect(t *testing.T, newClient func(*interfaces.ClientOp
 	streamDone := make(chan struct{})
 	go func() {
 		defer close(streamDone)
-		_ = client.Stream(idleReader{})
+		_ = client.Stream(audioReader{})
 	}()
 
-	time.Sleep(20 * time.Millisecond)
+	select {
+	case <-audioReceived:
+	case <-time.After(time.Second):
+		t.Fatal("stream did not write audio")
+	}
 	if !client.AttemptReconnect(context.Background(), 3) {
 		t.Fatal("reconnect")
 	}
