@@ -105,6 +105,26 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.muConn.Lock()
 	}
 
+	// Do not replace a cancelled session's context while its close watcher still
+	// owns the same transport. Wait for that watcher to release the socket first.
+	for c.wsconn != nil && c.ctx != nil && c.ctx.Err() != nil {
+		sessionDone := c.sessionDone
+		if sessionDone == nil {
+			break
+		}
+
+		c.muConn.Unlock()
+		select {
+		case <-sessionDone:
+		case <-ctx.Done():
+			if !lock {
+				c.muConn.Lock()
+			}
+			return nil
+		}
+		c.muConn.Lock()
+	}
+
 	// The caller holds muConn when lock is false, so all transport context
 	// replacement and use is serialized with writes and reconnects.
 	c.ctx = ctx
@@ -272,8 +292,6 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.retry = true
 		c.terminalMu.Unlock()
 
-		// Start protocol workers before the reader can process an immediate peer close.
-		// Finish then always has an active worker context to cancel.
 		if lock {
 			klog.V(3).Infof("Unlocking connection mutex\n")
 			c.muConn.Unlock()
@@ -283,11 +301,21 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			c.muConn.Unlock()
 		}
 
+		// Register cancellation before waiting for an old worker. A newly supplied
+		// context must still close this transport while Start drains that worker.
+		c.closeOnContextDone(ctx, ws, sessionDone)
+		if ctx.Err() != nil {
+			if !lock {
+				c.muConn.Lock()
+			}
+			return nil
+		}
+
+		// Start protocol workers before the reader can process an immediate peer close.
+		// Finish then always has an active worker context to cancel.
 		// start WS specific items
 		(*c.processMessages).Start()
 		go c.listen()
-
-		c.closeOnContextDone(ctx, ws, sessionDone)
 
 		// fire off close connection
 		err = (*c.router).Open(&commonv1interfaces.OpenResponse{

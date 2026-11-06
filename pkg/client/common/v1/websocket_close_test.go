@@ -124,3 +124,53 @@ func Test_WriteBinaryWithoutConnectionAttemptsReconnect(t *testing.T) {
 		t.Errorf("WriteBinary attempted %d reconnects, want 1", handler.urlCalls)
 	}
 }
+
+func Test_InternalConnectWaitsForCancelledSession(t *testing.T) {
+	handler := &closeCountingHandler{}
+	var handlerInterface commoninterfaces.WebSocketHandler = handler
+	oldCtx, cancelOld := context.WithCancel(context.Background())
+	sessionDone := make(chan struct{})
+	client := NewWS(oldCtx, cancelOld, "", &interfaces.ClientOptions{SelfHosted: true}, &handlerInterface, nil)
+	if client == nil {
+		t.Fatal("NewWS returned nil")
+	}
+	client.wsconn = &websocket.Conn{}
+	client.sessionDone = sessionDone
+	cancelOld()
+
+	newCtx := context.Background()
+	done := make(chan struct{})
+	go func() {
+		_ = client.internalConnectWithCancel(newCtx, func() {}, 1, true, nil)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		t.Fatal("reconnect returned before the cancelled session closed")
+	case <-time.After(50 * time.Millisecond):
+	}
+	client.muConn.RLock()
+	currentCtx := client.ctx
+	client.muConn.RUnlock()
+	if currentCtx != oldCtx {
+		t.Fatal("reconnect replaced the cancelled session context before it closed")
+	}
+
+	client.muConn.Lock()
+	client.wsconn = nil
+	close(sessionDone)
+	client.muConn.Unlock()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("reconnect did not continue after the cancelled session closed")
+	}
+	client.muConn.RLock()
+	currentCtx = client.ctx
+	client.muConn.RUnlock()
+	if currentCtx != newCtx {
+		t.Fatal("reconnect did not install the replacement context")
+	}
+}
