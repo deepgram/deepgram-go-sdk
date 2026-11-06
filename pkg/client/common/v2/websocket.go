@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
 
 	commonv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/common/v1"
@@ -32,7 +33,7 @@ func (c *WSClient) WritePing() error {
 	klog.V(7).Infof("commonv2.WritePing() ENTER\n")
 
 	deadline := time.Now().Add(10 * time.Second)
-	if err := c.WSClient.WritePing(deadline); err != nil {
+	if err := c.WSClient.WriteControl(websocket.PingMessage, []byte{}, deadline); err != nil {
 		klog.V(1).Infof("WritePing failed. Err: %v\n", err)
 		klog.V(7).Infof("commonv2.WritePing() LEAVE\n")
 		return err

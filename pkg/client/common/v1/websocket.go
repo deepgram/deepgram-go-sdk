@@ -50,83 +50,53 @@ func NewWS(ctx context.Context, ctxCancel context.CancelFunc, apiKey string, opt
 
 // Connect performs a websocket connection with "DefaultConnectRetry" number of retries.
 func (c *WSClient) Connect() bool {
-	c.muConn.RLock()
-	ctx, ctxCancel, retryCnt := c.ctx, c.ctxCancel, c.retryCnt
-	c.muConn.RUnlock()
-
 	// set the retry count
-	if retryCnt == 0 {
-		retryCnt = DefaultConnectRetry
+	if c.retryCnt == 0 {
+		c.retryCnt = DefaultConnectRetry
 	}
-	return c.internalConnectWithCancel(ctx, ctxCancel, int(retryCnt), true, nil) != nil
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), true) != nil
 }
 
 // ConnectWithCancel performs a websocket connection with specified number of retries and providing a
 // cancel function to stop the connection
 func (c *WSClient) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
-	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt, true, nil) != nil
+	return c.internalConnectWithCancel(ctx, ctxCancel, retryCnt, true) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries
 func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
-	reconnectCtx, reconnectCancel := context.WithCancel(ctx)
-	return c.AttemptReconnectWithCancel(reconnectCtx, reconnectCancel, retries)
+	c.muConn.Lock()
+	c.retry = true
+	c.muConn.Unlock()
+	c.ctx, c.ctxCancel = context.WithCancel(ctx)
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries), true) != nil
 }
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
 func (c *WSClient) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
-	connected, _ := c.AttemptReconnectWithCancelStatus(ctx, ctxCancel, retries)
-	return connected
-}
-
-// AttemptReconnectWithCancelStatus reconnects and reports whether it reused an
-// existing active transport instead of creating a new connection.
-func (c *WSClient) AttemptReconnectWithCancelStatus(ctx context.Context, ctxCancel context.CancelFunc, retries int64) (bool, bool) {
 	c.muConn.Lock()
 	c.retry = true
 	c.muConn.Unlock()
-
-	var reused bool
-	connected := c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true, &reused) != nil
-	return connected, reused
+	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true) != nil
 }
 
 func (c *WSClient) internalConnect() *websocket.Conn {
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false, nil)
+	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false)
 }
 
 //nolint:funlen,gocyclo // this is a complex function. keep as is
-func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool, reused *bool) *websocket.Conn {
+func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
 	klog.V(7).Infof("common.internalConnectWithCancel() ENTER\n")
+
+	// set the context
+	c.ctx = ctx
+	c.ctxCancel = ctxCancel
+	c.retryCnt = int64(retryCnt)
 
 	// lock conn access
 	if lock {
 		klog.V(3).Infof("Locking connection mutex\n")
 		c.muConn.Lock()
-	}
-
-	// Do not replace a cancelled session's context while its close watcher still
-	// owns the same transport. Wait for that watcher to release the socket first.
-	for c.ctx != nil && c.ctx.Err() != nil && c.teardownDone != nil {
-		teardownDone := c.teardownDone
-
-		c.muConn.Unlock()
-		select {
-		case <-teardownDone:
-		case <-ctx.Done():
-			if !lock {
-				c.muConn.Lock()
-			}
-			return nil
-		}
-		c.muConn.Lock()
-		if c.teardownDone == teardownDone {
-			c.teardownDone = nil
-		}
-	}
-
-	if reused != nil {
-		*reused = false
 	}
 
 	// we explicitly stopped and should not attempt to reconnect
@@ -140,45 +110,46 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		return nil
 	}
 
-	// Keep the active session's context with its transport. Replacing it would
-	// let the original context watcher close a socket returned to a new caller.
+	// if the connection is good, return it otherwise, attempt reconnect
 	if c.wsconn != nil {
-		if reused != nil {
-			*reused = true
+		select {
+		case <-c.ctx.Done():
+			klog.V(1).Infof("Connection is not valid\n")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
+			return nil
+		default:
+			klog.V(7).Infof("Connection is good. Return object.")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
+			return c.wsconn
 		}
-		klog.V(7).Infof("Connection is good. Return object.")
-		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
-		if lock {
-			klog.V(3).Infof("Unlocking connection mutex\n")
-			c.muConn.Unlock()
+	} else {
+		select {
+		case <-c.ctx.Done():
+			klog.V(1).Infof("Context is not valid. Has been canceled.\n")
+			klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
+			if lock {
+				klog.V(3).Infof("Unlocking connection mutex\n")
+				c.muConn.Unlock()
+			}
+			return nil
+		default:
+			klog.V(3).Infof("Context is still valid. Retry...\n")
 		}
-		return c.wsconn
 	}
-
-	select {
-	case <-ctx.Done():
-		klog.V(1).Infof("Context is not valid. Has been canceled.\n")
-		klog.V(7).Infof("common.internalConnectWithCancel() LEAVE\n")
-		if lock {
-			klog.V(3).Infof("Unlocking connection mutex\n")
-			c.muConn.Unlock()
-		}
-		return nil
-	default:
-		klog.V(3).Infof("Context is still valid. Retry...\n")
-	}
-
-	// The caller holds muConn when lock is false, so context replacement and
-	// use are serialized with writes and reconnects.
-	c.ctx = ctx
-	c.ctxCancel = ctxCancel
-	c.retryCnt = int64(retryCnt)
 
 	// set websocket headers
 	myHeader := http.Header{}
 
 	// restore application options to HTTP header
-	if headers, ok := ctx.Value(clientinterfaces.HeadersContext{}).(http.Header); ok {
+	if headers, ok := c.ctx.Value(clientinterfaces.HeadersContext{}).(http.Header); ok {
 		for k, v := range headers {
 			for _, v := range v {
 				klog.V(3).Infof("internalConnectWithCancel RESTORE Header: %s = %s\n", k, v)
@@ -254,7 +225,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		}
 
 		// perform the websocket connection
-		ws, res, err := dialer.DialContext(ctx, url, myHeader)
+		ws, res, err := dialer.DialContext(c.ctx, url, myHeader)
 		if err != nil {
 			if res != nil {
 				klog.V(3).Infof("HTTP Response: %s\n", res.Status)
@@ -279,36 +250,21 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.wsconn = ws
 		c.sessionDone = make(chan struct{})
 		sessionDone := c.sessionDone
-		c.teardownDone = make(chan struct{})
-		teardownDone := c.teardownDone
 		c.terminalCloseStarted = false
 		c.retry = true
 		c.terminalMu.Unlock()
 
+		// kick off threads to listen for messages and ping/keepalive
+		go c.listen()
 		if lock {
 			klog.V(3).Infof("Unlocking connection mutex\n")
 			c.muConn.Unlock()
-		} else {
-			// Write paths call internalConnect with muConn already held. Protocol
-			// Start may drain an in-flight worker that needs this lock to finish.
-			c.muConn.Unlock()
 		}
 
-		// Register cancellation before waiting for an old worker. A newly supplied
-		// context must still close this transport while Start drains that worker.
-		c.closeOnContextDone(ctx, ws, sessionDone, teardownDone)
-		if ctx.Err() != nil {
-			if !lock {
-				c.muConn.Lock()
-			}
-			return nil
-		}
+		c.closeOnContextDone(ctx, ws, sessionDone)
 
-		// Start protocol workers before the reader can process an immediate peer close.
-		// Finish then always has an active worker context to cancel.
 		// start WS specific items
 		(*c.processMessages).Start()
-		go c.listen()
 
 		// fire off close connection
 		err = (*c.router).Open(&commonv1interfaces.OpenResponse{
@@ -316,9 +272,6 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		})
 		if err != nil {
 			klog.V(1).Infof("router.Open failed. Err: %v\n", err)
-		}
-		if !lock {
-			c.muConn.Lock()
 		}
 		if ctx.Err() != nil {
 			klog.V(3).Infof("Connection closed while Open handler was running\n")
@@ -344,14 +297,6 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	}
 
 	return nil
-}
-
-// HasActiveConnection reports whether the shared transport is open and its
-// current context remains active.
-func (c *WSClient) HasActiveConnection() bool {
-	c.muConn.RLock()
-	defer c.muConn.RUnlock()
-	return c.wsconn != nil && c.ctx != nil && c.ctx.Err() == nil
 }
 
 func handshakeErrorResponse(res *http.Response) *commonv1interfaces.ErrorResponse {
@@ -396,7 +341,7 @@ func isDeterministicHandshakeRejection(statusCode int) bool {
 		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
 }
 
-func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone, teardownDone chan struct{}) <-chan struct{} {
+func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) <-chan struct{} {
 	watcherDone := make(chan struct{})
 	go func() {
 		defer close(watcherDone)
@@ -421,10 +366,7 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 		c.sessionDone = nil
 		close(sessionDone)
 		c.muConn.Unlock()
-		defer func() {
-			c.terminalMu.Unlock()
-			close(teardownDone)
-		}()
+		defer c.terminalMu.Unlock()
 
 		// Abort the transport before notifying application code. Router callbacks
 		// can block, and must not delay unblocking the reader or a reconnect.
@@ -695,26 +637,14 @@ func (c *WSClient) WriteRawJSON(payload json.RawMessage) error {
 
 // WriteControl sends a WebSocket control frame to the server.
 func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) error {
-	return c.writeControl(msgType, data, deadline, true)
-}
-
-// WritePing sends a ping for the current session without reconnecting a closed transport.
-func (c *WSClient) WritePing(deadline time.Time) error {
-	return c.writeControl(websocket.PingMessage, nil, deadline, false)
-}
-
-func (c *WSClient) writeControl(msgType int, data []byte, deadline time.Time, reconnect bool) error {
 	klog.V(7).Infof("common.WriteControl() ENTER\n")
 
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
-	ws := c.wsconn
-	if reconnect {
-		ws = c.internalConnect()
-	}
+	ws := c.internalConnect()
 	if ws == nil {
-		klog.V(4).Infof("connection is nil\n")
+		klog.V(4).Infof("c.internalConnect() is nil\n")
 		klog.V(7).Infof("common.WriteControl() LEAVE\n")
 		return ErrInvalidConnection
 	}
@@ -846,7 +776,6 @@ func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool
 		close(c.sessionDone)
 		c.sessionDone = nil
 	}
-	teardownDone := c.teardownDone
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
@@ -882,9 +811,6 @@ func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool
 	if c.wsconn != nil {
 		c.wsconn.Close()
 		c.wsconn = nil
-	}
-	if teardownDone != nil {
-		close(teardownDone)
 	}
 
 	klog.V(4).Infof("common.closeWs() Succeeded\n")
