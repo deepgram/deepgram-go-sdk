@@ -19,6 +19,7 @@ import (
 type WSCallback struct {
 	*common.WSClient
 	ctxMu      sync.RWMutex
+	connectMu  sync.Mutex
 	workerMu   sync.Mutex
 	workerWG   sync.WaitGroup
 	beforePing func()
@@ -37,6 +38,7 @@ type WSCallback struct {
 type WSChannel struct {
 	*common.WSClient
 	ctxMu      sync.RWMutex
+	connectMu  sync.Mutex
 	workerMu   sync.Mutex
 	workerWG   sync.WaitGroup
 	beforePing func()

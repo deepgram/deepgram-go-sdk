@@ -31,6 +31,9 @@ func (c *WSCallback) Connect() bool {
 
 // ConnectWithCancel performs a WebSocket connection with a caller-supplied context.
 func (c *WSCallback) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
+	c.connectMu.Lock()
+	defer c.connectMu.Unlock()
+
 	if c.WSClient.HasActiveConnection() {
 		return true
 	}
@@ -46,6 +49,9 @@ func (c *WSCallback) AttemptReconnect(ctx context.Context, retries int64) bool {
 
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 func (c *WSCallback) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	c.connectMu.Lock()
+	defer c.connectMu.Unlock()
+
 	if c.WSClient.HasActiveConnection() {
 		return true
 	}
