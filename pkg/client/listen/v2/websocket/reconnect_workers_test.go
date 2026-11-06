@@ -27,6 +27,11 @@ type reconnectingFluxClient interface {
 	Stop()
 }
 
+type connectWithCancelFluxClient interface {
+	ConnectWithCancel(context.Context, context.CancelFunc, int) bool
+	Stop()
+}
+
 func cleanupReconnectClient(client reconnectingFluxClient) {
 	client.Stop()
 	switch client := client.(type) {
@@ -58,6 +63,72 @@ func Test_StreamDuringReconnectIsRaceFreeChannel(t *testing.T) {
 	testStreamDuringReconnect(t, func(options *interfaces.ClientOptionsV2) (reconnectingFluxClient, error) {
 		return NewUsingChan(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
 	})
+}
+
+func Test_ConnectWithCancelReusesSessionContext(t *testing.T) {
+	testConnectWithCancelReusesSessionContext(t, func(options *interfaces.ClientOptionsV2) (connectWithCancelFluxClient, error) {
+		return NewUsingCallback(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	})
+}
+
+func Test_ConnectWithCancelReusesSessionContextChannel(t *testing.T) {
+	testConnectWithCancelReusesSessionContext(t, func(options *interfaces.ClientOptionsV2) (connectWithCancelFluxClient, error) {
+		return NewUsingChan(context.Background(), "test-api-key", options, &interfaces.FluxTranscriptionOptions{Model: "flux-general-en"}, nil)
+	})
+}
+
+func testConnectWithCancelReusesSessionContext(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (connectWithCancelFluxClient, error)) {
+	t.Helper()
+	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+		for {
+			if _, _, err := conn.ReadMessage(); err != nil {
+				return
+			}
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client, err := newClient(&interfaces.ClientOptionsV2{
+		Host: "ws" + strings.TrimPrefix(server.URL, "http"),
+		WSHeaderProcessor: func(headers http.Header) {
+			headers.Del("Host")
+		},
+	})
+	if err != nil {
+		t.Fatalf("create client: %v", err)
+	}
+	t.Cleanup(client.Stop)
+
+	firstCtx, firstCancel := context.WithCancel(context.Background())
+	if !client.ConnectWithCancel(firstCtx, firstCancel, 1) {
+		t.Fatal("initial connect")
+	}
+	secondCtx, secondCancel := context.WithCancel(context.Background())
+	defer secondCancel()
+	if !client.ConnectWithCancel(secondCtx, secondCancel, 1) {
+		t.Fatal("reused connect")
+	}
+	switch client := client.(type) {
+	case *WSCallback:
+		if client.context() != firstCtx {
+			t.Fatal("reused connect replaced the callback session context")
+		}
+	case *WSChannel:
+		if client.context() != firstCtx {
+			t.Fatal("reused connect replaced the channel session context")
+		}
+	default:
+		t.Fatalf("unexpected client type %T", client)
+	}
+
+	firstCancel()
 }
 
 func testStreamDuringReconnect(t *testing.T, newClient func(*interfaces.ClientOptionsV2) (reconnectingFluxClient, error)) {

@@ -31,6 +31,9 @@ func (c *WSChannel) Connect() bool {
 
 // ConnectWithCancel performs a WebSocket connection with a caller-supplied context.
 func (c *WSChannel) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
+	if c.WSClient.HasActiveConnection() {
+		return true
+	}
 	c.setContext(ctx, ctxCancel)
 	return c.WSClient.ConnectWithCancel(ctx, ctxCancel, retryCnt)
 }
