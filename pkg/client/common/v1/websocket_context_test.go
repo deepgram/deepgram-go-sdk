@@ -183,12 +183,14 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 	defer firstWS.Close()
 
 	firstSessionDone := make(chan struct{})
+	firstTeardownDone := make(chan struct{})
 	client.muConn.Lock()
 	client.wsconn = firstWS
 	client.sessionDone = firstSessionDone
+	client.teardownDone = firstTeardownDone
 	client.terminalCloseStarted = false
 	client.muConn.Unlock()
-	firstWatcherDone := client.closeOnContextDone(firstCtx, firstWS, firstSessionDone)
+	firstWatcherDone := client.closeOnContextDone(firstCtx, firstWS, firstSessionDone, firstTeardownDone)
 
 	secondCtx, cancelSecond := context.WithCancel(context.Background())
 	defer cancelSecond()
@@ -202,12 +204,14 @@ func Test_WSClientStaleContextDoesNotCloseReconnectedSession(t *testing.T) {
 	defer secondWS.Close()
 
 	secondSessionDone := make(chan struct{})
+	secondTeardownDone := make(chan struct{})
 	client.muConn.Lock()
 	client.wsconn = secondWS
 	client.sessionDone = secondSessionDone
+	client.teardownDone = secondTeardownDone
 	client.terminalCloseStarted = false
 	client.muConn.Unlock()
-	secondWatcherDone := client.closeOnContextDone(secondCtx, secondWS, secondSessionDone)
+	secondWatcherDone := client.closeOnContextDone(secondCtx, secondWS, secondSessionDone, secondTeardownDone)
 
 	cancelFirst()
 	select {
