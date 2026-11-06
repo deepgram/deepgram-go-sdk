@@ -18,14 +18,10 @@ import (
 // WSCallback is a Flux WebSocket client that delivers server events via a FluxMessageCallback.
 type WSCallback struct {
 	*common.WSClient
-	ctxMu      sync.RWMutex
-	connectMu  sync.Mutex
-	workerMu   sync.Mutex
-	workerWG   sync.WaitGroup
-	beforePing func()
-	ctx        context.Context
-	ctxCancel  context.CancelFunc
-	workers    commonv1.Workers
+	ctxMu     sync.RWMutex
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	workers   commonv1.Workers
 
 	cOptions *interfaces.ClientOptionsV2
 	tOptions *interfaces.FluxTranscriptionOptions
@@ -37,14 +33,10 @@ type WSCallback struct {
 // WSChannel is a Flux WebSocket client that delivers server events via Go channels.
 type WSChannel struct {
 	*common.WSClient
-	ctxMu      sync.RWMutex
-	connectMu  sync.Mutex
-	workerMu   sync.Mutex
-	workerWG   sync.WaitGroup
-	beforePing func()
-	ctx        context.Context
-	ctxCancel  context.CancelFunc
-	workers    commonv1.Workers
+	ctxMu     sync.RWMutex
+	ctx       context.Context
+	ctxCancel context.CancelFunc
+	workers   commonv1.Workers
 
 	cOptions *interfaces.ClientOptionsV2
 	tOptions *interfaces.FluxTranscriptionOptions
