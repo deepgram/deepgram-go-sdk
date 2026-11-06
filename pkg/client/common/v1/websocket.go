@@ -108,14 +108,14 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 	// Do not replace a cancelled session's context while its close watcher still
 	// owns the same transport. Wait for that watcher to release the socket first.
 	for c.wsconn != nil && c.ctx != nil && c.ctx.Err() != nil {
-		sessionDone := c.sessionDone
-		if sessionDone == nil {
+		teardownDone := c.teardownDone
+		if teardownDone == nil {
 			break
 		}
 
 		c.muConn.Unlock()
 		select {
-		case <-sessionDone:
+		case <-teardownDone:
 		case <-ctx.Done():
 			if !lock {
 				c.muConn.Lock()
@@ -279,6 +279,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		c.wsconn = ws
 		c.sessionDone = make(chan struct{})
 		sessionDone := c.sessionDone
+		c.teardownDone = make(chan struct{})
+		teardownDone := c.teardownDone
 		c.terminalCloseStarted = false
 		c.retry = true
 		c.terminalMu.Unlock()
@@ -294,7 +296,7 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 		// Register cancellation before waiting for an old worker. A newly supplied
 		// context must still close this transport while Start drains that worker.
-		c.closeOnContextDone(ctx, ws, sessionDone)
+		c.closeOnContextDone(ctx, ws, sessionDone, teardownDone)
 		if ctx.Err() != nil {
 			if !lock {
 				c.muConn.Lock()
@@ -394,7 +396,7 @@ func isDeterministicHandshakeRejection(statusCode int) bool {
 		statusCode != http.StatusRequestTimeout && statusCode != http.StatusTooManyRequests
 }
 
-func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone chan struct{}) <-chan struct{} {
+func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, sessionDone, teardownDone chan struct{}) <-chan struct{} {
 	watcherDone := make(chan struct{})
 	go func() {
 		defer close(watcherDone)
@@ -417,9 +419,13 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 		c.retry = false
 		c.wsconn = nil
 		c.sessionDone = nil
+		c.teardownDone = nil
 		close(sessionDone)
 		c.muConn.Unlock()
-		defer c.terminalMu.Unlock()
+		defer func() {
+			c.terminalMu.Unlock()
+			close(teardownDone)
+		}()
 
 		// Abort the transport before notifying application code. Router callbacks
 		// can block, and must not delay unblocking the reader or a reconnect.
@@ -690,12 +696,24 @@ func (c *WSClient) WriteRawJSON(payload json.RawMessage) error {
 
 // WriteControl sends a WebSocket control frame to the server.
 func (c *WSClient) WriteControl(msgType int, data []byte, deadline time.Time) error {
+	return c.writeControl(msgType, data, deadline, true)
+}
+
+// WritePing sends a ping for the current session without reconnecting a closed transport.
+func (c *WSClient) WritePing(deadline time.Time) error {
+	return c.writeControl(websocket.PingMessage, nil, deadline, false)
+}
+
+func (c *WSClient) writeControl(msgType int, data []byte, deadline time.Time, reconnect bool) error {
 	klog.V(7).Infof("common.WriteControl() ENTER\n")
 
 	c.muConn.Lock()
 	defer c.muConn.Unlock()
 
 	ws := c.wsconn
+	if reconnect {
+		ws = c.internalConnect()
+	}
 	if ws == nil {
 		klog.V(4).Infof("connection is nil\n")
 		klog.V(7).Infof("common.WriteControl() LEAVE\n")
@@ -829,6 +847,8 @@ func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool
 		close(c.sessionDone)
 		c.sessionDone = nil
 	}
+	teardownDone := c.teardownDone
+	c.teardownDone = nil
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
@@ -864,6 +884,9 @@ func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool
 	if c.wsconn != nil {
 		c.wsconn.Close()
 		c.wsconn = nil
+	}
+	if teardownDone != nil {
+		close(teardownDone)
 	}
 
 	klog.V(4).Infof("common.closeWs() Succeeded\n")

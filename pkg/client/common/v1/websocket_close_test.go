@@ -87,7 +87,25 @@ func Test_WSClientTerminalCloseRunsOnce(t *testing.T) {
 	}
 }
 
-func Test_WriteControlWithoutConnectionDoesNotReconnect(t *testing.T) {
+func Test_WriteControlWithoutConnectionAttemptsReconnect(t *testing.T) {
+	handler := &closeCountingHandler{}
+	var handlerInterface commoninterfaces.WebSocketHandler = handler
+	client := NewWS(context.Background(), func() {}, "", &interfaces.ClientOptions{SelfHosted: true}, &handlerInterface, nil)
+	if client == nil {
+		t.Fatal("NewWS returned nil")
+	}
+	client.retryCnt = 1
+
+	err := client.WriteControl(websocket.PingMessage, nil, time.Now().Add(time.Second))
+	if !errors.Is(err, ErrInvalidConnection) {
+		t.Fatalf("WriteControl error = %v, want ErrInvalidConnection", err)
+	}
+	if handler.urlCalls != 1 {
+		t.Errorf("WriteControl attempted %d reconnects, want 1", handler.urlCalls)
+	}
+}
+
+func Test_WritePingWithoutConnectionDoesNotReconnect(t *testing.T) {
 	handler := &closeCountingHandler{}
 	var handlerInterface commoninterfaces.WebSocketHandler = handler
 	client := WSClient{
@@ -95,12 +113,12 @@ func Test_WriteControlWithoutConnectionDoesNotReconnect(t *testing.T) {
 		processMessages: &handlerInterface,
 	}
 
-	err := client.WriteControl(websocket.PingMessage, nil, time.Now().Add(time.Second))
+	err := client.WritePing(time.Now().Add(time.Second))
 	if !errors.Is(err, ErrInvalidConnection) {
-		t.Fatalf("WriteControl error = %v, want ErrInvalidConnection", err)
+		t.Fatalf("WritePing error = %v, want ErrInvalidConnection", err)
 	}
 	if handler.urlCalls != 0 {
-		t.Errorf("WriteControl attempted %d reconnects, want 0", handler.urlCalls)
+		t.Errorf("WritePing attempted %d reconnects, want 0", handler.urlCalls)
 	}
 }
 
@@ -130,12 +148,14 @@ func Test_InternalConnectWaitsForCancelledSession(t *testing.T) {
 	var handlerInterface commoninterfaces.WebSocketHandler = handler
 	oldCtx, cancelOld := context.WithCancel(context.Background())
 	sessionDone := make(chan struct{})
+	teardownDone := make(chan struct{})
 	client := NewWS(oldCtx, cancelOld, "", &interfaces.ClientOptions{SelfHosted: true}, &handlerInterface, nil)
 	if client == nil {
 		t.Fatal("NewWS returned nil")
 	}
 	client.wsconn = &websocket.Conn{}
 	client.sessionDone = sessionDone
+	client.teardownDone = teardownDone
 	cancelOld()
 
 	newCtx := context.Background()
@@ -160,7 +180,15 @@ func Test_InternalConnectWaitsForCancelledSession(t *testing.T) {
 	client.muConn.Lock()
 	client.wsconn = nil
 	close(sessionDone)
+	client.sessionDone = nil
 	client.muConn.Unlock()
+
+	select {
+	case <-done:
+		t.Fatal("reconnect returned before the cancelled session cleanup completed")
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(teardownDone)
 
 	select {
 	case <-done:
