@@ -65,11 +65,8 @@ func (c *WSClient) ConnectWithCancel(ctx context.Context, ctxCancel context.Canc
 
 // AttemptReconnect performs a reconnect after failing retries
 func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
-	c.muConn.Lock()
-	c.retry = true
-	c.muConn.Unlock()
-	c.ctx, c.ctxCancel = context.WithCancel(ctx)
-	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(retries), true) != nil
+	reconnectCtx, reconnectCancel := context.WithCancel(ctx)
+	return c.AttemptReconnectWithCancel(reconnectCtx, reconnectCancel, retries)
 }
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
@@ -88,16 +85,17 @@ func (c *WSClient) internalConnect() *websocket.Conn {
 func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int, lock bool) *websocket.Conn {
 	klog.V(7).Infof("common.internalConnectWithCancel() ENTER\n")
 
-	// set the context
-	c.ctx = ctx
-	c.ctxCancel = ctxCancel
-	c.retryCnt = int64(retryCnt)
-
 	// lock conn access
 	if lock {
 		klog.V(3).Infof("Locking connection mutex\n")
 		c.muConn.Lock()
 	}
+
+	// The caller holds muConn when lock is false, so all transport context
+	// replacement and use is serialized with writes and reconnects.
+	c.ctx = ctx
+	c.ctxCancel = ctxCancel
+	c.retryCnt = int64(retryCnt)
 
 	// we explicitly stopped and should not attempt to reconnect
 	if !c.retry {
