@@ -107,11 +107,8 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 
 	// Do not replace a cancelled session's context while its close watcher still
 	// owns the same transport. Wait for that watcher to release the socket first.
-	for c.wsconn != nil && c.ctx != nil && c.ctx.Err() != nil {
+	for c.ctx != nil && c.ctx.Err() != nil && c.teardownDone != nil {
 		teardownDone := c.teardownDone
-		if teardownDone == nil {
-			break
-		}
 
 		c.muConn.Unlock()
 		select {
@@ -123,6 +120,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 			return nil
 		}
 		c.muConn.Lock()
+		if c.teardownDone == teardownDone {
+			c.teardownDone = nil
+		}
 	}
 
 	if reused != nil {
@@ -419,7 +419,6 @@ func (c *WSClient) closeOnContextDone(ctx context.Context, ws *websocket.Conn, s
 		c.retry = false
 		c.wsconn = nil
 		c.sessionDone = nil
-		c.teardownDone = nil
 		close(sessionDone)
 		c.muConn.Unlock()
 		defer func() {
@@ -848,7 +847,6 @@ func (c *WSClient) closeWsWithStateFor(ws *websocket.Conn, fatal bool, perm bool
 		c.sessionDone = nil
 	}
 	teardownDone := c.teardownDone
-	c.teardownDone = nil
 
 	if c.wsconn != nil && !fatal && !peerClosed {
 		// deepgram requires a close message to be sent
