@@ -313,26 +313,45 @@ Set `DetectEntities` to receive named entity recognition results in the top-leve
 Flux STT uses the `/v2/listen` WebSocket and separates initial connection-time options from mid-session `Configure` messages. Supply the initial numerals setting, alongside the model, encoding, sample rate, and language hints, in `FluxTranscriptionOptions` when constructing the client. Use `FluxConfigureOptions.Numerals` after `Connect` to update numeric formatting for subsequent turns; it uses a pointer so `false` is not omitted.
 
 ```go
-options := &interfaces.FluxTranscriptionOptions{
-    Model:           "flux-general-en",
-    Encoding:        "linear16",
-    SampleRate:      16000,
-    ProfanityFilter: true,
-    Numerals:        true,
-    Redact:          interfaces.FluxRedactAggressiveNumbers,
+package main
+
+import (
+    "context"
+    "log"
+
+    api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket"
+    interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+    listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v2"
+)
+
+func main() {
+    ctx := context.Background()
+    options := &interfaces.FluxTranscriptionOptions{
+        Model:           "flux-general-en",
+        Encoding:        "linear16",
+        SampleRate:      16000,
+        ProfanityFilter: true,
+        Numerals:        true,
+        Redact:          interfaces.FluxRedactAggressiveNumbers,
+    }
+    handler := api.NewDefaultCallbackHandler()
+    dgClient, err := listen.NewWSUsingCallbackWithDefaults(ctx, options, handler)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer dgClient.Stop()
+    if !dgClient.Connect() {
+        log.Fatal("failed to connect")
+    }
+
+    numerals := false
+    if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
+        log.Fatal(err)
+    }
 }
 ```
 
 `Redact` supports only `interfaces.FluxRedactNumbers` and `interfaces.FluxRedactAggressiveNumbers` for Flux STT. `FluxConfigureOptions` updates mid-session thresholds, keyterms, language hints, and numerals. Configure-time `Numerals` uses a pointer so an explicit `false` reaches the API.
-
-To update numeric formatting after connecting:
-
-```go
-numerals := false
-if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: &numerals}); err != nil {
-    log.Fatal(err)
-}
-```
 
 `FluxTranscriptionOptions.Numerals` sets the initial connection-time value. `FluxConfigureOptions.Numerals` updates that value after `Connect`. See the [Flux callback example](examples/speech-to-text/websocket/flux_callback) for a runnable client with `-configure-numerals true` or `-configure-numerals false`.
 

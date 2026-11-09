@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
 	microphone "github.com/deepgram/deepgram-go-sdk/v3/pkg/audio/microphone"
@@ -64,7 +65,10 @@ func init() {
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.
-type MyCallback struct{}
+type MyCallback struct {
+	configureSuccess chan struct{}
+	configureFailure chan *api.ConfigureFailureResponse
+}
 
 func (c MyCallback) Open(or *api.OpenResponse) error {
 	fmt.Printf("\n[Open] WebSocket connection established\n")
@@ -108,13 +112,21 @@ func (c MyCallback) TurnInfo(tr *api.TurnInfoResponse) error {
 	return nil
 }
 
-func (c MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
+func (c *MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
 	fmt.Printf("\n[ConfigureSuccess] Mid-session config accepted\n")
+	select {
+	case c.configureSuccess <- struct{}{}:
+	default:
+	}
 	return nil
 }
 
-func (c MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
+func (c *MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
 	fmt.Printf("\n[ConfigureFailure] request_id=%s sequence_id=%d\n", cf.RequestID, cf.SequenceID)
+	select {
+	case c.configureFailure <- cf:
+	default:
+	}
 	return nil
 }
 
@@ -179,7 +191,10 @@ func main() {
 		tOptions.LanguageHint = languageHints
 	}
 
-	callback := MyCallback{}
+	callback := &MyCallback{
+		configureSuccess: make(chan struct{}, 1),
+		configureFailure: make(chan *api.ConfigureFailureResponse, 1),
+	}
 
 	dgClient, err := client.NewWSUsingCallback(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
@@ -194,6 +209,19 @@ func main() {
 	if configuredNumerals != nil {
 		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: configuredNumerals}); err != nil {
 			fmt.Printf("ERROR: configuring numerals: %v\n", err)
+			dgClient.Stop()
+			microphone.Teardown()
+			os.Exit(1)
+		}
+		select {
+		case <-callback.configureSuccess:
+		case failure := <-callback.configureFailure:
+			fmt.Printf("ERROR: Configure rejected: request_id=%s sequence_id=%d\n", failure.RequestID, failure.SequenceID)
+			dgClient.Stop()
+			microphone.Teardown()
+			os.Exit(1)
+		case <-time.After(10 * time.Second):
+			fmt.Println("ERROR: timed out waiting for Configure response")
 			dgClient.Stop()
 			microphone.Teardown()
 			os.Exit(1)
