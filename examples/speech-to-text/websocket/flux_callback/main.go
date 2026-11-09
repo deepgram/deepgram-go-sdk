@@ -10,6 +10,8 @@
 //
 //	DEEPGRAM_API_KEY=<your-key> go run main.go -model flux-general-en
 //	DEEPGRAM_API_KEY=<your-key> go run main.go -model flux-general-multi -language en -language es
+//	// Format and redact transcripts at connection time.
+//	DEEPGRAM_API_KEY=<your-key> go run main.go -profanity-filter -numerals -redact aggressive_numbers
 package main
 
 import (
@@ -43,13 +45,19 @@ func (l *languageFlags) Set(v string) error {
 }
 
 var (
-	model         string
-	languageHints languageFlags
+	model           string
+	languageHints   languageFlags
+	profanityFilter bool
+	numerals        bool
+	redact          string
 )
 
 func init() {
 	flag.StringVar(&model, "model", "flux-general-en", "Flux model: flux-general-en or flux-general-multi")
 	flag.Var(&languageHints, "language", "Language hint (repeat for multiple, e.g. -language en -language es); only applied with flux-general-multi")
+	flag.BoolVar(&profanityFilter, "profanity-filter", false, "Filter recognized profanity")
+	flag.BoolVar(&numerals, "numerals", false, "Format written numbers as numerals")
+	flag.StringVar(&redact, "redact", "", "Redact sensitive numbers: numbers or aggressive_numbers")
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.
@@ -149,6 +157,9 @@ func main() {
 		Encoding:          "linear16",
 		SampleRate:        16000,
 		EagerEotThreshold: 0.3,
+		ProfanityFilter:   profanityFilter,
+		Numerals:          numerals,
+		Redact:            interfaces.FluxRedact(redact),
 	}
 
 	if model == "flux-general-multi" && len(languageHints) > 0 {
