@@ -145,6 +145,7 @@ type ConfigureMessage struct {
 
 // MarshalJSON preserves the distinction between an omitted slice and an
 // explicitly empty update without changing the public slice fields.
+//nolint:gocritic // value receiver required: json.Marshal is called on ConfigureMessage values
 func (m ConfigureMessage) MarshalJSON() ([]byte, error) {
 	type configureMessage struct {
 		Type          string                             `json:"type"`
