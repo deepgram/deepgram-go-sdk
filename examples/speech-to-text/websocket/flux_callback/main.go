@@ -145,7 +145,7 @@ func main() {
 		value, err := strconv.ParseBool(configureNumerals)
 		if err != nil {
 			fmt.Printf("ERROR: -configure-numerals must be true or false: %v\n", err)
-			return
+			os.Exit(2)
 		}
 		configuredNumerals = &value
 	}
@@ -196,7 +196,7 @@ func main() {
 			fmt.Printf("ERROR: configuring numerals: %v\n", err)
 			dgClient.Stop()
 			microphone.Teardown()
-			return
+			os.Exit(1)
 		}
 	}
 
