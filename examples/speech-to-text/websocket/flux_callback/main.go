@@ -20,8 +20,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	api "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v2/websocket/interfaces"
 	microphone "github.com/deepgram/deepgram-go-sdk/v3/pkg/audio/microphone"
@@ -45,11 +47,12 @@ func (l *languageFlags) Set(v string) error {
 }
 
 var (
-	model           string
-	languageHints   languageFlags
-	profanityFilter bool
-	numerals        bool
-	redact          string
+	model             string
+	languageHints     languageFlags
+	profanityFilter   bool
+	numerals          bool
+	redact            string
+	configureNumerals string
 )
 
 func init() {
@@ -58,10 +61,14 @@ func init() {
 	flag.BoolVar(&profanityFilter, "profanity-filter", false, "Filter recognized profanity")
 	flag.BoolVar(&numerals, "numerals", false, "Format written numbers as numerals")
 	flag.StringVar(&redact, "redact", "", "Redact sensitive numbers: numbers or aggressive_numbers")
+	flag.StringVar(&configureNumerals, "configure-numerals", "", "Update numeric formatting after connection (true or false)")
 }
 
 // MyCallback implements api.FluxMessageCallback to handle all Flux server events.
-type MyCallback struct{}
+type MyCallback struct {
+	configureSuccess chan struct{}
+	configureFailure chan *api.ConfigureFailureResponse
+}
 
 func (c MyCallback) Open(or *api.OpenResponse) error {
 	fmt.Printf("\n[Open] WebSocket connection established\n")
@@ -105,13 +112,21 @@ func (c MyCallback) TurnInfo(tr *api.TurnInfoResponse) error {
 	return nil
 }
 
-func (c MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
+func (c *MyCallback) ConfigureSuccess(cs *api.ConfigureSuccessResponse) error {
 	fmt.Printf("\n[ConfigureSuccess] Mid-session config accepted\n")
+	select {
+	case c.configureSuccess <- struct{}{}:
+	default:
+	}
 	return nil
 }
 
-func (c MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
+func (c *MyCallback) ConfigureFailure(cf *api.ConfigureFailureResponse) error {
 	fmt.Printf("\n[ConfigureFailure] request_id=%s sequence_id=%d\n", cf.RequestID, cf.SequenceID)
+	select {
+	case c.configureFailure <- cf:
+	default:
+	}
 	return nil
 }
 
@@ -137,6 +152,15 @@ func (c MyCallback) UnhandledEvent(byData []byte) error {
 
 func main() {
 	flag.Parse()
+	var configuredNumerals *bool
+	if configureNumerals != "" {
+		value, err := strconv.ParseBool(configureNumerals)
+		if err != nil {
+			fmt.Printf("ERROR: -configure-numerals must be true or false: %v\n", err)
+			os.Exit(2)
+		}
+		configuredNumerals = &value
+	}
 
 	microphone.Initialize()
 
@@ -167,7 +191,10 @@ func main() {
 		tOptions.LanguageHint = languageHints
 	}
 
-	callback := MyCallback{}
+	callback := &MyCallback{
+		configureSuccess: make(chan struct{}, 1),
+		configureFailure: make(chan *api.ConfigureFailureResponse, 1),
+	}
 
 	dgClient, err := client.NewWSUsingCallback(ctx, "", cOptions, tOptions, callback)
 	if err != nil {
@@ -178,6 +205,27 @@ func main() {
 	if !dgClient.Connect() {
 		fmt.Println("ERROR: failed to connect to Deepgram Flux endpoint")
 		os.Exit(1)
+	}
+	if configuredNumerals != nil {
+		if err := dgClient.Configure(&interfaces.FluxConfigureOptions{Numerals: configuredNumerals}); err != nil {
+			fmt.Printf("ERROR: configuring numerals: %v\n", err)
+			dgClient.Stop()
+			microphone.Teardown()
+			os.Exit(1)
+		}
+		select {
+		case <-callback.configureSuccess:
+		case failure := <-callback.configureFailure:
+			fmt.Printf("ERROR: Configure rejected: request_id=%s sequence_id=%d\n", failure.RequestID, failure.SequenceID)
+			dgClient.Stop()
+			microphone.Teardown()
+			os.Exit(1)
+		case <-time.After(10 * time.Second):
+			fmt.Println("ERROR: timed out waiting for Configure response")
+			dgClient.Stop()
+			microphone.Teardown()
+			os.Exit(1)
+		}
 	}
 
 	mic, err := microphone.New(microphone.AudioConfig{
