@@ -5,19 +5,19 @@
 
 ### Features
 
-* **listen:** add Flux safety options ([#393](https://github.com/deepgram/deepgram-go-sdk/issues/393)) ([c443a2c](https://github.com/deepgram/deepgram-go-sdk/commit/c443a2ce59dd7a8ce404d543449e9534260cfa86))
-* **listen:** add support to language_hint in the v1 API ([#380](https://github.com/deepgram/deepgram-go-sdk/issues/380)) ([ab7f944](https://github.com/deepgram/deepgram-go-sdk/commit/ab7f944196d55c46d87fbf777d7be9f9446351f6))
-* **listen:** configure Flux numerals ([#394](https://github.com/deepgram/deepgram-go-sdk/issues/394)) ([45cb5fb](https://github.com/deepgram/deepgram-go-sdk/commit/45cb5fb0ca94ffefc29a298eb67cd911c353672c))
-* **speak:** expose raw control frames ([#386](https://github.com/deepgram/deepgram-go-sdk/issues/386)) ([02bdba9](https://github.com/deepgram/deepgram-go-sdk/commit/02bdba96f258624c2da82b1989dc3d7228e9b859))
+* **Flux STT:** Add typed connection-time `profanity_filter`, `numerals`, and `redact` options, including validation for documented redaction values. ([#393](https://github.com/deepgram/deepgram-go-sdk/issues/393)) ([c443a2c](https://github.com/deepgram/deepgram-go-sdk/commit/c443a2ce59dd7a8ce404d543449e9534260cfa86))
+* **Listen v1 WebSocket:** Add repeatable `LiveTranscriptionOptions.LanguageHint` query parameters for Nova-3 multilingual streaming, and expose the normalized hints applied by the service in `Alternative.LanguagesHinted`. ([#380](https://github.com/deepgram/deepgram-go-sdk/issues/380)) ([ab7f944](https://github.com/deepgram/deepgram-go-sdk/commit/ab7f944196d55c46d87fbf777d7be9f9446351f6))
+* **Flux STT:** Support `numerals` in Configure messages, including explicit `false`; ConfigureSuccess now returns the applied value, and non-nil empty `Keyterms` and `LanguageHints` slices are sent as explicit empty updates. ([#394](https://github.com/deepgram/deepgram-go-sdk/issues/394)) ([45cb5fb](https://github.com/deepgram/deepgram-go-sdk/commit/45cb5fb0ca94ffefc29a298eb67cd911c353672c))
+* **Speak v1 WebSocket:** Add `SendControlJSON` to callback and channel clients for sending validated, unchanged raw JSON control frames when a typed helper is not yet available. ([#386](https://github.com/deepgram/deepgram-go-sdk/issues/386)) ([02bdba9](https://github.com/deepgram/deepgram-go-sdk/commit/02bdba96f258624c2da82b1989dc3d7228e9b859))
 
 
 ### Bug Fixes
 
-* allow nil client options ([#381](https://github.com/deepgram/deepgram-go-sdk/issues/381)) ([47a0b70](https://github.com/deepgram/deepgram-go-sdk/commit/47a0b708cdf01ce2a7f54012843d713747ee5d1f))
-* **listen:** synchronize Flux STT reconnect workers ([#400](https://github.com/deepgram/deepgram-go-sdk/issues/400)) ([a995c77](https://github.com/deepgram/deepgram-go-sdk/commit/a995c77fb0505251ce3b28e911a863a9d38a119e))
-* **websocket:** close sessions on context cancellation ([#384](https://github.com/deepgram/deepgram-go-sdk/issues/384)) ([272d09b](https://github.com/deepgram/deepgram-go-sdk/commit/272d09b2770508cc35183f6c4f41331618901d6e))
-* **WebSocket:** Expose the server's `code` on WebSocket `Error` and `Warning` events in a new `Code` field, and fill it from the close reason for transport errors the SDK reports itself. Re-marshaled `Error` and `Warning` values, including REST errors, now use the lowercase `type` JSON key instead of `Type`. ([a4cd6ab](https://github.com/deepgram/deepgram-go-sdk/commit/a4cd6ab5461e3e1f0abcea8b5491b4738ecbe2b5))
-* **websocket:** surface handshake errors ([#383](https://github.com/deepgram/deepgram-go-sdk/issues/383)) ([4913c47](https://github.com/deepgram/deepgram-go-sdk/commit/4913c47cc76f7121fe7308350a84f2300b9cde2f))
+* **REST:** Allow a nil `ClientOptions` argument in Listen, Speak, Analyze, Manage, and Auth REST constructors. ([#381](https://github.com/deepgram/deepgram-go-sdk/issues/381)) ([47a0b70](https://github.com/deepgram/deepgram-go-sdk/commit/47a0b708cdf01ce2a7f54012843d713747ee5d1f))
+* **Flux STT:** Synchronize connection-context replacement across streaming and reconnect paths, and stop the prior keepalive ping worker before a replacement connection starts. ([#400](https://github.com/deepgram/deepgram-go-sdk/issues/400)) ([a995c77](https://github.com/deepgram/deepgram-go-sdk/commit/a995c77fb0505251ce3b28e911a863a9d38a119e))
+* **WebSocket:** Close the active session and stop its workers when its context is canceled, without allowing stale contexts to close a newer reconnected session. ([#384](https://github.com/deepgram/deepgram-go-sdk/issues/384)) ([272d09b](https://github.com/deepgram/deepgram-go-sdk/commit/272d09b2770508cc35183f6c4f41331618901d6e))
+* **WebSocket:** Expose the server's `code` on `Error` and `Warning` events through a new `Code` field, including synthesized transport errors. Re-marshaled Error and Warning values now use the lowercase `type` JSON key. ([a4cd6ab](https://github.com/deepgram/deepgram-go-sdk/commit/a4cd6ab5461e3e1f0abcea8b5491b4738ecbe2b5))
+* **WebSocket:** Read failed upgrade response bodies and surface structured Deepgram errors; retry transient HTTP 408, 429, and 5xx failures while avoiding retries for deterministic authentication and configuration errors. ([#383](https://github.com/deepgram/deepgram-go-sdk/issues/383)) ([4913c47](https://github.com/deepgram/deepgram-go-sdk/commit/4913c47cc76f7121fe7308350a84f2300b9cde2f))
 
 ## [3.10.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.9.0...v3.10.0) (2026-10-13)
 
