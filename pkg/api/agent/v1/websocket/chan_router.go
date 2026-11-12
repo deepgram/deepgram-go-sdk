@@ -53,6 +53,7 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		injectionRefusedResponse:      make([]*chan *interfaces.InjectionRefusedResponse, 0),
 		keepAliveResponse:             make([]*chan *interfaces.KeepAlive, 0),
 		settingsAppliedResponse:       make([]*chan *interfaces.SettingsAppliedResponse, 0),
+		customFromThinkProvider:       make([]*chan *interfaces.CustomFromThinkProviderResponse, 0),
 		closeChan:                     make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                     make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:                 make([]*chan *[]byte, 0),
@@ -68,6 +69,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		router.functionCallRequestResponse = append(router.functionCallRequestResponse, chans.GetFunctionCallRequest()...)
 		if functionCallCancelled, ok := chans.(interfaces.FunctionCallCancelledChan); ok {
 			router.functionCallCancelledResponse = append(router.functionCallCancelledResponse, functionCallCancelled.GetFunctionCallCancelled()...)
+		}
+		if customFromThinkProvider, ok := chans.(interfaces.CustomFromThinkProviderChan); ok {
+			router.customFromThinkProvider = append(router.customFromThinkProvider, customFromThinkProvider.GetCustomFromThinkProvider()...)
 		}
 		router.agentStartedSpeakingResponse = append(router.agentStartedSpeakingResponse, chans.GetAgentStartedSpeaking()...)
 		router.agentAudioDoneResponse = append(router.agentAudioDoneResponse, chans.GetAgentAudioDone()...)
@@ -382,6 +386,30 @@ func (r *ChanRouter) processSettingsApplied(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeSettingsAppliedResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processCustomFromThinkProvider(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.CustomFromThinkProviderResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			klog.V(1).Infof("json.Unmarshal(CustomFromThinkProviderResponse) failed. Err: %v\n", err)
+			return err
+		}
+
+		if len(r.customFromThinkProvider) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+
+		for _, ch := range r.customFromThinkProvider {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeCustomFromThinkProviderResponse), byMsg, action)
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -423,6 +451,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processKeepAlive(byMsg)
 	case interfaces.TypeSettingsAppliedResponse:
 		err = r.processSettingsApplied(byMsg)
+	case interfaces.TypeCustomFromThinkProviderResponse:
+		err = r.processCustomFromThinkProvider(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}
