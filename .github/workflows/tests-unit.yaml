@@ -55,3 +55,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: go test -v -run Test_ ./...
+
+      - name: Run WebSocket race tests
+        shell: bash
+        run: go test -race -count=10 ./pkg/client/common/v1 ./pkg/client/listen/v2/websocket
