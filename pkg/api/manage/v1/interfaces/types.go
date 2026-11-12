@@ -265,6 +265,115 @@ type Usage struct {
 	Results    []Result   `json:"results,omitempty"`
 }
 
+// UsageBreakdownGrouping identifies the dimension used to group usage results.
+type UsageBreakdownGrouping string
+
+const (
+	UsageBreakdownGroupingAccessor   UsageBreakdownGrouping = "accessor"
+	UsageBreakdownGroupingEndpoint   UsageBreakdownGrouping = "endpoint"
+	UsageBreakdownGroupingFeatureSet UsageBreakdownGrouping = "feature_set"
+	UsageBreakdownGroupingModels     UsageBreakdownGrouping = "models"
+	UsageBreakdownGroupingMethod     UsageBreakdownGrouping = "method"
+	UsageBreakdownGroupingTags       UsageBreakdownGrouping = "tags"
+	UsageBreakdownGroupingDeployment UsageBreakdownGrouping = "deployment"
+)
+
+// UsageBreakdownGroupingResult identifies the values for one usage group.
+type UsageBreakdownGroupingResult struct {
+	Start      string    `json:"start,omitempty"`
+	End        string    `json:"end,omitempty"`
+	Accessor   *string   `json:"accessor,omitempty"`
+	Endpoint   *string   `json:"endpoint,omitempty"`
+	FeatureSet *string   `json:"feature_set,omitempty"`
+	Models     []*string `json:"models,omitempty"`
+	Method     *string   `json:"method,omitempty"`
+	Tags       []string  `json:"tags,omitempty"`
+	Deployment *string   `json:"deployment,omitempty"`
+}
+
+// UsageBreakdownEntry contains the usage totals for one grouping.
+type UsageBreakdownEntry struct {
+	Hours         float64                      `json:"hours,omitempty"`
+	TotalHours    float64                      `json:"total_hours,omitempty"`
+	AgentHours    float64                      `json:"agent_hours,omitempty"`
+	TokensIn      float64                      `json:"tokens_in,omitempty"`
+	TokensOut     float64                      `json:"tokens_out,omitempty"`
+	TTSCharacters float64                      `json:"tts_characters,omitempty"`
+	Requests      float64                      `json:"requests,omitempty"`
+	Grouping      UsageBreakdownGroupingResult `json:"grouping,omitempty"`
+}
+
+// UsageBreakdown provides project usage grouped by a reporting dimension.
+type UsageBreakdown struct {
+	Start      string                `json:"start,omitempty"`
+	End        string                `json:"end,omitempty"`
+	Resolution ReportingResolution   `json:"resolution,omitempty"`
+	Results    []UsageBreakdownEntry `json:"results,omitempty"`
+}
+
+// BillingBreakdownGrouping identifies a dimension used to group billing results.
+type BillingBreakdownGrouping string
+
+const (
+	BillingBreakdownGroupingAccessor   BillingBreakdownGrouping = "accessor"
+	BillingBreakdownGroupingDeployment BillingBreakdownGrouping = "deployment"
+	BillingBreakdownGroupingLineItem   BillingBreakdownGrouping = "line_item"
+	BillingBreakdownGroupingTags       BillingBreakdownGrouping = "tags"
+)
+
+// BillingBreakdownGroupingResult identifies the values for one billing group.
+type BillingBreakdownGroupingResult struct {
+	Start      string   `json:"start,omitempty"`
+	End        string   `json:"end,omitempty"`
+	Accessor   *string  `json:"accessor,omitempty"`
+	Deployment *string  `json:"deployment,omitempty"`
+	LineItem   *string  `json:"line_item,omitempty"`
+	Tags       []string `json:"tags,omitempty"`
+}
+
+// BillingBreakdownEntry contains the USD cost for one grouping.
+type BillingBreakdownEntry struct {
+	Dollars  float64                        `json:"dollars,omitempty"`
+	Grouping BillingBreakdownGroupingResult `json:"grouping,omitempty"`
+}
+
+// BillingBreakdown provides project billing grouped by reporting dimensions.
+type BillingBreakdown struct {
+	Start      string                  `json:"start,omitempty"`
+	End        string                  `json:"end,omitempty"`
+	Resolution ReportingResolution     `json:"resolution,omitempty"`
+	Results    []BillingBreakdownEntry `json:"results,omitempty"`
+}
+
+// ReportingResolution specifies the reporting period's time unit and amount.
+type ReportingResolution struct {
+	Units  string  `json:"units,omitempty"`
+	Amount float64 `json:"amount,omitempty"`
+}
+
+// BillingFields lists values that can filter a billing breakdown.
+type BillingFields struct {
+	Accessors   []string          `json:"accessors,omitempty"`
+	Deployments []string          `json:"deployments,omitempty"`
+	Tags        []string          `json:"tags,omitempty"`
+	LineItems   map[string]string `json:"line_items,omitempty"`
+}
+
+// Purchase contains the original amount on an order transaction.
+type Purchase struct {
+	OrderID    string     `json:"order_id,omitempty"`
+	Expiration *time.Time `json:"expiration,omitempty"`
+	Created    *time.Time `json:"created,omitempty"`
+	Amount     float64    `json:"amount,omitempty"`
+	Units      string     `json:"units,omitempty"`
+	OrderType  string     `json:"order_type,omitempty"`
+}
+
+// Purchases lists original amounts on a project's order transactions.
+type Purchases struct {
+	Orders []Purchase `json:"orders,omitempty"`
+}
+
 // AgentConfiguration provides a reusable voice-agent configuration.
 //
 // Config is the "agent" block of a Settings message as a JSON *string*, not a
@@ -475,6 +584,79 @@ type UsageRequest struct {
 	UttSplit           bool     `json:"utt_split,omitempty" url:"utt_split,omitempty"`
 }
 
+// UsageBreakdownRequest filters and groups usage breakdowns. Pointer boolean
+// fields preserve an explicit false filter, which excludes requests using that
+// feature according to the API contract.
+type UsageBreakdownRequest struct {
+	Start            string                 `schema:"start,omitempty"`
+	End              string                 `schema:"end,omitempty"`
+	Grouping         UsageBreakdownGrouping `schema:"grouping,omitempty"`
+	Accessor         string                 `schema:"accessor,omitempty"`
+	Alternatives     *bool                  `schema:"alternatives,omitempty"`
+	CallbackMethod   *bool                  `schema:"callback_method,omitempty"`
+	Callback         *bool                  `schema:"callback,omitempty"`
+	Channels         *bool                  `schema:"channels,omitempty"`
+	CustomIntentMode *bool                  `schema:"custom_intent_mode,omitempty"`
+	CustomIntent     *bool                  `schema:"custom_intent,omitempty"`
+	CustomTopicMode  *bool                  `schema:"custom_topic_mode,omitempty"`
+	CustomTopic      *bool                  `schema:"custom_topic,omitempty"`
+	Deployment       string                 `schema:"deployment,omitempty"`
+	DetectEntities   *bool                  `schema:"detect_entities,omitempty"`
+	DetectLanguage   *bool                  `schema:"detect_language,omitempty"`
+	Diarize          *bool                  `schema:"diarize,omitempty"`
+	Dictation        *bool                  `schema:"dictation,omitempty"`
+	Encoding         *bool                  `schema:"encoding,omitempty"`
+	Endpoint         string                 `schema:"endpoint,omitempty"`
+	Extra            *bool                  `schema:"extra,omitempty"`
+	FillerWords      *bool                  `schema:"filler_words,omitempty"`
+	Intents          *bool                  `schema:"intents,omitempty"`
+	Keyterm          *bool                  `schema:"keyterm,omitempty"`
+	Keywords         *bool                  `schema:"keywords,omitempty"`
+	Language         *bool                  `schema:"language,omitempty"`
+	Measurements     *bool                  `schema:"measurements,omitempty"`
+	Method           string                 `schema:"method,omitempty"`
+	Model            string                 `schema:"model,omitempty"`
+	Multichannel     *bool                  `schema:"multichannel,omitempty"`
+	Numerals         *bool                  `schema:"numerals,omitempty"`
+	Paragraphs       *bool                  `schema:"paragraphs,omitempty"`
+	ProfanityFilter  *bool                  `schema:"profanity_filter,omitempty"`
+	Punctuate        *bool                  `schema:"punctuate,omitempty"`
+	Redact           *bool                  `schema:"redact,omitempty"`
+	Replace          *bool                  `schema:"replace,omitempty"`
+	SampleRate       *bool                  `schema:"sample_rate,omitempty"`
+	Search           *bool                  `schema:"search,omitempty"`
+	Sentiment        *bool                  `schema:"sentiment,omitempty"`
+	SmartFormat      *bool                  `schema:"smart_format,omitempty"`
+	Summarize        *bool                  `schema:"summarize,omitempty"`
+	Tag              string                 `schema:"tag,omitempty"`
+	Topics           *bool                  `schema:"topics,omitempty"`
+	UttSplit         *bool                  `schema:"utt_split,omitempty"`
+	Utterances       *bool                  `schema:"utterances,omitempty"`
+	Version          *bool                  `schema:"version,omitempty"`
+}
+
+// BillingBreakdownRequest filters and groups billing breakdowns.
+type BillingBreakdownRequest struct {
+	Start      string                     `schema:"start,omitempty"`
+	End        string                     `schema:"end,omitempty"`
+	Accessor   string                     `schema:"accessor,omitempty"`
+	Deployment string                     `schema:"deployment,omitempty"`
+	Tag        string                     `schema:"tag,omitempty"`
+	LineItem   string                     `schema:"line_item,omitempty"`
+	Grouping   []BillingBreakdownGrouping `schema:"grouping,omitempty"`
+}
+
+// BillingFieldsRequest filters the reporting period for billing fields.
+type BillingFieldsRequest struct {
+	Start string `schema:"start,omitempty"`
+	End   string `schema:"end,omitempty"`
+}
+
+// PurchasesRequest controls purchase-history pagination.
+type PurchasesRequest struct {
+	Limit int `schema:"limit,omitempty"`
+}
+
 /***********************************/
 // Result/Output structs
 /***********************************/
@@ -563,6 +745,26 @@ type UsageFieldResult struct {
 // UsageSummary provides a result with a list of usage
 type UsageResult struct {
 	Usage
+}
+
+// UsageBreakdownResult provides a project usage breakdown.
+type UsageBreakdownResult struct {
+	UsageBreakdown
+}
+
+// BillingBreakdownResult provides a project billing breakdown.
+type BillingBreakdownResult struct {
+	BillingBreakdown
+}
+
+// BillingFieldsResult provides values that can filter billing breakdowns.
+type BillingFieldsResult struct {
+	BillingFields
+}
+
+// PurchasesResult provides project purchase history.
+type PurchasesResult struct {
+	Purchases
 }
 
 // AgentsResult provides a result with a list of agent configurations
