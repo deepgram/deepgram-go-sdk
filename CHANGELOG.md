@@ -2,14 +2,12 @@
 
 ## [3.11.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.10.0...v3.11.0) (2026-11-12)
 
-
 ### Features
 
 * **Flux STT:** Add typed connection-time `profanity_filter`, `numerals`, and `redact` options, including validation for documented redaction values. ([#393](https://github.com/deepgram/deepgram-go-sdk/issues/393)) ([c443a2c](https://github.com/deepgram/deepgram-go-sdk/commit/c443a2ce59dd7a8ce404d543449e9534260cfa86))
 * **Listen v1 WebSocket:** Add repeatable `LiveTranscriptionOptions.LanguageHint` query parameters for Nova-3 multilingual streaming, and expose the normalized hints applied by the service in `Alternative.LanguagesHinted`. ([#380](https://github.com/deepgram/deepgram-go-sdk/issues/380)) ([ab7f944](https://github.com/deepgram/deepgram-go-sdk/commit/ab7f944196d55c46d87fbf777d7be9f9446351f6))
 * **Flux STT:** Support `numerals` in Configure messages, including explicit `false`; ConfigureSuccess now returns the applied value, and non-nil empty `Keyterms` and `LanguageHints` slices are sent as explicit empty updates. ([#394](https://github.com/deepgram/deepgram-go-sdk/issues/394)) ([45cb5fb](https://github.com/deepgram/deepgram-go-sdk/commit/45cb5fb0ca94ffefc29a298eb67cd911c353672c))
 * **Speak v1 WebSocket:** Add `SendControlJSON` to callback and channel clients for sending validated, unchanged raw JSON control frames when a typed helper is not yet available. ([#386](https://github.com/deepgram/deepgram-go-sdk/issues/386)) ([02bdba9](https://github.com/deepgram/deepgram-go-sdk/commit/02bdba96f258624c2da82b1989dc3d7228e9b859))
-
 
 ### Bug Fixes
 
