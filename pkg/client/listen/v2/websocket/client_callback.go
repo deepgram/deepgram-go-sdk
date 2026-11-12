@@ -26,33 +26,46 @@ import (
 
 // Connect performs a WebSocket connection with DefaultConnectRetry retries.
 func (c *WSCallback) Connect() bool {
-	c.ctx, c.ctxCancel = context.WithCancel(c.ctx)
-	return c.ConnectWithCancel(c.ctx, c.ctxCancel, int(DefaultConnectRetry))
+	ctx, cancel := context.WithCancel(c.context())
+	return c.ConnectWithCancel(ctx, cancel, int(DefaultConnectRetry))
 }
 
 // ConnectWithCancel performs a WebSocket connection with a caller-supplied context.
 func (c *WSCallback) ConnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retryCnt int) bool {
-	c.ctx = ctx
-	c.ctxCancel = ctxCancel
+	c.setContext(ctx, ctxCancel)
 	return c.WSClient.ConnectWithCancel(ctx, ctxCancel, retryCnt)
 }
 
 // AttemptReconnect reconnects after exhausting retries.
 func (c *WSCallback) AttemptReconnect(ctx context.Context, retries int64) bool {
-	c.ctx, c.ctxCancel = context.WithCancel(ctx)
-	return c.AttemptReconnectWithCancel(c.ctx, c.ctxCancel, retries)
+	reconnectCtx, reconnectCancel := context.WithCancel(ctx)
+	return c.AttemptReconnectWithCancel(reconnectCtx, reconnectCancel, retries)
 }
 
 // AttemptReconnectWithCancel reconnects with a caller-supplied cancel function.
 func (c *WSCallback) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	// Stop the old ping worker before it can trigger a competing reconnect.
+	c.workers.Stop()
+	c.setContext(ctx, ctxCancel)
+	return c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
+}
+
+func (c *WSCallback) setContext(ctx context.Context, ctxCancel context.CancelFunc) {
+	c.ctxMu.Lock()
 	c.ctx = ctx
 	c.ctxCancel = ctxCancel
-	return c.WSClient.AttemptReconnectWithCancel(ctx, ctxCancel, retries)
+	c.ctxMu.Unlock()
+}
+
+func (c *WSCallback) context() context.Context {
+	c.ctxMu.RLock()
+	defer c.ctxMu.RUnlock()
+	return c.ctx
 }
 
 // GetURL builds the Flux WebSocket URL: wss://host/v2/listen?<FluxTranscriptionOptions>
 func (c *WSCallback) GetURL(host string) (string, error) {
-	url, err := version.GetFluxAPI(c.ctx, c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.tOptions)
+	url, err := version.GetFluxAPI(c.context(), c.cOptions.Host, c.cOptions.APIVersion, c.cOptions.Path, c.tOptions)
 	if err != nil {
 		klog.V(1).Infof("version.GetFluxAPI failed. Err: %v\n", err)
 		return "", err
@@ -63,7 +76,7 @@ func (c *WSCallback) GetURL(host string) (string, error) {
 
 // Start launches the WebSocket-level ping goroutine if EnableKeepAlive is set.
 func (c *WSCallback) Start() {
-	workerCtx := c.workers.Start(c.ctx)
+	workerCtx := c.workers.Start(c.context())
 	if c.cOptions.EnableKeepAlive {
 		go c.ping(workerCtx)
 	}
@@ -154,7 +167,7 @@ func (c *WSCallback) Stream(r io.Reader) error {
 	chunk := make([]byte, ChunkSize)
 	for {
 		select {
-		case <-c.ctx.Done():
+		case <-c.context().Done():
 			klog.V(2).Infof("Stream context Done()\n")
 			klog.V(6).Infof("flux.WSCallback.Stream() LEAVE\n")
 			return nil
