@@ -100,15 +100,12 @@ func (c *WSChannel) Start() {
 			deleteEmptyProvider(agent, "think")
 			deleteEmptyProvider(agent, "listen")
 		}
-		byteData, marshalErr2 := json.Marshal(clone)
+		_, marshalErr2 := json.Marshal(clone)
 		if marshalErr2 != nil {
 			klog.V(1).Infof("Marshaling cleaned configuration settings failed. Err: %v\n", marshalErr2)
 			c.WSClient.Stop()
 			return
 		}
-		print("ConfigurationSettings: ")
-		fmt.Println(string(byteData))
-		klog.V(4).Infof("Cleaned ConfigurationSettings: %s", string(byteData))
 		err := c.WriteJSON(clone)
 		if err != nil {
 			klog.V(1).Infof("w.WriteJSON ConfigurationSettings failed. Err: %v\n", err)

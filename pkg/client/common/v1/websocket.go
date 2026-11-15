@@ -566,7 +566,7 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 
 	byData, err := json.Marshal(payload)
 	if err != nil {
-		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Data: %v, Err: %v\n", payload, err)
+		klog.V(1).Infof("WriteJSON: Error marshaling JSON. Err: %v\n", err)
 		klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 		return err
 	}
@@ -595,7 +595,7 @@ func (c *WSClient) WriteJSON(payload interface{}) error {
 	}
 
 	klog.V(4).Infof("common.WriteJSON() Succeeded\n")
-	klog.V(6).Infof("payload: %s\n", string(byData))
+	klog.V(6).Infof("payload length: %d\n", len(byData))
 	klog.V(6).Infof("common.WriteJSON() LEAVE\n")
 
 	return nil
@@ -628,7 +628,7 @@ func (c *WSClient) WriteRawJSON(payload json.RawMessage) error {
 	}
 
 	klog.V(4).Infof("common.WriteRawJSON() Succeeded\n")
-	klog.V(6).Infof("payload: %s\n", string(payload))
+	klog.V(6).Infof("payload length: %d\n", len(payload))
 	klog.V(6).Infof("common.WriteRawJSON() LEAVE\n")
 	return nil
 }
