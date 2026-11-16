@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 
-	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
@@ -155,7 +154,7 @@ func (dch DefaultChanHandler) Run() error {
 			fmt.Printf("Size: %d\n\n", len(*br))
 
 			if dch.debugWebsocket {
-				fmt.Printf("Hex Dump: %x...\n\n", (*br)[:20])
+				fmt.Printf("Debug: binary data length: %d\n\n", len(*br))
 			}
 			if dch.debugWebsocketVerbose {
 				fmt.Printf("Dumping to verbose.wav\n")
@@ -183,18 +182,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for or := range dch.openChan {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(or)
-				if err != nil {
-					klog.V(1).Infof("Open json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nOpen Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("Open", or)
 			}
 
 			fmt.Printf("\n\n[OpenResponse]\n\n")
@@ -208,18 +196,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for wr := range dch.welcomeResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(wr)
-				if err != nil {
-					klog.V(1).Infof("Welcome json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nWelcome Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("Welcome", wr)
 			}
 
 			fmt.Printf("\n\n[WelcomeResponse]\n\n")
@@ -233,18 +210,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for ctr := range dch.conversationTextResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(ctr)
-				if err != nil {
-					klog.V(1).Infof("ConversationText json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nConversationText Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("ConversationText", ctr)
 			}
 
 			fmt.Printf("\n\n[ConversationTextResponse]\n\n")
@@ -258,18 +224,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for ussr := range dch.userStartedSpeakingResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(ussr)
-				if err != nil {
-					klog.V(1).Infof("UserStartedSpeaking json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nUserStartedSpeaking Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("UserStartedSpeaking", ussr)
 			}
 
 			fmt.Printf("\n\n[UserStartedSpeakingResponse]\n\n")
@@ -283,18 +238,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for atr := range dch.agentThinkingResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(atr)
-				if err != nil {
-					klog.V(1).Infof("AgentThinking json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nAgentThinking Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("AgentThinking", atr)
 			}
 
 			fmt.Printf("\n\n[AgentThinkingResponse]\n\n")
@@ -308,18 +252,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for fcrr := range dch.functionCallRequestResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(fcrr)
-				if err != nil {
-					klog.V(1).Infof("FunctionCallRequest json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nFunctionCallRequest Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("FunctionCallRequest", fcrr)
 			}
 
 			fmt.Printf("\n\n[FunctionCallRequestResponse]\n\n")
@@ -331,11 +264,8 @@ func (dch DefaultChanHandler) Run() error {
 	go func() {
 		defer wgReceivers.Done()
 
-		for fccr := range dch.functionCallCancelledResponse {
+		for range dch.functionCallCancelledResponse {
 			fmt.Printf("\n\n[FunctionCallCancelledResponse]\n\n")
-			for _, function := range fccr.Functions {
-				fmt.Printf("Function: %s\n", function.Name)
-			}
 		}
 	}()
 
@@ -346,18 +276,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for assr := range dch.agentStartedSpeakingResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(assr)
-				if err != nil {
-					klog.V(1).Infof("AgentStartedSpeaking json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nAgentStartedSpeaking Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("AgentStartedSpeaking", assr)
 			}
 
 			fmt.Printf("\n\n[AgentStartedSpeakingResponse]\n\n")
@@ -371,18 +290,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for aadr := range dch.agentAudioDoneResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(aadr)
-				if err != nil {
-					klog.V(1).Infof("AgentAudioDone json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nAgentAudioDone Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("AgentAudioDone", aadr)
 			}
 
 			fmt.Printf("\n\n[AgentAudioDoneResponse]\n\n")
@@ -396,18 +304,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for ka := range dch.keepAliveResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(ka)
-				if err != nil {
-					klog.V(1).Infof("KeepAlive json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nKeepAlive Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("KeepAlive", ka)
 			}
 
 			fmt.Printf("\n\n[KeepAliveResponse]\n\n")
@@ -421,18 +318,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for sa := range dch.settingsAppliedResponse {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(sa)
-				if err != nil {
-					klog.V(1).Infof("SettingsApplied json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nSettingsApplied Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("SettingsApplied", sa)
 			}
 
 			fmt.Printf("\n\n[SettingsAppliedResponse]\n\n")
@@ -446,18 +332,7 @@ func (dch DefaultChanHandler) Run() error {
 
 		for cr := range dch.closeChan {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(cr)
-				if err != nil {
-					klog.V(1).Infof("Close json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nClose Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("Close", cr)
 			}
 
 			fmt.Printf("\n\n[CloseResponse]\n\n")
@@ -471,25 +346,10 @@ func (dch DefaultChanHandler) Run() error {
 
 		for er := range dch.errorChan {
 			if dch.debugWebsocket {
-				data, err := json.Marshal(er)
-				if err != nil {
-					klog.V(1).Infof("Close json.Marshal failed. Err: %v\n", err)
-					continue
-				}
-
-				prettyJSON, err := prettyjson.Format(data)
-				if err != nil {
-					klog.V(1).Infof("prettyjson.Marshal failed. Err: %v\n", err)
-					continue
-				}
-				klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJSON)
+				logDebugObjectLength("Error", er)
 			}
 
 			fmt.Printf("\n[ErrorResponse]\n")
-			fmt.Printf("\nError.Type: %s\n", er.ErrCode)
-			fmt.Printf("Error.Message: %s\n", er.ErrMsg)
-			fmt.Printf("Error.Description: %s\n\n", er.Description)
-			fmt.Printf("Error.Variant: %s\n\n", er.Variant)
 		}
 	}()
 
@@ -500,16 +360,10 @@ func (dch DefaultChanHandler) Run() error {
 
 		for byData := range dch.unhandledChan {
 			if dch.debugWebsocket {
-				prettyJSON, err := prettyjson.Format(*byData)
-				if err != nil {
-					klog.V(2).Infof("\n\nRaw Data:\n%s\n\n", string(*byData))
-				} else {
-					klog.V(2).Infof("\n\nError Object:\n%s\n\n", prettyJSON)
-				}
+				klog.V(2).Infof("Unhandled event length: %d\n", len(*byData))
 			}
 
-			fmt.Printf("\n[UnhandledEvent]")
-			fmt.Printf("Dump:\n%s\n\n", string(*byData))
+			fmt.Printf("\n[UnhandledEvent] Size: %d bytes\n\n", len(*byData))
 		}
 	}()
 
@@ -517,4 +371,14 @@ func (dch DefaultChanHandler) Run() error {
 	wgReceivers.Wait()
 
 	return nil
+}
+
+func logDebugObjectLength(name string, payload interface{}) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		klog.V(1).Infof("%s json.Marshal failed. Err: %v\n", name, err)
+		return
+	}
+
+	klog.V(2).Infof("%s object length: %d\n", name, len(data))
 }

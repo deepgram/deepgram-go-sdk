@@ -78,41 +78,9 @@ func (c *WSChannel) Start() {
 	workerCtx := c.workers.Start(c.ctx)
 	// send ConfigurationOptions to server
 	if c.tOptions != nil {
-		// send the configuration settings to the server
-		klog.V(4).Infof("Sending ConfigurationSettings to server\n")
-		tmp, marshalErr := json.Marshal(c.tOptions)
-		if marshalErr != nil {
-			klog.V(1).Infof("Marshalling configuration settings failed. Err: %v\n", marshalErr)
-			// terminate the connection
+		if err := c.sendConfigurationSettings(c.WriteJSON); err != nil {
+			klog.V(1).Infof("Sending configuration settings failed. Err: %v\n", err)
 			c.WSClient.Stop()
-			return
-		}
-		clone := make(map[string]interface{})
-		jsonErr := json.Unmarshal(tmp, &clone)
-		if jsonErr != nil {
-			klog.V(1).Infof("Parsing configuration settings failed. Err: %v\n", jsonErr)
-			// terminate the connection
-			c.WSClient.Stop()
-			return
-		}
-		if agent, ok := clone["agent"].(map[string]interface{}); ok {
-			deleteEmptyProvider(agent, "speak")
-			deleteEmptyProvider(agent, "think")
-			deleteEmptyProvider(agent, "listen")
-		}
-		_, marshalErr2 := json.Marshal(clone)
-		if marshalErr2 != nil {
-			klog.V(1).Infof("Marshaling cleaned configuration settings failed. Err: %v\n", marshalErr2)
-			c.WSClient.Stop()
-			return
-		}
-		err := c.WriteJSON(clone)
-		if err != nil {
-			klog.V(1).Infof("w.WriteJSON ConfigurationSettings failed. Err: %v\n", err)
-
-			// terminate the connection
-			c.WSClient.Stop()
-
 			return
 		}
 	}
@@ -120,6 +88,31 @@ func (c *WSChannel) Start() {
 	if c.cOptions.EnableKeepAlive {
 		go c.ping(workerCtx)
 	}
+}
+
+func (c *WSChannel) sendConfigurationSettings(writeJSON func(interface{}) error) error {
+	klog.V(4).Infof("Sending ConfigurationSettings to server\n")
+	tmp, err := json.Marshal(c.tOptions)
+	if err != nil {
+		return fmt.Errorf("marshal configuration settings: %w", err)
+	}
+	clone := make(map[string]interface{})
+	if err := json.Unmarshal(tmp, &clone); err != nil {
+		return fmt.Errorf("parse configuration settings: %w", err)
+	}
+	if agent, ok := clone["agent"].(map[string]interface{}); ok {
+		deleteEmptyProvider(agent, "speak")
+		deleteEmptyProvider(agent, "think")
+		deleteEmptyProvider(agent, "listen")
+	}
+	if _, err := json.Marshal(clone); err != nil {
+		return fmt.Errorf("marshal cleaned configuration settings: %w", err)
+	}
+	if err := writeJSON(clone); err != nil {
+		return fmt.Errorf("write configuration settings: %w", err)
+	}
+
+	return nil
 }
 
 // ProcessMessage processes the message and sends it to the callback

@@ -7,6 +7,7 @@ package commonv1
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"math"
@@ -48,7 +49,7 @@ func (b *lockedBuffer) String() string {
 	return b.buffer.String()
 }
 
-func Test_WSClientDoesNotLogJSONPayloads(t *testing.T) {
+func Test_WSClientDoesNotLogPayloads(t *testing.T) {
 	const secret = "websocket-log-secret"
 
 	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
@@ -60,7 +61,7 @@ func Test_WSClientDoesNotLogJSONPayloads(t *testing.T) {
 		}
 		defer conn.Close()
 
-		for i := 0; i < 2; i++ {
+		for i := 0; i < 3; i++ {
 			if _, _, err := conn.ReadMessage(); err != nil {
 				t.Errorf("read websocket message: %v", err)
 				return
@@ -91,6 +92,9 @@ func Test_WSClientDoesNotLogJSONPayloads(t *testing.T) {
 		if err := client.WriteRawJSON(json.RawMessage(`{"authorization":"` + secret + `"}`)); err != nil {
 			t.Fatalf("write raw JSON: %v", err)
 		}
+		if err := client.WriteBinary([]byte(secret)); err != nil {
+			t.Fatalf("write binary: %v", err)
+		}
 		if err := client.WriteJSON(map[string]interface{}{
 			"authorization": secret,
 			"invalid":       math.Inf(1),
@@ -98,8 +102,8 @@ func Test_WSClientDoesNotLogJSONPayloads(t *testing.T) {
 			t.Fatal("write JSON with an invalid value succeeded")
 		}
 	})
-	if strings.Contains(output, secret) {
-		t.Fatal("JSON payload leaked to klog output")
+	if strings.Contains(output, secret) || strings.Contains(output, hex.EncodeToString([]byte(secret))) {
+		t.Fatal("payload leaked to klog output")
 	}
 }
 

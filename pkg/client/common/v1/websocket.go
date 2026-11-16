@@ -551,7 +551,7 @@ func (c *WSClient) WriteBinary(byData []byte) error {
 	}
 
 	klog.V(7).Infof("WriteBinary Successful\n")
-	klog.V(7).Infof("payload: %x\n", byData)
+	klog.V(7).Infof("payload length: %d\n", len(byData))
 	klog.V(7).Infof("common.WriteBinary() LEAVE\n")
 
 	return nil
