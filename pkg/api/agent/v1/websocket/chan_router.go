@@ -5,12 +5,10 @@
 package websocketv1
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"os"
 	"strings"
 
-	prettyjson "github.com/hokaccha/go-prettyjson"
 	klog "k8s.io/klog/v2"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/agent/v1/websocket/interfaces"
@@ -440,7 +438,7 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 func (r *ChanRouter) Binary(byMsg []byte) error {
 	klog.V(6).Infof("router.Binary ENTER\n")
 
-	klog.V(5).Infof("Binary Message:\n%s...\n", hex.EncodeToString(byMsg[:20]))
+	klog.V(5).Infof("Binary message length: %d\n", len(byMsg))
 	for _, ch := range r.binaryChan {
 		*ch <- &byMsg
 	}
@@ -463,14 +461,7 @@ func (r *ChanRouter) UnhandledMessage(byMsg []byte) error {
 	return ErrInvalidMessageType
 }
 
-// printDebugMessages formats and logs debugging messages
+// printDebugMessages logs the message name and length without exposing its contents.
 func (r *ChanRouter) printDebugMessages(level klog.Level, function string, byMsg []byte) {
-	prettyJSON, err := prettyjson.Format(byMsg)
-	if err != nil {
-		klog.V(1).Infof("prettyjson.Format failed. Err: %v\n", err)
-		return
-	}
-	klog.V(level).Infof("\n\n-----------------------------------------------\n")
-	klog.V(level).Infof("%s RAW:\n%s\n", function, prettyJSON)
-	klog.V(level).Infof("-----------------------------------------------\n\n\n")
+	klog.V(level).Infof("%s message length: %d\n", function, len(byMsg))
 }
