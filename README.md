@@ -470,7 +470,7 @@ After `SettingsApplied`, a channel-based Agent connection supports `UpdateListen
 
 - `UpdateListen` takes `*interfacesv1.Listen` and emits `ListenUpdated`. It is a partial update, but the service clears `language_hints` when they are omitted.
 - `UpdateThink` takes `*interfacesv1.Think`, replaces the active Think configuration, and emits `ThinkUpdated`.
-- `ForceEndTurn` takes no arguments and requires a Deepgram V2 (Flux) Listen provider. It has no success acknowledgement; a successful forced turn follows the usual `ConversationText` and `AgentThinking` flow. Implement optional `WarningChan` to receive `FORCE_END_TURN_UNSUPPORTED` for a non-Flux provider.
+- `ForceEndTurn` takes no arguments and requires a Deepgram V2 (Flux STT) Listen provider. It has no success acknowledgement; a successful forced turn follows the usual `ConversationText` and `AgentThinking` flow. Implement optional `WarningChan` to receive `FORCE_END_TURN_UNSUPPORTED` for a non-Flux STT provider.
 
 Custom handlers remain source-compatible. To receive the new events, additionally implement `ListenUpdatedChan`, `ThinkUpdatedChan`, and/or `WarningChan`; otherwise the router safely forwards those frames to `GetUnhandled`. This initial runtime-control surface intentionally excludes custom Think-provider pass-through messages and `History`. See the runnable text-only [`runtime_controls`](examples/agent/websocket/runtime_controls) example.
 

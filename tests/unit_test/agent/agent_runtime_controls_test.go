@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -336,26 +337,70 @@ func (v runtimeControlMarshalFailure) MarshalJSON() ([]byte, error) {
 	return nil, errors.New(string(v))
 }
 
-func Test_AgentUpdateThinkDoesNotLogPayload(t *testing.T) {
-	klog.InitFlags(nil)
-	verbosity := flag.Lookup("v")
-	if verbosity == nil {
-		t.Fatal("klog verbosity flag is not initialized")
+type lockedLogBuffer struct {
+	mu             sync.Mutex
+	buffer         bytes.Buffer
+	listenFinished chan struct{}
+	finishOnce     sync.Once
+}
+
+func (b *lockedLogBuffer) Write(data []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	n, err := b.buffer.Write(data)
+	if strings.Contains(string(data), "common.listen() LEAVE") {
+		b.finishOnce.Do(func() {
+			close(b.listenFinished)
+		})
+	}
+	return n, err
+}
+
+func (b *lockedLogBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buffer.String()
+}
+
+func (b *lockedLogBuffer) waitForListen(t *testing.T) {
+	t.Helper()
+
+	select {
+	case <-b.listenFinished:
+	case <-time.After(5 * time.Second):
+		t.Fatal("websocket listener did not stop")
+	}
+}
+
+func Test_AgentRuntimeControlsDoNotLogPayloads(t *testing.T) {
+	fs := flag.NewFlagSet("klog", flag.ContinueOnError)
+	klog.InitFlags(fs)
+	verbosity := fs.Lookup("v")
+	logToStderr := fs.Lookup("logtostderr")
+	if verbosity == nil || logToStderr == nil {
+		t.Fatal("klog flags are not initialized")
 	}
 	previousVerbosity := verbosity.Value.String()
-	if err := flag.Set("v", "6"); err != nil {
+	previousLogToStderr := logToStderr.Value.String()
+	if err := fs.Set("v", "6"); err != nil {
 		t.Fatalf("set klog verbosity: %v", err)
 	}
+	if err := fs.Set("logtostderr", "false"); err != nil {
+		t.Fatalf("disable klog stderr output: %v", err)
+	}
 
-	var logs bytes.Buffer
-	klog.LogToStderr(false)
+	logs := lockedLogBuffer{listenFinished: make(chan struct{})}
 	klog.SetOutput(&logs)
 	t.Cleanup(func() {
 		klog.Flush()
 		klog.SetOutput(os.Stderr)
-		klog.LogToStderr(true)
-		if err := flag.Set("v", previousVerbosity); err != nil {
+		if err := fs.Set("v", previousVerbosity); err != nil {
 			t.Errorf("restore klog verbosity: %v", err)
+		}
+		if err := fs.Set("logtostderr", previousLogToStderr); err != nil {
+			t.Errorf("restore klog stderr output: %v", err)
 		}
 	})
 
@@ -363,9 +408,17 @@ func Test_AgentUpdateThinkDoesNotLogPayload(t *testing.T) {
 	defer shutdown()
 
 	client := newAgentRuntimeControlClient(t, host, newRuntimeControlHandler())
-	defer client.Stop()
+	t.Cleanup(client.Stop)
 
 	const sentinel = "agent-runtime-controls-authorization-header-sentinel"
+	if err := client.UpdateListen(&interfacesv1.Listen{
+		Provider: map[string]interface{}{
+			"type":          "custom",
+			"authorization": sentinel,
+		},
+	}); err != nil {
+		t.Fatalf("UpdateListen with provider credentials failed: %v", err)
+	}
 	if err := client.UpdateThink(&interfacesv1.Think{
 		Provider: map[string]interface{}{"type": "open_ai"},
 		Endpoint: &interfacesv1.Endpoint{Headers: map[string]string{"authorization": sentinel}},
@@ -378,8 +431,10 @@ func Test_AgentUpdateThinkDoesNotLogPayload(t *testing.T) {
 		t.Fatal("UpdateThink with an unmarshalable payload returned nil")
 	}
 
+	client.Stop()
+	logs.waitForListen(t)
 	klog.Flush()
 	if strings.Contains(logs.String(), sentinel) {
-		t.Fatal("UpdateThink leaked its payload to logs")
+		t.Fatal("runtime control leaked its payload to logs")
 	}
 }

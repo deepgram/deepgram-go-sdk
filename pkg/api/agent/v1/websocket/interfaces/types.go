@@ -210,7 +210,7 @@ type ThinkUpdatedResponse struct {
 }
 
 // WarningResponse describes a non-fatal service warning. ForceEndTurn sends
-// FORCE_END_TURN_UNSUPPORTED when the active Listen provider is not Flux V2.
+// FORCE_END_TURN_UNSUPPORTED when the active Listen provider is not Flux STT V2.
 type WarningResponse struct {
 	Type        string `json:"type,omitempty"`
 	Code        string `json:"code,omitempty"`

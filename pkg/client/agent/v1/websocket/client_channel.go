@@ -250,7 +250,7 @@ func (c *WSChannel) UpdateListen(listen *interfacesv1.Listen) error {
 		return ErrInvalidUpdateListen
 	}
 
-	return c.WriteJSON(msginterfaces.UpdateListen{
+	return c.WriteJSONWithoutPayloadLogging(msginterfaces.UpdateListen{
 		Type:   msginterfaces.TypeUpdateListen,
 		Listen: listen,
 	})
@@ -270,9 +270,9 @@ func (c *WSChannel) UpdateThink(think *interfacesv1.Think) error {
 }
 
 // ForceEndTurn ends the current user turn when the active Listen provider is
-// Deepgram V2 (Flux). It has no acknowledgement event: the resulting turn uses
+// Deepgram V2 (Flux STT). It has no acknowledgement event: the resulting turn uses
 // the normal ConversationText and AgentThinking events. The service sends a
-// Warning with code FORCE_END_TURN_UNSUPPORTED for non-Flux providers.
+// Warning with code FORCE_END_TURN_UNSUPPORTED for non-Flux STT providers.
 func (c *WSChannel) ForceEndTurn() error {
 	return c.WriteJSON(msginterfaces.ForceEndTurn{Type: msginterfaces.TypeForceEndTurn})
 }

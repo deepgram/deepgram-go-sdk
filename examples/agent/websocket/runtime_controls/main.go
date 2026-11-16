@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT license that can be found in the LICENSE file.
 // SPDX-License-Identifier: MIT
 
-// runtime_controls updates a Flux end-of-turn setting after SettingsApplied and
+// runtime_controls updates a Flux STT end-of-turn setting after SettingsApplied and
 // waits for the server's ListenUpdated acknowledgement. It sends no audio.
 package main
 
