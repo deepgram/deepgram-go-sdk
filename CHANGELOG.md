@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.11.1](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.0...v3.11.1) (2026-11-16)
+
+### Bug Fixes
+
+* **websocket:** prevent Agent configuration, WebSocket control frames, and Agent event payloads from being written to stdout or logs; diagnostics report only payload lengths ([#402](https://github.com/deepgram/deepgram-go-sdk/issues/402)) ([2e293f2](https://github.com/deepgram/deepgram-go-sdk/commit/2e293f2fa2fbfae55c951715bf9db8cde1105a1a))
+
 ## [3.11.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.10.0...v3.11.0) (2026-11-12)
 
 ### Features
