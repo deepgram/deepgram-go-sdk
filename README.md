@@ -272,7 +272,7 @@ options := &interfaces.LiveTranscriptionOptions{
 }
 ```
 
-The same fields are available on `LiveTranscriptionOptions`. Read `LanguagesHinted` on alternatives to see which hints the API applied. With `Utterances: true`, REST utterances also include their detected `Languages`.
+For prerecorded transcription, use the same `LanguageHint` values with `PreRecordedTranscriptionOptions`. Read `LanguagesHinted` on alternatives to see which hints the API applied. With `Utterances: true`, prerecorded utterances also include their detected `Languages`.
 
 Transcribe streaming audio.
 

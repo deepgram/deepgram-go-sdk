@@ -18,6 +18,8 @@ import (
 	listen "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
 )
 
+// streamURL is English-only. Replace it with a multilingual stream to observe
+// detected language changes while keeping the same Nova-3 settings.
 const streamURL = "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service"
 
 type languageHandler struct {

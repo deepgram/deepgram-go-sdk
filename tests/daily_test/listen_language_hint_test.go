@@ -7,7 +7,9 @@ package daily_test
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -42,30 +44,54 @@ func (h *languageHintDailyHandler) GetError() []*chan *msginterfaces.ErrorRespon
 }
 func (h *languageHintDailyHandler) GetUnhandled() []*chan *[]byte { return nil }
 
+func languageHintFixturePath(t *testing.T) string {
+	t.Helper()
+
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("locate language hint test source")
+	}
+	return filepath.Join(filepath.Dir(filename), "..", "..", "examples", "speech-to-text", "websocket", "replay", "testing.wav")
+}
+
 func TestDaily_ListenLanguageHint(t *testing.T) {
 	if os.Getenv("DEEPGRAM_API_KEY") == "" && os.Getenv("DEEPGRAM_ACCESS_TOKEN") == "" {
-		t.Skip("DEEPGRAM_API_KEY or DEEPGRAM_ACCESS_TOKEN is required")
+		t.Skip("DEEPGRAM_API_KEY or DEEPGRAM_ACCESS_TOKEN is required for the on-demand production contract test")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
 	hints := []string{"en", "es"}
 
 	t.Run("REST returns applied hints", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
 		response, err := rest.New(listen.NewRESTWithDefaults()).FromURL(ctx, "https://dpgr.am/spacewalk.wav", &interfaces.PreRecordedTranscriptionOptions{
 			Model:        "nova-3",
 			Language:     "multi",
 			LanguageHint: hints,
+			Utterances:   true,
 		})
 		if err != nil {
 			t.Fatalf("transcribe multilingual audio: %v", err)
 		}
+		if len(response.Results.Channels) == 0 || len(response.Results.Channels[0].Alternatives) == 0 {
+			t.Fatal("REST response contained no alternatives")
+		}
 		if got := response.Results.Channels[0].Alternatives[0].LanguagesHinted; !reflect.DeepEqual(got, hints) {
 			t.Fatalf("LanguagesHinted = %q, want %q", got, hints)
+		}
+		if len(response.Results.Utterances) == 0 {
+			t.Fatal("REST response contained no utterances")
+		}
+		if len(response.Results.Utterances[0].Languages) == 0 {
+			t.Fatal("REST utterance did not include detected languages")
 		}
 	})
 
 	t.Run("streaming returns applied hints", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
 		handler := &languageHintDailyHandler{
 			messages: make(chan *msginterfaces.MessageResponse, 8),
 			errors:   make(chan *msginterfaces.ErrorResponse, 1),
@@ -87,7 +113,7 @@ func TestDaily_ListenLanguageHint(t *testing.T) {
 			t.Fatal("connect multilingual streaming client")
 		}
 
-		audio, err := replay.New(replay.Options{FullFilename: "examples/speech-to-text/websocket/replay/testing.wav"})
+		audio, err := replay.New(replay.Options{FullFilename: languageHintFixturePath(t)})
 		if err != nil {
 			t.Fatalf("open audio fixture: %v", err)
 		}
@@ -105,14 +131,22 @@ func TestDaily_ListenLanguageHint(t *testing.T) {
 		for {
 			select {
 			case response := <-handler.messages:
-				if !response.IsFinal {
+				if response == nil || !response.IsFinal {
 					continue
 				}
-				if got := response.Channel.Alternatives[0].LanguagesHinted; !reflect.DeepEqual(got, hints) {
-					t.Fatalf("LanguagesHinted = %q, want %q", got, hints)
+				if len(response.Channel.Alternatives) == 0 {
+					t.Fatal("final streaming response contained no alternatives")
+				}
+				for _, alternative := range response.Channel.Alternatives {
+					if got := alternative.LanguagesHinted; !reflect.DeepEqual(got, hints) {
+						t.Fatalf("LanguagesHinted = %q, want %q", got, hints)
+					}
 				}
 				return
 			case response := <-handler.errors:
+				if response == nil {
+					t.Fatal("streaming language hint error channel closed")
+				}
 				t.Fatalf("streaming language hint error: %s", response.Description)
 			case <-ctx.Done():
 				t.Fatalf("wait for final streaming result: %v", ctx.Err())

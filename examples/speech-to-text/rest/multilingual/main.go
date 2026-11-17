@@ -15,6 +15,8 @@ import (
 )
 
 func main() {
+	// This hosted sample is English-only. Replace it with multilingual audio to
+	// observe language switching while keeping the same Nova-3 settings.
 	client := listen.NewRESTWithDefaults()
 	response, err := api.New(client).FromURL(context.Background(), "https://dpgr.am/spacewalk.wav", &interfaces.PreRecordedTranscriptionOptions{
 		Model:        "nova-3",

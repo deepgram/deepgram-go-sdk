@@ -7,13 +7,20 @@ package deepgram_test
 import (
 	"context"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/dvonthenen/websocket"
 
 	listenws "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/listen/v1/websocket/interfaces"
 	version "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/version"
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+	liveclient "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen/v1/websocket"
 )
 
 // liveQuery builds the Listen v1 WebSocket URL for the given options and
@@ -61,6 +68,53 @@ func Test_LiveLanguageHint(t *testing.T) {
 
 		if got := q["language_hint"]; !reflect.DeepEqual(got, []string{"en", "es"}) {
 			t.Errorf("expected language_hint=[en es] as repeated keys, got %v", got)
+		}
+	})
+
+	t.Run("client sends repeated hints on the WebSocket upgrade request", func(t *testing.T) {
+		queries := make(chan url.Values, 1)
+		upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			queries <- r.URL.Query()
+			conn, err := upgrader.Upgrade(w, r, nil)
+			if err != nil {
+				t.Errorf("upgrade websocket: %v", err)
+				return
+			}
+			defer conn.Close()
+			for {
+				if _, _, err := conn.ReadMessage(); err != nil {
+					return
+				}
+			}
+		}))
+		t.Cleanup(server.Close)
+
+		client, err := liveclient.NewUsingCallback(context.Background(), MockAPIKey, &interfaces.ClientOptions{
+			Host: "ws" + strings.TrimPrefix(server.URL, "http"),
+			WSHeaderProcessor: func(headers http.Header) {
+				headers.Del("Host")
+			},
+		}, &interfaces.LiveTranscriptionOptions{
+			Model:        "nova-3",
+			Language:     "multi",
+			LanguageHint: []string{"en", "es"},
+		}, nil)
+		if err != nil {
+			t.Fatalf("create client: %v", err)
+		}
+		t.Cleanup(client.Stop)
+		if !client.Connect() {
+			t.Fatal("connect client")
+		}
+
+		select {
+		case query := <-queries:
+			if got, want := query["language_hint"], []string{"en", "es"}; !reflect.DeepEqual(got, want) {
+				t.Errorf("language_hint = %q, want %q", got, want)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("server did not receive WebSocket upgrade request")
 		}
 	})
 
