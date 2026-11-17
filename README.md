@@ -1168,6 +1168,8 @@ The reporting examples below assume a Management client and project ID initializ
 
 ```go
 import (
+    "context"
+    "fmt"
     "log"
     "os"
 
@@ -1176,6 +1178,7 @@ import (
     manage "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/manage"
 )
 
+ctx := context.Background()
 mgClient := manageapi.New(manage.NewWithDefaults())
 myProjectID := os.Getenv("DEEPGRAM_PROJECT_ID")
 if myProjectID == "" {
