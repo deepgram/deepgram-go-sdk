@@ -1168,6 +1168,7 @@ The reporting examples below assume a Management client and project ID initializ
 
 ```go
 import (
+    "log"
     "os"
 
     manageapi "github.com/deepgram/deepgram-go-sdk/v3/pkg/api/manage/v1"

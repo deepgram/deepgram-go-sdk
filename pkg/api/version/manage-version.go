@@ -75,5 +75,5 @@ mechanism for:
 The return value is the complete URL endpoint to be used for manage
 */
 func GetManageAPI(ctx context.Context, host, version, path string, vals interface{}, args ...interface{}) (string, error) {
-	return getAPIURL(ctx, "speak", host, version, path, vals, args...)
+	return getAPIURL(ctx, "manage", host, version, path, vals, args...)
 }

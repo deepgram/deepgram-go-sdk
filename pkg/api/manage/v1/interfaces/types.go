@@ -652,7 +652,7 @@ type BillingFieldsRequest struct {
 	End   string `schema:"end,omitempty"`
 }
 
-// PurchasesRequest controls purchase-history pagination.
+// PurchasesRequest limits the number of purchase-history entries returned.
 type PurchasesRequest struct {
 	Limit int `schema:"limit,omitempty"`
 }
