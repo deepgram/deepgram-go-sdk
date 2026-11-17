@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"math"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/dvonthenen/websocket"
 	klog "k8s.io/klog/v2"
@@ -31,15 +33,23 @@ var (
 )
 
 type lockedBuffer struct {
-	mu     sync.Mutex
-	buffer bytes.Buffer
+	mu             sync.Mutex
+	buffer         bytes.Buffer
+	listenerExited chan struct{}
+	listenerOnce   sync.Once
 }
 
 func (b *lockedBuffer) Write(data []byte) (int, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	return b.buffer.Write(data)
+	n, err := b.buffer.Write(data)
+	if strings.Contains(string(data), "common.listen() LEAVE") {
+		b.listenerOnce.Do(func() {
+			close(b.listenerExited)
+		})
+	}
+	return n, err
 }
 
 func (b *lockedBuffer) String() string {
@@ -47,6 +57,16 @@ func (b *lockedBuffer) String() string {
 	defer b.mu.Unlock()
 
 	return b.buffer.String()
+}
+
+func (b *lockedBuffer) waitForListener(t *testing.T) {
+	t.Helper()
+
+	select {
+	case <-b.listenerExited:
+	case <-time.After(5 * time.Second):
+		t.Fatal("websocket listener did not stop")
+	}
 }
 
 func Test_WSClientDoesNotLogPayloads(t *testing.T) {
@@ -83,31 +103,36 @@ func Test_WSClientDoesNotLogPayloads(t *testing.T) {
 	if !client.ConnectWithCancel(ctx, cancel, 1) {
 		t.Fatal("connect websocket")
 	}
-	defer client.Stop()
 
-	output := captureKlogOutput(t, func() {
+	output, actionErr := captureKlogOutput(t, func() error {
 		if err := client.WriteJSON(map[string]string{"authorization": secret}); err != nil {
-			t.Fatalf("write JSON: %v", err)
+			return err
 		}
 		if err := client.WriteRawJSON(json.RawMessage(`{"authorization":"` + secret + `"}`)); err != nil {
-			t.Fatalf("write raw JSON: %v", err)
+			return err
 		}
 		if err := client.WriteBinary([]byte(secret)); err != nil {
-			t.Fatalf("write binary: %v", err)
+			return err
 		}
 		if err := client.WriteJSON(map[string]interface{}{
 			"authorization": secret,
 			"invalid":       math.Inf(1),
 		}); err == nil {
-			t.Fatal("write JSON with an invalid value succeeded")
+			return errors.New("write JSON with an invalid value succeeded")
 		}
+		return nil
 	})
-	if strings.Contains(output, secret) || strings.Contains(output, hex.EncodeToString([]byte(secret))) {
+	client.Stop()
+	output.waitForListener(t)
+	if actionErr != nil {
+		t.Fatalf("write payload: %v", actionErr)
+	}
+	if strings.Contains(output.String(), secret) || strings.Contains(output.String(), hex.EncodeToString([]byte(secret))) {
 		t.Fatal("payload leaked to klog output")
 	}
 }
 
-func captureKlogOutput(t *testing.T, action func()) string {
+func captureKlogOutput(t *testing.T, action func() error) (*lockedBuffer, error) {
 	t.Helper()
 
 	klogOutputMu.Lock()
@@ -125,7 +150,7 @@ func captureKlogOutput(t *testing.T, action func()) string {
 	}
 	previousVerbosity := verbosity.Value.String()
 	previousLogToStderr := logToStderr.Value.String()
-	var output lockedBuffer
+	output := &lockedBuffer{listenerExited: make(chan struct{})}
 
 	if err := flag.Set("v", "6"); err != nil {
 		t.Fatalf("set klog verbosity: %v", err)
@@ -133,7 +158,7 @@ func captureKlogOutput(t *testing.T, action func()) string {
 	if err := flag.Set("logtostderr", "false"); err != nil {
 		t.Fatalf("disable klog stderr output: %v", err)
 	}
-	klog.SetOutput(&output)
+	klog.SetOutput(output)
 	t.Cleanup(func() {
 		klog.Flush()
 		klog.SetOutput(os.Stderr)
@@ -141,7 +166,7 @@ func captureKlogOutput(t *testing.T, action func()) string {
 		_ = flag.Set("logtostderr", previousLogToStderr)
 	})
 
-	action()
+	actionErr := action()
 	klog.Flush()
-	return output.String()
+	return output, actionErr
 }

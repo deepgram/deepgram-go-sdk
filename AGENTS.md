@@ -62,7 +62,7 @@ Run the narrowest check first, then the CI command. Every command in this table 
 | Download and verify modules | `go mod download && go mod verify` | CI runs `go mod tidy`, `go mod download`, `go mod verify` before tests |
 | Build everything | `go build ./...` | Needs PortAudio headers (see above) |
 | Vet | `go vet ./...` | Not run by CI; run it anyway |
-| Unit tests, CI command | `go test -v -run Test_ ./...` | What `.github/workflows/tests-unit.yaml` runs on every pull request, with a 5 minute job timeout. Only functions named `Test_*` execute, so name unit tests with the `Test_` prefix |
+| Unit tests, CI command | `go test -v -run Test_ ./...` | What `.github/workflows/tests-unit.yaml` runs on every pull request, with an 8 minute job timeout. Only functions named `Test_*` execute, so name unit tests with the `Test_` prefix |
 | WebSocket race tests, CI command | `go test -race -count=10 ./pkg/client/common/v1 ./pkg/client/listen/v2/websocket` | Additional `.github/workflows/tests-unit.yaml` gate on every pull request; repeats shared WebSocket transport and Flux STT client tests under the race detector |
 | Unit tests, fastest | `go test ./tests/unit_test/...` | Deterministic, no network, about 1 second |
 | One test | `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel` | |
