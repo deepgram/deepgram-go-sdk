@@ -67,7 +67,7 @@ func (c *Client) GetModels(ctx context.Context, model *api.ModelRequest) (*api.M
 	}
 
 	klog.V(6).Infof("manage.GetModels() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetModel gets a model by ID
@@ -92,7 +92,7 @@ func (c *Client) GetModel(ctx context.Context, modelID string) (*api.ModelResult
 	}
 
 	klog.V(6).Infof("manage.GetModel() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // ListProjectModels lists all models available
@@ -145,7 +145,7 @@ func (c *Client) GetProjectModels(ctx context.Context, projectID string, model *
 	}
 
 	klog.V(6).Infof("manage.GetProjectModels() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
 
 // GetProjectModel gets a single model within the project by ID
@@ -171,5 +171,5 @@ func (c *Client) GetProjectModel(ctx context.Context, projectID, modelID string)
 	}
 
 	klog.V(6).Infof("manage.GetProjectModel() LEAVE\n")
-	return &resp, nil
+	return &resp, err
 }
