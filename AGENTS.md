@@ -63,6 +63,7 @@ Run the narrowest check first, then the CI command. Every command in this table 
 | Build everything | `go build ./...` | Needs PortAudio headers (see above) |
 | Vet | `go vet ./...` | Not run by CI; run it anyway |
 | Unit tests, CI command | `go test -v -run Test_ ./...` | What `.github/workflows/tests-unit.yaml` runs on every pull request, with a 5 minute job timeout. Only functions named `Test_*` execute, so name unit tests with the `Test_` prefix |
+| WebSocket race tests, CI command | `go test -race -count=10 ./pkg/client/common/v1 ./pkg/client/listen/v2/websocket` | Additional `.github/workflows/tests-unit.yaml` gate on every pull request; repeats shared WebSocket transport and Flux STT client tests under the race detector |
 | Unit tests, fastest | `go test ./tests/unit_test/...` | Deterministic, no network, about 1 second |
 | One test | `go test ./tests/unit_test -run Test_PrerecordedDiarizeModel` | |
 | Lint | `make lint` | Builds `golangci-lint` v1.48.0 from `hack/check/tools` and runs it with `.golangci.yaml`. It exits 0 even when the linter reports issues or panics, so read the output. The repository has pre-existing findings; fix only the ones in files you touch. In a container, pass `ROOT_DIR=/work` because the `Makefile` derives the root from `git rev-parse` |
