@@ -44,6 +44,8 @@ func (b *lockedBuffer) Write(data []byte) (int, error) {
 	defer b.mu.Unlock()
 
 	n, err := b.buffer.Write(data)
+	// WSClient.listen emits this V(6) line on every exit path; wait for it
+	// before restoring the process-wide klog output and flags.
 	if strings.Contains(string(data), "common.listen() LEAVE") {
 		b.listenerOnce.Do(func() {
 			close(b.listenerExited)
