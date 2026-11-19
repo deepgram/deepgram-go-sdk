@@ -24,6 +24,7 @@ type thinkLiveHandler struct {
 	conversationTexts   chan *msginterfaces.ConversationTextResponse
 	frustrationDetected chan *msginterfaces.FrustrationDetectedResponse
 	thinkLiveUpdated    chan *msginterfaces.ThinkLiveUpdatedResponse
+	warnings            chan *msginterfaces.WarningResponse
 	errors              chan *msginterfaces.ErrorResponse
 }
 
@@ -34,6 +35,7 @@ func newThinkLiveHandler() *thinkLiveHandler {
 		conversationTexts:   make(chan *msginterfaces.ConversationTextResponse, 4),
 		frustrationDetected: make(chan *msginterfaces.FrustrationDetectedResponse, 1),
 		thinkLiveUpdated:    make(chan *msginterfaces.ThinkLiveUpdatedResponse, 1),
+		warnings:            make(chan *msginterfaces.WarningResponse, 1),
 		errors:              make(chan *msginterfaces.ErrorResponse, 1),
 	}
 }
@@ -52,6 +54,10 @@ func (h *thinkLiveHandler) GetFrustrationDetected() []*chan *msginterfaces.Frust
 
 func (h *thinkLiveHandler) GetThinkLiveUpdated() []*chan *msginterfaces.ThinkLiveUpdatedResponse {
 	return []*chan *msginterfaces.ThinkLiveUpdatedResponse{&h.thinkLiveUpdated}
+}
+
+func (h *thinkLiveHandler) GetWarning() []*chan *msginterfaces.WarningResponse {
+	return []*chan *msginterfaces.WarningResponse{&h.warnings}
 }
 
 func (h *thinkLiveHandler) GetError() []*chan *msginterfaces.ErrorResponse {
@@ -128,6 +134,9 @@ func run() error {
 	}); err != nil {
 		return fmt.Errorf("send InjectUserMessage: %w", err)
 	}
+	if err := conn.InjectDynamicAgentMessage("queue"); err != nil {
+		return fmt.Errorf("request dynamic filler: %w", err)
+	}
 
 	for {
 		select {
@@ -142,6 +151,8 @@ func run() error {
 			if event.Role == "assistant" && behavior == "default" {
 				return nil
 			}
+		case warning := <-handler.warnings:
+			fmt.Printf("Warning %s: %s\n", warning.Code, warning.Description)
 		case response := <-handler.errors:
 			return fmt.Errorf("agent error: %s", response.Description)
 		case <-ctx.Done():
