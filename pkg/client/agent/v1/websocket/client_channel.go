@@ -250,7 +250,7 @@ func (c *WSChannel) UpdateThinkLive(thinkLive *interfacesv1.ThinkLiveSettings) e
 		return ErrInvalidUpdateThinkLive
 	}
 
-	return c.WriteJSON(msginterfaces.UpdateThinkLive{
+	return c.WriteJSONWithoutPayloadLogging(msginterfaces.UpdateThinkLive{
 		Type:      msginterfaces.TypeUpdateThinkLive,
 		ThinkLive: thinkLive,
 	})
@@ -258,7 +258,7 @@ func (c *WSChannel) UpdateThinkLive(thinkLive *interfacesv1.ThinkLiveSettings) e
 
 // InjectDynamicAgentMessage asks Think Live to generate a filler line.
 func (c *WSChannel) InjectDynamicAgentMessage(behavior string) error {
-	return c.WriteJSON(msginterfaces.InjectDynamicAgentMessage{
+	return c.WriteJSONWithoutPayloadLogging(msginterfaces.InjectDynamicAgentMessage{
 		Type:     msginterfaces.TypeInjectAgentMessage,
 		Behavior: behavior,
 	})
