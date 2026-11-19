@@ -39,6 +39,9 @@ func main() {
 	}
 }
 
+// run sends Configure immediately after Connect, on an idle connection, to keep
+// the example short. The same call works at any point while audio is streaming;
+// only one Configure request may be pending at a time.
 func run() error {
 	ctx := context.Background()
 	handler := &configureHandler{

@@ -270,7 +270,11 @@ func (dch DefaultChanHandler) Run() error {
 		defer wgReceivers.Done()
 
 		for cs := range dch.configureSuccessChan {
-			fmt.Printf("\n[ConfigureSuccess] request_id=%s\n", cs.RequestID)
+			fmt.Printf("\n[ConfigureSuccess]\n")
+			if dch.debugWebsocketVerbose {
+				fmt.Printf("\nConfigureSuccess.RequestID: %s\n", cs.RequestID)
+				fmt.Printf("ConfigureSuccess.Keyterms: %v\n\n", cs.Keyterms)
+			}
 		}
 	}()
 
@@ -280,7 +284,11 @@ func (dch DefaultChanHandler) Run() error {
 		defer wgReceivers.Done()
 
 		for cf := range dch.configureFailureChan {
-			fmt.Printf("\n[ConfigureFailure] request_id=%s code=%s description=%s\n", cf.RequestID, cf.Code, cf.Description)
+			fmt.Printf("\n[ConfigureFailure] code=%s\n", cf.Code)
+			if dch.debugWebsocketVerbose {
+				fmt.Printf("\nConfigureFailure.RequestID: %s\n", cf.RequestID)
+				fmt.Printf("ConfigureFailure.Description: %s\n\n", cf.Description)
+			}
 		}
 	}()
 
