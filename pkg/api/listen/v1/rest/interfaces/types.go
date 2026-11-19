@@ -138,7 +138,8 @@ type Alternative struct {
 	Translation *Translation `json:"translation,omitempty"`
 	// Languages lists detected BCP-47 language tags when multilingual detection is used.
 	Languages []string `json:"languages,omitempty"`
-	// LanguagesHinted lists the language_hint values applied to multilingual recognition.
+	// LanguagesHinted lists the normalized language_hint values applied to multilingual
+	// recognition; for example, en-GB is returned as en.
 	LanguagesHinted []string `json:"languages_hinted,omitempty"`
 }
 
