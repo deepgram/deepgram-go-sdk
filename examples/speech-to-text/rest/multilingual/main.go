@@ -28,6 +28,9 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if len(response.Results.Channels) == 0 || len(response.Results.Channels[0].Alternatives) == 0 {
+		log.Fatal("no transcription alternatives returned")
+	}
 	alternative := response.Results.Channels[0].Alternatives[0]
 	fmt.Printf("Transcript: %s\nApplied language hints: %v\n", alternative.Transcript, alternative.LanguagesHinted)
 	for _, utterance := range response.Results.Utterances {

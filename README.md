@@ -310,6 +310,8 @@ dgClient.Stop()
 
 [See our API reference for more info](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 
+Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
+
 ### Nova-3 Multilingual Prompting
 
 For Nova-3 multilingual transcription, set `Language` to `multi` and provide the expected languages with `LanguageHint`. Hints bias language detection; they do not restrict recognition to those languages.
@@ -323,8 +325,6 @@ options := &interfaces.LiveTranscriptionOptions{
 ```
 
 For prerecorded transcription, use the same `LanguageHint` values with `PreRecordedTranscriptionOptions`. Read `LanguagesHinted` on alternatives to see which hints the API applied. With `Utterances: true`, prerecorded utterances also include their detected `Languages`.
-
-Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
 
 For an active Listen v1 WebSocket, call `Configure` with `LiveConfigureOptions` to change `keyterms` or `features` without reconnecting. Only `keyterms` require Nova-3. Listen v1 Configure does not support `language` or language hints; set `Keyterms` to a pointer to an empty slice to clear keyterms. Each update is limited to 500 keyterm tokens. Only one Configure request may be pending at a time; another request receives `ConfigureFailure` with code `CONFIGURE_ALREADY_PENDING`. See the [Configure example](examples/speech-to-text/websocket/configure) and the [Listen streaming API reference](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
 

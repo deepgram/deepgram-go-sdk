@@ -56,8 +56,12 @@ func main() {
 	if !client.Connect() {
 		log.Fatal("connect Listen WebSocket")
 	}
-	go client.Stream(bufio.NewReader(response.Body))
+	go func() {
+		if err := client.Stream(bufio.NewReader(response.Body)); err != nil {
+			log.Printf("stream ended: %v", err)
+		}
+	}()
 
-	log.Print("Streaming multilingual audio. Press Enter to stop.")
+	log.Print("Streaming audio with language hints en and es (the sample stream is English-only). Press Enter to stop.")
 	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 }
