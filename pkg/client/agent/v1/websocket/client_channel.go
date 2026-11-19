@@ -296,8 +296,9 @@ func (c *WSChannel) ForceEndTurn() error {
 	return c.WriteJSON(msginterfaces.ForceEndTurn{Type: msginterfaces.TypeForceEndTurn})
 }
 
-// SendCustomToThinkProvider sends arbitrary JSON to a custom Think provider.
-// The provider endpoint must use wss:// and this experimental server feature.
+// Experimental: SendCustomToThinkProvider sends arbitrary JSON to a custom Think
+// provider. The provider endpoint must use wss://; without a wss:// custom Think
+// endpoint the server silently ignores the message.
 func (c *WSChannel) SendCustomToThinkProvider(content json.RawMessage) error {
 	if content == nil {
 		content = json.RawMessage("null")

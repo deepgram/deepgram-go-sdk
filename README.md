@@ -492,7 +492,7 @@ Custom handlers remain source-compatible. To receive the new events, additionall
 
 See [`examples/agent/websocket/function_call`](./examples/agent/websocket/function_call) for a runnable client-side function call.
 
-Experimental custom Think providers can exchange arbitrary JSON with the client when `agent.think.endpoint.url` is a `wss://` endpoint. Use `conn.SendCustomToThinkProvider(json.RawMessage(...))` to send a JSON value and implement the optional `CustomFromThinkProviderChan` interface to receive `CustomFromThinkProviderResponse` events. This surface intentionally does not include history or other runtime controls. See [`examples/agent/websocket/custom_think_provider`](./examples/agent/websocket/custom_think_provider) for a text-only example. Do not use this experimental feature for production traffic until you have verified the provider contract in your account.
+Experimental custom Think providers can exchange arbitrary JSON with the client when `agent.think.endpoint.url` is a `wss://` endpoint; without a `wss://` custom Think endpoint the server silently ignores these messages. Use `conn.SendCustomToThinkProvider(json.RawMessage(...))` to send a JSON value and implement the optional `CustomFromThinkProviderChan` interface to receive `CustomFromThinkProviderResponse` events. This surface intentionally does not include history or other runtime controls. See [`examples/agent/websocket/custom_think_provider`](./examples/agent/websocket/custom_think_provider) for a text-only example. Do not use this experimental feature for production traffic until you have verified the provider contract in your account.
 
 [See our API reference for more info](https://developers.deepgram.com/reference/voice-agent/voice-agent).
 
