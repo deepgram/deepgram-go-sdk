@@ -26,6 +26,9 @@ const (
 
 	// MessageTypeFinalize flushes the transcription from the server
 	MessageTypeFinalize string = "Finalize"
+
+	// MessageTypeConfigure sends a mid-session keyterms or features update.
+	MessageTypeConfigure string = "Configure"
 )
 
 // internal constants for retry, waits, back-off, etc.

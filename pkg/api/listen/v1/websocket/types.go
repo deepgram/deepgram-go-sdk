@@ -54,14 +54,16 @@ type DefaultChanHandler struct {
 	debugWebsocket        bool
 	debugWebsocketVerbose bool
 
-	openChan          chan *interfaces.OpenResponse
-	messageChan       chan *interfaces.MessageResponse
-	metadataChan      chan *interfaces.MetadataResponse
-	speechStartedChan chan *interfaces.SpeechStartedResponse
-	utteranceEndChan  chan *interfaces.UtteranceEndResponse
-	closeChan         chan *interfaces.CloseResponse
-	errorChan         chan *interfaces.ErrorResponse
-	unhandledChan     chan *[]byte
+	openChan             chan *interfaces.OpenResponse
+	messageChan          chan *interfaces.MessageResponse
+	metadataChan         chan *interfaces.MetadataResponse
+	speechStartedChan    chan *interfaces.SpeechStartedResponse
+	utteranceEndChan     chan *interfaces.UtteranceEndResponse
+	configureSuccessChan chan *interfaces.ConfigureSuccessResponse
+	configureFailureChan chan *interfaces.ConfigureFailureResponse
+	closeChan            chan *interfaces.CloseResponse
+	errorChan            chan *interfaces.ErrorResponse
+	unhandledChan        chan *[]byte
 }
 
 // ChanRouter routes events
@@ -71,14 +73,16 @@ type ChanRouter struct {
 	extraMetadata extraCache
 
 	// call out to channels
-	openChan          []*chan *interfaces.OpenResponse
-	messageChan       []*chan *interfaces.MessageResponse
-	metadataChan      []*chan *interfaces.MetadataResponse
-	speechStartedChan []*chan *interfaces.SpeechStartedResponse
-	utteranceEndChan  []*chan *interfaces.UtteranceEndResponse
-	closeChan         []*chan *interfaces.CloseResponse
-	errorChan         []*chan *interfaces.ErrorResponse
-	unhandledChan     []*chan *[]byte
+	openChan             []*chan *interfaces.OpenResponse
+	messageChan          []*chan *interfaces.MessageResponse
+	metadataChan         []*chan *interfaces.MetadataResponse
+	speechStartedChan    []*chan *interfaces.SpeechStartedResponse
+	utteranceEndChan     []*chan *interfaces.UtteranceEndResponse
+	configureSuccessChan []*chan *interfaces.ConfigureSuccessResponse
+	configureFailureChan []*chan *interfaces.ConfigureFailureResponse
+	closeChan            []*chan *interfaces.CloseResponse
+	errorChan            []*chan *interfaces.ErrorResponse
+	unhandledChan        []*chan *[]byte
 }
 
 /*
