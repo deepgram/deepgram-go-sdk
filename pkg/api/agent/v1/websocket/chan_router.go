@@ -56,6 +56,7 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		thinkUpdatedResponse:          make([]*chan *interfaces.ThinkUpdatedResponse, 0),
 		thinkLiveUpdatedResponse:      make([]*chan *interfaces.ThinkLiveUpdatedResponse, 0),
 		warningResponse:               make([]*chan *interfaces.WarningResponse, 0),
+		customFromThinkProvider:       make([]*chan *interfaces.CustomFromThinkProviderResponse, 0),
 		closeChan:                     make([]*chan *interfaces.CloseResponse, 0),
 		errorChan:                     make([]*chan *interfaces.ErrorResponse, 0),
 		unhandledChan:                 make([]*chan *[]byte, 0),
@@ -94,6 +95,9 @@ func NewChanRouter(chans interfaces.AgentMessageChan) *ChanRouter {
 		}
 		if warning, ok := chans.(interfaces.WarningChan); ok {
 			router.warningResponse = append(router.warningResponse, warning.GetWarning()...)
+		}
+		if custom, ok := chans.(interfaces.CustomFromThinkProviderChan); ok {
+			router.customFromThinkProvider = append(router.customFromThinkProvider, custom.GetCustomFromThinkProvider()...)
 		}
 	}
 
@@ -508,6 +512,27 @@ func (r *ChanRouter) processWarning(byMsg []byte) error {
 	return r.processGeneric(string(interfaces.TypeWarningResponse), byMsg, action)
 }
 
+func (r *ChanRouter) processCustomFromThinkProvider(byMsg []byte) error {
+	action := func(data []byte) error {
+		var msg interfaces.CustomFromThinkProviderResponse
+		if err := json.Unmarshal(data, &msg); err != nil {
+			return err
+		}
+		if len(r.customFromThinkProvider) == 0 {
+			for _, ch := range r.unhandledChan {
+				*ch <- &byMsg
+			}
+			return nil
+		}
+		for _, ch := range r.customFromThinkProvider {
+			*ch <- &msg
+		}
+		return nil
+	}
+
+	return r.processGeneric(string(interfaces.TypeCustomFromThinkProviderResponse), byMsg, action)
+}
+
 // Message handles platform messages and routes them appropriately based on the MessageType
 func (r *ChanRouter) Message(byMsg []byte) error {
 	klog.V(6).Infof("router.Message ENTER\n")
@@ -559,6 +584,8 @@ func (r *ChanRouter) Message(byMsg []byte) error {
 		err = r.processThinkLiveUpdated(byMsg)
 	case interfaces.TypeWarningResponse:
 		err = r.processWarning(byMsg)
+	case interfaces.TypeCustomFromThinkProviderResponse:
+		err = r.processCustomFromThinkProvider(byMsg)
 	default:
 		err = r.UnhandledMessage(byMsg)
 	}

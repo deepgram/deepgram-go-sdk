@@ -35,6 +35,7 @@ type DefaultChanHandler struct {
 	thinkUpdatedResponse          chan *interfaces.ThinkUpdatedResponse
 	thinkLiveUpdatedResponse      chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               chan *interfaces.WarningResponse
+	customFromThinkProvider       chan *interfaces.CustomFromThinkProviderResponse
 	closeChan                     chan *interfaces.CloseResponse
 	errorChan                     chan *interfaces.ErrorResponse
 	unhandledChan                 chan *[]byte
@@ -63,6 +64,7 @@ type ChanRouter struct {
 	thinkUpdatedResponse          []*chan *interfaces.ThinkUpdatedResponse
 	thinkLiveUpdatedResponse      []*chan *interfaces.ThinkLiveUpdatedResponse
 	warningResponse               []*chan *interfaces.WarningResponse
+	customFromThinkProvider       []*chan *interfaces.CustomFromThinkProviderResponse
 	closeChan                     []*chan *interfaces.CloseResponse
 	errorChan                     []*chan *interfaces.ErrorResponse
 	unhandledChan                 []*chan *[]byte

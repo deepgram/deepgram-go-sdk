@@ -27,6 +27,7 @@ type InjectDynamicAgentMessage = msginterface.InjectDynamicAgentMessage
 type InjectUserMessage msginterface.InjectUserMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
 type KeepAlive msginterface.KeepAlive
+type CustomToThinkProvider msginterface.CustomToThinkProvider
 
 // Listen is the typed listen configuration accepted by UpdateListen.
 type Listen = interfacesv1.Listen

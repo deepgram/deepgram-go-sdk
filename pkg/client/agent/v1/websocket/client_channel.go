@@ -107,9 +107,6 @@ func (c *WSChannel) sendConfigurationSettings(writeJSON func(interface{}) error)
 		deleteEmptyProvider(agent, "think_live")
 		deleteEmptyProvider(agent, "listen")
 	}
-	if _, err := json.Marshal(clone); err != nil {
-		return fmt.Errorf("marshal cleaned configuration settings: %w", err)
-	}
 	if err := writeJSON(clone); err != nil {
 		return fmt.Errorf("write configuration settings: %w", err)
 	}
@@ -297,6 +294,23 @@ func (c *WSChannel) UpdateThink(think *interfacesv1.Think) error {
 // Warning with code FORCE_END_TURN_UNSUPPORTED for non-Flux STT providers.
 func (c *WSChannel) ForceEndTurn() error {
 	return c.WriteJSON(msginterfaces.ForceEndTurn{Type: msginterfaces.TypeForceEndTurn})
+}
+
+// Experimental: SendCustomToThinkProvider sends arbitrary JSON to a custom Think
+// provider. The provider endpoint must use wss://; without a wss:// custom Think
+// endpoint the server silently ignores the message.
+func (c *WSChannel) SendCustomToThinkProvider(content json.RawMessage) error {
+	if content == nil {
+		content = json.RawMessage("null")
+	}
+	if !json.Valid(content) {
+		return fmt.Errorf("custom Think provider content: %w", common.ErrInvalidJSON)
+	}
+
+	return c.WriteJSON(msginterfaces.CustomToThinkProvider{
+		Type:    msginterfaces.TypeCustomToThinkProvider,
+		Content: content,
+	})
 }
 
 // GetCloseMsg sends an application level message to Deepgram
