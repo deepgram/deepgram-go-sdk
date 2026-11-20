@@ -34,6 +34,7 @@ type PreRecordedTranscriptionOptions struct {
 	Keywords         []string `json:"keywords,omitempty" schema:"keywords,omitempty"`
 	Keyterm          []string `json:"keyterm,omitempty" schema:"keyterm,omitempty"`
 	Language         string   `json:"language,omitempty" schema:"language,omitempty"`
+	LanguageHint     []string `json:"language_hint,omitempty" schema:"language_hint,omitempty"` // Biases language detection toward these codes (e.g. "en", "es"). Only applies when Model is "nova-3" and Language is "multi"; ignored otherwise.
 	Measurements     bool     `json:"measurements,omitempty" schema:"measurements,omitempty"`
 	Model            string   `json:"model,omitempty" schema:"model,omitempty"`
 	Multichannel     bool     `json:"multichannel,omitempty" schema:"multichannel,omitempty"`
