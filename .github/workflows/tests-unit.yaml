@@ -14,7 +14,7 @@ jobs:
     # Only run this job if we're in the main repo, not a fork.
     if: github.repository == 'deepgram/deepgram-go-sdk'
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
 
       - name: Checkout code by commit
@@ -55,3 +55,7 @@ jobs:
       - name: Run unit tests
         shell: bash
         run: go test -v -run Test_ ./...
+
+      - name: Run WebSocket race tests
+        shell: bash
+        run: go test -race -count=10 ./pkg/client/common/v1 ./pkg/client/listen/v2/websocket
