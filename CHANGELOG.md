@@ -2,7 +2,6 @@
 
 ## [3.12.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.1...v3.12.0) (2026-11-20)
 
-
 ### Features
 
 * **agent:** add custom Think provider events ([#392](https://github.com/deepgram/deepgram-go-sdk/issues/392)) ([85c1b1f](https://github.com/deepgram/deepgram-go-sdk/commit/85c1b1fab2daa110db8afa03a40daa0d47de9660))
@@ -11,7 +10,6 @@
 * **listen:** add prerecorded Nova-3 language hints ([#389](https://github.com/deepgram/deepgram-go-sdk/issues/389)) ([560027c](https://github.com/deepgram/deepgram-go-sdk/commit/560027c5edc8db206984c1a3828d3774c54921ef))
 * **listen:** support mid-stream configuration ([#388](https://github.com/deepgram/deepgram-go-sdk/issues/388)) ([47c71cf](https://github.com/deepgram/deepgram-go-sdk/commit/47c71cfae75e44e0845484934a9cd7f9e8e1b8be))
 * **manage:** add reporting APIs ([#395](https://github.com/deepgram/deepgram-go-sdk/issues/395)) ([eeaf3db](https://github.com/deepgram/deepgram-go-sdk/commit/eeaf3db1f542c37c49c6012651ba2ac771ebcd4e))
-
 
 ### Bug Fixes
 
