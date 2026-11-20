@@ -41,6 +41,14 @@ func Test_DefaultChanHandlerDoesNotLogPayloads(t *testing.T) {
 		handler.functionCallCancelledResponse <- &interfaces.FunctionCallCancelledResponse{
 			Functions: []interfaces.FunctionCallCancelled{{Name: secret}},
 		}
+		handler.frustrationDetectedResponse <- &interfaces.FrustrationDetectedResponse{
+			Type:      secret,
+			Count:     2,
+			Escalated: true,
+		}
+		handler.thinkLiveUpdatedResponse <- &interfaces.ThinkLiveUpdatedResponse{
+			Type: secret,
+		}
 		handler.errorChan <- &interfaces.ErrorResponse{
 			ErrCode:     "TEST_ERROR",
 			ErrMsg:      secret,
