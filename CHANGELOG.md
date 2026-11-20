@@ -1,5 +1,23 @@
 # Changelog
 
+## [3.12.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.1...v3.12.0) (2026-11-20)
+
+
+### Features
+
+* **agent:** add custom Think provider events ([#392](https://github.com/deepgram/deepgram-go-sdk/issues/392)) ([85c1b1f](https://github.com/deepgram/deepgram-go-sdk/commit/85c1b1fab2daa110db8afa03a40daa0d47de9660))
+* **agent:** add runtime controls ([#391](https://github.com/deepgram/deepgram-go-sdk/issues/391)) ([fe06d6a](https://github.com/deepgram/deepgram-go-sdk/commit/fe06d6a21deb867ce22708f1095f80c9ce93d867))
+* **agent:** add Think Live settings ([#390](https://github.com/deepgram/deepgram-go-sdk/issues/390)) ([bcb9a87](https://github.com/deepgram/deepgram-go-sdk/commit/bcb9a8768acb34e55f550a1ca3dc2b1e5e0b7ee9))
+* **listen:** add prerecorded Nova-3 language hints ([#389](https://github.com/deepgram/deepgram-go-sdk/issues/389)) ([560027c](https://github.com/deepgram/deepgram-go-sdk/commit/560027c5edc8db206984c1a3828d3774c54921ef))
+* **listen:** support mid-stream configuration ([#388](https://github.com/deepgram/deepgram-go-sdk/issues/388)) ([47c71cf](https://github.com/deepgram/deepgram-go-sdk/commit/47c71cfae75e44e0845484934a9cd7f9e8e1b8be))
+* **manage:** add reporting APIs ([#395](https://github.com/deepgram/deepgram-go-sdk/issues/395)) ([eeaf3db](https://github.com/deepgram/deepgram-go-sdk/commit/eeaf3db1f542c37c49c6012651ba2ac771ebcd4e))
+
+
+### Bug Fixes
+
+* **agent:** send UpdatePrompt prompt and InjectAgentMessage message fields ([#396](https://github.com/deepgram/deepgram-go-sdk/issues/396)) ([580d314](https://github.com/deepgram/deepgram-go-sdk/commit/580d314c47d3359706cd0ac2d05b3e9d003bee39))
+* **manage:** return API errors from manage and auth methods ([#399](https://github.com/deepgram/deepgram-go-sdk/issues/399)) ([305f5c8](https://github.com/deepgram/deepgram-go-sdk/commit/305f5c8a0811268f413d76cf1ab047974dfe7585))
+
 ## [3.11.1](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.0...v3.11.1) (2026-11-16)
 
 ### Bug Fixes
