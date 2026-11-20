@@ -499,13 +499,13 @@ See [`examples/agent/websocket/function_call`](./examples/agent/websocket/functi
 Think Live is an invite-only Early Access Voice Agent feature. It runs alongside the reasoning provider in `agent.think` and requires a project enrolled in the Think Live program. Configure it through the optional `Agent.ThinkLive` field; its provider must be Deepgram `v1`.
 
 ```go
-import interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
+import interfacesv1 "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces/v1"
 
 sensitivity := 0.2
 presenceCheckMaxCount := 2
 frustrationMaxCount := 2
 
-options.Agent.ThinkLive = interfaces.NewThinkLiveSettings()
+options.Agent.ThinkLive = interfacesv1.NewThinkLiveSettings()
 options.Agent.ThinkLive.Provider.AgentBackchannelSensitivity = &sensitivity
 options.Agent.ThinkLive.Provider.PresenceCheckMaxCount = &presenceCheckMaxCount
 options.Agent.ThinkLive.Provider.FrustrationMaxCount = &frustrationMaxCount
