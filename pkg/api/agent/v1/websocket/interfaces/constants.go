@@ -13,18 +13,19 @@ type TypeResponse commoninterfaces.TypeResponse
 
 // client message types
 const (
-	TypeSettings             = "Settings"
-	TypeUpdatePrompt         = "UpdatePrompt"
-	TypeUpdateSpeak          = "UpdateSpeak"
-	TypeUpdateListen         = "UpdateListen"
-	TypeUpdateThink          = "UpdateThink"
-	TypeUpdateThinkLive      = "UpdateThink_Live"
-	TypeForceEndTurn         = "ForceEndTurn"
-	TypeInjectAgentMessage   = "InjectAgentMessage"
-	TypeInjectUserMessage    = "InjectUserMessage"
-	TypeFunctionCallResponse = "FunctionCallResponse"
-	TypeKeepAlive            = "KeepAlive"
-	TypeClose                = "Close"
+	TypeSettings              = "Settings"
+	TypeUpdatePrompt          = "UpdatePrompt"
+	TypeUpdateSpeak           = "UpdateSpeak"
+	TypeUpdateListen          = "UpdateListen"
+	TypeUpdateThink           = "UpdateThink"
+	TypeUpdateThinkLive       = "UpdateThink_Live"
+	TypeForceEndTurn          = "ForceEndTurn"
+	TypeCustomToThinkProvider = "__customToThinkProvider"
+	TypeInjectAgentMessage    = "InjectAgentMessage"
+	TypeInjectUserMessage     = "InjectUserMessage"
+	TypeFunctionCallResponse  = "FunctionCallResponse"
+	TypeKeepAlive             = "KeepAlive"
+	TypeClose                 = "Close"
 )
 
 // server message types
