@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.12.0](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.1...v3.12.0) (2026-11-20)
+
+### Features
+
+* **Voice Agent:** Add experimental custom Think-provider messaging: send arbitrary JSON to a configured `wss://` provider and receive its response through an optional typed channel. ([#392](https://github.com/deepgram/deepgram-go-sdk/issues/392)) ([85c1b1f](https://github.com/deepgram/deepgram-go-sdk/commit/85c1b1fab2daa110db8afa03a40daa0d47de9660))
+* **Voice Agent:** Add typed `UpdateListen`, `UpdateThink`, and `ForceEndTurn` controls, with optional channels for their acknowledgements and non-fatal warnings. ([#391](https://github.com/deepgram/deepgram-go-sdk/issues/391)) ([fe06d6a](https://github.com/deepgram/deepgram-go-sdk/commit/fe06d6a21deb867ce22708f1095f80c9ce93d867))
+* **Voice Agent:** Add invite-only Think Live settings, mid-session updates, frustration events, dynamic filler requests, and conversational-behavior metadata. ([#390](https://github.com/deepgram/deepgram-go-sdk/issues/390)) ([bcb9a87](https://github.com/deepgram/deepgram-go-sdk/commit/bcb9a8768acb34e55f550a1ca3dc2b1e5e0b7ee9))
+* **Listen v1 REST:** Add Nova-3 multilingual `LanguageHint` request options and expose normalized applied hints plus detected utterance languages in responses. ([#389](https://github.com/deepgram/deepgram-go-sdk/issues/389)) ([560027c](https://github.com/deepgram/deepgram-go-sdk/commit/560027c5edc8db206984c1a3828d3774c54921ef))
+* **Listen v1 WebSocket:** Add mid-stream `Configure` support for keyterms and formatting features, plus typed success and failure events for callback and channel clients. ([#388](https://github.com/deepgram/deepgram-go-sdk/issues/388)) ([47c71cf](https://github.com/deepgram/deepgram-go-sdk/commit/47c71cfae75e44e0845484934a9cd7f9e8e1b8be))
+* **Management:** Add typed project usage and billing reporting, including usage and billing breakdowns, available billing fields, and purchase history. ([#395](https://github.com/deepgram/deepgram-go-sdk/issues/395)) ([eeaf3db](https://github.com/deepgram/deepgram-go-sdk/commit/eeaf3db1f542c37c49c6012651ba2ac771ebcd4e))
+
+### Bug Fixes
+
+* **Voice Agent:** Send the API-required `prompt` and `message` keys for `UpdatePrompt` and `InjectAgentMessage`, preventing those controls from being rejected by the service. ([#396](https://github.com/deepgram/deepgram-go-sdk/issues/396)) ([580d314](https://github.com/deepgram/deepgram-go-sdk/commit/580d314c47d3359706cd0ac2d05b3e9d003bee39))
+* **Management and Auth:** Return API request failures to callers instead of returning a response with a nil error. ([#399](https://github.com/deepgram/deepgram-go-sdk/issues/399)) ([305f5c8](https://github.com/deepgram/deepgram-go-sdk/commit/305f5c8a0811268f413d76cf1ab047974dfe7585))
+
 ## [3.11.1](https://github.com/deepgram/deepgram-go-sdk/compare/v3.11.0...v3.11.1) (2026-11-16)
 
 ### Bug Fixes
