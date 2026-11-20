@@ -18,6 +18,7 @@ const (
 	TypeUpdateSpeak          = "UpdateSpeak"
 	TypeUpdateListen         = "UpdateListen"
 	TypeUpdateThink          = "UpdateThink"
+	TypeUpdateThinkLive      = "UpdateThink_Live"
 	TypeForceEndTurn         = "ForceEndTurn"
 	TypeInjectAgentMessage   = "InjectAgentMessage"
 	TypeInjectUserMessage    = "InjectUserMessage"
@@ -34,6 +35,7 @@ const (
 	TypeConversationTextResponse      = "ConversationText"
 	TypeUserStartedSpeakingResponse   = "UserStartedSpeaking"
 	TypeAgentThinkingResponse         = "AgentThinking"
+	TypeFrustrationDetectedResponse   = "FrustrationDetected"
 	TypeFunctionCallRequestResponse   = "FunctionCallRequest"
 	TypeFunctionCallCancelledResponse = "FunctionCallCancelled"
 	TypeAgentStartedSpeakingResponse  = "AgentStartedSpeaking"
@@ -44,5 +46,6 @@ const (
 	TypeSettingsAppliedResponse       = "SettingsApplied"
 	TypeListenUpdatedResponse         = "ListenUpdated"
 	TypeThinkUpdatedResponse          = "ThinkUpdated"
+	TypeThinkLiveUpdatedResponse      = "ThinkLiveUpdated"
 	TypeWarningResponse               = "Warning"
 )

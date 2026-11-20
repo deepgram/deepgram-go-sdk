@@ -20,8 +20,10 @@ type UpdatePrompt msginterface.UpdatePrompt
 type UpdateSpeak msginterface.UpdateSpeak
 type UpdateListen msginterface.UpdateListen
 type UpdateThink msginterface.UpdateThink
+type UpdateThinkLive msginterface.UpdateThinkLive
 type ForceEndTurn msginterface.ForceEndTurn
 type InjectAgentMessage msginterface.InjectAgentMessage
+type InjectDynamicAgentMessage = msginterface.InjectDynamicAgentMessage
 type InjectUserMessage msginterface.InjectUserMessage
 type FunctionCallResponse msginterface.FunctionCallResponse
 type KeepAlive msginterface.KeepAlive
@@ -31,6 +33,9 @@ type Listen = interfacesv1.Listen
 
 // Think is the typed think configuration accepted by UpdateThink.
 type Think = interfacesv1.Think
+
+// ThinkLive is the typed Think Live configuration accepted by UpdateThinkLive.
+type ThinkLive = interfacesv1.ThinkLiveSettings
 
 // WSChannel is a struct representing the websocket client connection using channels
 type WSChannel struct {

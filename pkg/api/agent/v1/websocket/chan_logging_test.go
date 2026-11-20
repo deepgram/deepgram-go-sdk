@@ -41,6 +41,14 @@ func Test_DefaultChanHandlerDoesNotLogPayloads(t *testing.T) {
 		handler.functionCallCancelledResponse <- &interfaces.FunctionCallCancelledResponse{
 			Functions: []interfaces.FunctionCallCancelled{{Name: secret}},
 		}
+		handler.frustrationDetectedResponse <- &interfaces.FrustrationDetectedResponse{
+			Type:      secret,
+			Count:     2,
+			Escalated: true,
+		}
+		handler.thinkLiveUpdatedResponse <- &interfaces.ThinkLiveUpdatedResponse{
+			Type: secret,
+		}
 		handler.errorChan <- &interfaces.ErrorResponse{
 			ErrCode:     "TEST_ERROR",
 			ErrMsg:      secret,
@@ -68,6 +76,7 @@ func newTestDefaultChanHandler() *DefaultChanHandler {
 		conversationTextResponse:      make(chan *interfaces.ConversationTextResponse),
 		userStartedSpeakingResponse:   make(chan *interfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:         make(chan *interfaces.AgentThinkingResponse),
+		frustrationDetectedResponse:   make(chan *interfaces.FrustrationDetectedResponse),
 		functionCallRequestResponse:   make(chan *interfaces.FunctionCallRequestResponse),
 		functionCallCancelledResponse: make(chan *interfaces.FunctionCallCancelledResponse),
 		agentStartedSpeakingResponse:  make(chan *interfaces.AgentStartedSpeakingResponse),
@@ -77,6 +86,7 @@ func newTestDefaultChanHandler() *DefaultChanHandler {
 		settingsAppliedResponse:       make(chan *interfaces.SettingsAppliedResponse),
 		listenUpdatedResponse:         make(chan *interfaces.ListenUpdatedResponse),
 		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
+		thinkLiveUpdatedResponse:      make(chan *interfaces.ThinkLiveUpdatedResponse),
 		warningResponse:               make(chan *interfaces.WarningResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
@@ -91,6 +101,7 @@ func closeTestDefaultChanHandler(handler *DefaultChanHandler) {
 	close(handler.conversationTextResponse)
 	close(handler.userStartedSpeakingResponse)
 	close(handler.agentThinkingResponse)
+	close(handler.frustrationDetectedResponse)
 	close(handler.functionCallRequestResponse)
 	close(handler.functionCallCancelledResponse)
 	close(handler.agentStartedSpeakingResponse)
@@ -100,6 +111,7 @@ func closeTestDefaultChanHandler(handler *DefaultChanHandler) {
 	close(handler.settingsAppliedResponse)
 	close(handler.listenUpdatedResponse)
 	close(handler.thinkUpdatedResponse)
+	close(handler.thinkLiveUpdatedResponse)
 	close(handler.warningResponse)
 	close(handler.closeChan)
 	close(handler.errorChan)

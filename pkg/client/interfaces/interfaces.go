@@ -21,6 +21,11 @@ func NewSettingsConfigurationOptions() *interfacesv1.SettingsOptions {
 	return interfacesv1.NewSettingsOptions()
 }
 
+// NewThinkLiveSettings creates Think Live settings with the required provider.
+func NewThinkLiveSettings() *interfacesv1.ThinkLiveSettings {
+	return interfacesv1.NewThinkLiveSettings()
+}
+
 // options
 type ClientOptions = interfacesv1.ClientOptions
 type ClientOptionsV2 = interfacesv2.ClientOptions
@@ -31,6 +36,8 @@ type LiveConfigureOptions = interfacesv1.LiveConfigureOptions
 type AnalyzeOptions = interfacesv1.AnalyzeOptions
 type SpeakOptions = interfacesv1.SpeakOptions
 type WSSpeakOptions = interfacesv1.WSSpeakOptions
+type ThinkLiveProvider = interfacesv1.ThinkLiveProvider
+type ThinkLiveSettings = interfacesv1.ThinkLiveSettings
 type FluxTranscriptionOptions = interfacesv2.FluxTranscriptionOptions
 type FluxConfigureOptions = interfacesv2.FluxConfigureOptions
 type FluxThresholds = interfacesv2.FluxThresholds

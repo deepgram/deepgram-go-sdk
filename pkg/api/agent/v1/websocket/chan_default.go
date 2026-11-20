@@ -37,6 +37,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		conversationTextResponse:      make(chan *interfaces.ConversationTextResponse),
 		userStartedSpeakingResponse:   make(chan *interfaces.UserStartedSpeakingResponse),
 		agentThinkingResponse:         make(chan *interfaces.AgentThinkingResponse),
+		frustrationDetectedResponse:   make(chan *interfaces.FrustrationDetectedResponse),
 		functionCallRequestResponse:   make(chan *interfaces.FunctionCallRequestResponse),
 		functionCallCancelledResponse: make(chan *interfaces.FunctionCallCancelledResponse),
 		agentStartedSpeakingResponse:  make(chan *interfaces.AgentStartedSpeakingResponse),
@@ -46,6 +47,7 @@ func NewDefaultChanHandler() *DefaultChanHandler {
 		settingsAppliedResponse:       make(chan *interfaces.SettingsAppliedResponse),
 		listenUpdatedResponse:         make(chan *interfaces.ListenUpdatedResponse),
 		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
+		thinkLiveUpdatedResponse:      make(chan *interfaces.ThinkLiveUpdatedResponse),
 		warningResponse:               make(chan *interfaces.WarningResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
@@ -90,6 +92,11 @@ func (dch DefaultChanHandler) GetUserStartedSpeaking() []*chan *interfaces.UserS
 // GetAgentThinkingResponse returns the agent thinking response channels
 func (dch DefaultChanHandler) GetAgentThinking() []*chan *interfaces.AgentThinkingResponse {
 	return []*chan *interfaces.AgentThinkingResponse{&dch.agentThinkingResponse}
+}
+
+// GetFrustrationDetected returns the Think Live frustration event channels.
+func (dch DefaultChanHandler) GetFrustrationDetected() []*chan *interfaces.FrustrationDetectedResponse {
+	return []*chan *interfaces.FrustrationDetectedResponse{&dch.frustrationDetectedResponse}
 }
 
 // GetFunctionCallRequestResponse returns the function call request response channels
@@ -150,6 +157,11 @@ func (dch DefaultChanHandler) GetListenUpdated() []*chan *interfaces.ListenUpdat
 // GetThinkUpdated returns ThinkUpdated response channels.
 func (dch DefaultChanHandler) GetThinkUpdated() []*chan *interfaces.ThinkUpdatedResponse {
 	return []*chan *interfaces.ThinkUpdatedResponse{&dch.thinkUpdatedResponse}
+}
+
+// GetThinkLiveUpdated returns ThinkLiveUpdated response channels.
+func (dch DefaultChanHandler) GetThinkLiveUpdated() []*chan *interfaces.ThinkLiveUpdatedResponse {
+	return []*chan *interfaces.ThinkLiveUpdatedResponse{&dch.thinkLiveUpdatedResponse}
 }
 
 // GetWarning returns non-fatal service warning channels.
@@ -264,6 +276,16 @@ func (dch DefaultChanHandler) Run() error {
 		}
 	}()
 
+	// Think Live frustration events
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+
+		for fdr := range dch.frustrationDetectedResponse {
+			fmt.Printf("\n\n[FrustrationDetectedResponse] count=%d escalated=%t\n\n", fdr.Count, fdr.Escalated)
+		}
+	}()
+
 	// function call request response channel
 	wgReceivers.Add(1)
 	go func() {
@@ -358,6 +380,14 @@ func (dch DefaultChanHandler) Run() error {
 		defer wgReceivers.Done()
 		for range dch.thinkUpdatedResponse {
 			fmt.Printf("\n\n[ThinkUpdatedResponse]\n\n")
+		}
+	}()
+
+	wgReceivers.Add(1)
+	go func() {
+		defer wgReceivers.Done()
+		for range dch.thinkLiveUpdatedResponse {
+			fmt.Printf("\n\n[ThinkLiveUpdatedResponse]\n\n")
 		}
 	}()
 
