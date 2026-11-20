@@ -75,6 +75,9 @@ func newTestDefaultChanHandler() *DefaultChanHandler {
 		injectionRefusedResponse:      make(chan *interfaces.InjectionRefusedResponse),
 		keepAliveResponse:             make(chan *interfaces.KeepAlive),
 		settingsAppliedResponse:       make(chan *interfaces.SettingsAppliedResponse),
+		listenUpdatedResponse:         make(chan *interfaces.ListenUpdatedResponse),
+		thinkUpdatedResponse:          make(chan *interfaces.ThinkUpdatedResponse),
+		warningResponse:               make(chan *interfaces.WarningResponse),
 		closeChan:                     make(chan *interfaces.CloseResponse),
 		errorChan:                     make(chan *interfaces.ErrorResponse),
 		unhandledChan:                 make(chan *[]byte),
@@ -95,6 +98,9 @@ func closeTestDefaultChanHandler(handler *DefaultChanHandler) {
 	close(handler.injectionRefusedResponse)
 	close(handler.keepAliveResponse)
 	close(handler.settingsAppliedResponse)
+	close(handler.listenUpdatedResponse)
+	close(handler.thinkUpdatedResponse)
+	close(handler.warningResponse)
 	close(handler.closeChan)
 	close(handler.errorChan)
 	close(handler.unhandledChan)
