@@ -36,6 +36,11 @@ type WSClient struct {
 	sessionDone chan struct{}
 	retry       bool
 	retryCnt    int64
+	// reconnecting prevents application writes and background workers from
+	// opening a second connection while an automatic recovery is in progress.
+	reconnecting        bool
+	autoReconnectCancel context.CancelFunc
+	reconnectGeneration uint64
 	// terminalCloseStarted prevents concurrent local and peer-close paths from
 	// routing a second close event after handler-owned channels are released.
 	terminalCloseStarted bool

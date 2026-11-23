@@ -15,6 +15,15 @@ import (
 // ClientOptions defines any options for the client
 
 type BaseClientOptions = clientinterfaces.ClientOptions
+type ReconnectPolicy = clientinterfaces.ReconnectPolicy
+type ReconnectEvent = clientinterfaces.ReconnectEvent
+type ReconnectEventType = clientinterfaces.ReconnectEventType
+
+const (
+	ReconnectAttempt = clientinterfaces.ReconnectAttempt
+	ReconnectSuccess = clientinterfaces.ReconnectSuccess
+	ReconnectFailure = clientinterfaces.ReconnectFailure
+)
 
 type ClientOptions struct {
 	APIKey            string
@@ -38,6 +47,10 @@ type ClientOptions struct {
 
 	// text-to-speech client options
 	AutoFlushSpeakDelta int64 // enables the auto flush feature based on the delta in milliseconds
+
+	// ReconnectPolicy enables opt-in automatic recovery after unexpected
+	// WebSocket transport failures. Nil preserves manual reconnect behavior.
+	ReconnectPolicy *clientinterfaces.ReconnectPolicy
 
 	// Thread safety for credential management
 	credentialsMutex sync.RWMutex // protects AccessToken and APIKey fields
@@ -74,3 +87,6 @@ func (o *ClientOptions) GetWSHeaderProcessor() func(http.Header)         { retur
 func (o *ClientOptions) GetRedirectService() bool                        { return o.RedirectService }
 func (o *ClientOptions) GetSkipServerAuth() bool                         { return o.SkipServerAuth }
 func (o *ClientOptions) GetProxy() func(*http.Request) (*url.URL, error) { return o.Proxy }
+func (o *ClientOptions) GetReconnectPolicy() *clientinterfaces.ReconnectPolicy {
+	return o.ReconnectPolicy
+}

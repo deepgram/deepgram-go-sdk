@@ -7,9 +7,11 @@ package commonv1
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
 	"io"
+	"math/big"
 	"net/http"
 	"runtime/debug"
 	"strings"
@@ -72,13 +74,198 @@ func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
 func (c *WSClient) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
 	c.muConn.Lock()
+	c.cancelAutomaticReconnectLocked()
 	c.retry = true
+	c.reconnecting = false
 	c.muConn.Unlock()
 	return c.internalConnectWithCancel(ctx, ctxCancel, int(retries), true) != nil
 }
 
 func (c *WSClient) internalConnect() *websocket.Conn {
+	if c.reconnecting {
+		return nil
+	}
 	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false)
+}
+
+func (c *WSClient) cancelAutomaticReconnectLocked() {
+	c.reconnectGeneration++
+	if c.autoReconnectCancel != nil {
+		c.autoReconnectCancel()
+		c.autoReconnectCancel = nil
+	}
+}
+
+func (c *WSClient) startAutomaticReconnect(ws *websocket.Conn, cause error) bool {
+	policy := c.cOptions.GetReconnectPolicy()
+	if policy == nil {
+		return false
+	}
+	policyCopy := *policy
+	policyCopy = normalizeReconnectPolicy(policyCopy)
+
+	c.muConn.Lock()
+	if c.wsconn != ws || !c.retry || c.reconnecting || c.ctx.Err() != nil {
+		c.muConn.Unlock()
+		return false
+	}
+
+	c.terminalMu.Lock()
+	if c.sessionDone != nil {
+		close(c.sessionDone)
+		c.sessionDone = nil
+	}
+	c.wsconn = nil
+	c.terminalMu.Unlock()
+
+	reconnectCtx, reconnectCancel := context.WithCancel(c.ctx)
+	c.reconnectGeneration++
+	generation := c.reconnectGeneration
+	c.reconnecting = true
+	c.autoReconnectCancel = reconnectCancel
+	c.muConn.Unlock()
+
+	// The socket is already unusable, but Close releases any peer resources and
+	// unblocks a simultaneous reader without sending application frames.
+	_ = ws.Close()
+
+	go c.reconnect(reconnectCtx, reconnectCancel, generation, policyCopy, cause)
+	return true
+}
+
+func (c *WSClient) reconnect(ctx context.Context, cancel context.CancelFunc, generation uint64, policy clientinterfaces.ReconnectPolicy, cause error) {
+	for attempt := 1; attempt <= policy.MaxRetries; attempt++ {
+		if !waitForReconnect(ctx, reconnectDelay(policy, attempt)) {
+			c.finishAutomaticReconnect(generation, policy, attempt-1, cause, false)
+			return
+		}
+		if !c.isActiveAutomaticReconnect(generation) {
+			return
+		}
+
+		c.notifyReconnect(policy, clientinterfaces.ReconnectEvent{
+			Type:    clientinterfaces.ReconnectAttempt,
+			Attempt: attempt,
+		})
+
+		c.muConn.Lock()
+		if c.reconnectGeneration != generation || ctx.Err() != nil {
+			c.muConn.Unlock()
+			return
+		}
+		c.retry = true
+		c.muConn.Unlock()
+
+		if c.internalConnectWithCancel(ctx, cancel, 1, true) != nil {
+			c.muConn.Lock()
+			if c.reconnectGeneration != generation {
+				c.muConn.Unlock()
+				return
+			}
+			c.reconnecting = false
+			c.autoReconnectCancel = nil
+			c.muConn.Unlock()
+			c.notifyReconnect(policy, clientinterfaces.ReconnectEvent{
+				Type:    clientinterfaces.ReconnectSuccess,
+				Attempt: attempt,
+			})
+			return
+		}
+	}
+
+	c.finishAutomaticReconnect(generation, policy, policy.MaxRetries, cause, true)
+}
+
+func (c *WSClient) isActiveAutomaticReconnect(generation uint64) bool {
+	c.muConn.RLock()
+	defer c.muConn.RUnlock()
+	return c.reconnectGeneration == generation && c.autoReconnectCancel != nil && c.reconnecting
+}
+
+func (c *WSClient) finishAutomaticReconnect(generation uint64, policy clientinterfaces.ReconnectPolicy, attempts int, cause error, exhausted bool) {
+	c.muConn.Lock()
+	if c.reconnectGeneration != generation {
+		c.muConn.Unlock()
+		return
+	}
+	c.autoReconnectCancel = nil
+	c.reconnecting = false
+	c.retry = false
+	c.muConn.Unlock()
+
+	if exhausted {
+		c.notifyReconnect(policy, clientinterfaces.ReconnectEvent{
+			Type:    clientinterfaces.ReconnectFailure,
+			Attempt: attempts,
+			Error:   cause,
+		})
+	}
+	// Context cancellation and an exhausted policy are terminal. There is no
+	// active transport to close, so force the regular terminal handler cleanup.
+	c.closeWsWithState(true, false, false)
+}
+
+func normalizeReconnectPolicy(policy clientinterfaces.ReconnectPolicy) clientinterfaces.ReconnectPolicy {
+	if policy.MaxRetries <= 0 {
+		policy.MaxRetries = 3
+	}
+	if policy.InitialDelay <= 0 {
+		policy.InitialDelay = time.Second
+	}
+	if policy.MaxDelay <= 0 {
+		policy.MaxDelay = 30 * time.Second
+	}
+	if policy.MaxDelay < policy.InitialDelay {
+		policy.MaxDelay = policy.InitialDelay
+	}
+	if policy.Jitter <= 0 {
+		policy.Jitter = 0.2
+	}
+	if policy.Jitter > 1 {
+		policy.Jitter = 1
+	}
+	return policy
+}
+
+func reconnectDelay(policy clientinterfaces.ReconnectPolicy, attempt int) time.Duration {
+	delay := policy.InitialDelay
+	for i := 1; i < attempt && delay < policy.MaxDelay; i++ {
+		if delay > policy.MaxDelay/2 {
+			delay = policy.MaxDelay
+			break
+		}
+		delay *= 2
+	}
+	spread := float64(delay) * policy.Jitter
+	random, err := rand.Int(rand.Reader, big.NewInt(1_000_001))
+	if err != nil {
+		return delay
+	}
+	fraction := float64(random.Int64()) / 1_000_000
+	return time.Duration(float64(delay) - spread + fraction*(2*spread))
+}
+
+func waitForReconnect(ctx context.Context, delay time.Duration) bool {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return false
+	case <-timer.C:
+		return true
+	}
+}
+
+func (c *WSClient) notifyReconnect(policy clientinterfaces.ReconnectPolicy, event clientinterfaces.ReconnectEvent) {
+	if policy.OnReconnect == nil {
+		return
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			klog.V(1).Infof("Reconnect lifecycle callback panicked: %v", r)
+		}
+	}()
+	policy.OnReconnect(event)
 }
 
 //nolint:funlen,gocyclo // this is a complex function. keep as is
@@ -250,6 +437,10 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 		sessionDone := c.sessionDone
 		c.terminalCloseStarted = false
 		c.retry = true
+		// Start may send protocol setup required by a new session (for example,
+		// Voice Agent settings). Once the transport exists, allow those direct
+		// writes; no application frame was buffered or replayed during recovery.
+		c.reconnecting = false
 		c.terminalMu.Unlock()
 
 		// kick off threads to listen for messages and ping/keepalive
@@ -460,6 +651,11 @@ func (c *WSClient) listen() {
 					klog.V(1).Infof("listen: Fatal socket error. Err: %v\n", sendErr)
 				}
 
+				if c.startAutomaticReconnect(ws, err) {
+					klog.V(6).Infof("common.listen() LEAVE\n")
+					return
+				}
+
 				// fatal close
 				c.closeWsFor(ws, true, false)
 
@@ -488,6 +684,11 @@ func (c *WSClient) listen() {
 					klog.V(1).Infof("listen: EOF error. Err: %v\n", sendErr)
 				}
 
+				if c.startAutomaticReconnect(ws, err) {
+					klog.V(6).Infof("common.listen() LEAVE\n")
+					return
+				}
+
 				// close the connection
 				c.closeWsFor(ws, true, false)
 
@@ -500,6 +701,11 @@ func (c *WSClient) listen() {
 				sendErr := c.sendError(err)
 				if sendErr != nil {
 					klog.V(1).Infof("listen: EOF error. Err: %v\n", sendErr)
+				}
+
+				if c.startAutomaticReconnect(ws, err) {
+					klog.V(6).Infof("common.listen() LEAVE\n")
+					return
 				}
 
 				// close the connection
@@ -747,8 +953,16 @@ func (c *WSClient) normalClosure(lock bool) error {
 func (c *WSClient) Stop() {
 	klog.V(3).Infof("Stopping...\n")
 	c.muConn.Lock()
+	reconnecting := c.reconnecting
 	c.retry = false
+	c.reconnecting = false
+	c.cancelAutomaticReconnectLocked()
 	c.muConn.Unlock()
+
+	if reconnecting {
+		c.closeWsWithState(true, true, false)
+		return
+	}
 
 	// exit gracefully
 	c.closeWs(false, true)

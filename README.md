@@ -21,6 +21,7 @@ Official Go SDK for [Deepgram](https://www.deepgram.com/). Power your apps with 
     - [Remote Files (Asynchronous)](#remote-files-asynchronous)
     - [Local Files (Asynchronous)](#local-files-asynchronous)
   - [Streaming Audio](#streaming-audio)
+    - [Automatic WebSocket reconnect](#automatic-websocket-reconnect)
   - [Flux STT](#flux-stt)
   - [Voice Agent](#voice-agent)
   - [Text to Speech REST](#text-to-speech-rest)
@@ -313,6 +314,35 @@ dgClient.Stop()
 Set `DetectEntities` to receive named entity recognition results in the top-level `Entities` field of final streaming `MessageResponse` values. See the [streaming entity example](examples/speech-to-text/websocket/entities) for a callback handler that prints those results.
 
 For an active Listen v1 WebSocket, call `Configure` with `LiveConfigureOptions` to change `keyterms` or `features` without reconnecting. Only `keyterms` require Nova-3. Listen v1 Configure does not support `language` or language hints; set `Keyterms` to a pointer to an empty slice to clear keyterms. Each update is limited to 500 keyterm tokens. Only one Configure request may be pending at a time; another request receives `ConfigureFailure` with code `CONFIGURE_ALREADY_PENDING`. See the [Configure example](examples/speech-to-text/websocket/configure) and the [Listen streaming API reference](https://developers.deepgram.com/reference/speech-to-text-api/listen-streaming).
+
+### Automatic WebSocket reconnect
+
+WebSocket clients reconnect only when you opt in with `ReconnectPolicy`. The policy applies to Listen v1, Flux STT, Speak, Flux TTS, and Voice Agent clients. It reconnects after unexpected transport failures, retaining the client configuration, authentication, headers, and handlers. It does not reconnect after `Stop`, context cancellation, or a normal peer close.
+
+```go
+clientOptions := &interfaces.ClientOptions{
+    ReconnectPolicy: &interfaces.ReconnectPolicy{
+        MaxRetries:   5,
+        InitialDelay: time.Second,
+        MaxDelay:     20 * time.Second,
+        OnReconnect: func(event interfaces.ReconnectEvent) {
+            log.Printf("reconnect %s (attempt %d): %v", event.Type, event.Attempt, event.Error)
+        },
+    },
+}
+
+dgClient, err := client.NewWSUsingCallback(
+    ctx,
+    "",
+    clientOptions,
+    transcriptOptions,
+    nil,
+)
+```
+
+`MaxRetries` defaults to three, `InitialDelay` defaults to one second, `MaxDelay` defaults to thirty seconds, and `Jitter` defaults to 20%. The callback receives `ReconnectAttempt`, `ReconnectSuccess`, and terminal `ReconnectFailure` events.
+
+The SDK does **not** queue or replay audio, `Finalize`, `Close`, function-call results, or other application frames. A write attempted while recovery is in progress returns an error; callers own buffering and any application-level retry policy.
 
 ### Nova-3 Multilingual Prompting
 

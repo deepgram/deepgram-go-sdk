@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"time"
 
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 	client "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/listen"
@@ -38,8 +39,20 @@ func main() {
 		Punctuate: true,
 	}
 
+	// Enable opt-in automatic recovery for unexpected transport failures.
+	clientOptions := &interfaces.ClientOptions{
+		ReconnectPolicy: &interfaces.ReconnectPolicy{
+			MaxRetries:   5,
+			InitialDelay: time.Second,
+			MaxDelay:     20 * time.Second,
+			OnReconnect: func(event interfaces.ReconnectEvent) {
+				fmt.Printf("WebSocket reconnect %s (attempt %d): %v\n", event.Type, event.Attempt, event.Error)
+			},
+		},
+	}
+
 	// create a Deepgram client
-	dgClient, err := client.NewWSUsingCallbackForDemo(ctx, transcriptOptions)
+	dgClient, err := client.NewWSUsingCallback(ctx, "", clientOptions, transcriptOptions, nil)
 	if err != nil {
 		fmt.Println("ERROR creating LiveTranscription connection:", err)
 		return

@@ -18,9 +18,9 @@ import (
 	interfaces "github.com/deepgram/deepgram-go-sdk/v3/pkg/client/interfaces"
 )
 
-// After the server closes a connection and the caller reconnects, the client must send one
-// KeepAlive per period, not one per connection it has had.
-func Test_ReconnectDoesNotDuplicateKeepAlive(t *testing.T) {
+// After an automatic reconnect, the client must send one KeepAlive per period,
+// not one per connection it has had.
+func Test_AutomaticReconnectDoesNotDuplicateKeepAlive(t *testing.T) {
 	if testing.Short() {
 		t.Skip("waits for a full keepalive period")
 	}
@@ -36,12 +36,8 @@ func Test_ReconnectDoesNotDuplicateKeepAlive(t *testing.T) {
 		defer conn.Close()
 
 		if connections.Add(1) == 1 {
-			// Close the first connection gracefully, as a server does when it ends a session.
-			_ = conn.WriteControl(
-				websocket.CloseMessage,
-				websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
-				time.Now().Add(time.Second),
-			)
+			// Drop the transport without a WebSocket close frame.
+			_ = conn.UnderlyingConn().Close()
 			return
 		}
 
@@ -60,6 +56,11 @@ func Test_ReconnectDoesNotDuplicateKeepAlive(t *testing.T) {
 	options := &interfaces.ClientOptions{
 		Host:            "ws" + strings.TrimPrefix(server.URL, "http"),
 		EnableKeepAlive: true,
+		ReconnectPolicy: &interfaces.ReconnectPolicy{
+			MaxRetries:   1,
+			InitialDelay: time.Millisecond,
+			MaxDelay:     time.Millisecond,
+		},
 		WSHeaderProcessor: func(headers http.Header) {
 			headers.Del("Host")
 		},
@@ -73,13 +74,12 @@ func Test_ReconnectDoesNotDuplicateKeepAlive(t *testing.T) {
 	if !client.Connect() {
 		t.Fatal("connect")
 	}
-	// Give the client time to observe the server's close before it reconnects.
-	time.Sleep(500 * time.Millisecond)
-	if !client.AttemptReconnect(context.Background(), 3) {
-		t.Fatal("reconnect")
-	}
-	if got := connections.Load(); got != 2 {
-		t.Fatalf("connections = %d, want 2", got)
+	deadline := time.Now().Add(time.Second)
+	for connections.Load() != 2 {
+		if time.Now().After(deadline) {
+			t.Fatalf("connections = %d, want 2", connections.Load())
+		}
+		time.Sleep(time.Millisecond)
 	}
 
 	// The first keepalive of a single worker arrives one period after the reconnect; a second
