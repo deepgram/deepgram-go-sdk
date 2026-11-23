@@ -36,6 +36,12 @@ type WSClient struct {
 	sessionDone chan struct{}
 	retry       bool
 	retryCnt    int64
+	// reconnecting prevents application writes and background workers from
+	// opening a second connection while an automatic recovery is in progress.
+	reconnecting        bool
+	reconnectGeneration uint64
+	autoReconnectMu     sync.Mutex
+	autoReconnect       autoReconnect
 	// terminalCloseStarted prevents concurrent local and peer-close paths from
 	// routing a second close event after handler-owned channels are released.
 	terminalCloseStarted bool
@@ -50,4 +56,9 @@ type WSClient struct {
 // RESTClient implements an extensible REST client
 type RESTClient struct {
 	*restv1.Client
+}
+
+type autoReconnect struct {
+	generation uint64
+	cancel     context.CancelFunc
 }

@@ -29,6 +29,9 @@ func NewThinkLiveSettings() *interfacesv1.ThinkLiveSettings {
 // options
 type ClientOptions = interfacesv1.ClientOptions
 type ClientOptionsV2 = interfacesv2.ClientOptions
+type ReconnectPolicy = interfacesv1.ReconnectPolicy
+type ReconnectEvent = interfacesv1.ReconnectEvent
+type ReconnectEventType = interfacesv1.ReconnectEventType
 type SettingsOptions = interfacesv1.SettingsOptions
 type PreRecordedTranscriptionOptions = interfacesv1.PreRecordedTranscriptionOptions
 type LiveTranscriptionOptions = interfacesv1.LiveTranscriptionOptions
@@ -45,3 +48,9 @@ type FluxRedact = interfacesv2.FluxRedact
 type SpeakV2Options = interfacesv2.SpeakV2Options
 type SpeakV2WSOptions = interfacesv2.SpeakV2WSOptions
 type SpeakV2ConfigureOptions = interfacesv2.SpeakV2ConfigureOptions
+
+const (
+	ReconnectAttempt = interfacesv1.ReconnectAttempt
+	ReconnectSuccess = interfacesv1.ReconnectSuccess
+	ReconnectFailure = interfacesv1.ReconnectFailure
+)
