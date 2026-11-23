@@ -347,6 +347,70 @@ func Test_WSClientAutomaticReconnectDoesNotReconnectAfterStop(t *testing.T) {
 	}
 }
 
+func Test_WSClientStopCancelsInFlightAutomaticReconnectDial(t *testing.T) {
+	var connections atomic.Int32
+	firstConnected := make(chan struct{})
+	dialStarted := make(chan struct{})
+	releaseDial := make(chan struct{})
+	defer close(releaseDial)
+	upgrader := websocket.Upgrader{CheckOrigin: func(*http.Request) bool { return true }}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if connections.Add(1) == 2 {
+			close(dialStarted)
+			<-releaseDial
+			return
+		}
+
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			t.Errorf("upgrade websocket: %v", err)
+			return
+		}
+		defer conn.Close()
+		close(firstConnected)
+		_ = conn.UnderlyingConn().Close()
+	}))
+	t.Cleanup(server.Close)
+
+	handler := &reconnectTestHandler{url: "ws" + strings.TrimPrefix(server.URL, "http")}
+	router := &reconnectTestRouter{}
+	var handlerInterface commoninterfaces.WebSocketHandler = handler
+	var routerInterface commoninterfaces.Router = router
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	client := NewWS(ctx, cancel, "test-api-key", &interfaces.ClientOptions{
+		ReconnectPolicy: &interfaces.ReconnectPolicy{
+			InitialDelay: time.Millisecond,
+			MaxDelay:     time.Millisecond,
+		},
+	}, &handlerInterface, &routerInterface)
+
+	if !client.ConnectWithCancel(ctx, cancel, 1) {
+		t.Fatal("connect")
+	}
+	select {
+	case <-firstConnected:
+	case <-time.After(time.Second):
+		t.Fatal("first connection was not established")
+	}
+	select {
+	case <-dialStarted:
+	case <-time.After(time.Second):
+		t.Fatal("automatic reconnect did not start a replacement dial")
+	}
+
+	stopped := make(chan struct{})
+	go func() {
+		client.Stop()
+		close(stopped)
+	}()
+	select {
+	case <-stopped:
+	case <-time.After(time.Second):
+		t.Fatal("Stop did not cancel the in-flight reconnect dial")
+	}
+}
+
 func Test_WSClientAutomaticReconnectReportsTerminalFailure(t *testing.T) {
 	var connections atomic.Int32
 	firstConnected := make(chan struct{})

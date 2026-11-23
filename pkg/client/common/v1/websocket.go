@@ -12,9 +12,11 @@ import (
 	"encoding/json"
 	"io"
 	"math/big"
+	"net"
 	"net/http"
 	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dvonthenen/websocket"
@@ -73,8 +75,9 @@ func (c *WSClient) AttemptReconnect(ctx context.Context, retries int64) bool {
 
 // AttemptReconnect performs a reconnect after failing retries and providing a cancel function
 func (c *WSClient) AttemptReconnectWithCancel(ctx context.Context, ctxCancel context.CancelFunc, retries int64) bool {
+	c.cancelAutomaticReconnect()
 	c.muConn.Lock()
-	c.cancelAutomaticReconnectLocked()
+	c.reconnectGeneration++
 	c.retry = true
 	c.reconnecting = false
 	c.muConn.Unlock()
@@ -88,16 +91,47 @@ func (c *WSClient) internalConnect() *websocket.Conn {
 	return c.internalConnectWithCancel(c.ctx, c.ctxCancel, int(c.retryCnt), false)
 }
 
-func (c *WSClient) cancelAutomaticReconnectLocked() {
-	c.reconnectGeneration++
-	if c.autoReconnectCancel != nil {
-		c.autoReconnectCancel()
-		c.autoReconnectCancel = nil
+type reconnectPolicyProvider interface {
+	GetReconnectPolicy() *clientinterfaces.ReconnectPolicy
+}
+
+type cancelableConn struct {
+	net.Conn
+	done chan struct{}
+	once sync.Once
+}
+
+func (c *cancelableConn) Close() error {
+	c.once.Do(func() { close(c.done) })
+	return c.Conn.Close()
+}
+
+func dialWithContextClose(ctx context.Context, network, address string) (net.Conn, error) {
+	conn, err := (&net.Dialer{}).DialContext(ctx, network, address)
+	if err != nil {
+		return nil, err
 	}
+	cancelable := &cancelableConn{Conn: conn, done: make(chan struct{})}
+	go func() {
+		select {
+		case <-ctx.Done():
+			_ = cancelable.Close()
+		case <-cancelable.done:
+		}
+	}()
+	return cancelable, nil
+}
+
+func (c *WSClient) reconnectPolicy() *clientinterfaces.ReconnectPolicy {
+	provider, ok := c.cOptions.(reconnectPolicyProvider)
+	if !ok {
+		return nil
+	}
+	return provider.GetReconnectPolicy()
 }
 
 func (c *WSClient) startAutomaticReconnect(ws *websocket.Conn, cause error) bool {
-	policy := c.cOptions.GetReconnectPolicy()
+	policy := c.reconnectPolicy()
 	if policy == nil {
 		return false
 	}
@@ -122,8 +156,16 @@ func (c *WSClient) startAutomaticReconnect(ws *websocket.Conn, cause error) bool
 	c.reconnectGeneration++
 	generation := c.reconnectGeneration
 	c.reconnecting = true
-	c.autoReconnectCancel = reconnectCancel
 	c.muConn.Unlock()
+
+	c.setAutomaticReconnect(generation, reconnectCancel)
+	c.muConn.RLock()
+	active := c.reconnectGeneration == generation && c.retry && c.reconnecting
+	c.muConn.RUnlock()
+	if !active {
+		c.clearAutomaticReconnect(generation, true)
+		return false
+	}
 
 	// The socket is already unusable, but Close releases any peer resources and
 	// unblocks a simultaneous reader without sending application frames.
@@ -163,8 +205,8 @@ func (c *WSClient) reconnect(ctx context.Context, cancel context.CancelFunc, gen
 				return
 			}
 			c.reconnecting = false
-			c.autoReconnectCancel = nil
 			c.muConn.Unlock()
+			c.clearAutomaticReconnect(generation, false)
 			c.notifyReconnect(policy, clientinterfaces.ReconnectEvent{
 				Type:    clientinterfaces.ReconnectSuccess,
 				Attempt: attempt,
@@ -179,7 +221,7 @@ func (c *WSClient) reconnect(ctx context.Context, cancel context.CancelFunc, gen
 func (c *WSClient) isActiveAutomaticReconnect(generation uint64) bool {
 	c.muConn.RLock()
 	defer c.muConn.RUnlock()
-	return c.reconnectGeneration == generation && c.autoReconnectCancel != nil && c.reconnecting
+	return c.reconnectGeneration == generation && c.reconnecting && c.hasAutomaticReconnect(generation)
 }
 
 func (c *WSClient) finishAutomaticReconnect(generation uint64, policy clientinterfaces.ReconnectPolicy, attempts int, cause error, exhausted bool) {
@@ -188,10 +230,10 @@ func (c *WSClient) finishAutomaticReconnect(generation uint64, policy clientinte
 		c.muConn.Unlock()
 		return
 	}
-	c.autoReconnectCancel = nil
 	c.reconnecting = false
 	c.retry = false
 	c.muConn.Unlock()
+	c.clearAutomaticReconnect(generation, false)
 
 	if exhausted {
 		c.notifyReconnect(policy, clientinterfaces.ReconnectEvent{
@@ -203,6 +245,39 @@ func (c *WSClient) finishAutomaticReconnect(generation uint64, policy clientinte
 	// Context cancellation and an exhausted policy are terminal. There is no
 	// active transport to close, so force the regular terminal handler cleanup.
 	c.closeWsWithState(true, false, false)
+}
+
+func (c *WSClient) setAutomaticReconnect(generation uint64, cancel context.CancelFunc) {
+	c.autoReconnectMu.Lock()
+	defer c.autoReconnectMu.Unlock()
+	c.autoReconnect = autoReconnect{generation: generation, cancel: cancel}
+}
+
+func (c *WSClient) hasAutomaticReconnect(generation uint64) bool {
+	c.autoReconnectMu.Lock()
+	defer c.autoReconnectMu.Unlock()
+	return c.autoReconnect.generation == generation && c.autoReconnect.cancel != nil
+}
+
+func (c *WSClient) clearAutomaticReconnect(generation uint64, cancel bool) {
+	c.autoReconnectMu.Lock()
+	defer c.autoReconnectMu.Unlock()
+	if c.autoReconnect.generation != generation || c.autoReconnect.cancel == nil {
+		return
+	}
+	if cancel {
+		c.autoReconnect.cancel()
+	}
+	c.autoReconnect = autoReconnect{}
+}
+
+func (c *WSClient) cancelAutomaticReconnect() {
+	c.autoReconnectMu.Lock()
+	defer c.autoReconnectMu.Unlock()
+	if c.autoReconnect.cancel != nil {
+		c.autoReconnect.cancel()
+	}
+	c.autoReconnect = autoReconnect{}
 }
 
 func normalizeReconnectPolicy(policy clientinterfaces.ReconnectPolicy) clientinterfaces.ReconnectPolicy {
@@ -397,6 +472,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 				HandshakeTimeout: 15 * time.Second,
 				RedirectService:  c.cOptions.GetRedirectService(),
 				Proxy:            c.cOptions.GetProxy(),
+				NetDialContext: func(_ context.Context, network, address string) (net.Conn, error) {
+					return dialWithContextClose(ctx, network, address)
+				},
 			}
 		} else {
 			dialer = websocket.Dialer{
@@ -406,6 +484,9 @@ func (c *WSClient) internalConnectWithCancel(ctx context.Context, ctxCancel cont
 				RedirectService: c.cOptions.GetRedirectService(),
 				SkipServerAuth:  c.cOptions.GetSkipServerAuth(),
 				Proxy:           c.cOptions.GetProxy(),
+				NetDialContext: func(_ context.Context, network, address string) (net.Conn, error) {
+					return dialWithContextClose(ctx, network, address)
+				},
 			}
 		}
 
@@ -952,11 +1033,14 @@ func (c *WSClient) normalClosure(lock bool) error {
 // Stop will send close message and shutdown websocket connection
 func (c *WSClient) Stop() {
 	klog.V(3).Infof("Stopping...\n")
+	// Cancel an in-flight reconnect dial before waiting for muConn. DialContext
+	// can otherwise hold that mutex until its handshake timeout expires.
+	c.cancelAutomaticReconnect()
 	c.muConn.Lock()
 	reconnecting := c.reconnecting
 	c.retry = false
 	c.reconnecting = false
-	c.cancelAutomaticReconnectLocked()
+	c.reconnectGeneration++
 	c.muConn.Unlock()
 
 	if reconnecting {

@@ -16,5 +16,4 @@ type ClientOptions interface {
 	GetRedirectService() bool
 	GetSkipServerAuth() bool
 	GetProxy() func(*http.Request) (*url.URL, error)
-	GetReconnectPolicy() *ReconnectPolicy
 }
